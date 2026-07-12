@@ -47,6 +47,16 @@
 	font-family: var(--mobile-font-family);
 	font-size: var(--mobile-font-md);
 	line-height: 1.6;
+	touch-action: manipulation;
+}
+
+[data-theme-plugin="texlyre-mobile"] button,
+[data-theme-plugin="texlyre-mobile"] a,
+[data-theme-plugin="texlyre-mobile"] input,
+[data-theme-plugin="texlyre-mobile"] select,
+[data-theme-plugin="texlyre-mobile"] textarea,
+[data-theme-plugin="texlyre-mobile"] label {
+	touch-action: manipulation;
 }
 
 [data-theme-plugin="texlyre-mobile"] .logo {
