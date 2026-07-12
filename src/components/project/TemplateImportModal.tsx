@@ -229,14 +229,14 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 
 		const effectiveTemplate: TemplateProject = selectedVersionEntry
 			? {
-				...selectedTemplate,
-				version: selectedVersionEntry.version,
-				downloadUrl: selectedVersionEntry.downloadUrl,
-				previewImage: selectedVersionEntry.previewImage,
-				lastUpdated: selectedVersionEntry.lastUpdated,
-				compile: selectedVersionEntry.compile,
-				file: selectedVersionEntry.file,
-			}
+					...selectedTemplate,
+					version: selectedVersionEntry.version,
+					downloadUrl: selectedVersionEntry.downloadUrl,
+					previewImage: selectedVersionEntry.previewImage,
+					lastUpdated: selectedVersionEntry.lastUpdated,
+					compile: selectedVersionEntry.compile,
+					file: selectedVersionEntry.file,
+				}
 			: selectedTemplate;
 
 		onTemplateSelected(effectiveTemplate);
@@ -495,7 +495,6 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 										</div>
 
 										<div className='template-detail-info'>
-
 											<div className='template-detail-meta'>
 												<span className='template-category'>
 													{selectedTemplate.category}
@@ -528,7 +527,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 													{t('Last Updated: {lastUpdated}', {
 														lastUpdated: formatLastModified(
 															selectedVersionEntry?.lastUpdated ??
-															selectedTemplate.lastUpdated,
+																selectedTemplate.lastUpdated,
 														),
 													})}
 												</span>
@@ -538,7 +537,9 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 												<select
 													className='template-version-select'
 													value={selectedVersion ?? ''}
-													disabled={(selectedTemplate.versions?.length ?? 1) <= 1}
+													disabled={
+														(selectedTemplate.versions?.length ?? 1) <= 1
+													}
 													onChange={(e) => setSelectedVersion(e.target.value)}
 												>
 													{(
