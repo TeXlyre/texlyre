@@ -1,9 +1,9 @@
 import { createTypstCompiler } from '@myriaddreamin/typst.ts/compiler';
 import { createTypstRenderer } from '@myriaddreamin/typst.ts/renderer';
-import { TypstSnippet } from '@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs';
 
 import type { TypstOutputFormat } from '../../types/typst';
 import { sanitizeSvg } from '../../utils/svgSanitizer';
+import { longPathFetchPackageRegistry } from './LongPathPackageRegistry';
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -149,7 +149,9 @@ async function ensureInit() {
 	if (initialized) return;
 
 	const fonts = await loadFonts();
-	const packageRegistry = TypstSnippet.fetchPackageRegistry();
+	// NOTE (fabawi): Patch for issue (#340)[https://github.com/TeXlyre/texlyre/issues/340]
+	// const packageRegistry = TypstSnippet.fetchPackageRegistry();
+	const packageRegistry = longPathFetchPackageRegistry();
 
 	compiler = createTypstCompiler();
 
