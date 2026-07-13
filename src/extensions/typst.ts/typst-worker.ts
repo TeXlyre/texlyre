@@ -3,6 +3,7 @@ import { createTypstRenderer } from '@myriaddreamin/typst.ts/renderer';
 
 import type { TypstOutputFormat } from '../../types/typst';
 import { sanitizeSvg } from '../../utils/svgSanitizer';
+import { normalizeTypstSvgNavigation } from './svgNavigation';
 import { longPathFetchPackageRegistry } from './LongPathPackageRegistry';
 
 const BASE_PATH = __BASE_PATH__;
@@ -273,7 +274,7 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
 				artifactContent: compiled.result,
 			});
 
-			output = sanitizeSvg(String(rawSvg), {
+			output = sanitizeSvg(normalizeTypstSvgNavigation(String(rawSvg)), {
 				baseUrl: self.location.href,
 				allowRemoteUrls,
 			});
