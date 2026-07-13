@@ -4,12 +4,16 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 import { t } from '@/i18n';
+import type { CompilerProvider } from '../../types/compilation';
+import type { ProjectType } from '../../types/projects';
+import { resolveLabel } from '../output/externalCompilerSchema';
 
 interface TypesetterInfoProps {
-	type: 'latex' | 'typst';
+	type: ProjectType;
+	provider?: CompilerProvider | null;
 }
 
-const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
+const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type, provider }) => {
 	const [showTooltip, setShowTooltip] = useState(false);
 	const [position, setPosition] = useState({ top: 0, left: 0 });
 	const buttonRef = useRef<HTMLButtonElement>(null);
@@ -77,6 +81,15 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
 		};
 	}, [showTooltip]);
 
+	const externalInfo = provider?.ui?.info;
+
+	const getLabel = () => {
+		if (type === 'latex') return 'LaTeX';
+		if (type === 'typst') return 'Typst';
+		if (externalInfo) return resolveLabel(externalInfo.title);
+		return provider?.label ?? type;
+	};
+
 	const getTooltipContent = () => {
 		if (type === 'latex') {
 			return (
@@ -110,30 +123,60 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
 			);
 		}
 
+		if (type === 'typst') {
+			return (
+				<>
+					<h4 className='typesetter-tooltip-title'>{t('Typst')}</h4>
+					<div className='typesetter-tooltip-section'>
+						<strong>{t('Typst Engine:')}</strong>{' '}
+						{t('@myriaddreamin/typst.ts v0.8.0-rc1')}
+					</div>
+					<div className='typesetter-tooltip-section'>
+						<strong>{t('Typst Renderer:')}</strong>{' '}
+						{t('@texlyre/typst-ts-renderer v0.8.0-rc1')}
+					</div>
+					<div className='typesetter-tooltip-section'>
+						<strong>{t('Typst Compiler:')}</strong>{' '}
+						{t('@texlyre/typst-ts-compiler v0.8.0-rc1')}
+					</div>
+					<div className='typesetter-tooltip-section'>
+						<strong>{t('Typst Version:')}</strong> {t('0.15.0 (15/06/2026)')}
+					</div>
+					<div className='typesetter-tooltip-section'>
+						<strong>{t('Output Formats:')}</strong>
+						<ul>
+							<li>{t('PDF')}</li>
+							<li>{t('SVG')}</li>
+						</ul>
+					</div>
+				</>
+			);
+		}
+
+		if (externalInfo) {
+			return (
+				<>
+					<h4 className='typesetter-tooltip-title'>
+						{resolveLabel(externalInfo.title)}
+					</h4>
+					{externalInfo.rows.map((row, index) => (
+						<div
+							className='typesetter-tooltip-section'
+							key={`${resolveLabel(row.label)}-${index}`}
+						>
+							<strong>{resolveLabel(row.label)}</strong>{' '}
+							{resolveLabel(row.value)}
+						</div>
+					))}
+				</>
+			);
+		}
+
 		return (
 			<>
-				<h4 className='typesetter-tooltip-title'>{t('Typst')}</h4>
+				<h4 className='typesetter-tooltip-title'>{provider?.label ?? type}</h4>
 				<div className='typesetter-tooltip-section'>
-					<strong>{t('Typst Engine:')}</strong>{' '}
-					{t('@myriaddreamin/typst.ts v0.8.0-rc1')}
-				</div>
-				<div className='typesetter-tooltip-section'>
-					<strong>{t('Typst Renderer:')}</strong>{' '}
-					{t('@texlyre/typst-ts-renderer v0.8.0-rc1')}
-				</div>
-				<div className='typesetter-tooltip-section'>
-					<strong>{t('Typst Compiler:')}</strong>{' '}
-					{t('@texlyre/typst-ts-compiler v0.8.0-rc1')}
-				</div>
-				<div className='typesetter-tooltip-section'>
-					<strong>{t('Typst Version:')}</strong> {t('0.15.0 (15/06/2026)')}
-				</div>
-				<div className='typesetter-tooltip-section'>
-					<strong>{t('Output Formats:')}</strong>
-					<ul>
-						<li>{t('PDF')}</li>
-						<li>{t('SVG')}</li>
-					</ul>
+					{t('No typesetter information available.')}
 				</div>
 			</>
 		);
@@ -149,7 +192,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
 				onMouseLeave={() => setShowTooltip(false)}
 				onClick={() => setShowTooltip(!showTooltip)}
 			>
-				{type === 'latex' ? 'LaTeX' : 'Typst'}
+				{getLabel()}
 			</button>
 			{showTooltip &&
 				createPortal(

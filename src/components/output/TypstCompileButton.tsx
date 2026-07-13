@@ -22,7 +22,11 @@ import {
 	serializeStandards,
 	toggleStandard,
 } from '../../utils/pdfStandardsUtils';
-import { isTypstFile, isTemporaryFile } from '../../utils/fileUtils';
+import {
+	isTypstFile,
+	isTemporaryFile,
+	getFilenameFromPath,
+} from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
 import {
 	OptionsIcon,
@@ -485,14 +489,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 		});
 	};
 
-	const getFileName = (path?: string) => {
-		if (!path) return t('No .typ file');
-		return path.split('/').pop() || path;
-	};
-
 	const getDisplayName = (path?: string) => {
-		if (!path) return t('No .typ file');
-
 		if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
 			const doc = documents.find((d) => d.id === selectedDocId);
 			if (doc) {
@@ -500,7 +497,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 			}
 		}
 
-		return getFileName(path);
+		return getFilenameFromPath(path, '.typ');
 	};
 
 	const isDisabled = isInitializing || (!isCompiling && !effectiveMainFile);
@@ -584,7 +581,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 							<option value='auto'>{t('Auto-detect')}</option>
 							{availableTypstFiles.map((filePath) => (
 								<option key={filePath} value={filePath}>
-									{getFileName(filePath)}
+									{getFilenameFromPath(filePath, '.typ')}
 								</option>
 							))}
 						</select>

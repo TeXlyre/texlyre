@@ -19,7 +19,11 @@ import {
 	serializeStandards,
 	toggleStandard,
 } from '../../utils/pdfStandardsUtils';
-import { isTypstFile, isTemporaryFile } from '../../utils/fileUtils';
+import {
+	isTypstFile,
+	isTemporaryFile,
+	getFilenameFromPath,
+} from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
 import { ChevronDownIcon, OptionsIcon, ExportIcon } from '../common/Icons';
 
@@ -235,14 +239,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 		}
 	};
 
-	const getFileName = (path?: string) => {
-		if (!path) return t('No .typ file');
-		return path.split('/').pop() || path;
-	};
-
 	const getDisplayName = (path?: string) => {
-		if (!path) return t('No .typ file');
-
 		if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
 			const doc = documents.find((d) => d.id === selectedDocId);
 			if (doc) {
@@ -250,7 +247,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 			}
 		}
 
-		return getFileName(path);
+		return getFilenameFromPath(path, '.typ');
 	};
 
 	const isDisabled = isExporting || !effectiveMainFile;
@@ -308,7 +305,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 							<option value='auto'>{t('Auto-detect')}</option>
 							{availableTypstFiles.map((filePath) => (
 								<option key={filePath} value={filePath}>
-									{getFileName(filePath)}
+									{getFilenameFromPath(filePath, '.typ')}
 								</option>
 							))}
 						</select>

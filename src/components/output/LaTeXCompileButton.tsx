@@ -15,6 +15,7 @@ import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
 import type { LaTeXOutputFormat, LaTeXEngine } from '../../types/latex';
 import {
+	getFilenameFromPath,
 	isLatexFile,
 	isLatexMainFile,
 	isTemporaryFile,
@@ -677,14 +678,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		}
 	};
 
-	const getFileName = (path?: string) => {
-		if (!path) return t('No .tex file');
-		return path.split('/').pop() || path;
-	};
-
 	const getDisplayName = (path?: string) => {
-		if (!path) return t('No .tex file');
-
 		if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
 			const doc = documents.find((d) => d.id === selectedDocId);
 			if (doc) {
@@ -692,7 +686,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 			}
 		}
 
-		return getFileName(path);
+		return getFilenameFromPath(path, '.tex');
 	};
 
 	const isDisabled =
@@ -793,7 +787,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 							<option value='auto'>{t('Auto-detect')}</option>
 							{availableTexFiles.map((filePath) => (
 								<option key={filePath} value={filePath}>
-									{getFileName(filePath)}
+									{getFilenameFromPath(filePath, '.tex')}
 								</option>
 							))}
 						</select>
