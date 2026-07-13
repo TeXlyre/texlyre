@@ -153,6 +153,7 @@
 	min-height: calc(var(--mobile-min-touch-target) - 8px);
 }
 
+[data-layout="texlyre-mobile"] .external-outline-header,
 [data-layout="texlyre-mobile"] .latex-outline-header,
 [data-layout="texlyre-mobile"] .typst-outline-header {
 	padding: var(--mobile-spacing-md);
