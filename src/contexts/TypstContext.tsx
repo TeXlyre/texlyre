@@ -31,6 +31,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 	const { getSetting } = useSettings();
 
 	const [isCompiling, setIsCompiling] = useState<boolean>(false);
+	const [isInitializing, setIsInitializing] = useState(false);
 	const [hasAutoCompiled, setHasAutoCompiled] = useState(false);
 	const [compileError, setCompileError] = useState<string | null>(null);
 	const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
@@ -93,12 +94,28 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 			allowRemoteUrls: previewAllowRemoteUrls,
 		});
 
+		setCompileError(null);
+
 		if (!typstService.isReady()) {
-			await typstService.initialize();
+			setIsInitializing(true);
+
+			try {
+				await typstService.initialize();
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : t('Unknown error');
+
+				setCompileError(message);
+				setCurrentView('log');
+				setLogIndicator('error');
+				popoutViewerService.sendCompileResult(-1, message);
+				return;
+			} finally {
+				setIsInitializing(false);
+			}
 		}
 
 		setIsCompiling(true);
-		setCompileError(null);
 		setActiveCompiler('typst');
 
 		setCompiledPdf(null);
@@ -284,6 +301,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 		<TypstContext.Provider
 			value={{
 				isCompiling,
+				isInitializing,
 				compileError,
 				compiledPdf,
 				compiledSvg,

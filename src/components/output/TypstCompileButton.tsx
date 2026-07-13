@@ -63,6 +63,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 }) => {
 	const {
 		isCompiling,
+		isInitializing,
 		compileDocument,
 		stopCompilation,
 		clearCache,
@@ -502,22 +503,30 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 		return getFileName(path);
 	};
 
-	const isDisabled = !isCompiling && !effectiveMainFile;
+	const isDisabled = isInitializing || (!isCompiling && !effectiveMainFile);
 
 	return (
 		<div className={`typst-compile-buttons ${className}`} ref={dropdownRef}>
 			<div className='compile-button-group'>
 				<button
-					className={`typst-button compile-button ${isCompiling ? 'compiling' : ''}`}
+					className={`typst-button compile-button ${isCompiling ? 'compiling' : ''} ${isInitializing ? 'initializing' : ''}`}
 					onClick={handleCompileOrStop}
 					disabled={isDisabled}
 					title={
 						isCompiling
 							? `${t('Stop Compilation')} ${useSharedSettings ? t('(F8)') : ''}`
-							: `${t('Compile Typst Document')} ${useSharedSettings ? t('(F9)') : ''}`
+							: isInitializing
+								? t('Initializing Compiler...')
+								: `${t('Compile Typst Document')} ${useSharedSettings ? t('(F9)') : ''}`
 					}
 				>
-					{isCompiling ? <StopIcon /> : <PlayIcon />}
+					{isCompiling ? (
+						<StopIcon />
+					) : isInitializing ? (
+						<div className='loading-spinner' />
+					) : (
+						<PlayIcon />
+					)}
 				</button>
 
 				<PopoutViewerToggleButton

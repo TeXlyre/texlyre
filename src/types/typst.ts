@@ -26,6 +26,7 @@ export interface TypstCompileResult {
 
 export interface TypstContextType {
 	isCompiling: boolean;
+	isInitializing: boolean;
 	compileError: string | null;
 	compiledPdf: Uint8Array | null;
 	compiledSvg: string | null;
