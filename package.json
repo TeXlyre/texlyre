@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.9.12",
+	"version": "0.9.13",
 	"description": "A local-first LaTeX & Typst collaborative web editor ",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -98,7 +98,7 @@
 		"codemirror": "^6.0.2",
 		"codemirror-helix": "^0.5.7",
 		"codemirror-lang-bib": "^0.2.4",
-		"codemirror-lang-latex": "^0.4.1",
+		"codemirror-lang-latex": "^0.4.2",
 		"codemirror-lang-typst": "^0.4.0",
 		"codemirror-markdown-commands": "^0.1.0",
 		"detypify-service": "^0.3.0",

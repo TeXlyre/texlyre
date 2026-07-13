@@ -3985,10 +3985,10 @@ codemirror-lang-bib@^0.2.4:
   resolved "https://registry.npmjs.org/codemirror-lang-bib/-/codemirror-lang-bib-0.2.4.tgz"
   integrity sha512-EEwyUIEjsvN48O2XoOli6oCx+U9TQBEANaHfsYeXRdO0mQtTc3R+XLlnUPJhwlCWuMLL3ciDiqlRPGAyjFp82w==
 
-codemirror-lang-latex@^0.4.1:
-  version "0.4.1"
-  resolved "https://registry.npmjs.org/codemirror-lang-latex/-/codemirror-lang-latex-0.4.1.tgz"
-  integrity sha512-7uhwWoay81Bi9YashzosjXJYmdIAmtmPlmMJ3b4uZBMcrSfAy/js5+OXY/5mPHaMiPReCKe0SfzkXDAvBXVTxw==
+codemirror-lang-latex@^0.4.2:
+  version "0.4.2"
+  resolved "https://registry.npmjs.org/codemirror-lang-latex/-/codemirror-lang-latex-0.4.2.tgz"
+  integrity sha512-NjhekT+elGTGv49i1KA35J5239RX3hbMrO0dBRfyUbLYMIdjqmwMoOJScxJdIl7qwo9Tgd92QGrYhR4kX68yQQ==
 
 codemirror-lang-typst@^0.4.0:
   version "0.4.0"
