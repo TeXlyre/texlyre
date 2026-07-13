@@ -93,6 +93,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 	>({});
 	const [isDeletingBundle, setIsDeletingBundle] = useState<string | null>(null);
 
+	const isInitializingRef = useRef(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const [isDropdownOpen, setIsDropdownOpen] = usePersistentState(
 		dropdownKey,
@@ -343,24 +344,41 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		) => {
 			const requestedEngine = event.detail?.engine;
 
-			if (!requestedEngine || compileStateRef.current.isCompiling) return;
-
-			if (projectEngine) {
-				changeDoc((d) => {
-					if (!d.projectMetadata) {
-						d.projectMetadata = { name: '', description: '' };
-					}
-					d.projectMetadata.latexEngine = requestedEngine;
-				});
-			} else {
-				setProperty('latex-engine', requestedEngine, {
-					scope: 'project',
-					projectId,
-				});
+			if (
+				!requestedEngine ||
+				compileStateRef.current.isCompiling ||
+				isInitializingRef.current
+			) {
+				return;
 			}
 
-			if (requestedEngine !== latexService.getCurrentEngineType()) {
-				await latexService.setEngine(requestedEngine);
+			isInitializingRef.current = true;
+			setIsInitializing(true);
+
+			try {
+				if (projectEngine) {
+					changeDoc((d) => {
+						if (!d.projectMetadata) {
+							d.projectMetadata = { name: '', description: '' };
+						}
+						d.projectMetadata.latexEngine = requestedEngine;
+					});
+				} else {
+					setProperty('latex-engine', requestedEngine, {
+						scope: 'project',
+						projectId,
+					});
+				}
+
+				if (requestedEngine !== latexService.getCurrentEngineType()) {
+					await latexService.setEngine(requestedEngine);
+				}
+			} catch (error) {
+				console.error('Failed to initialize requested compiler:', error);
+				return;
+			} finally {
+				isInitializingRef.current = false;
+				setIsInitializing(false);
 			}
 
 			document.dispatchEvent(new CustomEvent('trigger-compile'));
@@ -370,13 +388,21 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 			'trigger-compile-with-engine',
 			handleCompileWithEngine as EventListener,
 		);
+
 		return () => {
 			document.removeEventListener(
 				'trigger-compile-with-engine',
 				handleCompileWithEngine as EventListener,
 			);
 		};
-	}, [useSharedSettings, projectEngine, projectId, changeDoc, setProperty]);
+	}, [
+		useSharedSettings,
+		projectEngine,
+		projectId,
+		changeDoc,
+		setProperty,
+		setIsInitializing,
+	]);
 
 	useEffect(() => {
 		if (!isBusyTeX || !isCacheOptionsOpen) return;

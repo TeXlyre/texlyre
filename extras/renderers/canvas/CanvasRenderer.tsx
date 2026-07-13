@@ -403,7 +403,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 	);
 
 	const goToPage = useCallback(
-		(page: number) => {
+		(page: number, y = 0) => {
 			const target = clamp(page, 1, numPages || 1);
 
 			suppressPageSync();
@@ -416,7 +416,9 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 			if (!scrollView || !scrollContainerRef.current) return;
 
 			const container = scrollContainerRef.current;
-			const top = pageTopFor(pageMetadata, numPages, target, scale);
+			const pageTop = pageTopFor(pageMetadata, numPages, target, scale);
+			const pageHeight = pageMetadata.get(target)?.height || DEFAULT_HEIGHT;
+			const top = pageTop + clamp(y, 0, pageHeight) * scale;
 
 			container.scrollTop = top;
 			setRenderRange(
@@ -467,6 +469,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 									scale,
 									meta?.width || DEFAULT_WIDTH,
 									meta?.height || DEFAULT_HEIGHT,
+									({ page, y }) => goToPage(page, y),
 								);
 							}
 						}
@@ -490,6 +493,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 			canvasRendererTextSelection,
 			canvasRendererAnnotations,
 			pageMetadata,
+			goToPage,
 		],
 	);
 

@@ -168,12 +168,19 @@ function svgHasInteractivity(svg: string): boolean {
 
 const svgOverlayScaleCache = new WeakMap<HTMLDivElement, number>();
 
+export interface SvgNavigationTarget {
+	page: number;
+	x?: number;
+	y?: number;
+}
+
 export function renderSvgOverlay(
 	textLayerSvg: string,
 	container: HTMLDivElement,
 	scale: number,
 	pageWidth: number,
 	pageHeight: number,
+	onNavigate?: (target: SvgNavigationTarget) => void,
 ): void {
 	if (!textLayerSvg) return;
 	if (svgOverlayScaleCache.get(container) === scale) return;
@@ -215,6 +222,39 @@ export function renderSvgOverlay(
 				(el as HTMLElement).style.cursor = 'auto';
 			}
 		});
+
+	if (onNavigate) {
+		svg.addEventListener('click', (event) => {
+			const target = event.target as Element | null;
+			const anchor = target?.closest<SVGAElement>('a[data-nav-page]');
+
+			if (!anchor) return;
+
+			const page = Number(anchor.dataset.navPage);
+			const x =
+				anchor.dataset.navX === undefined
+					? undefined
+					: Number(anchor.dataset.navX);
+			const y =
+				anchor.dataset.navY === undefined
+					? undefined
+					: Number(anchor.dataset.navY);
+
+			if (
+				!Number.isInteger(page) ||
+				page < 1 ||
+				(x !== undefined && !Number.isFinite(x)) ||
+				(y !== undefined && !Number.isFinite(y))
+			) {
+				return;
+			}
+
+			event.preventDefault();
+			event.stopPropagation();
+
+			onNavigate({ page, x, y });
+		});
+	}
 
 	shadow.replaceChildren(svg);
 
