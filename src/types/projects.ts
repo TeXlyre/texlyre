@@ -6,6 +6,7 @@ export interface Project {
 	name: string;
 	description: string;
 	type: ProjectType;
+	compilerId?: string;
 	docUrl: string;
 	createdAt: number;
 	updatedAt: number;

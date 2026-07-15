@@ -28,6 +28,7 @@ export interface AuthContextType {
 		name: string;
 		description: string;
 		type: string;
+		compilerId?: string;
 		tags: string[];
 		docUrl?: string;
 		isFavorite: boolean;

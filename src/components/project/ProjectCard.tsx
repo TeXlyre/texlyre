@@ -15,6 +15,7 @@ import {
 	FileTextIcon,
 	FileIcon,
 } from '../common/Icons.tsx';
+import { compilerRegistryService } from '../../services/CompilerRegistryService';
 import TypesetterInfo from '../common/TypesetterInfo';
 import { formatDate, formatLastModified } from '@/utils/dateUtils.ts';
 
@@ -182,7 +183,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
 				<div className='project-card-header-actions'>
 					<div className='project-type-info'>
-						<TypesetterInfo type={project.type} />
+						<TypesetterInfo
+							type={project.type}
+							provider={compilerRegistryService.resolve(
+								project.type,
+								project.compilerId,
+							)}
+						/>
 					</div>
 					{!isSelectionMode && (
 						<button

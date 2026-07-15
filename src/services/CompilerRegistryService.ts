@@ -3,6 +3,11 @@ import type { CompilerInputFile, CompilerProvider } from '../types/compilation';
 
 type RegistryListener = () => void;
 
+export interface CompilerProjectType {
+	projectType: string;
+	label: string;
+}
+
 class CompilerRegistryService {
 	private providers: Map<string, CompilerProvider> = new Map();
 	private listeners: Set<RegistryListener> = new Set();
@@ -64,22 +69,80 @@ class CompilerRegistryService {
 		return Array.from(this.providers.values());
 	}
 
-	getForProjectType(projectType: string): CompilerProvider | undefined {
-		return this.list().find((provider) => provider.projectType === projectType);
+	listForProjectType(projectType: string): CompilerProvider[] {
+		const providers = this.list().filter(
+			(provider) => provider.projectType === projectType,
+		);
+		return [
+			...providers.filter((provider) => provider.source === 'builtin'),
+			...providers.filter((provider) => provider.source !== 'builtin'),
+		];
 	}
 
-	getForExtension(extension: string): CompilerProvider | undefined {
+	listProjectTypes(): CompilerProjectType[] {
+		const seen = new Set<string>();
+		const projectTypes: CompilerProjectType[] = [];
+
+		for (const provider of this.list()) {
+			if (seen.has(provider.projectType)) continue;
+			seen.add(provider.projectType);
+			projectTypes.push({
+				projectType: provider.projectType,
+				label:
+					this.getForProjectType(provider.projectType)?.label ?? provider.label,
+			});
+		}
+
+		return projectTypes;
+	}
+
+	getForProjectType(projectType: string): CompilerProvider | undefined {
+		return this.listForProjectType(projectType)[0];
+	}
+
+	resolve(
+		projectType: string,
+		compilerId?: string,
+	): CompilerProvider | undefined {
+		const selected = compilerId ? this.providers.get(compilerId) : undefined;
+		if (selected?.projectType === projectType) return selected;
+		return this.getForProjectType(projectType);
+	}
+
+	getForExtension(
+		extension: string,
+		projectType?: string,
+	): CompilerProvider | undefined {
 		const normalized = extension.replace(/^\./, '').toLowerCase();
-		return this.list().find((provider) =>
+		const matches = this.list().filter((provider) =>
 			provider.inputExtensions.includes(normalized),
 		);
+
+		if (projectType) {
+			const inProjectType = matches.find(
+				(provider) => provider.projectType === projectType,
+			);
+			if (inProjectType) return inProjectType;
+		}
+
+		return matches[0];
 	}
 
 	getInputFilesForProjectType(projectType: string): CompilerInputFile[] {
-		const provider = this.getForProjectType(projectType);
-		if (!provider) return [];
-		if (provider.inputFiles?.length) return provider.inputFiles;
-		return provider.inputExtensions.map((extension) => ({ extension }));
+		const merged = new Map<string, CompilerInputFile>();
+
+		for (const provider of this.listForProjectType(projectType)) {
+			const inputs = provider.inputFiles?.length
+				? provider.inputFiles
+				: provider.inputExtensions.map((extension) => ({ extension }));
+
+			for (const input of inputs) {
+				const key = input.extension.toLowerCase();
+				if (!merged.has(key)) merged.set(key, input);
+			}
+		}
+
+		return Array.from(merged.values());
 	}
 
 	getVersion(): number {

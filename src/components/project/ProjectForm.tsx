@@ -1,6 +1,6 @@
 // src/components/project/ProjectForm.tsx
 import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { t } from '@/i18n';
 import { compilerRegistryService } from '../../services/CompilerRegistryService';
@@ -13,6 +13,7 @@ interface ProjectFormProps {
 		name: string;
 		description: string;
 		type: ProjectType;
+		compilerId?: string;
 		tags: string[];
 		docUrl?: string;
 		isFavorite: boolean;
@@ -21,23 +22,6 @@ interface ProjectFormProps {
 	isSubmitting?: boolean;
 	simpleMode?: boolean;
 	disableNameAndDescription?: boolean;
-}
-
-type ProjectTypeOption = [value: string, label: string];
-
-function getProjectTypeOptions(): ProjectTypeOption[] {
-	return Array.from(
-		new Map(
-			compilerRegistryService
-				.list()
-				.map(
-					(provider): ProjectTypeOption => [
-						provider.projectType,
-						provider.label,
-					],
-				),
-		).entries(),
-	);
 }
 
 const ProjectForm: React.FC<ProjectFormProps> = ({
@@ -51,23 +35,42 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 	const [name, setName] = useState('');
 	const [description, setDescription] = useState('');
 	const [type, setType] = useState<ProjectType>('latex');
-	const [projectTypeOptions, setProjectTypeOptions] = useState<
-		ProjectTypeOption[]
-	>(getProjectTypeOptions);
+	const [compilerId, setCompilerId] = useState<string | undefined>();
+	const [registryVersion, setRegistryVersion] = useState(
+		compilerRegistryService.getVersion(),
+	);
 	const [tags, setTags] = useState<string[]>([]);
 	const [docUrl, setDocUrl] = useState('');
 	const [isFavorite, setIsFavorite] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const refreshProjectTypeOptions = useCallback(() => {
-		setProjectTypeOptions(getProjectTypeOptions());
-	}, []);
+	useEffect(
+		() =>
+			compilerRegistryService.onChange(() =>
+				setRegistryVersion(compilerRegistryService.getVersion()),
+			),
+		[],
+	);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: registryVersion invalidates the registry snapshot. */
+	const projectTypeOptions = useMemo(
+		() => compilerRegistryService.listProjectTypes(),
+		[registryVersion],
+	);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: registryVersion invalidates the registry snapshot. */
+	const compilerOptions = useMemo(
+		() => compilerRegistryService.listForProjectType(type),
+		[type, registryVersion],
+	);
 
 	useEffect(() => {
-		refreshProjectTypeOptions();
+		if (compilerId && compilerOptions.some(({ id }) => id === compilerId)) {
+			return;
+		}
 
-		return compilerRegistryService.onChange(refreshProjectTypeOptions);
-	}, [refreshProjectTypeOptions]);
+		setCompilerId(compilerOptions[0]?.id);
+	}, [compilerOptions, compilerId]);
 
 	useEffect(() => {
 		if (!project) {
@@ -77,6 +80,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 		setName(project.name);
 		setDescription(project.description || '');
 		setType(project.type);
+		setCompilerId(project.compilerId);
 		setTags(project.tags || []);
 		setDocUrl(project.docUrl || '');
 		setIsFavorite(project.isFavorite);
@@ -94,6 +98,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 			name: name.trim(),
 			description: description.trim(),
 			type,
+			compilerId,
 			tags,
 			docUrl: docUrl || undefined,
 			isFavorite,
@@ -156,8 +161,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 				{disableNameAndDescription ? (
 					<div className='disabled-field'>
 						<span>
-							{projectTypeOptions.find(([value]) => value === type)?.[1] ??
-								type}
+							{projectTypeOptions.find((option) => option.projectType === type)
+								?.label ?? type}
 						</span>
 						<div className='field-note'>
 							{t('Open the project to edit its typesetter type')}
@@ -170,14 +175,45 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 						onChange={(e) => setType(e.target.value as ProjectType)}
 						disabled={isSubmitting}
 					>
-						{projectTypeOptions.map(([value, label]) => (
-							<option key={value} value={value}>
-								{label}
+						{projectTypeOptions.map((option) => (
+							<option key={option.projectType} value={option.projectType}>
+								{option.label}
 							</option>
 						))}
 					</select>
 				)}
 			</div>
+
+			{compilerOptions.length > 1 && (
+				<div className='form-group'>
+					<label htmlFor='project-compiler'>{t('Compiler')}</label>
+
+					{disableNameAndDescription ? (
+						<div className='disabled-field'>
+							<span>
+								{compilerOptions.find(({ id }) => id === compilerId)?.label ??
+									compilerOptions[0].label}
+							</span>
+							<div className='field-note'>
+								{t('Open the project to edit its compiler')}
+							</div>
+						</div>
+					) : (
+						<select
+							id='project-compiler'
+							value={compilerId ?? ''}
+							onChange={(e) => setCompilerId(e.target.value)}
+							disabled={isSubmitting}
+						>
+							{compilerOptions.map((provider) => (
+								<option key={provider.id} value={provider.id}>
+									{provider.label}
+								</option>
+							))}
+						</select>
+					)}
+				</div>
+			)}
 
 			{!simpleMode && (
 				<>

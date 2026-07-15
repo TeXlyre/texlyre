@@ -19,6 +19,7 @@ export interface DocumentList {
 		name: string;
 		description: string;
 		type?: ProjectType;
+		compilerId?: string;
 		mainFile?: string;
 		latexEngine?: LaTeXEngine;
 		typstEngine?: string;

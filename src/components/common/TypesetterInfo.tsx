@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 import { t } from '@/i18n';
+import { compilerRegistryService } from '../../services/CompilerRegistryService';
 import type { CompilerProvider } from '../../types/compilation';
 import type { ProjectType } from '../../types/projects';
 import { resolveLabel } from '../../utils/compilerUtils';
@@ -13,7 +14,12 @@ interface TypesetterInfoProps {
 	provider?: CompilerProvider | null;
 }
 
-const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type, provider }) => {
+const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
+	type,
+	provider: providerProp,
+}) => {
+	const provider =
+		providerProp ?? compilerRegistryService.getForProjectType(type);
 	const [showTooltip, setShowTooltip] = useState(false);
 	const [position, setPosition] = useState({ top: 0, left: 0 });
 	const buttonRef = useRef<HTMLButtonElement>(null);
@@ -82,16 +88,18 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type, provider }) => {
 	}, [showTooltip]);
 
 	const externalInfo = provider?.ui?.info;
+	const isInternalLatex = provider?.id === 'internal:latex';
+	const isInternalTypst = provider?.id === 'internal:typst';
 
 	const getLabel = () => {
-		if (type === 'latex') return 'LaTeX';
-		if (type === 'typst') return 'Typst';
+		if (isInternalLatex) return 'LaTeX';
+		if (isInternalTypst) return 'Typst';
 		if (externalInfo) return resolveLabel(externalInfo.title);
 		return provider?.label ?? type;
 	};
 
 	const getTooltipContent = () => {
-		if (type === 'latex') {
+		if (isInternalLatex) {
 			return (
 				<>
 					<h4 className='typesetter-tooltip-title'>{t('LaTeX')}</h4>
@@ -123,7 +131,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type, provider }) => {
 			);
 		}
 
-		if (type === 'typst') {
+		if (isInternalTypst) {
 			return (
 				<>
 					<h4 className='typesetter-tooltip-title'>{t('Typst')}</h4>

@@ -37,6 +37,7 @@ interface ExternalCompileButtonProps {
 		fileName?: string;
 		filePath?: string;
 	} | null;
+	useSharedSettings?: boolean;
 }
 
 const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
@@ -44,6 +45,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 	className = '',
 	onExpandExternalOutput,
 	linkedFileInfo,
+	useSharedSettings = false,
 }) => {
 	const { isCompiling, isExporting, compileDocument, clearCache } =
 		useExternalCompiler();
@@ -57,6 +59,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 	const projectId = fileStorageService.getCurrentProjectId() || undefined;
 	const fields = provider.ui?.compile?.fields ?? [];
 	const mainFilePropertyId = `external-${provider.id}-main-file`;
+	const autoCompilePropertyId = `external-${provider.id}-auto-compile-on-save`;
 	const fieldPropertyId = useCallback(
 		(key: string) => `external-${provider.id}-${key}`,
 		[provider.id],
@@ -77,6 +80,13 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 			category: 'Compilation',
 			subcategory: provider.label,
 			defaultValue: undefined,
+		});
+
+		registerProperty({
+			id: autoCompilePropertyId,
+			category: 'Compilation',
+			subcategory: provider.label,
+			defaultValue: false,
 		});
 
 		for (const field of fields) {
@@ -129,6 +139,10 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 	}) as string | undefined;
 	const effectiveMainFile = propMainFile || autoMainFile;
 
+	const effectiveAutoCompileOnSave =
+		getProperty(autoCompilePropertyId, { scope: 'project', projectId }) ===
+		true;
+
 	const readValue = useCallback(
 		(key: string): unknown =>
 			getProperty(fieldPropertyId(key), { scope: 'project', projectId }),
@@ -171,6 +185,29 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 		compileDocument,
 		onExpandExternalOutput,
 	]);
+
+	const compileStateRef = useRef({ isCompiling, handleCompile });
+	compileStateRef.current = { isCompiling, handleCompile };
+
+	useEffect(() => {
+		if (!useSharedSettings || !effectiveAutoCompileOnSave) return;
+
+		const handleFileSaved = async () => {
+			const state = compileStateRef.current;
+			if (state.isCompiling) return;
+			await state.handleCompile();
+		};
+
+		document.addEventListener('file-saved', handleFileSaved);
+		return () => document.removeEventListener('file-saved', handleFileSaved);
+	}, [useSharedSettings, effectiveAutoCompileOnSave]);
+
+	const handleAutoCompileOnSaveChange = (checked: boolean) => {
+		setProperty(autoCompilePropertyId, checked, {
+			scope: 'project',
+			projectId,
+		});
+	};
 
 	const handleClearCache = useCallback(async () => {
 		await clearCache(provider.id);
@@ -314,6 +351,21 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 				)}
 
 				<div className='dropdown-section'>
+					{useSharedSettings && (
+						<label className='dropdown-checkbox'>
+							<input
+								type='checkbox'
+								checked={effectiveAutoCompileOnSave}
+								onChange={(e) =>
+									handleAutoCompileOnSaveChange(e.target.checked)
+								}
+								disabled={isCompiling}
+							/>
+
+							{t('Auto-compile on save')}
+						</label>
+					)}
+
 					<div
 						className='cache-item'
 						onClick={handleClearCache}

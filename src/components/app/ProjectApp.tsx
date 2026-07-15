@@ -202,6 +202,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		name: string;
 		description: string;
 		type: ProjectType;
+		compilerId?: string;
 		tags: string[];
 		docUrl?: string;
 		isFavorite: boolean;
@@ -221,6 +222,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						name: projectData.name,
 						description: projectData.description,
 						type: projectData.type,
+						compilerId: projectData.compilerId,
 					}),
 				);
 				onOpenProject(

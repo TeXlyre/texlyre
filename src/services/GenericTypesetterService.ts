@@ -82,14 +82,6 @@ class GenericTypesetterService {
 		return this.configs.get(configId);
 	}
 
-	getConfigForProjectType(
-		projectType: string,
-	): TypesetterServerConfig | undefined {
-		return Array.from(this.configs.values()).find(
-			(config) => config.enabled && config.projectType === projectType,
-		);
-	}
-
 	getConnectionStatus(configId: string): ConnectionStatus {
 		return this.connectionStatuses.get(configId) ?? 'disconnected';
 	}

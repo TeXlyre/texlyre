@@ -166,6 +166,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		setLocalOpenDocument,
 	} = usePeerDocumentTracking(docUrl);
 	const [projectType, setProjectType] = useState<ProjectType>('latex');
+	const [compilerId, setCompilerId] = useState<string | undefined>();
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [activeView, setActiveView] = useState<
@@ -264,19 +265,24 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		(name?: string) => {
 			const extension = name?.split('.').pop() ?? '';
 			const byExtension = name
-				? compilerRegistryService.getForExtension(extension)
+				? compilerRegistryService.getForExtension(extension, projectType)
 				: undefined;
-			const provider =
-				byExtension ?? compilerRegistryService.getForProjectType(projectType);
-			const effectiveType = provider?.projectType ?? projectType;
+			const effectiveType =
+				byExtension?.projectType ??
+				compilerRegistryService.getForProjectType(projectType)?.projectType ??
+				projectType;
+			const provider = compilerRegistryService.resolve(
+				effectiveType,
+				compilerId,
+			);
 
-			setShowLatexOutput(effectiveType === 'latex');
-			setShowTypstOutput(effectiveType === 'typst');
+			setShowLatexOutput(provider?.id === 'internal:latex');
+			setShowTypstOutput(provider?.id === 'internal:typst');
 			setActiveExternalProvider(
-				provider && provider.source === 'chelys' ? provider : null,
+				provider && provider.source !== 'builtin' ? provider : null,
 			);
 		},
-		[projectType],
+		[projectType, compilerId],
 	);
 
 	const openDocumentById = useCallback(
@@ -762,10 +768,15 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			const project = await getProjectById(projectId);
 			if (project) {
 				setProjectType(project.type || 'latex');
+				setCompilerId(project.compilerId);
 			}
 		};
 
 		loadProjectType();
+
+		document.addEventListener('project-metadata-updated', loadProjectType);
+		return () =>
+			document.removeEventListener('project-metadata-updated', loadProjectType);
 	}, [getProjectById]);
 
 	useEffect(() => {

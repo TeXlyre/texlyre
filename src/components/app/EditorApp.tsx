@@ -112,6 +112,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		name: '',
 		description: '',
 		type: 'latex' as ProjectType,
+		compilerId: undefined as string | undefined,
 		mainFile: undefined as string | undefined,
 		latexEngine: undefined as LaTeXEngine | undefined,
 		typstEngine: undefined as string | undefined,
@@ -133,8 +134,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 	const projectType = doc?.projectMetadata?.type || 'latex';
 	const projectTypeKnown = doc?.projectMetadata?.type !== undefined;
-	const activeCompilerProvider =
-		compilerRegistryService.getForProjectType(projectType);
+	const projectCompilerId = doc?.projectMetadata?.compilerId;
+	const activeCompilerProvider = compilerRegistryService.resolve(
+		projectType,
+		projectCompilerId,
+	);
 
 	useGlobalKeyboard();
 
@@ -199,6 +203,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		name: string;
 		description: string;
 		type?: ProjectType;
+		compilerId?: string;
 	}) => {
 		setIsSubmitting(true);
 		changeDoc((d) => {
@@ -207,11 +212,13 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					name: projectData.name,
 					description: projectData.description,
 					type: projectData.type || 'latex',
+					compilerId: projectData.compilerId,
 				};
 			} else {
 				d.projectMetadata.name = projectData.name;
 				d.projectMetadata.description = projectData.description;
 				d.projectMetadata.type = projectData.type || 'latex';
+				d.projectMetadata.compilerId = projectData.compilerId;
 			}
 		});
 		setIsSubmitting(false);
@@ -350,6 +357,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						name: parsedMetadata.name || 'Untitled Project',
 						description: parsedMetadata.description || '',
 						type: parsedMetadata.type || 'latex',
+						compilerId: parsedMetadata.compilerId,
 						mainFile: parsedMetadata.mainFile,
 						latexEngine: parsedMetadata.latexEngine,
 						typstEngine: parsedMetadata.typstEngine,
@@ -367,6 +375,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				name,
 				description,
 				type,
+				compilerId,
 				mainFile,
 				latexEngine,
 				typstEngine,
@@ -384,6 +393,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					lastSyncedMetadata.current.name !== name ||
 					lastSyncedMetadata.current.description !== description ||
 					lastSyncedMetadata.current.type !== type ||
+					lastSyncedMetadata.current.compilerId !== compilerId ||
 					lastSyncedMetadata.current.mainFile !== mainFile ||
 					lastSyncedMetadata.current.latexEngine !== latexEngine ||
 					lastSyncedMetadata.current.typstEngine !== typstEngine ||
@@ -393,6 +403,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						name,
 						description: description || '',
 						type: type || 'latex',
+						compilerId,
 						mainFile,
 						latexEngine,
 						typstEngine,
@@ -407,7 +418,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 									name,
 									description: description || '',
 									type: type || 'latex',
+									compilerId,
 								});
+								document.dispatchEvent(
+									new CustomEvent('project-metadata-updated'),
+								);
 							}
 						} catch (error) {
 							console.error('Failed to sync project metadata:', error);
@@ -530,6 +545,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						className='header-compile-button'
 						onExpandExternalOutput={handleExpandExternalOutput}
 						linkedFileInfo={linkedFileInfo}
+						useSharedSettings={true}
 					/>
 					<ExternalExportButton
 						provider={activeCompilerProvider}
@@ -666,11 +682,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					{t('Typesetter: ')}{' '}
 					<TypesetterInfo
 						type={projectType}
-						provider={
-							activeCompilerProvider?.source === 'chelys'
-								? activeCompilerProvider
-								: null
-						}
+						provider={activeCompilerProvider}
 					/>
 				</div>
 
@@ -747,6 +759,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						name: projectName,
 						description: projectDescription,
 						type: projectType || 'latex',
+						compilerId: projectCompilerId,
 						docUrl: docUrl,
 						createdAt: 0,
 						updatedAt: 0,
