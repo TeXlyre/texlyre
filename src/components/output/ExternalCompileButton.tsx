@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import PositionedDropdown from '../common/PositionedDropdown';
+import PopoutViewerToggleButton from './PopoutViewerToggleButton';
 import { useExternalCompiler } from '../../hooks/useExternalCompiler';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';
@@ -20,17 +21,18 @@ import {
 	StopIcon,
 	TrashIcon,
 } from '../common/Icons';
+import { getFilenameFromPath } from '../../utils/fileUtils';
 import {
 	collectValues,
 	fieldDefault,
 	findInputFiles,
-	getFileName,
 	resolveLabel,
-} from './externalCompilerSchema';
+} from '../../utils/compilerUtils';
 
 interface ExternalCompileButtonProps {
 	provider: CompilerProvider;
 	className?: string;
+	onExpandExternalOutput?: () => void;
 	linkedFileInfo?: {
 		fileName?: string;
 		filePath?: string;
@@ -40,6 +42,7 @@ interface ExternalCompileButtonProps {
 const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 	provider,
 	className = '',
+	onExpandExternalOutput,
 	linkedFileInfo,
 }) => {
 	const { isCompiling, isExporting, compileDocument, clearCache } =
@@ -54,13 +57,17 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 	const projectId = fileStorageService.getCurrentProjectId() || undefined;
 	const fields = provider.ui?.compile?.fields ?? [];
 	const mainFilePropertyId = `external-${provider.id}-main-file`;
-	const fieldPropertyId = (key: string) => `external-${provider.id}-${key}`;
+	const fieldPropertyId = useCallback(
+		(key: string) => `external-${provider.id}-${key}`,
+		[provider.id],
+	);
 
 	const availableFiles = useMemo(
 		() => findInputFiles(fileTree, provider.inputExtensions),
 		[fileTree, provider.inputExtensions],
 	);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: One-time registration guarded by ref; fields and provider metadata are read for initial registration only. */
 	useEffect(() => {
 		if (propertiesRegistered.current) return;
 		propertiesRegistered.current = true;
@@ -108,7 +115,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 			const target = event.target as Node;
 			if (dropdownRef.current && !dropdownRef.current.contains(target)) {
 				const portaled = document.querySelector('.external-dropdown');
-				if (portaled && portaled.contains(target)) return;
+				if (portaled?.contains(target)) return;
 				setIsDropdownOpen(false);
 			}
 		};
@@ -125,14 +132,14 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 	const readValue = useCallback(
 		(key: string): unknown =>
 			getProperty(fieldPropertyId(key), { scope: 'project', projectId }),
-		[getProperty, projectId, provider.id],
+		[getProperty, projectId, fieldPropertyId],
 	);
 
 	const writeValue = useCallback(
 		(key: string, value: string | number | boolean) => {
 			setProperty(fieldPropertyId(key), value, { scope: 'project', projectId });
 		},
-		[setProperty, projectId, provider.id],
+		[setProperty, projectId, fieldPropertyId],
 	);
 
 	const handleMainFileChange = (filePath: string) => {
@@ -145,6 +152,9 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 
 	const handleCompile = useCallback(async () => {
 		if (!effectiveMainFile) return;
+
+		onExpandExternalOutput?.();
+
 		const { format, options } = collectValues(fields, readValue);
 		const resolvedFormat = format ?? provider.outputFormats[0]?.id ?? 'pdf';
 		await compileDocument(
@@ -153,7 +163,14 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 			resolvedFormat,
 			options,
 		);
-	}, [effectiveMainFile, fields, readValue, provider, compileDocument]);
+	}, [
+		effectiveMainFile,
+		fields,
+		readValue,
+		provider,
+		compileDocument,
+		onExpandExternalOutput,
+	]);
 
 	const handleClearCache = useCallback(async () => {
 		await clearCache(provider.id);
@@ -233,7 +250,6 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 		<div className={`external-compile-buttons ${className}`} ref={dropdownRef}>
 			<div className='compile-button-group'>
 				<button
-					type='button'
 					className={`external-button compile-button ${isCompiling ? 'compiling' : ''}`}
 					onClick={handleCompile}
 					disabled={isDisabled}
@@ -247,8 +263,14 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 					{/* <span>{provider.label}</span> */}
 				</button>
 
+				<PopoutViewerToggleButton
+					className='popout-viewer-button'
+					buttonClassName='external-button'
+					projectId={projectId || 'default'}
+					title={t('Open output in new window')}
+				/>
+
 				<button
-					type='button'
 					className='external-button dropdown-toggle'
 					onClick={toggleDropdown}
 					title={t('Compilation Options')}
@@ -269,7 +291,8 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 				<div className='dropdown-section'>
 					<div className='dropdown-title'>{t('Main File:')}</div>
 					<div className='dropdown-value' title={effectiveMainFile}>
-						{getFileName(effectiveMainFile) || t('No input file')}
+						{getFilenameFromPath(effectiveMainFile, '.tex') ||
+							t('No input file')}
 					</div>
 					<select
 						value={propMainFile || 'auto'}
@@ -280,7 +303,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 						<option value='auto'>{t('Auto-detect')}</option>
 						{availableFiles.map((filePath) => (
 							<option key={filePath} value={filePath}>
-								{getFileName(filePath)}
+								{getFilenameFromPath(filePath, '.tex')}
 							</option>
 						))}
 					</select>

@@ -15,11 +15,12 @@ import { pluginRegistry } from '../../plugins/PluginRegistry';
 import type { CompilerProvider } from '../../types/compilation';
 import { toArrayBuffer } from '../../utils/fileUtils';
 import ExternalCompileButton from './ExternalCompileButton';
-import { findInputFiles, resolveLabel } from './externalCompilerSchema';
+import { findInputFiles, resolveLabel } from '../../utils/compilerUtils';
 
 interface ExternalCompilerOutputProps {
 	provider: CompilerProvider;
 	className?: string;
+	onExpandExternalOutput?: () => void;
 	linkedFileInfo?: {
 		fileName?: string;
 		filePath?: string;
@@ -36,6 +37,7 @@ const indicatorColor: Record<string, string> = {
 const ExternalCompilerOutput: React.FC<ExternalCompilerOutputProps> = ({
 	provider,
 	className = '',
+	onExpandExternalOutput,
 	linkedFileInfo,
 }) => {
 	const {
@@ -153,6 +155,7 @@ const ExternalCompilerOutput: React.FC<ExternalCompilerOutputProps> = ({
 				<ExternalCompileButton
 					provider={provider}
 					className='output-compile-button'
+					onExpandExternalOutput={onExpandExternalOutput}
 					linkedFileInfo={linkedFileInfo}
 				/>
 			</div>

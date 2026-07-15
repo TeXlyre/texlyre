@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import { t } from '@/i18n';
 import type { CompilerProvider } from '../../types/compilation';
 import type { ProjectType } from '../../types/projects';
-import { resolveLabel } from '../output/externalCompilerSchema';
+import { resolveLabel } from '../../utils/compilerUtils';
 
 interface TypesetterInfoProps {
 	type: ProjectType;

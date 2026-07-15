@@ -1,5 +1,5 @@
 // src/services/CompilerRegistryService.ts
-import type { CompilerProvider } from '../types/compilation';
+import type { CompilerInputFile, CompilerProvider } from '../types/compilation';
 
 type RegistryListener = () => void;
 
@@ -7,10 +7,47 @@ class CompilerRegistryService {
 	private providers: Map<string, CompilerProvider> = new Map();
 	private listeners: Set<RegistryListener> = new Set();
 	private version = 0;
+	private builtinsRegistered = false;
 
 	register(provider: CompilerProvider): void {
 		this.providers.set(provider.id, provider);
 		this.notify();
+	}
+
+	registerBuiltins(): void {
+		if (this.builtinsRegistered) return;
+		this.builtinsRegistered = true;
+
+		this.register({
+			id: 'internal:latex',
+			label: 'LaTeX',
+			source: 'builtin',
+			projectType: 'latex',
+			inputExtensions: ['tex', 'latex'],
+			inputFiles: [
+				{ extension: 'tex', label: 'LaTeX File', mimeType: 'text/x-tex' },
+				{ extension: 'cls', label: 'LaTeX Class', mimeType: 'text/x-tex' },
+				{ extension: 'sty', label: 'LaTeX Style', mimeType: 'text/x-tex' },
+			],
+			outputFormats: [{ id: 'pdf', mimeType: 'application/pdf' }],
+			capabilities: { outline: true, formatter: 'tex-fmt' },
+		});
+
+		this.register({
+			id: 'internal:typst',
+			label: 'Typst',
+			source: 'builtin',
+			projectType: 'typst',
+			inputExtensions: ['typ', 'typst'],
+			inputFiles: [
+				{ extension: 'typ', label: 'Typst File', mimeType: 'text/x-typst' },
+			],
+			outputFormats: [
+				{ id: 'pdf', mimeType: 'application/pdf' },
+				{ id: 'svg', mimeType: 'image/svg+xml' },
+			],
+			capabilities: { outline: true },
+		});
 	}
 
 	unregister(providerId: string): void {
@@ -36,6 +73,13 @@ class CompilerRegistryService {
 		return this.list().find((provider) =>
 			provider.inputExtensions.includes(normalized),
 		);
+	}
+
+	getInputFilesForProjectType(projectType: string): CompilerInputFile[] {
+		const provider = this.getForProjectType(projectType);
+		if (!provider) return [];
+		if (provider.inputFiles?.length) return provider.inputFiles;
+		return provider.inputExtensions.map((extension) => ({ extension }));
 	}
 
 	getVersion(): number {

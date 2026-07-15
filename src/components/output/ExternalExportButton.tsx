@@ -13,13 +13,13 @@ import type {
 	CompilerUIField,
 } from '../../types/compilation';
 import { ChevronDownIcon, ExportIcon } from '../common/Icons';
+import { getFilenameFromPath } from '../../utils/fileUtils';
 import {
 	collectValues,
 	fieldDefault,
 	findInputFiles,
-	getFileName,
 	resolveLabel,
-} from './externalCompilerSchema';
+} from '../../utils/compilerUtils';
 
 interface ExternalExportButtonProps {
 	provider: CompilerProvider;
@@ -49,14 +49,17 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 	const section = provider.ui?.export;
 	const fields = section?.fields ?? [];
 	const mainFilePropertyId = `external-${provider.id}-main-file`;
-	const fieldPropertyId = (key: string) =>
-		`external-export-${provider.id}-${key}`;
+	const fieldPropertyId = useCallback(
+		(key: string) => `external-export-${provider.id}-${key}`,
+		[provider.id],
+	);
 
 	const availableFiles = useMemo(
 		() => findInputFiles(fileTree, provider.inputExtensions),
 		[fileTree, provider.inputExtensions],
 	);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: One-time registration guarded by ref; fields and provider metadata are read for initial registration only. */
 	useEffect(() => {
 		if (propertiesRegistered.current) return;
 		propertiesRegistered.current = true;
@@ -97,7 +100,7 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 			const target = event.target as Node;
 			if (dropdownRef.current && !dropdownRef.current.contains(target)) {
 				const portaled = document.querySelector('.external-dropdown');
-				if (portaled && portaled.contains(target)) return;
+				if (portaled?.contains(target)) return;
 				setIsDropdownOpen(false);
 			}
 		};
@@ -114,14 +117,14 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 	const readValue = useCallback(
 		(key: string): unknown =>
 			getProperty(fieldPropertyId(key), { scope: 'project', projectId }),
-		[getProperty, projectId, provider.id],
+		[getProperty, projectId, fieldPropertyId],
 	);
 
 	const writeValue = useCallback(
 		(key: string, value: string | number | boolean) => {
 			setProperty(fieldPropertyId(key), value, { scope: 'project', projectId });
 		},
-		[setProperty, projectId, provider.id],
+		[setProperty, projectId, fieldPropertyId],
 	);
 
 	const handleExport = useCallback(async () => {
@@ -207,7 +210,6 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 		<div className={`external-export-buttons ${className}`} ref={dropdownRef}>
 			<div className='compile-button-group'>
 				<button
-					type='button'
 					className={`external-button export-button ${isExporting ? 'exporting' : ''}`}
 					onClick={handleExport}
 					disabled={isDisabled}
@@ -216,7 +218,6 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 					<ExportIcon />
 				</button>
 				<button
-					type='button'
 					className='external-button dropdown-toggle'
 					onClick={toggleDropdown}
 					title={t('Export Options')}
@@ -237,7 +238,8 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 				<div className='dropdown-section'>
 					<div className='dropdown-title'>{t('Main File:')}</div>
 					<div className='dropdown-value' title={effectiveMainFile}>
-						{getFileName(effectiveMainFile) || t('No input file')}
+						{getFilenameFromPath(effectiveMainFile, '.tex') ||
+							t('No input file')}
 					</div>
 				</div>
 
@@ -247,6 +249,7 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 
 				<div className='dropdown-section'>
 					<button
+						type='button'
 						className='dropdown-button'
 						onClick={handleExport}
 						disabled={isDisabled}
