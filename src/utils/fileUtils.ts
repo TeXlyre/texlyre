@@ -608,6 +608,7 @@ export function isBinaryFile(fileName: string): boolean {
 		'noweb',
 		'org',
 		'pic',
+		'ptx',
 		'qmd',
 		'roff',
 		'rst',
