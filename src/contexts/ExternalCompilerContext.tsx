@@ -104,7 +104,11 @@ export const ExternalCompilerProvider: React.FC<
 				}
 			}
 			if (content === undefined) continue;
-			files.push({ path: node.path, content: toBytes(content) });
+			files.push({
+				path: node.path,
+				content: toBytes(content),
+				lastModified: node.lastModified,
+			});
 		}
 		return files;
 	}, [fileTree]);
@@ -255,6 +259,7 @@ export const ExternalCompilerProvider: React.FC<
 
 	const clearCache = useCallback(async (providerId: string) => {
 		try {
+			genericTypesetterService.resetSyncState(providerId);
 			await genericTypesetterService.compile(providerId, {
 				mainFile: '',
 				format: '',

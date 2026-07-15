@@ -45,6 +45,7 @@ interface StoredTypesetterConfig {
 	configId?: unknown;
 	name?: unknown;
 	enabled?: unknown;
+	incrementalSync?: unknown;
 	projectType?: unknown;
 	inputExtensions?: unknown;
 	inputFiles?: unknown;
@@ -370,6 +371,7 @@ function normalizeConfig(value: unknown): TypesetterServerConfig | null {
 				: id.toUpperCase(),
 		enabled: config.enabled !== false,
 		projectType: config.projectType,
+		...(config.incrementalSync === true ? { incrementalSync: true } : {}),
 		inputExtensions: normalizeStringArray(config.inputExtensions),
 		outputFormats: normalizeOutputFormats(config.outputFormats),
 		transportConfig,

@@ -15,6 +15,7 @@ export interface TypesetterServerConfig {
 	id: string;
 	name: string;
 	enabled: boolean;
+	incrementalSync?: boolean;
 	projectType: string;
 	inputExtensions: string[];
 	inputFiles?: CompilerInputFile[];
@@ -27,6 +28,17 @@ export interface TypesetterServerConfig {
 export interface TypesetterFile {
 	path: string;
 	content: Uint8Array;
+	lastModified?: number;
+}
+
+interface ManifestEntry {
+	path: string;
+	hash: string;
+}
+
+interface HashCacheEntry {
+	lastModified?: number;
+	hash: string;
 }
 
 export interface TypesetterCompileRequest {
@@ -55,11 +67,15 @@ interface Connection {
 	>;
 }
 
+const MISSING_FILES_STATUS = -2;
+
 class GenericTypesetterService {
 	private configs: Map<string, TypesetterServerConfig> = new Map();
 	private connections: Map<string, Connection> = new Map();
 	private connectionStatuses: Map<string, ConnectionStatus> = new Map();
 	private statusListeners: Set<StatusListener> = new Set();
+	private hashCaches: Map<string, Map<string, HashCacheEntry>> = new Map();
+	private sentHashes: Map<string, Map<string, string>> = new Map();
 
 	registerConfig(config: TypesetterServerConfig): void {
 		this.configs.set(config.id, config);
@@ -76,6 +92,11 @@ class GenericTypesetterService {
 		this.disconnect(configId);
 		this.configs.delete(configId);
 		this.connectionStatuses.delete(configId);
+		this.hashCaches.delete(configId);
+	}
+
+	resetSyncState(configId: string): void {
+		this.sentHashes.delete(configId);
 	}
 
 	getConfig(configId: string): TypesetterServerConfig | undefined {
@@ -101,6 +122,34 @@ class GenericTypesetterService {
 		}
 
 		const connection = await this.ensureConnection(config);
+
+		if (!config.incrementalSync) {
+			return this.send(connection, request, request.files);
+		}
+
+		const manifest = await this.buildManifest(configId, request.files);
+		const sent = this.sentHashes.get(configId) ?? new Map<string, string>();
+		const changed = request.files.filter(
+			(file) => sent.get(file.path) !== manifest.get(file.path),
+		);
+
+		const result = await this.send(connection, request, changed, manifest);
+
+		if (result.status === MISSING_FILES_STATUS) {
+			this.sentHashes.delete(configId);
+			return this.send(connection, request, request.files, manifest);
+		}
+
+		this.sentHashes.set(configId, manifest);
+		return result;
+	}
+
+	private send(
+		connection: Connection,
+		request: TypesetterCompileRequest,
+		files: TypesetterFile[],
+		manifest?: Map<string, string>,
+	): Promise<TypesetterCompileResult> {
 		const requestId = nanoid();
 
 		return new Promise<TypesetterCompileResult>((resolve, reject) => {
@@ -111,13 +160,63 @@ class GenericTypesetterService {
 					mainFile: request.mainFile,
 					format: request.format,
 					options: request.options ?? {},
-					files: request.files.map((file) => ({
+					...(manifest
+						? {
+								manifest: Array.from(
+									manifest,
+									([path, hash]): ManifestEntry => ({
+										path,
+										hash,
+									}),
+								),
+							}
+						: {}),
+					files: files.map((file) => ({
 						path: file.path,
 						content: this.encodeBytes(file.content),
 					})),
 				}),
 			);
 		});
+	}
+
+	private async buildManifest(
+		configId: string,
+		files: TypesetterFile[],
+	): Promise<Map<string, string>> {
+		const cache =
+			this.hashCaches.get(configId) ?? new Map<string, HashCacheEntry>();
+		const nextCache = new Map<string, HashCacheEntry>();
+		const manifest = new Map<string, string>();
+
+		for (const file of files) {
+			const cached = cache.get(file.path);
+			const reusable =
+				cached !== undefined &&
+				file.lastModified !== undefined &&
+				cached.lastModified === file.lastModified;
+
+			const hash = reusable
+				? cached.hash
+				: await this.hashContent(file.content);
+
+			nextCache.set(file.path, { lastModified: file.lastModified, hash });
+			manifest.set(file.path, hash);
+		}
+
+		this.hashCaches.set(configId, nextCache);
+		return manifest;
+	}
+
+	private async hashContent(content: Uint8Array): Promise<string> {
+		const buffer = content.buffer.slice(
+			content.byteOffset,
+			content.byteOffset + content.byteLength,
+		) as ArrayBuffer;
+		const digest = await crypto.subtle.digest('SHA-256', buffer);
+		return Array.from(new Uint8Array(digest))
+			.map((byte) => byte.toString(16).padStart(2, '0'))
+			.join('');
 	}
 
 	private async ensureConnection(
@@ -150,6 +249,7 @@ class GenericTypesetterService {
 			this.failPending(config.id, new Error('Connection closed'));
 			this.setConnectionStatus(config.id, 'disconnected');
 			this.connections.delete(config.id);
+			this.sentHashes.delete(config.id);
 		});
 		socket.addEventListener('error', () => {
 			this.setConnectionStatus(config.id, 'error');
@@ -200,6 +300,7 @@ class GenericTypesetterService {
 	}
 
 	private disconnect(configId: string): void {
+		this.sentHashes.delete(configId);
 		const connection = this.connections.get(configId);
 		if (!connection) return;
 		this.failPending(configId, new Error('Connection reset'));
@@ -234,11 +335,17 @@ class GenericTypesetterService {
 	}
 
 	private encodeBytes(bytes: Uint8Array): string {
-		let binary = '';
-		bytes.forEach((byte) => {
-			binary += String.fromCharCode(byte);
-		});
-		return btoa(binary);
+		const chunkSize = 0x8000;
+		const chunks: string[] = [];
+		for (let i = 0; i < bytes.length; i += chunkSize) {
+			chunks.push(
+				String.fromCharCode.apply(
+					null,
+					bytes.subarray(i, i + chunkSize) as unknown as number[],
+				),
+			);
+		}
+		return btoa(chunks.join(''));
 	}
 
 	private decodeBytes(encoded: string): Uint8Array {
