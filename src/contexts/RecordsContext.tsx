@@ -93,7 +93,7 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 		}
 	}, [getStorageKey]);
 
-	useEffect(() => {
+	const reload = useCallback(() => {
 		try {
 			const stored = localStorage.getItem(getStorageKey());
 			recordsRef.current = stored ? JSON.parse(stored) : {};
@@ -105,6 +105,25 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 		}
 	}, [getStorageKey]);
 
+	useEffect(() => {
+		reload();
+	}, [reload]);
+
+	useEffect(() => {
+		const handleStoreChanged = (event: Event) => {
+			const detail = (event as CustomEvent).detail;
+			if (detail && detail.store !== 'records') return;
+			reload();
+		};
+
+		window.addEventListener('chelys-account-store-changed', handleStoreChanged);
+		return () =>
+			window.removeEventListener(
+				'chelys-account-store-changed',
+				handleStoreChanged,
+			);
+	}, [reload]);
+
 	const appendRecord = useCallback(
 		<T,>(
 			key: string,
@@ -115,6 +134,7 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 				maxEntries?: number;
 			},
 		): RecordEntry<T> | null => {
+			reload();
 			const recordKey = getRecordKey(key, options?.scope, options?.projectId);
 			const entry: RecordEntry<T> = {
 				id: Math.random().toString(36).substring(2),
@@ -134,7 +154,7 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 			persist();
 			return entry;
 		},
-		[getRecordKey, persist],
+		[getRecordKey, persist, reload],
 	);
 
 	const listRecords = useCallback(
@@ -159,6 +179,7 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 			recordId: string,
 			options?: { scope?: 'global' | 'project'; projectId?: string },
 		): void => {
+			reload();
 			const recordKey = getRecordKey(key, options?.scope, options?.projectId);
 			const entries = recordsRef.current[recordKey];
 			if (!entries) return;
@@ -166,7 +187,7 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 			recordsRef.current[recordKey] = entries.filter((e) => e.id !== recordId);
 			persist();
 		},
-		[getRecordKey, persist],
+		[getRecordKey, persist, reload],
 	);
 
 	const clearRecords = useCallback(
@@ -174,15 +195,17 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 			key: string,
 			options?: { scope?: 'global' | 'project'; projectId?: string },
 		): void => {
+			reload();
 			const recordKey = getRecordKey(key, options?.scope, options?.projectId);
 			delete recordsRef.current[recordKey];
 			persist();
 		},
-		[getRecordKey, persist],
+		[getRecordKey, persist, reload],
 	);
 
 	const clearAllRecords = useCallback(
 		(keyPrefix?: string): void => {
+			reload();
 			if (!keyPrefix) {
 				recordsRef.current = {};
 			} else {
@@ -194,7 +217,7 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 			}
 			persist();
 		},
-		[persist],
+		[persist, reload],
 	);
 
 	return (

@@ -65,6 +65,9 @@ export interface PropertiesContextType {
 	clearAllProperties: (pluginId?: string) => void;
 }
 
+const isEqual = (a: unknown, b: unknown): boolean =>
+	JSON.stringify(a) === JSON.stringify(b);
+
 export const PropertiesContext = createContext<PropertiesContextType>({
 	isReady: false,
 	getProperty: () => undefined,
@@ -178,28 +181,58 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		}
 		if (properties.length === 0) return;
 
-		const toSave = { ...localStoragePropertiesRef.current };
-
-		properties.forEach((p) => {
-			toSave[p.id] = p.value;
-		});
-
 		try {
 			const storageKey = getStorageKey();
 			const currentStored = localStorage.getItem(storageKey);
-			const currentVersion = currentStored
-				? JSON.parse(currentStored)._version
-				: undefined;
+			const { _version, ...currentEntries } = currentStored
+				? JSON.parse(currentStored)
+				: {};
 
-			localStorage.setItem(
-				storageKey,
-				JSON.stringify({ ...toSave, _version: currentVersion }),
-			);
+			const toSave: Record<string, unknown> = { ...currentEntries };
+			properties.forEach((p) => {
+				toSave[p.id] = p.value;
+			});
+
+			localStorage.setItem(storageKey, JSON.stringify({ ...toSave, _version }));
 			localStoragePropertiesRef.current = toSave;
 		} catch (error) {
 			console.error('Error saving properties to localStorage:', error);
 		}
 	}, [properties, getStorageKey, isReady]);
+
+	useEffect(() => {
+		const handleStoreChanged = (event: Event) => {
+			const detail = (event as CustomEvent).detail;
+			if (detail && detail.store !== 'properties') return;
+
+			try {
+				const stored = localStorage.getItem(getStorageKey());
+				if (!stored) return;
+				const { _version, ...entries } = JSON.parse(stored);
+				localStoragePropertiesRef.current = entries;
+
+				setProperties((prev) => {
+					let changed = false;
+					const next = prev.map((p) => {
+						const incoming = entries[p.id];
+						if (incoming === undefined || isEqual(incoming, p.value)) return p;
+						changed = true;
+						return { ...p, value: incoming };
+					});
+					return changed ? next : prev;
+				});
+			} catch (error) {
+				console.error('Error applying synced properties:', error);
+			}
+		};
+
+		window.addEventListener('chelys-account-store-changed', handleStoreChanged);
+		return () =>
+			window.removeEventListener(
+				'chelys-account-store-changed',
+				handleStoreChanged,
+			);
+	}, [getStorageKey]);
 
 	const getProperty = useCallback(
 		(

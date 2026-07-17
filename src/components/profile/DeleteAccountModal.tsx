@@ -7,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { cleanupProjectDatabases } from '../../utils/dbDeleteUtils';
 import { TrashIcon, ExportIcon } from '../common/Icons';
 import Modal from '../common/Modal';
+import { chelysAccountSyncService } from '../../services/ChelysAccountSyncService';
 
 interface DeleteAccountModalProps {
 	isOpen: boolean;
@@ -106,6 +107,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 		localStorage.removeItem(userRecordsKey);
 		localStorage.removeItem(userChelysRoomKey);
 		localStorage.removeItem(userChelysCredentialKey);
+		chelysAccountSyncService.clearSyncState(userId);
 		localStorage.removeItem('texlyre-current-user');
 
 		console.log(

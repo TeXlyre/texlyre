@@ -2,11 +2,16 @@
 import type * as Y from 'yjs';
 
 import { collabService } from './CollabService';
-import type { CollabConnectOptions } from '../types/collab';
+import type { CollabConnectOptions, CollabProvider } from '../types/collab';
 
 const SYNC_ORIGIN = 'chelys-account-sync';
 const COLLECTION_NAME = 'chelys_account';
 const POLL_INTERVAL_MS = 3000;
+const PERSISTENCE_TIMEOUT_MS = 2000;
+const PEER_SETTLE_MS = 500;
+const TOMBSTONE_KEY = '__chelys_deleted';
+const snapshotKey = (userId: string, store: string): string =>
+	`texlyre-user-${userId}-chelys-synced-${store}`;
 
 type Entries = Record<string, unknown>;
 
@@ -135,8 +140,24 @@ class ChelysAccountSyncService {
 	private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 	private unobservers: Array<() => void> = [];
 	private snapshots = new Map<string, Entries>();
+	private startToken = 0;
+	private hydrated = false;
+	private queue: Promise<void> = Promise.resolve();
 
 	async start(
+		roomId: string,
+		roomKey: string,
+		userId: string,
+		username: string,
+	): Promise<void> {
+		const run = this.queue.then(() =>
+			this.runStart(roomId, roomKey, userId, username),
+		);
+		this.queue = run.catch(() => undefined);
+		return run;
+	}
+
+	private async runStart(
 		roomId: string,
 		roomKey: string,
 		userId: string,
@@ -145,7 +166,9 @@ class ChelysAccountSyncService {
 		if (this.doc && this.roomId === roomId && this.userId === userId) return;
 		this.stop();
 
-		const { doc } = collabService.connect(roomId, COLLECTION_NAME, {
+		const token = ++this.startToken;
+
+		const { doc, provider } = collabService.connect(roomId, COLLECTION_NAME, {
 			password: roomKey,
 			autoReconnect: true,
 			awarenessTimeout: 30000,
@@ -156,6 +179,7 @@ class ChelysAccountSyncService {
 		this.roomKey = roomKey;
 		this.userId = userId;
 		this.username = username;
+		this.hydrated = false;
 
 		collabService.setUserInfo(roomId, COLLECTION_NAME, {
 			id: userId,
@@ -167,22 +191,14 @@ class ChelysAccountSyncService {
 			createdAt: 0,
 		});
 
-		const container = collabService.getDocContainer(roomId, COLLECTION_NAME);
-		if (container?.persistence && !container.persistence.synced) {
-			await new Promise<void>((resolve) => {
-				const timeout = setTimeout(resolve, 2000);
-				container.persistence.once('synced', () => {
-					clearTimeout(timeout);
-					resolve();
-				});
-			});
-		}
-
-		if (this.roomId !== roomId || this.userId !== userId) return;
-
 		for (const adapter of ADAPTERS) {
-			this.initializeStore(adapter, doc, userId);
+			this.observeStore(adapter, doc);
 		}
+
+		await this.waitForSync(roomId, provider);
+		if (token !== this.startToken) return;
+
+		this.hydrate();
 
 		this.pollIntervalId = setInterval(() => {
 			this.pushLocalChanges();
@@ -190,6 +206,7 @@ class ChelysAccountSyncService {
 	}
 
 	stop(): void {
+		this.startToken++;
 		if (this.pollIntervalId) {
 			clearInterval(this.pollIntervalId);
 			this.pollIntervalId = null;
@@ -206,7 +223,14 @@ class ChelysAccountSyncService {
 		this.roomKey = null;
 		this.userId = null;
 		this.username = null;
+		this.hydrated = false;
 		this.snapshots.clear();
+	}
+
+	clearSyncState(userId: string): void {
+		for (const adapter of ADAPTERS) {
+			localStorage.removeItem(snapshotKey(userId, adapter.name));
+		}
 	}
 
 	async reconnect(): Promise<void> {
@@ -219,46 +243,119 @@ class ChelysAccountSyncService {
 		await this.start(roomId, roomKey, userId, username);
 	}
 
-	private initializeStore(
-		adapter: StoreAdapter,
-		doc: Y.Doc,
-		userId: string,
-	): void {
-		const ymap = doc.getMap(adapter.name);
-		const storageKey = adapter.storageKey(userId);
-		const raw = localStorage.getItem(storageKey);
-		const local = adapter.read(raw);
+	private async waitForSync(
+		roomId: string,
+		provider: CollabProvider | null,
+	): Promise<void> {
+		const container = collabService.getDocContainer(roomId, COLLECTION_NAME);
+		const persistence = container?.persistence;
 
-		const remote: Entries = {};
-		ymap.forEach((value, key) => {
-			remote[key] = value;
-		});
-
-		const merged: Entries = { ...remote };
-		for (const [key, value] of Object.entries(local)) {
-			merged[key] =
-				adapter.merge && key in remote
-					? adapter.merge(value, remote[key])
-					: value;
+		if (persistence && !persistence.synced) {
+			await new Promise<void>((resolve) => {
+				const timeout = setTimeout(resolve, PERSISTENCE_TIMEOUT_MS);
+				persistence.once('synced', () => {
+					clearTimeout(timeout);
+					resolve();
+				});
+			});
 		}
 
-		doc.transact(() => {
-			for (const [key, value] of Object.entries(merged)) {
-				if (!(key in remote) || !isEqual(remote[key], value)) {
-					ymap.set(key, toPlain(value));
+		if (provider) {
+			await new Promise<void>((resolve) => setTimeout(resolve, PEER_SETTLE_MS));
+		}
+	}
+
+	private readTombstones(ymap: Y.Map<unknown>): Set<string> {
+		const raw = ymap.get(TOMBSTONE_KEY);
+		return new Set(Array.isArray(raw) ? (raw as string[]) : []);
+	}
+
+	private readSnapshot(adapter: StoreAdapter, userId: string): Entries | null {
+		const raw = localStorage.getItem(snapshotKey(userId, adapter.name));
+		if (raw === null) return null;
+		try {
+			const parsed = JSON.parse(raw);
+			return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+				? parsed
+				: null;
+		} catch {
+			return null;
+		}
+	}
+
+	private hydrate(): void {
+		const doc = this.doc;
+		const userId = this.userId;
+		if (!doc || !userId) return;
+
+		for (const adapter of ADAPTERS) {
+			const ymap = doc.getMap(adapter.name);
+			const raw = localStorage.getItem(adapter.storageKey(userId));
+			const local = adapter.read(raw);
+			const snapshot = this.readSnapshot(adapter, userId);
+			const tombstones = this.readTombstones(ymap);
+
+			const remote: Entries = {};
+			ymap.forEach((value, key) => {
+				if (key !== TOMBSTONE_KEY) remote[key] = value;
+			});
+
+			const merged: Entries = { ...remote };
+			for (const [key, value] of Object.entries(local)) {
+				const changedLocally =
+					snapshot !== null && !isEqual(value, snapshot[key]);
+				if (key in remote) {
+					if (adapter.merge) {
+						merged[key] = adapter.merge(value, remote[key]);
+					} else if (changedLocally) {
+						merged[key] = value;
+					}
+				} else if (!tombstones.has(key) || changedLocally) {
+					merged[key] = value;
 				}
 			}
-		}, SYNC_ORIGIN);
 
-		localStorage.setItem(storageKey, adapter.write(merged, raw));
-		this.snapshots.set(adapter.name, merged);
+			doc.transact(() => {
+				for (const [key, value] of Object.entries(merged)) {
+					if (!(key in remote) || !isEqual(remote[key], value)) {
+						ymap.set(key, toPlain(value));
+					}
+				}
+			}, SYNC_ORIGIN);
+
+			this.flushStore(adapter, merged, raw);
+		}
+
+		this.hydrated = true;
+	}
+
+	private flushStore(
+		adapter: StoreAdapter,
+		entries: Entries,
+		raw: string | null,
+	): void {
+		const userId = this.userId;
+		if (!userId) return;
+		localStorage.setItem(
+			adapter.storageKey(userId),
+			adapter.write(entries, raw),
+		);
+		localStorage.setItem(
+			snapshotKey(userId, adapter.name),
+			JSON.stringify(entries),
+		);
+		this.snapshots.set(adapter.name, entries);
 		emitStoreChanged(adapter.name);
+	}
 
+	private observeStore(adapter: StoreAdapter, doc: Y.Doc): void {
+		const ymap = doc.getMap(adapter.name);
 		const observer = (
 			event: Y.YMapEvent<unknown>,
 			transaction: Y.Transaction,
 		) => {
 			if (transaction.origin === SYNC_ORIGIN) return;
+			if (!this.hydrated) return;
 			this.applyRemoteChanges(adapter, ymap, event);
 		};
 		ymap.observe(observer);
@@ -273,11 +370,17 @@ class ChelysAccountSyncService {
 		const userId = this.userId;
 		if (!userId) return;
 
-		const storageKey = adapter.storageKey(userId);
-		const raw = localStorage.getItem(storageKey);
+		const raw = localStorage.getItem(adapter.storageKey(userId));
 		const entries = adapter.read(raw);
+		const tombstones = this.readTombstones(ymap);
 
 		event.changes.keys.forEach((change, key) => {
+			if (key === TOMBSTONE_KEY) {
+				for (const deleted of tombstones) {
+					delete entries[deleted];
+				}
+				return;
+			}
 			if (change.action === 'delete') {
 				delete entries[key];
 			} else {
@@ -289,35 +392,43 @@ class ChelysAccountSyncService {
 			}
 		});
 
-		localStorage.setItem(storageKey, adapter.write(entries, raw));
-		this.snapshots.set(adapter.name, entries);
-		emitStoreChanged(adapter.name);
+		this.flushStore(adapter, entries, raw);
 	}
 
 	private pushLocalChanges(): void {
 		const doc = this.doc;
 		const userId = this.userId;
-		if (!doc || !userId) return;
+		if (!doc || !userId || !this.hydrated) return;
 
 		for (const adapter of ADAPTERS) {
-			const entries = adapter.read(
-				localStorage.getItem(adapter.storageKey(userId)),
-			);
+			const raw = localStorage.getItem(adapter.storageKey(userId));
+			const entries = adapter.read(raw);
 			const snapshot = this.snapshots.get(adapter.name) ?? {};
 			const ymap = doc.getMap(adapter.name);
+			const removed = Object.keys(snapshot).filter((key) => !(key in entries));
 
 			doc.transact(() => {
+				const tombstones = this.readTombstones(ymap);
+				let tombstonesChanged = false;
 				for (const [key, value] of Object.entries(entries)) {
 					if (!(key in snapshot) || !isEqual(snapshot[key], value)) {
 						ymap.set(key, toPlain(value));
 					}
+					if (tombstones.delete(key)) tombstonesChanged = true;
 				}
-				for (const key of Object.keys(snapshot)) {
-					if (!(key in entries)) ymap.delete(key);
+				for (const key of removed) {
+					ymap.delete(key);
+					tombstones.add(key);
+					tombstonesChanged = true;
 				}
+				if (tombstonesChanged) ymap.set(TOMBSTONE_KEY, [...tombstones]);
 			}, SYNC_ORIGIN);
 
 			this.snapshots.set(adapter.name, entries);
+			localStorage.setItem(
+				snapshotKey(userId, adapter.name),
+				JSON.stringify(entries),
+			);
 		}
 	}
 }

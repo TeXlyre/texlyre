@@ -150,6 +150,7 @@ class ChelysService {
 	private clearRoom(userId: string): void {
 		localStorage.removeItem(roomKey(userId));
 		chelysAccountSyncService.stop();
+		chelysAccountSyncService.clearSyncState(userId);
 	}
 }
 
