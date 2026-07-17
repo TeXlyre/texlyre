@@ -512,7 +512,10 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 			{!compileLog && !hasAnyOutput ? (
 				<div className='empty-state'>
 					<p>
-						{t('No output available. Compile a LaTeX document to see results.')}
+						{t(
+							'No output available. Compile a {typesetter} document to see results.',
+							{ typesetter: t('LaTeX') },
+						)}
 					</p>
 				</div>
 			) : (

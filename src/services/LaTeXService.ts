@@ -139,7 +139,10 @@ class LaTeXService {
 
 		try {
 			this.showLoadingNotification(
-				t('Compiling LaTeX document...'),
+				t('Compiling {typesetter} to {format}...', {
+					typesetter: t('LaTeX'),
+					format: format.toUpperCase(),
+				}),
 				operationId,
 				format,
 			);
@@ -163,18 +166,29 @@ class LaTeXService {
 	async clearCacheDirectories(): Promise<void> {
 		const operationId = `latex-clear-cache-${nanoid()}`;
 		try {
-			this.showLoadingNotification(t('Clearing LaTeX cache...'), operationId);
-			await swiftLaTeXService.clearCache();
-			this.showSuccessNotification(t('LaTeX cache cleared successfully'), {
+			this.showLoadingNotification(
+				t('Clearing {typesetter} cache...', { typesetter: t('LaTeX') }),
 				operationId,
-				duration: 2000,
-			});
+			);
+			await swiftLaTeXService.clearCache();
+			this.showSuccessNotification(
+				t('{typesetter} cache cleared successfully', {
+					typesetter: t('LaTeX'),
+				}),
+				{
+					operationId,
+					duration: 2000,
+				},
+			);
 		} catch (error) {
 			console.error('Error clearing cache directories:', error);
-			this.showErrorNotification(t('Failed to clear LaTeX cache'), {
-				operationId,
-				duration: 3000,
-			});
+			this.showErrorNotification(
+				t('Failed to clear {typesetter} cache', { typesetter: t('LaTeX') }),
+				{
+					operationId,
+					duration: 3000,
+				},
+			);
 			throw error;
 		}
 	}
@@ -321,7 +335,7 @@ class LaTeXService {
 		)
 			return;
 		this.showLoadingNotification(
-			t('Initializing LaTeX engine...'),
+			t('Initializing SwiftLaTeX engine...'),
 			operationId,
 			format,
 		);
@@ -470,15 +484,23 @@ class LaTeXService {
 			result.status === 0 && result.pdf && result.pdf.length > 0;
 		if (succeeded) {
 			this.showSuccessNotification(
-				t('LaTeX compilation completed successfully'),
+				t('{typesetter} {format} compilation completed', {
+					typesetter: t('LaTeX'),
+					format: format.toUpperCase(),
+				}),
 				{ operationId, duration: 3000, format },
 			);
 		} else {
-			this.showErrorNotification(t('LaTeX compilation failed'), {
-				operationId,
-				duration: 5000,
-				format,
-			});
+			this.showErrorNotification(
+				t('{typesetter} compilation failed', {
+					typesetter: t('LaTeX'),
+				}),
+				{
+					operationId,
+					duration: 5000,
+					format,
+				},
+			);
 		}
 	}
 

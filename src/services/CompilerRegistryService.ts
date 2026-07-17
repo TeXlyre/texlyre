@@ -1,4 +1,5 @@
 // src/services/CompilerRegistryService.ts
+import { t } from '@/i18n';
 import type { CompilerInputFile, CompilerProvider } from '../types/compilation';
 
 type RegistryListener = () => void;
@@ -25,14 +26,26 @@ class CompilerRegistryService {
 
 		this.register({
 			id: 'internal:latex',
-			label: 'LaTeX',
+			label: t('LaTeX'),
 			source: 'builtin',
 			projectType: 'latex',
 			inputExtensions: ['tex', 'latex'],
 			inputFiles: [
-				{ extension: 'tex', label: 'LaTeX File', mimeType: 'text/x-tex' },
-				{ extension: 'cls', label: 'LaTeX Class', mimeType: 'text/x-tex' },
-				{ extension: 'sty', label: 'LaTeX Style', mimeType: 'text/x-tex' },
+				{
+					extension: 'tex',
+					label: t('{typesetter} File', { typesetter: t('LaTeX') }),
+					mimeType: 'text/x-tex',
+				},
+				{
+					extension: 'cls',
+					label: t('{typesetter} Class', { typesetter: t('LaTeX') }),
+					mimeType: 'text/x-tex',
+				},
+				{
+					extension: 'sty',
+					label: t('{typesetter} Style', { typesetter: t('LaTeX') }),
+					mimeType: 'text/x-tex',
+				},
 			],
 			outputFormats: [{ id: 'pdf', mimeType: 'application/pdf' }],
 			capabilities: { outline: true, formatter: 'tex-fmt' },
@@ -40,12 +53,16 @@ class CompilerRegistryService {
 
 		this.register({
 			id: 'internal:typst',
-			label: 'Typst',
+			label: t('Typst'),
 			source: 'builtin',
 			projectType: 'typst',
 			inputExtensions: ['typ', 'typst'],
 			inputFiles: [
-				{ extension: 'typ', label: 'Typst File', mimeType: 'text/x-typst' },
+				{
+					extension: 'typ',
+					label: t('{typesetter} File', { typesetter: t('Typst') }),
+					mimeType: 'text/x-typst',
+				},
 			],
 			outputFormats: [
 				{ id: 'pdf', mimeType: 'application/pdf' },

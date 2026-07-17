@@ -491,7 +491,10 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 			{!compileLog && !hasAnyOutput ? (
 				<div className='empty-state'>
 					<p>
-						{t('No output available. Compile a Typst document to see results.')}
+						{t(
+							'No output available. Compile a {typesetter} document to see results.',
+							{ typesetter: t('Typst') },
+						)}
 					</p>
 				</div>
 			) : (

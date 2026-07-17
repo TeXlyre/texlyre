@@ -87,7 +87,7 @@ class TypstService {
 		try {
 			this.notify(
 				'info',
-				t('Preparing files for Typst compilation...'),
+				t('Preparing files for compilation...'),
 				operationId,
 				format,
 			);
@@ -109,7 +109,10 @@ class TypstService {
 
 			this.notify(
 				'info',
-				t('Compiling Typst to {format}...', { format: format.toUpperCase() }),
+				t('Compiling {typesetter} to {format}...', {
+					typesetter: t('Typst'),
+					format: format.toUpperCase(),
+				}),
 				operationId,
 				format,
 			);
@@ -141,7 +144,8 @@ class TypstService {
 
 			this.notify(
 				'success',
-				t('Typst {format} compilation completed', {
+				t('{typesetter} {format} compilation completed', {
+					typesetter: t('Typst'),
 					format: format.toUpperCase(),
 				}),
 				operationId,
@@ -192,7 +196,10 @@ class TypstService {
 
 			this.notify(
 				'info',
-				t('Compiling Typst to {format}...', { format: format.toUpperCase() }),
+				t('Compiling {typesetter} to {format}...', {
+					typesetter: t('Typst'),
+					format: format.toUpperCase(),
+				}),
 				operationId,
 				format,
 			);
@@ -730,8 +737,8 @@ class TypstService {
 		this.setStatus('ready');
 		this.notify(
 			'error',
-			t('Typst compilation failed: {message}', {
-				message: 'Compilation failed',
+			t('{typesetter} compilation failed', {
+				typesetter: t('Typst'),
 			}),
 			operationId,
 			format,

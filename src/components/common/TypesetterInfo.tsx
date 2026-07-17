@@ -104,20 +104,28 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 				<>
 					<h4 className='typesetter-tooltip-title'>{t('LaTeX')}</h4>
 					<div className='typesetter-tooltip-section'>
-						<strong>{t('LaTeX Engine:')}</strong>{' '}
+						<strong>
+							{t('{typesetter} Engine:', { typesetter: t('LaTeX') })}
+						</strong>{' '}
 						{t('SwiftLaTeX v20/02/2022 (TeX Live 2020, 10/04/2020)')}
 						<br />
-						<strong>{t('LaTeX Compilers:')}</strong>
+						<strong>
+							{t('{typesetter} Compilers:', { typesetter: t('LaTeX') })}
+						</strong>
 						<ul>
 							<li>{t('pdfTeX (2020)')}</li>
 							<li>{t('XeTeX (2020)')}</li>
 						</ul>
 					</div>
 					<div className='typesetter-tooltip-section'>
-						<strong>{t('LaTeX Engine:')}</strong>{' '}
+						<strong>
+							{t('{typesetter} Engine:', { typesetter: t('LaTeX') })}
+						</strong>{' '}
 						{t('BusyTeX: texlyre-busytex v1.2.3 (TeX Live 2026, 01/03/2026)')}
 						<br />
-						<strong>{t('LaTeX Compilers:')}</strong>
+						<strong>
+							{t('{typesetter} Compilers:', { typesetter: t('LaTeX') })}
+						</strong>
 						<ul>
 							<li>{t('pdfTeX (2026)')}</li>
 							<li>{t('XeTeX (2026)')}</li>
@@ -136,22 +144,31 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 				<>
 					<h4 className='typesetter-tooltip-title'>{t('Typst')}</h4>
 					<div className='typesetter-tooltip-section'>
-						<strong>{t('Typst Engine:')}</strong>{' '}
+						<strong>
+							{t('{typesetter} Engine:', { typesetter: t('Typst') })}
+						</strong>{' '}
 						{t('@myriaddreamin/typst.ts v0.8.0-rc1')}
 					</div>
 					<div className='typesetter-tooltip-section'>
-						<strong>{t('Typst Renderer:')}</strong>{' '}
+						<strong>
+							{t('{typesetter} Renderer:', { typesetter: t('Typst') })}
+						</strong>{' '}
 						{t('@texlyre/typst-ts-renderer v0.8.0-rc1')}
 					</div>
 					<div className='typesetter-tooltip-section'>
-						<strong>{t('Typst Compiler:')}</strong>{' '}
+						<strong>
+							{t('{typesetter} Compiler:', { typesetter: t('Typst') })}
+						</strong>{' '}
 						{t('@texlyre/typst-ts-compiler v0.8.0-rc1')}
 					</div>
 					<div className='typesetter-tooltip-section'>
-						<strong>{t('Typst Version:')}</strong> {t('0.15.0 (15/06/2026)')}
+						<strong>
+							{t('{typesetter} Version:', { typesetter: t('Typst') })}
+						</strong>{' '}
+						{t('0.15.0 (15/06/2026)')}
 					</div>
 					<div className='typesetter-tooltip-section'>
-						<strong>{t('Output Formats:')}</strong>
+						<strong>{t('Output Format:')}</strong>
 						<ul>
 							<li>{t('PDF')}</li>
 							<li>{t('SVG')}</li>

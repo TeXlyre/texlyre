@@ -706,7 +706,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 							? `${t('Stop Compilation')} ${useSharedSettings ? t('(F8)') : ''}`
 							: isChangingEngine
 								? t('Switching Engine...')
-								: `${t('Compile LaTeX Document')} ${useSharedSettings ? t('(F9)') : ''}`
+								: `${t('Compile {typesetter}', { typesetter: t('LaTeX') })} ${useSharedSettings ? t('(F9)') : ''}`
 					}
 				>
 					{isCompiling ? (
@@ -805,7 +805,9 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
 				<div className='dropdown-section'>
 					<div className='format-selector-header'>
-						<div className='dropdown-title'>{t('LaTeX Engine:')}</div>
+						<div className='dropdown-title'>
+							{t('{typesetter} Engine:', { typesetter: t('LaTeX') })}
+						</div>
 					</div>
 					<div className='format-selector-group'>
 						<select

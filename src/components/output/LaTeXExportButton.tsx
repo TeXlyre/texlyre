@@ -411,7 +411,9 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 				)}
 
 				<div className='dropdown-section'>
-					<div className='dropdown-title'>{t('LaTeX Engine:')}</div>
+					<div className='dropdown-title'>
+						{t('{typesetter} Engine:', { typesetter: t('LaTeX') })}
+					</div>
 					<div className='format-selector-group'>
 						<select
 							value={selectedEngine}

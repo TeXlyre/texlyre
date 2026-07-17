@@ -87,8 +87,10 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	return (
 		<div className='latex-visualizer'>
 			<PluginHeader
-				fileName={t('LaTeX Log')}
-				filePath={t('LaTeX Compilation Output')}
+				fileName={t('{typesetter} Log', { typesetter: t('LaTeX') })}
+				filePath={t('{typesetter} Compilation Output', {
+					typesetter: t('LaTeX'),
+				})}
 				pluginName={PLUGIN_NAME}
 				pluginVersion={PLUGIN_VERSION}
 				tooltipInfo={tooltipInfo}

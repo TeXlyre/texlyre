@@ -514,7 +514,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 							? `${t('Stop Compilation')} ${useSharedSettings ? t('(F8)') : ''}`
 							: isInitializing
 								? t('Initializing Compiler...')
-								: `${t('Compile Typst Document')} ${useSharedSettings ? t('(F9)') : ''}`
+								: `${t('Compile {typesetter}', { typesetter: t('Typst') })} ${useSharedSettings ? t('(F9)') : ''}`
 					}
 				>
 					{isCompiling ? (

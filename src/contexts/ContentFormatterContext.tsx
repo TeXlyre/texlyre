@@ -223,7 +223,7 @@ export const ContentFormatterProvider: React.FC<
 			try {
 				if (showLatexNotifications) {
 					contentFormatterService.showLoadingNotification(
-						t('Formatting LaTeX content...'),
+						t('Formatting {typesetter} content...', { typesetter: t('LaTeX') }),
 						operationId,
 						'latex',
 					);
@@ -283,7 +283,7 @@ export const ContentFormatterProvider: React.FC<
 			try {
 				if (showTypstNotifications) {
 					contentFormatterService.showLoadingNotification(
-						t('Formatting Typst content...'),
+						t('Formatting {typesetter} content...', { typesetter: t('Typst') }),
 						operationId,
 						'typst',
 					);

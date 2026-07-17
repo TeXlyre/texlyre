@@ -45,8 +45,10 @@ export function useRegisterLatexSettings() {
 			category: t('Compilation'),
 			subcategory: t('LaTeX'),
 			type: 'select',
-			label: t('LaTeX Engine'),
-			description: t('Choose the LaTeX engine for compilation'),
+			label: t('{typesetter} Engine', { typesetter: t('LaTeX') }),
+			description: t('Choose the {typesetter} engine for compilation', {
+				typesetter: t('LaTeX'),
+			}),
 			defaultValue: initialEngine,
 			options: [
 				{ label: t('pdfTeX (SwiftLaTeX / TeX Live 2020)'), value: 'pdftex' },
@@ -121,7 +123,10 @@ export function useRegisterLatexSettings() {
 			subcategory: t('LaTeX'),
 			type: 'checkbox',
 			label: t('Auto-compile on project open'),
-			description: t('Automatically compile LaTeX when opening a project'),
+			description: t(
+				'Automatically compile {typesetter} when opening a project',
+				{ typesetter: t('LaTeX') },
+			),
 			defaultValue: initialAutoCompile,
 		});
 
@@ -132,11 +137,19 @@ export function useRegisterLatexSettings() {
 			type: 'select',
 			label: t('Auto-navigate to main file on compile'),
 			description: t(
-				'Control when to automatically navigate to the main LaTeX file during compilation',
+				'Control when to automatically navigate to the main {typesetter} file during compilation',
+				{
+					typesetter: t('LaTeX'),
+				},
 			),
 			defaultValue: initialAutoNavigate,
 			options: [
-				{ label: t('Only when no LaTeX file is open'), value: 'conditional' },
+				{
+					label: t('Only when no {typesetter} file is open', {
+						typesetter: t('LaTeX'),
+					}),
+					value: 'conditional',
+				},
 				{ label: t('Always navigate to main file'), value: 'always' },
 				{ label: t('Never navigate to main file'), value: 'never' },
 			],
@@ -148,7 +161,9 @@ export function useRegisterLatexSettings() {
 			subcategory: t('LaTeX'),
 			type: 'select',
 			label: t('Default output format'),
-			description: t('Default format for LaTeX compilation'),
+			description: t('Default format for {typesetter} compilation', {
+				typesetter: t('LaTeX'),
+			}),
 			defaultValue: initialDefaultFormat,
 			options: [
 				{ label: t('PDF'), value: 'pdf' },
@@ -183,7 +198,10 @@ export function useRegisterLatexSettings() {
 			type: 'checkbox',
 			label: t('Show compilation notifications'),
 			description: t(
-				'Display notifications for LaTeX compilation activities (PDF only)',
+				'Display notifications for {typesetter} compilation activities (PDF only)',
+				{
+					typesetter: t('LaTeX'),
+				},
 			),
 			defaultValue: initialNotifications,
 		});
