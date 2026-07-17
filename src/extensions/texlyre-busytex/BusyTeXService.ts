@@ -4,8 +4,8 @@ import { isPackageCached, deletePackageCache } from 'texlyre-busytex';
 import type { TexliveRemoteFile } from 'texlyre-busytex';
 
 import { busyTeXEngine, BUSYTEX_CACHE_DIR, MISSES_KEY } from './BusyTeXEngine';
-import type { BusyTeXEngineType, BusyTeXCompileResult } from './BusyTeXEngine';
-import type { CompileResult } from '../swiftlatex/BaseEngine';
+import type { BusyTeXEngineType } from './BusyTeXEngine';
+import type { CompileResult } from '../../types/compilation';
 import type { FileNode } from '../../types/files';
 import { fileStorageService } from '../../services/FileStorageService';
 import { latexSourceMapService } from '../../services/LaTeXSourceMapService';
@@ -16,6 +16,7 @@ import {
 	toArrayBuffer,
 } from '../../utils/fileUtils';
 import { cleanContent } from '../../utils/fileCommentUtils';
+import { findCompileArtifact } from '../../utils/compilerUtils';
 
 export const BUSYTEX_BUNDLE_URLS: Record<string, string> = {
 	basic: `${__BASE_PATH__}/core/busytex/texlive-basic.js`,
@@ -120,7 +121,7 @@ class BusyTeXService {
 	async compile(
 		mainFileName: string,
 		fileNodes: FileNode[],
-	): Promise<CompileResult & { synctex?: Uint8Array }> {
+	): Promise<CompileResult> {
 		if (!busyTeXEngine.isReady()) {
 			await this.initialize(busyTeXEngine.getCurrentEngineType());
 		}
@@ -153,8 +154,12 @@ class BusyTeXService {
 		if (result.status === 0 && result.pdf) {
 			await this.saveCompilationOutput(mainFileName, result);
 
-			if (result.synctex) {
-				latexSourceMapService.loadFromBytes(result.synctex);
+			const synctex = findCompileArtifact(result.artifacts, 'synctex', [
+				'.synctex',
+				'.synctex.gz',
+			]);
+			if (synctex) {
+				latexSourceMapService.loadFromBytes(synctex.data);
 			} else {
 				latexSourceMapService.clear();
 			}
@@ -371,7 +376,7 @@ class BusyTeXService {
 
 	private async saveCompilationOutput(
 		mainFile: string,
-		result: BusyTeXCompileResult,
+		result: CompileResult,
 	): Promise<void> {
 		try {
 			const outputFiles: FileNode[] = [];

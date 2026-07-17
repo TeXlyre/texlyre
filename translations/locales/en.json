@@ -476,6 +476,7 @@
   "Compile document": "Compile document",
   "Compile documents to PDF": "Compile documents to PDF",
   "Compile with cleared cache": "Compile with cleared cache",
+  "Compiler": "Compiler",
   "Compiling {typesetter} to {format}...": "Compiling {{typesetter}} to {{format}}...",
   "Compiling for export...": "Compiling for export...",
   "Complete project export including documents, collaboration data, and files. Can be imported back into TeXlyre.": "Complete project export including documents, collaboration data, and files. Can be imported back into TeXlyre.",

@@ -5,16 +5,21 @@ import {
 	useCallback,
 	useEffect,
 	useMemo,
+	useRef,
 	useState,
 } from 'react';
 
 import { t } from '@/i18n';
 import { useExternalCompiler } from '../../hooks/useExternalCompiler';
 import { useFileTree } from '../../hooks/useFileTree';
+import { useSourceMap } from '../../hooks/useSourceMap';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
+import type { RendererController } from '../../plugins/PluginInterface';
 import type { CompilerProvider } from '../../types/compilation';
+import type { SourceMapClickMode } from '../../types/sourceMap';
 import { toArrayBuffer } from '../../utils/fileUtils';
 import ExternalCompileButton from './ExternalCompileButton';
+import SourceMapFloatingButton from './SourceMapFloatingButton';
 import { findInputFiles, resolveLabel } from '../../utils/compilerUtils';
 
 interface ExternalCompilerOutputProps {
@@ -52,6 +57,17 @@ const ExternalCompilerOutput: React.FC<ExternalCompilerOutputProps> = ({
 		compileDocument,
 	} = useExternalCompiler();
 	const { fileTree, selectedFileId, getFile } = useFileTree();
+	const {
+		reverseSync,
+		currentHighlight,
+		isAvailable: sourceMapAvailable,
+		reverseClickEnabled,
+		reverseClickMode,
+	} = useSourceMap();
+
+	const rendererControllerRef = useRef<RendererController | null>(null);
+	const clickCountRef = useRef(0);
+	const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const tabs = useMemo(() => {
 		if (provider.ui?.renderers?.length) {
@@ -71,6 +87,16 @@ const ExternalCompilerOutput: React.FC<ExternalCompilerOutputProps> = ({
 	useEffect(() => {
 		if (outputFormat) setActiveFormat(outputFormat);
 	}, [outputFormat]);
+
+	useEffect(() => {
+		rendererControllerRef.current?.setHighlight?.(currentHighlight);
+	}, [currentHighlight]);
+
+	useEffect(() => {
+		return () => {
+			if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+		};
+	}, []);
 
 	const effectiveFormat = activeFormat ?? outputFormat ?? tabs[0]?.format;
 
@@ -106,6 +132,31 @@ const ExternalCompilerOutput: React.FC<ExternalCompilerOutputProps> = ({
 			}
 		},
 		[compiledOutput, resolveMainFile, compileDocument, provider.id],
+	);
+
+	const handleLocationClick = useCallback(
+		(page: number, x: number, y: number) => {
+			if (!reverseClickEnabled) return;
+
+			clickCountRef.current++;
+
+			if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+
+			clickTimerRef.current = setTimeout(() => {
+				const required: Record<SourceMapClickMode, number> = {
+					single: 1,
+					double: 2,
+					triple: 3,
+				};
+
+				if (clickCountRef.current >= required[reverseClickMode]) {
+					reverseSync(page, x, y);
+				}
+
+				clickCountRef.current = 0;
+			}, 300);
+		},
+		[reverseClickEnabled, reverseClickMode, reverseSync],
 	);
 
 	const hasOutput = !!compiledOutput;
@@ -206,6 +257,13 @@ const ExternalCompilerOutput: React.FC<ExternalCompilerOutputProps> = ({
 											content: sharedContent ?? new ArrayBuffer(0),
 											mimeType: outputMimeType ?? format?.mimeType,
 											fileName: `output.${tab.format}`,
+											onLocationClick: handleLocationClick,
+											controllerRef: (
+												controller: RendererController | null,
+											) => {
+												rendererControllerRef.current = controller;
+												controller?.setHighlight?.(currentHighlight);
+											},
 										})
 									) : (
 										<div className='canvas-fallback'>
@@ -216,6 +274,16 @@ const ExternalCompilerOutput: React.FC<ExternalCompilerOutputProps> = ({
 							);
 						})}
 				</>
+			)}
+
+			{sourceMapAvailable && (
+				<SourceMapFloatingButton
+					onForwardSync={() => {
+						document.dispatchEvent(
+							new CustomEvent('trigger-sourcemap-forward'),
+						);
+					}}
+				/>
 			)}
 		</div>
 	);

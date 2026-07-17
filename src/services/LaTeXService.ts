@@ -2,13 +2,13 @@
 import { nanoid } from 'nanoid';
 
 import { t } from '@/i18n';
-import type { CompileResult } from '../extensions/swiftlatex/BaseEngine';
 import {
 	swiftLaTeXService,
 	type SwiftEngineType,
 } from '../extensions/swiftlatex/SwiftLaTeXService';
 import { busyTexService } from '../extensions/texlyre-busytex/BusyTeXService';
 import type { BusyTeXEngineType } from '../extensions/texlyre-busytex/BusyTeXEngine';
+import type { CompileResult } from '../types/compilation';
 import type { FileNode } from '../types/files';
 import { downloadFiles } from '../utils/zipUtils';
 import { fileStorageService } from './FileStorageService';

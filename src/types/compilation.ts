@@ -13,6 +13,20 @@ export interface ExportOptions {
 
 export type CompilerSource = 'builtin' | 'chelys';
 
+export interface CompileArtifact {
+	id: string;
+	name: string;
+	mimeType?: string;
+	data: Uint8Array;
+}
+
+export interface CompileResult {
+	pdf?: Uint8Array;
+	status: number;
+	log: string;
+	artifacts?: CompileArtifact[];
+}
+
 export interface CompilerTransportConfig {
 	type: 'websocket' | 'webrtc';
 	url?: string;

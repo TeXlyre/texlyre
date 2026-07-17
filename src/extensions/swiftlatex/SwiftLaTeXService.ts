@@ -1,10 +1,7 @@
 // src/extensions/swiftlatex/SwiftLaTeXService.ts
 import { nanoid } from 'nanoid';
 
-import type { BaseEngine, CompileResult } from './BaseEngine';
-import { DvipdfmxEngine } from './DvipdfmxEngine';
-import { PdfTeXEngine } from './PdfTeXEngine';
-import { XeTeXEngine } from './XeTeXEngine';
+import type { CompileResult } from '../../types/compilation';
 import type { FileNode } from '../../types/files';
 import { fileStorageService } from '../../services/FileStorageService';
 import { cleanContent } from '../../utils/fileCommentUtils';
@@ -14,6 +11,10 @@ import {
 	isTemporaryFile,
 	toArrayBuffer,
 } from '../../utils/fileUtils';
+import type { BaseEngine } from './BaseEngine';
+import { DvipdfmxEngine } from './DvipdfmxEngine';
+import { PdfTeXEngine } from './PdfTeXEngine';
+import { XeTeXEngine } from './XeTeXEngine';
 
 export type SwiftEngineType = 'pdftex' | 'xetex' | 'luatex';
 type InternalEngineKey = SwiftEngineType | 'dvipdfmx';

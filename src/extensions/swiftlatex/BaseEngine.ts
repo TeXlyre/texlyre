@@ -1,9 +1,5 @@
 // src/extensions/swiftlatex/BaseEngine.ts
-export interface CompileResult {
-	pdf?: Uint8Array;
-	status: number;
-	log: string;
-}
+import type { CompileResult } from '../../types/compilation';
 
 export interface EngineConfig {
 	name: string;

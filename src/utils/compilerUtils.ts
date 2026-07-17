@@ -1,6 +1,10 @@
 // src/utils/compilerUtils.ts
 import { t } from '@/i18n';
-import type { CompilerUIField, TranslatableText } from '../types/compilation';
+import type {
+	CompileArtifact,
+	CompilerUIField,
+	TranslatableText,
+} from '../types/compilation';
 import type { FileNode } from '../types/files';
 
 export function resolveLabel(value?: TranslatableText): string {
@@ -58,4 +62,20 @@ export function findInputFiles(
 		}
 	}
 	return matches;
+}
+
+export function findCompileArtifact(
+	artifacts: CompileArtifact[] | undefined,
+	id: string,
+	extensions: string[] = [],
+): CompileArtifact | undefined {
+	const normalizedExtensions = extensions.map((extension) =>
+		extension.toLowerCase(),
+	);
+
+	return artifacts?.find((artifact) => {
+		if (artifact.id === id) return true;
+		const name = artifact.name.toLowerCase();
+		return normalizedExtensions.some((extension) => name.endsWith(extension));
+	});
 }

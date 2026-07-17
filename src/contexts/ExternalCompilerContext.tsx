@@ -5,6 +5,7 @@ import { type ReactNode, createContext, useCallback, useState } from 'react';
 import { useFileTree } from '../hooks/useFileTree';
 import { compilerRegistryService } from '../services/CompilerRegistryService';
 import { fileStorageService } from '../services/FileStorageService';
+import { latexSourceMapService } from '../services/LaTeXSourceMapService';
 import {
 	type PopoutContentKind,
 	popoutViewerService,
@@ -15,6 +16,7 @@ import {
 } from '../services/GenericTypesetterService';
 import type { FileNode } from '../types/files';
 import { type DownloadableFile, downloadFiles } from '../utils/zipUtils';
+import { findCompileArtifact } from '../utils/compilerUtils';
 import { getProjectName } from '../utils/urlUtils';
 import { toBytes } from '../utils/fileUtils';
 
@@ -141,6 +143,23 @@ export const ExternalCompilerProvider: React.FC<
 				setCompileLog(result.log);
 
 				if (result.status === 0 && result.output) {
+					document.dispatchEvent(
+						new CustomEvent('compiler-active', {
+							detail: { type: 'latex' },
+						}),
+					);
+
+					const synctex = findCompileArtifact(result.artifacts, 'synctex', [
+						'.synctex',
+						'.synctex.gz',
+					]);
+
+					if (synctex) {
+						latexSourceMapService.loadFromBytes(synctex.data);
+					} else {
+						latexSourceMapService.clear();
+					}
+
 					const resolvedFormat = result.format || format;
 					const outputFormat = provider.outputFormats.find(
 						(f) => f.id === resolvedFormat,
@@ -149,7 +168,7 @@ export const ExternalCompilerProvider: React.FC<
 						result.mimeType ?? outputFormat?.mimeType ?? 'application/pdf';
 
 					setCompiledOutput(result.output);
-					setOutputMimeType(result.mimeType ?? null);
+					setOutputMimeType(mimeType);
 					setOutputFormat(resolvedFormat);
 					setCurrentView('output');
 					setLogIndicator('success');
@@ -171,11 +190,13 @@ export const ExternalCompilerProvider: React.FC<
 						projectName: getProjectName(),
 					});
 				} else {
+					latexSourceMapService.clear();
 					setLogIndicator('error');
 					setCurrentView('log');
 					popoutViewerService.sendCompileResult(result.status, result.log);
 				}
 			} catch (error) {
+				latexSourceMapService.clear();
 				const message = error instanceof Error ? error.message : String(error);
 				setCompileError(message);
 				setLogIndicator('error');

@@ -293,7 +293,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 					title={
 						status === 'error'
 							? t('Compiler connection error')
-							: t('Compile with {{name}}', { name: provider.label })
+							: t('Compile {typesetter}', { typesetter: provider.label })
 					}
 				>
 					{isCompiling ? <StopIcon /> : <PlayIcon />}

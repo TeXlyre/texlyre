@@ -520,6 +520,7 @@
   "Compile document": "تجميع المستند",
   "Compile documents to PDF": "تجميع المستندات إلى PDF",
   "Compile with cleared cache": "تجميع مع ذاكرة تخزين مؤقت ممسوحة",
+  "Compiler": "المُجمِّع",
   "Compiling {typesetter} to {format}...": "جارٍ تجميع {{typesetter}} إلى {{format}}...",
   "Compiling for export...": "جارٍ التجميع للتصدير...",
   "Complete project export including documents, collaboration data, and files. Can be imported back into TeXlyre.": "تصدير كامل للمشروع بما في ذلك المستندات وبيانات التعاون والملفات. يمكن استيراده مرة أخرى إلى TeXlyre.",

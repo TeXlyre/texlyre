@@ -512,6 +512,7 @@
   "Compile document": "编译文档",
   "Compile documents to PDF": "将文档编译为 PDF",
   "Compile with cleared cache": "使用已清除的缓存编译",
+  "Compiler": "编译器",
   "Compiling {typesetter} to {format}...": "正在将 {{typesetter}} 编译为 {{format}}...",
   "Compiling for export...": "正在为导出编译...",
   "Complete project export including documents, collaboration data, and files. Can be imported back into TeXlyre.": "完整的项目导出，包括文档、协作数据和文件。可以导入回 TeXlyre。",

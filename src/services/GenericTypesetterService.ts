@@ -2,6 +2,7 @@
 import { nanoid } from 'nanoid';
 
 import type {
+	CompileArtifact,
 	CompilerInputFile,
 	CompilerOutputFormat,
 	CompilerTransportConfig,
@@ -54,6 +55,7 @@ export interface TypesetterCompileResult {
 	format: string;
 	mimeType?: string;
 	output?: Uint8Array;
+	artifacts?: CompileArtifact[];
 }
 
 interface Connection {
@@ -85,7 +87,7 @@ class GenericTypesetterService {
 	updateConfig(configId: string, config: TypesetterServerConfig): void {
 		this.disconnect(configId);
 		this.configs.set(configId, config);
-		this.setConnectionStatus(configId, 'disconnected');
+		this.setConnectionStatus(config.id, 'disconnected');
 	}
 
 	unregisterConfig(configId: string): void {
@@ -279,6 +281,12 @@ class GenericTypesetterService {
 			format: string;
 			mimeType?: string;
 			output?: string;
+			artifacts?: Array<{
+				id: string;
+				name: string;
+				mimeType?: string;
+				data: string;
+			}>;
 		};
 		try {
 			payload = JSON.parse(data);
@@ -296,6 +304,12 @@ class GenericTypesetterService {
 			format: payload.format,
 			mimeType: payload.mimeType,
 			output: payload.output ? this.decodeBytes(payload.output) : undefined,
+			artifacts: payload.artifacts?.map((artifact) => ({
+				id: artifact.id,
+				name: artifact.name,
+				mimeType: artifact.mimeType,
+				data: this.decodeBytes(artifact.data),
+			})),
 		});
 	}
 

@@ -1,16 +1,9 @@
 // src/extensions/swiftlatex/DvipdfmxEngine.ts
-import {
-	BaseEngine,
-	type CompileResult,
-	type EngineConfig,
-} from './BaseEngine';
+import type { CompileResult } from '../../types/compilation';
+import { BaseEngine, type EngineConfig } from './BaseEngine';
 import { EngineLoader } from './EngineLoader';
 
 const BASE_PATH = __BASE_PATH__;
-
-interface DvipdfmxCompileResult extends CompileResult {
-	xdv?: Uint8Array;
-}
 
 declare global {
 	interface Window {

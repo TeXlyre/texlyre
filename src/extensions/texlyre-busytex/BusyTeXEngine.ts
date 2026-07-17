@@ -2,7 +2,7 @@
 import { BusyTexRunner } from 'texlyre-busytex';
 import type { FileInput, TexliveRemoteFile } from 'texlyre-busytex';
 
-import type { CompileResult } from '../swiftlatex/BaseEngine';
+import type { CompileResult } from '../../types/compilation';
 import type { FileNode } from '../../types/files';
 import { isTemporaryFile, toArrayBuffer } from '../../utils/fileUtils';
 
@@ -25,10 +25,6 @@ const DRIVER_MAP: Record<
 	'busytex-xetex': 'xetex_bibtex8_dvipdfmx',
 	'busytex-luatex': 'luahbtex_bibtex8',
 };
-
-export interface BusyTeXCompileResult extends CompileResult {
-	synctex?: Uint8Array;
-}
 
 export class BusyTeXEngine {
 	private runner: BusyTexRunner | null = null;
@@ -142,7 +138,7 @@ export class BusyTeXEngine {
 			remoteEndpoint?: string;
 			cachedMisses?: string[];
 		} = {},
-	): Promise<BusyTeXCompileResult> {
+	): Promise<CompileResult> {
 		if (!this.runner?.isInitialized()) {
 			await this.initialize(this.currentEngineType);
 		}
@@ -176,7 +172,16 @@ export class BusyTeXEngine {
 				pdf: result.success ? result.pdf : undefined,
 				status: result.exitCode,
 				log: result.log,
-				synctex: result.synctex,
+				artifacts: result.synctex
+					? [
+							{
+								id: 'synctex',
+								name: `${mainTexPath.replace(/\.[^.]+$/, '')}.synctex.gz`,
+								mimeType: 'application/gzip',
+								data: result.synctex,
+							},
+						]
+					: undefined,
 			};
 		} catch (error) {
 			this.setStatus('error');
