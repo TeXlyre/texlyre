@@ -12,16 +12,14 @@ import type { CompileResult } from '../types/compilation';
 import type { FileNode } from '../types/files';
 import { downloadFiles } from '../utils/zipUtils';
 import { fileStorageService } from './FileStorageService';
-import { notificationService } from './NotificationService';
+import {
+	notificationService,
+	type NotificationOptions,
+} from './NotificationService';
 
 export type EngineType = SwiftEngineType | BusyTeXEngineType;
 
-type NotificationOptions = {
-	operationId?: string;
-	duration?: number;
-	data?: Record<string, any>;
-	format?: string;
-};
+type LaTeXNotificationOptions = NotificationOptions<string>;
 type ExportFile = { content: Uint8Array; name: string; mimeType: string };
 
 const SUPPORTED_ENGINES: EngineType[] = [
@@ -282,7 +280,7 @@ class LaTeXService {
 
 	showSuccessNotification(
 		message: string,
-		options: NotificationOptions = {},
+		options: LaTeXNotificationOptions = {},
 	): void {
 		if (this.canNotify(options.format))
 			notificationService.showSuccess(message, options);
@@ -290,7 +288,7 @@ class LaTeXService {
 
 	showErrorNotification(
 		message: string,
-		options: NotificationOptions = {},
+		options: LaTeXNotificationOptions = {},
 	): void {
 		if (this.canNotify(options.format))
 			notificationService.showError(message, options);
@@ -298,7 +296,7 @@ class LaTeXService {
 
 	showInfoNotification(
 		message: string,
-		options: NotificationOptions = {},
+		options: LaTeXNotificationOptions = {},
 	): void {
 		if (this.canNotify(options.format))
 			notificationService.showInfo(message, options);

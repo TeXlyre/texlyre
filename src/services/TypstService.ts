@@ -10,7 +10,10 @@ import type {
 } from '../types/typst';
 import type { FileNode } from '../types/files';
 import { fileStorageService } from './FileStorageService';
-import { notificationService } from './NotificationService';
+import {
+	notificationService,
+	type NotificationOptions,
+} from './NotificationService';
 import { typstSourceMapService } from './TypstSourceMapService';
 import { cleanContent } from '../utils/fileCommentUtils';
 import { TypstCompilerEngine } from '../extensions/typst.ts/TypstCompilerEngine';
@@ -21,6 +24,7 @@ import {
 } from '../utils/fileUtils';
 import { downloadFiles } from '../utils/zipUtils';
 
+type TypstNotificationOptions = NotificationOptions<TypstOutputFormat>;
 type CompilationStatus =
 	| 'unloaded'
 	| 'loading'
@@ -44,6 +48,7 @@ class TypstService {
 	private defaultFormat: TypstOutputFormat = 'pdf';
 	private compilationAbortController: AbortController | null = null;
 	private compilerEngine: TypstCompilerEngine = new TypstCompilerEngine();
+	private currentOperationId: string | null = null;
 
 	async initialize(): Promise<void> {
 		if (this.status === 'ready') return;
@@ -81,12 +86,12 @@ class TypstService {
 		if (!this.isReady()) await this.initialize();
 
 		const operationId = `typst-compile-${nanoid()}`;
+		this.currentOperationId = operationId;
 		const normalizedMain = this.normalizePath(mainFileName);
 		const signal = this.beginOperation();
 
 		try {
-			this.notify(
-				'info',
+			this.showLoadingNotification(
 				t('Preparing files for compilation...'),
 				operationId,
 				format,
@@ -107,8 +112,7 @@ class TypstService {
 				);
 			}
 
-			this.notify(
-				'info',
+			this.showLoadingNotification(
 				t('Compiling {typesetter} to {format}...', {
 					typesetter: t('Typst'),
 					format: format.toUpperCase(),
@@ -142,15 +146,12 @@ class TypstService {
 			await this.saveCompilationOutput(normalizedMain, result);
 			this.updateSourceMap(format, output, pageInfos, sources, normalizedMain);
 
-			this.notify(
-				'success',
+			this.showSuccessNotification(
 				t('{typesetter} {format} compilation completed', {
 					typesetter: t('Typst'),
 					format: format.toUpperCase(),
 				}),
-				operationId,
-				format,
-				3000,
+				{ operationId, duration: 3000, format },
 			);
 
 			return result;
@@ -175,6 +176,7 @@ class TypstService {
 		compileOptions: { allowRemoteUrls?: boolean } = {},
 	): Promise<void> {
 		const operationId = `typst-export-${nanoid()}`;
+		this.currentOperationId = operationId;
 
 		if (!this.isReady()) await this.initialize();
 
@@ -182,8 +184,7 @@ class TypstService {
 		const signal = this.beginOperation();
 
 		try {
-			this.notify(
-				'info',
+			this.showLoadingNotification(
 				t('Preparing files for export...'),
 				operationId,
 				format,
@@ -194,8 +195,7 @@ class TypstService {
 				signal,
 			);
 
-			this.notify(
-				'info',
+			this.showLoadingNotification(
 				t('Compiling {typesetter} to {format}...', {
 					typesetter: t('Typst'),
 					format: format.toUpperCase(),
@@ -214,7 +214,11 @@ class TypstService {
 			);
 
 			if (this.hasErrorDiagnostics(diagnostics)) {
-				this.notify('error', t('Export failed'), operationId, format, 3000);
+				this.showErrorNotification(t('Export failed'), {
+					operationId,
+					duration: 3000,
+					format,
+				});
 				return;
 			}
 
@@ -230,25 +234,21 @@ class TypstService {
 				await downloadFiles(files, baseName);
 			}
 
-			this.notify(
-				'success',
-				t('Export completed successfully'),
+			this.showSuccessNotification(t('Export completed successfully'), {
 				operationId,
+				duration: 2000,
 				format,
-				2000,
-			);
+			});
 		} catch (error) {
 			if (this.isCancellation(error)) return;
 
 			const message =
 				error instanceof Error ? error.message : t('Unknown error');
-			this.notify(
-				'error',
-				`Export error: ${message}`,
+			this.showErrorNotification(`Export error: ${message}`, {
 				operationId,
+				duration: 5000,
 				format,
-				5000,
-			);
+			});
 		} finally {
 			this.endOperation();
 		}
@@ -270,6 +270,10 @@ class TypstService {
 		return this.status === 'compiling';
 	}
 
+	getCurrentOperationId(): string | null {
+		return this.currentOperationId;
+	}
+
 	addStatusListener(listener: () => void): () => void {
 		this.statusListeners.add(listener);
 		return () => this.statusListeners.delete(listener);
@@ -283,6 +287,44 @@ class TypstService {
 	async clearCache(): Promise<void> {
 		this.compilerEngine.terminate();
 		await this.clearOutputDirectories();
+	}
+
+	dismissCurrentNotification(): void {
+		if (this.currentOperationId)
+			notificationService.dismiss(this.currentOperationId);
+	}
+
+	showLoadingNotification(
+		message: string,
+		operationId?: string,
+		format?: TypstOutputFormat,
+	): void {
+		if (this.canNotify(format))
+			notificationService.showLoading(message, operationId);
+	}
+
+	showSuccessNotification(
+		message: string,
+		options: TypstNotificationOptions = {},
+	): void {
+		if (this.canNotify(options.format))
+			notificationService.showSuccess(message, options);
+	}
+
+	showErrorNotification(
+		message: string,
+		options: TypstNotificationOptions = {},
+	): void {
+		if (this.canNotify(options.format))
+			notificationService.showError(message, options);
+	}
+
+	showInfoNotification(
+		message: string,
+		options: TypstNotificationOptions = {},
+	): void {
+		if (this.canNotify(options.format))
+			notificationService.showInfo(message, options);
 	}
 
 	private beginOperation(): AbortSignal {
@@ -735,38 +777,12 @@ class TypstService {
 		format: TypstOutputFormat,
 	): void {
 		this.setStatus('ready');
-		this.notify(
-			'error',
+		this.showErrorNotification(
 			t('{typesetter} compilation failed', {
 				typesetter: t('Typst'),
 			}),
-			operationId,
-			format,
-			5000,
+			{ operationId, duration: 5000, format },
 		);
-	}
-
-	private notify(
-		type: 'info' | 'success' | 'error',
-		message: string,
-		operationId?: string,
-		format?: TypstOutputFormat,
-		duration?: number,
-	): void {
-		if (!this.areNotificationsEnabled()) return;
-		if (format?.toLowerCase().includes('canvas')) return;
-
-		switch (type) {
-			case 'info':
-				notificationService.showLoading(message, operationId);
-				break;
-			case 'success':
-				notificationService.showSuccess(message, { operationId, duration });
-				break;
-			case 'error':
-				notificationService.showError(message, { operationId, duration });
-				break;
-		}
 	}
 
 	private parseDiagnosticsFromError(error: any): any[] {
@@ -830,6 +846,11 @@ class TypstService {
 		return location
 			? `${prefix}[${location}]: ${message}`
 			: `${prefix}: ${message}`;
+	}
+
+	private canNotify(format?: TypstOutputFormat): boolean {
+		if (!this.areNotificationsEnabled()) return false;
+		return !format?.toLowerCase().includes('canvas');
 	}
 
 	private areNotificationsEnabled(): boolean {
