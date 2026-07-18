@@ -102,6 +102,7 @@ class FileStorageService {
 		removed: number;
 		kept: number;
 	} | null> {
+		if (!this.projectId) return null;
 		if (!this.db) await this.initialize();
 
 		const allFiles = await this.getAllFiles(true);

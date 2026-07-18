@@ -3,6 +3,7 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
 import { fileStorageService } from '../services/FileStorageService';
+import { collabService } from '../services/CollabService';
 import type { Project } from '../types/projects';
 import { createNamedLogger } from '@/logging';
 
@@ -44,6 +45,7 @@ export async function closeActiveConnections(projectId: string): Promise<void> {
 				`Closed FileStorageService connection for project: ${projectId}`,
 			);
 		}
+		collabService.disconnectAll(projectId);
 	} catch (error) {
 		moduleLog.warn('Error closing FileStorageService connection:', error);
 	}

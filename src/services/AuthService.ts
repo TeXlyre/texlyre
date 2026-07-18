@@ -493,13 +493,13 @@ class AuthService {
 		return this.updateUser(updatedUser);
 	}
 
-	private createNewDocumentUrl(
+	private async createNewDocumentUrl(
 		projectId: string = generateYjsProjectId(),
 		projectName = 'Untitled Project',
 		projectDescription = '',
 		projectType: ProjectType = 'latex',
 		projectGroup: ProjectGroup = 'tex',
-	): string {
+	): Promise<string> {
 		try {
 			const dbName = `texlyre-project-${projectId}`;
 			const yjsCollection = `${dbName}-yjs_metadata`;
@@ -522,10 +522,21 @@ class AuthService {
 				});
 			});
 
-			setTimeout(() => {
-				persistence.destroy();
-				ydoc.destroy();
-			}, 1000);
+			await new Promise<void>((resolve) => {
+				const timeout = setTimeout(resolve, 2000);
+				if (persistence.synced) {
+					clearTimeout(timeout);
+					resolve();
+					return;
+				}
+				persistence.once('synced', () => {
+					clearTimeout(timeout);
+					resolve();
+				});
+			});
+
+			persistence.destroy();
+			ydoc.destroy();
 
 			return `yjs:${projectId}`;
 		} catch (error) {
@@ -551,13 +562,13 @@ class AuthService {
 
 		const docUrl =
 			project.docUrl ||
-			this.createNewDocumentUrl(
+			(await this.createNewDocumentUrl(
 				projectId,
 				project.name,
 				project.description,
 				project.type,
 				project.group,
-			);
+			));
 
 		const now = Date.now();
 		const newProject: Project = {
@@ -623,7 +634,7 @@ class AuthService {
 		}
 		return this.createProject({
 			...project,
-			docUrl: project.docUrl || this.createNewDocumentUrl(),
+			docUrl: project.docUrl || (await this.createNewDocumentUrl()),
 		});
 	}
 

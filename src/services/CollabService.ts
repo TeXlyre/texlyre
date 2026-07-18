@@ -605,6 +605,18 @@ class CollabService {
 		}
 	}
 
+	public disconnectAll(docId: string): void {
+		const prefix = `${docId}-`;
+		for (const containerId of Array.from(this.docContainers.keys())) {
+			if (!containerId.startsWith(prefix)) continue;
+			const container = this.docContainers.get(containerId);
+			if (container) {
+				container.refCount = 1;
+				this.disconnect(docId, containerId.slice(prefix.length));
+			}
+		}
+	}
+
 	public cleanup(): void {
 		if (this.offlineStatusUnsubscribe) {
 			this.offlineStatusUnsubscribe();

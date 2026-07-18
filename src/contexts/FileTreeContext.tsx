@@ -315,50 +315,63 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 							: docUrl;
 						const collectionName = `yjs_${createdDocId}`;
 
-						const signalingServersSetting = getSetting(
-							'collab-signaling-servers',
+						const signalingServers =
+							(getSetting('collab-signaling-servers')?.value as
+								| string
+								| undefined) ?? 'ws://ywebrtc.localhost:8082/';
+						const awarenessTimeout =
+							(getSetting('collab-awareness-timeout')?.value as
+								| number
+								| undefined) ?? 30;
+						const autoReconnect =
+							(getSetting('collab-auto-reconnect')?.value as
+								| boolean
+								| undefined) ?? false;
+
+						const serversToUse = signalingServers
+							.split(',')
+							.map((s) => s.trim());
+
+						const { doc: newYDoc } = collabService.connect(
+							projectId,
+							collectionName,
+							{
+								signalingServers: serversToUse,
+								autoReconnect,
+								awarenessTimeout: awarenessTimeout * 1000,
+							},
 						);
-						const awarenessTimeoutSetting = getSetting(
-							'collab-awareness-timeout',
+
+						const container = collabService.getDocContainer(
+							projectId,
+							collectionName,
 						);
-						const autoReconnectSetting = getSetting('collab-auto-reconnect');
-
-						// Only proceed if all collaboration settings are available
-						if (
-							signalingServersSetting &&
-							awarenessTimeoutSetting &&
-							autoReconnectSetting
-						) {
-							const signalingServers = signalingServersSetting.value as string;
-							const awarenessTimeout = awarenessTimeoutSetting.value as number;
-							const autoReconnect = autoReconnectSetting.value as boolean;
-
-							const serversToUse = signalingServers
-								.split(',')
-								.map((s) => s.trim());
-
-							const { doc: newYDoc } = collabService.connect(
-								projectId,
-								collectionName,
-								{
-									signalingServers: serversToUse,
-									autoReconnect,
-									awarenessTimeout: awarenessTimeout * 1000,
-								},
-							);
-
-							await new Promise((resolve) => setTimeout(resolve, 100));
-
-							newYDoc.transact(() => {
-								const ytext = newYDoc.getText('codemirror');
-								if (ytext.length === 0) {
-									ytext.insert(0, textContent);
+						if (container?.persistence) {
+							await new Promise<void>((resolve) => {
+								const timeout = setTimeout(resolve, 2000);
+								if (container.persistence.synced) {
+									clearTimeout(timeout);
+									resolve();
+									return;
 								}
+								container.persistence.once('synced', () => {
+									clearTimeout(timeout);
+									resolve();
+								});
 							});
-							collabService.disconnect(projectId, collectionName);
-
-							setupFileSyncListener(createdDocId, fileId);
 						}
+
+						newYDoc.transact(() => {
+							const ytext = newYDoc.getText('codemirror');
+							if (ytext.length === 0) {
+								ytext.insert(0, textContent);
+							}
+						});
+
+						await new Promise((resolve) => setTimeout(resolve, 500));
+						collabService.disconnect(projectId, collectionName);
+
+						setupFileSyncListener(createdDocId, fileId);
 					}
 
 					await refreshFileTree();
