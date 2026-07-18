@@ -37,6 +37,7 @@ interface UrlProjectParams {
 	newProjectType?: string;
 	newProjectTags?: string;
 	newProjectFiles?: string;
+	newProjectGroup?: string;
 	compile?: string;
 	file?: string;
 }
@@ -53,6 +54,8 @@ const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
 				params.newProjectDescription = decodeURIComponent(part.slice(22));
 			} else if (part.startsWith('newProjectType:')) {
 				params.newProjectType = decodeURIComponent(part.slice(15));
+			} else if (part.startsWith('newProjectGroup:')) {
+				params.newProjectGroup = decodeURIComponent(part.slice(16));
 			} else if (part.startsWith('newProjectTags:')) {
 				params.newProjectTags = decodeURIComponent(part.slice(15));
 			} else if (part.startsWith('newProjectFiles:')) {
@@ -130,7 +133,13 @@ const AppRouter: React.FC = () => {
 	const processedProjectHashRef = useRef<string | null>(null);
 
 	const createProjectForDocument = useCallback(
-		async (docUrl: string, name: string, description: string, type: string) => {
+		async (
+			docUrl: string,
+			name: string,
+			description: string,
+			type: string,
+			group?: string,
+		) => {
 			try {
 				await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -138,6 +147,7 @@ const AppRouter: React.FC = () => {
 					name,
 					description,
 					type,
+					group,
 					docUrl,
 					tags: [],
 					isFavorite: false,
@@ -166,6 +176,7 @@ const AppRouter: React.FC = () => {
 					name: params.newProjectName,
 					description: params.newProjectDescription || '',
 					type: params.newProjectType || 'latex',
+					group: params.newProjectGroup || undefined,
 					tags: params.newProjectTags?.split(',') || [],
 					isFavorite: false,
 				});

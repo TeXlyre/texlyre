@@ -5,7 +5,7 @@ import * as Y from 'yjs';
 
 import type { User } from '../types/auth';
 import type { FileNode } from '../types/files';
-import type { Project, ProjectType } from '../types/projects';
+import type { Project, ProjectType, ProjectGroup } from '../types/projects';
 import { getMimeType, isBinaryFile } from '../utils/fileUtils';
 import { authService } from './AuthService';
 import {
@@ -272,6 +272,7 @@ export class ProjectDataService {
 		projectName?: string,
 		projectDescription?: string,
 		projectType?: ProjectType,
+		projectGroup?: ProjectGroup,
 	): Promise<void> {
 		const dbName = `texlyre-project-${projectId}`;
 		const metadataCollection = `${dbName}-yjs_metadata`;
@@ -302,6 +303,7 @@ export class ProjectDataService {
 				projectName,
 				projectDescription,
 				projectType,
+				projectGroup,
 			);
 
 			console.log(
@@ -359,6 +361,7 @@ export class ProjectDataService {
 		projectName?: string,
 		projectDescription?: string,
 		projectType?: ProjectType,
+		projectGroup?: ProjectGroup,
 	): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
 			try {
@@ -388,6 +391,7 @@ export class ProjectDataService {
 								name: projectName,
 								description: projectDescription,
 								type: projectType || 'latex',
+								group: projectGroup,
 							});
 						}
 					});

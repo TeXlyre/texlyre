@@ -5,7 +5,7 @@ import * as Y from 'yjs';
 
 import { t } from '@/i18n';
 import type { User } from '../types/auth';
-import type { Project, ProjectType } from '../types/projects';
+import type { Project, ProjectType, ProjectGroup } from '../types/projects';
 import { generateRandomColor } from '../utils/colorUtils';
 import { cleanupProjectDatabases } from '../utils/dbDeleteUtils';
 import { generateYjsProjectId } from '../utils/urlUtils';
@@ -501,6 +501,7 @@ class AuthService {
 		projectName = 'Untitled Project',
 		projectDescription = '',
 		projectType: ProjectType = 'latex',
+		projectGroup: ProjectGroup = 'tex',
 	): string {
 		try {
 			const dbName = `texlyre-project-${projectId}`;
@@ -520,6 +521,7 @@ class AuthService {
 					name: projectName,
 					description: projectDescription,
 					type: projectType,
+					group: projectGroup,
 				});
 			});
 
@@ -557,6 +559,7 @@ class AuthService {
 				project.name,
 				project.description,
 				project.type,
+				project.group,
 			);
 
 		const now = Date.now();
@@ -700,6 +703,23 @@ class AuthService {
 		);
 	}
 
+	async getProjectsByGroup(group: ProjectGroup): Promise<Project[]> {
+		if (!this.db) await this.initialize();
+
+		if (!this.currentUser) {
+			return [];
+		}
+
+		const tx = this.db?.transaction(this.PROJECT_STORE, 'readonly');
+		const projects: Project[] = await tx.store.getAll();
+
+		return projects.filter(
+			(project) =>
+				project.ownerId === this.currentUser?.id &&
+				(project.group ?? project.type) === group,
+		);
+	}
+
 	async searchProjects(query: string): Promise<Project[]> {
 		if (!this.db) await this.initialize();
 
@@ -717,7 +737,41 @@ class AuthService {
 				(project.name.toLowerCase().includes(lowerQuery) ||
 					project.description.toLowerCase().includes(lowerQuery) ||
 					project.type.toLowerCase().includes(lowerQuery) ||
+					project.group?.toLowerCase().includes(lowerQuery) ||
 					project.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))),
+		);
+	}
+
+	async filterProjects(
+		query = '',
+		tag = '',
+		type: ProjectType | '' = '',
+		group: ProjectGroup | '' = '',
+	): Promise<Project[]> {
+		if (!this.db) await this.initialize();
+
+		if (!this.currentUser) {
+			return [];
+		}
+
+		const tx = this.db?.transaction(this.PROJECT_STORE, 'readonly');
+		const projects: Project[] = await tx.store.getAll();
+		const lowerQuery = query.trim().toLowerCase();
+
+		return projects.filter(
+			(project) =>
+				project.ownerId === this.currentUser?.id &&
+				(!tag || project.tags.includes(tag)) &&
+				(!type || project.type === type) &&
+				(!group || (project.group ?? project.type) === group) &&
+				(!lowerQuery ||
+					project.name.toLowerCase().includes(lowerQuery) ||
+					project.description.toLowerCase().includes(lowerQuery) ||
+					project.type.toLowerCase().includes(lowerQuery) ||
+					(project.group ?? project.type).toLowerCase().includes(lowerQuery) ||
+					project.tags.some((projectTag) =>
+						projectTag.toLowerCase().includes(lowerQuery),
+					)),
 		);
 	}
 

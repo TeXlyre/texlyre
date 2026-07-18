@@ -4,7 +4,7 @@ import { type ReactNode, createContext, useEffect, useState } from 'react';
 
 import { authService } from '../services/AuthService';
 import type { AuthContextType, User } from '../types/auth';
-import type { Project, ProjectType } from '../types/projects';
+import type { Project, ProjectType, ProjectGroup } from '../types/projects';
 
 export const AuthContext = createContext<AuthContextType>({
 	user: null,
@@ -47,6 +47,9 @@ export const AuthContext = createContext<AuthContextType>({
 		throw new Error('Not implemented');
 	},
 	getProjectsByTag: async () => {
+		throw new Error('Not implemented');
+	},
+	getProjectsByGroup: async (group: ProjectGroup) => {
 		throw new Error('Not implemented');
 	},
 	getProjectsByType: async (type: ProjectType) => {
@@ -179,6 +182,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		return authService.getProjectsByType(type);
 	};
 
+	const getProjectsByGroup = async (
+		group: ProjectGroup,
+	): Promise<Project[]> => {
+		return authService.getProjectsByGroup(group);
+	};
+
 	const searchProjects = async (query: string): Promise<Project[]> => {
 		return authService.searchProjects(query);
 	};
@@ -231,6 +240,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 				getProjects,
 				getProjectsByTag,
 				getProjectsByType,
+				getProjectsByGroup,
 				searchProjects,
 				toggleFavorite,
 				verifyPassword,

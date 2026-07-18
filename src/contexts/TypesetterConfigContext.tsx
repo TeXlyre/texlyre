@@ -47,6 +47,7 @@ interface StoredTypesetterConfig {
 	enabled?: unknown;
 	incrementalSync?: unknown;
 	projectType?: unknown;
+	projectGroup?: unknown;
 	inputExtensions?: unknown;
 	inputFiles?: unknown;
 	outputFormats?: unknown;
@@ -371,6 +372,10 @@ function normalizeConfig(value: unknown): TypesetterServerConfig | null {
 				: id.toUpperCase(),
 		enabled: config.enabled !== false,
 		projectType: config.projectType,
+		projectGroup:
+			typeof config.projectGroup === 'string' && config.projectGroup.trim()
+				? config.projectGroup
+				: undefined,
 		...(config.incrementalSync === true ? { incrementalSync: true } : {}),
 		inputExtensions: normalizeStringArray(config.inputExtensions),
 		outputFormats: normalizeOutputFormats(config.outputFormats),
@@ -448,6 +453,7 @@ export const TypesetterConfigProvider: React.FC<
 					label: config.name,
 					source: 'chelys',
 					projectType: config.projectType,
+					projectGroup: config.projectGroup,
 					inputExtensions: config.inputExtensions,
 					inputFiles: config.inputFiles,
 					outputFormats: config.outputFormats,

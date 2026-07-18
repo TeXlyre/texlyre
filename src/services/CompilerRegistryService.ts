@@ -7,6 +7,8 @@ type RegistryListener = () => void;
 export interface CompilerProjectType {
 	projectType: string;
 	label: string;
+	source: CompilerProvider['source'];
+	compilerId: string;
 }
 
 class CompilerRegistryService {
@@ -29,6 +31,7 @@ class CompilerRegistryService {
 			label: t('LaTeX'),
 			source: 'builtin',
 			projectType: 'latex',
+			projectGroup: 'tex',
 			inputExtensions: ['tex', 'latex'],
 			inputFiles: [
 				{
@@ -86,6 +89,18 @@ class CompilerRegistryService {
 		return Array.from(this.providers.values());
 	}
 
+	getProjectGroup(provider: CompilerProvider): string {
+		return provider.projectGroup ?? provider.projectType;
+	}
+
+	getProjectGroupLabel(projectGroup: string): string {
+		const labels: Record<string, string> = {
+			tex: t('TeX'),
+			typst: t('Typst'),
+		};
+		return labels[projectGroup] ?? projectGroup;
+	}
+
 	listForProjectType(projectType: string): CompilerProvider[] {
 		const providers = this.list().filter(
 			(provider) => provider.projectType === projectType,
@@ -96,17 +111,46 @@ class CompilerRegistryService {
 		];
 	}
 
+	listForProjectGroup(projectGroup: string): CompilerProvider[] {
+		const providers = this.list().filter(
+			(provider) => this.getProjectGroup(provider) === projectGroup,
+		);
+		return [
+			...providers.filter((provider) => provider.source === 'builtin'),
+			...providers.filter((provider) => provider.source !== 'builtin'),
+		];
+	}
+
 	listProjectTypes(): CompilerProjectType[] {
 		const seen = new Set<string>();
 		const projectTypes: CompilerProjectType[] = [];
+		const groupTypes = new Map<string, Set<string>>();
 
 		for (const provider of this.list()) {
-			if (seen.has(provider.projectType)) continue;
-			seen.add(provider.projectType);
+			const projectGroup = this.getProjectGroup(provider);
+			const types = groupTypes.get(projectGroup) ?? new Set<string>();
+			types.add(provider.projectType);
+			groupTypes.set(projectGroup, types);
+		}
+
+		for (const provider of this.list()) {
+			const projectGroup = this.getProjectGroup(provider);
+			const key = `${provider.source}:${projectGroup}`;
+			if (seen.has(key)) continue;
+			seen.add(key);
+
+			const groupLabel = this.getProjectGroupLabel(projectGroup);
+
 			projectTypes.push({
-				projectType: provider.projectType,
+				projectType: projectGroup,
 				label:
-					this.getForProjectType(provider.projectType)?.label ?? provider.label,
+					groupLabel !== projectGroup
+						? groupLabel
+						: groupTypes.get(projectGroup)?.size === 1
+							? provider.label
+							: projectGroup,
+				source: provider.source,
+				compilerId: provider.id,
 			});
 		}
 

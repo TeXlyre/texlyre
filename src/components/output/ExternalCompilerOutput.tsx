@@ -217,9 +217,9 @@ const ExternalCompilerOutput: React.FC<ExternalCompilerOutputProps> = ({
 				<div className='empty-state'>
 					<p>
 						{t(
-							'No output available. Compile a {{name}} document to see results.',
+							'No output available. Compile a {typesetter} document to see results.',
 							{
-								name: provider.label,
+								typesetter: provider.label,
 							},
 						)}
 					</p>

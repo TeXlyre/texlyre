@@ -1,11 +1,13 @@
 // src/types/projects.ts
 export type ProjectType = 'latex' | 'typst' | (string & {});
+export type ProjectGroup = 'tex' | (string & {});
 
 export interface Project {
 	id: string;
 	name: string;
 	description: string;
 	type: ProjectType;
+	group?: ProjectGroup;
 	compilerId?: string;
 	docUrl: string;
 	createdAt: number;
@@ -38,7 +40,8 @@ export interface TemplateProject {
 	author?: string;
 	version?: string;
 	lastUpdated: string;
-	type?: 'latex' | 'typst';
+	type?: ProjectType;
+	group?: ProjectGroup;
 	compile?: string;
 	file?: string;
 	versions?: TemplateVersion[];

@@ -752,7 +752,7 @@
   "Draw.io Diagram Editor": "Draw.io Diagram Editor",
   "Draw.io Editor": "Draw.io Editor",
   "Draw.io editor not loaded yet": "Draw.io editor not loaded yet",
-  "Draw.io File": "Draw.io File",
+  "{editor} File": "{{editor}} File",
   "Drop here to move to root directory": "Drop here to move to root directory",
   "Duotone Dark": "Duotone Dark",
   "Duotone Light": "Duotone Light",

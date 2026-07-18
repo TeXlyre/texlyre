@@ -36,7 +36,7 @@ describe('ProjectForm Component', () => {
 
         await user.type(nameInput, 'New Project');
         await user.type(descInput, 'Project description');
-        await user.selectOptions(typeSelect, 'latex');
+        await user.selectOptions(typeSelect, 'builtin:tex');
 
         const submitButton = screen.getByRole('button', { name: /create project/i });
         await user.click(submitButton);
@@ -46,6 +46,8 @@ describe('ProjectForm Component', () => {
                 name: 'New Project',
                 description: 'Project description',
                 type: 'latex',
+                compilerId: 'internal:latex',
+                group: 'tex',
                 tags: [],
                 isFavorite: false,
             });

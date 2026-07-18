@@ -35,7 +35,7 @@ const milkdownViewerPlugin: ViewerPlugin = {
 		{
 			extension: MARKDOWN_EXTENSIONS[0],
 			mimeType: MARKDOWN_MIMETYPES[0],
-			fileLabel: t('Markdown File'),
+			fileLabel: t('{editor} File', { editor: t('Markdown') }),
 		},
 	],
 

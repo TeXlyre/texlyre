@@ -107,6 +107,7 @@ export interface CompilerProvider {
 	label: string;
 	source: CompilerSource;
 	projectType: string;
+	projectGroup?: string;
 	inputExtensions: string[];
 	inputFiles?: CompilerInputFile[];
 	outputFormats: CompilerOutputFormat[];

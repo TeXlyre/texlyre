@@ -142,6 +142,11 @@ const ProjectList: React.FC<ProjectListProps> = ({
 		setCurrentPage(1);
 	};
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: Reset page whenever projects change.*/
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [projects]);
+
 	const handleNextPage = () => {
 		if (currentPage < totalPages) {
 			setCurrentPage(currentPage + 1);

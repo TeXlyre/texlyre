@@ -462,6 +462,7 @@ class FileSystemBackupService {
 			name: projectMetadata.name,
 			description: projectMetadata.description,
 			type: projectMetadata.type || 'latex',
+			group: projectMetadata.group,
 			docUrl: projectMetadata.docUrl,
 			createdAt: projectMetadata.createdAt,
 			updatedAt: Date.now(),

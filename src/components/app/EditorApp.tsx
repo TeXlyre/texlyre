@@ -27,7 +27,7 @@ import type { DocumentList } from '../../types/documents';
 import type { YjsDocUrl } from '../../types/yjs';
 import type { TypstOutputFormat } from '../../types/typst';
 import type { LaTeXEngine } from '../../types/latex';
-import type { ProjectType } from '../../types/projects';
+import type { ProjectType, ProjectGroup } from '../../types/projects';
 import BackupModal from '../backup/BackupModal';
 import BackupStatusIndicator from '../backup/BackupStatusIndicator';
 import ChatPanel from '../chat/ChatPanel';
@@ -203,6 +203,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		name: string;
 		description: string;
 		type?: ProjectType;
+		group?: ProjectGroup;
 		compilerId?: string;
 	}) => {
 		setIsSubmitting(true);
@@ -212,12 +213,14 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					name: projectData.name,
 					description: projectData.description,
 					type: projectData.type || 'latex',
+					group: projectData.group,
 					compilerId: projectData.compilerId,
 				};
 			} else {
 				d.projectMetadata.name = projectData.name;
 				d.projectMetadata.description = projectData.description;
 				d.projectMetadata.type = projectData.type || 'latex';
+				d.projectMetadata.group = projectData.group;
 				d.projectMetadata.compilerId = projectData.compilerId;
 			}
 		});

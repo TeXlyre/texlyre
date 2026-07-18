@@ -18,6 +18,7 @@ export interface TypesetterServerConfig {
 	enabled: boolean;
 	incrementalSync?: boolean;
 	projectType: string;
+	projectGroup?: string;
 	inputExtensions: string[];
 	inputFiles?: CompilerInputFile[];
 	outputFormats: CompilerOutputFormat[];

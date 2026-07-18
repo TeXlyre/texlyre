@@ -1,5 +1,5 @@
 // src/types/auth.ts
-import type { Project, ProjectType } from './projects';
+import type { Project, ProjectType, ProjectGroup } from './projects';
 
 export interface AuthContextType {
 	user: User | null;
@@ -28,6 +28,7 @@ export interface AuthContextType {
 		name: string;
 		description: string;
 		type: string;
+		group?: string;
 		compilerId?: string;
 		tags: string[];
 		docUrl?: string;
@@ -39,6 +40,7 @@ export interface AuthContextType {
 	getProjects: () => Promise<Project[]>;
 	getProjectsByTag: (tag: string) => Promise<Project[]>;
 	getProjectsByType: (type: ProjectType) => Promise<Project[]>;
+	getProjectsByGroup: (type: ProjectGroup) => Promise<Project[]>;
 	searchProjects: (query: string) => Promise<Project[]>;
 	toggleFavorite: (projectId: string) => Promise<Project>;
 	verifyPassword: (userId: string, password: string) => Promise<boolean>;

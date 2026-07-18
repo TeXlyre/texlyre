@@ -4,7 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { t } from '@/i18n';
 import { compilerRegistryService } from '../../services/CompilerRegistryService';
-import type { Project, ProjectType } from '../../types/projects.ts';
+import type {
+	Project,
+	ProjectGroup,
+	ProjectType,
+} from '../../types/projects.ts';
 import { TagInput } from '../common/TagInput';
 
 interface ProjectFormProps {
@@ -13,6 +17,7 @@ interface ProjectFormProps {
 		name: string;
 		description: string;
 		type: ProjectType;
+		group?: ProjectGroup;
 		compilerId?: string;
 		tags: string[];
 		docUrl?: string;
@@ -58,18 +63,55 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 		[registryVersion],
 	);
 
+	const selectedProvider = compilerId
+		? compilerRegistryService.get(compilerId)
+		: compilerRegistryService.getForProjectType(type);
+	const selectedGroup = selectedProvider
+		? compilerRegistryService.getProjectGroup(selectedProvider)
+		: type;
+	const selectedSource =
+		selectedProvider?.source ??
+		(compilerId?.startsWith('internal:') ? 'builtin' : 'chelys');
+	const selectedProjectTypeOptions = projectTypeOptions.some(
+		(option) =>
+			option.projectType === selectedGroup && option.source === selectedSource,
+	)
+		? projectTypeOptions
+		: [
+				...projectTypeOptions,
+				{
+					projectType: selectedGroup,
+					label: `${type} (${t('Unavailable')})`,
+					source: selectedSource,
+					compilerId: compilerId ?? '',
+					unavailable: true,
+				},
+			];
+
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: registryVersion invalidates the registry snapshot. */
 	const compilerOptions = useMemo(
-		() => compilerRegistryService.listForProjectType(type),
-		[type, registryVersion],
+		() => compilerRegistryService.listForProjectGroup(selectedGroup),
+		[selectedGroup, registryVersion],
+	);
+
+	const internalCompilerOptions = compilerOptions.filter(
+		({ source }) => source === 'builtin',
+	);
+	const externalCompilerOptions = compilerOptions.filter(
+		({ source }) => source !== 'builtin',
 	);
 
 	useEffect(() => {
-		if (compilerId && compilerOptions.some(({ id }) => id === compilerId)) {
+		if (
+			!compilerOptions.length ||
+			(compilerId && compilerOptions.some(({ id }) => id === compilerId))
+		) {
 			return;
 		}
 
-		setCompilerId(compilerOptions[0]?.id);
+		const provider = compilerOptions[0];
+		setCompilerId(provider.id);
+		setType(provider.projectType as ProjectType);
 	}, [compilerOptions, compilerId]);
 
 	useEffect(() => {
@@ -98,6 +140,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 			name: name.trim(),
 			description: description.trim(),
 			type,
+			group: selectedGroup as ProjectGroup,
 			compilerId,
 			tags,
 			docUrl: docUrl || undefined,
@@ -161,8 +204,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 				{disableNameAndDescription ? (
 					<div className='disabled-field'>
 						<span>
-							{projectTypeOptions.find((option) => option.projectType === type)
-								?.label ?? type}
+							{selectedProjectTypeOptions.find(
+								(option) =>
+									option.projectType === selectedGroup &&
+									option.source === selectedSource,
+							)?.label ?? selectedGroup}
 						</span>
 						<div className='field-note'>
 							{t('Open the project to edit its typesetter type')}
@@ -171,20 +217,50 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 				) : (
 					<select
 						id='project-type'
-						value={type}
-						onChange={(e) => setType(e.target.value as ProjectType)}
+						value={`${selectedSource}:${selectedGroup}`}
+						onChange={(e) => {
+							const option = selectedProjectTypeOptions.find(
+								({ source, projectType }) =>
+									`${source}:${projectType}` === e.target.value,
+							);
+							const provider = option
+								? compilerRegistryService.get(option.compilerId)
+								: undefined;
+
+							if (!provider) return;
+							setType(provider.projectType as ProjectType);
+							setCompilerId(provider.id);
+						}}
 						disabled={isSubmitting}
 					>
-						{projectTypeOptions.map((option) => (
-							<option key={option.projectType} value={option.projectType}>
-								{option.label}
-							</option>
-						))}
+						{(['builtin', 'chelys'] as const).map((source) => {
+							const options = selectedProjectTypeOptions.filter(
+								(option) => option.source === source,
+							);
+							if (!options.length) return null;
+
+							return (
+								<optgroup
+									key={source}
+									label={source === 'builtin' ? t('Internal') : t('External')}
+								>
+									{options.map((option) => (
+										<option
+											key={`${source}:${option.projectType}`}
+											value={`${source}:${option.projectType}`}
+											disabled={'unavailable' in option}
+										>
+											{option.label}
+										</option>
+									))}
+								</optgroup>
+							);
+						})}
 					</select>
 				)}
 			</div>
 
-			{compilerOptions.length > 1 && (
+			{selectedGroup !== type && (
 				<div className='form-group'>
 					<label htmlFor='project-compiler'>{t('Compiler')}</label>
 
@@ -192,7 +268,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 						<div className='disabled-field'>
 							<span>
 								{compilerOptions.find(({ id }) => id === compilerId)?.label ??
-									compilerOptions[0].label}
+									compilerOptions[0]?.label}
 							</span>
 							<div className='field-note'>
 								{t('Open the project to edit its compiler')}
@@ -202,14 +278,33 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 						<select
 							id='project-compiler'
 							value={compilerId ?? ''}
-							onChange={(e) => setCompilerId(e.target.value)}
+							onChange={(e) => {
+								const provider = compilerRegistryService.get(e.target.value);
+								if (!provider) return;
+
+								setType(provider.projectType as ProjectType);
+								setCompilerId(provider.id);
+							}}
 							disabled={isSubmitting}
 						>
-							{compilerOptions.map((provider) => (
-								<option key={provider.id} value={provider.id}>
-									{provider.label}
-								</option>
-							))}
+							{internalCompilerOptions.length > 0 && (
+								<optgroup label={t('Internal')}>
+									{internalCompilerOptions.map((provider) => (
+										<option key={provider.id} value={provider.id}>
+											{provider.label}
+										</option>
+									))}
+								</optgroup>
+							)}
+							{externalCompilerOptions.length > 0 && (
+								<optgroup label={t('External')}>
+									{externalCompilerOptions.map((provider) => (
+										<option key={provider.id} value={provider.id}>
+											{provider.label}
+										</option>
+									))}
+								</optgroup>
+							)}
 						</select>
 					)}
 				</div>

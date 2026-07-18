@@ -3,11 +3,12 @@ import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { t } from '@/i18n';
+import { compilerRegistryService } from '../../services/CompilerRegistryService';
 import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 import { useAuth } from '../../hooks/useAuth';
 import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
 import { useTheme } from '../../hooks/useTheme';
-import type { Project, ProjectType } from '../../types/projects';
+import type { Project, ProjectType, ProjectGroup } from '../../types/projects';
 import {
 	isValidYjsUrl,
 	buildUrlWithFragments,
@@ -41,6 +42,7 @@ interface ProjectManagerProps {
 		projectName?: string,
 		projectDescription?: string,
 		projectType?: ProjectType,
+		projectGroup?: ProjectGroup,
 		projectId?: string,
 	) => void;
 	onLogout: () => void;
@@ -53,9 +55,6 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const {
 		user,
 		getProjects,
-		getProjectsByTag,
-		getProjectsByType,
-		searchProjects,
 		createProject,
 		updateProject,
 		deleteProject,
@@ -85,6 +84,12 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [isLoading, setIsLoading] = useState(true);
 	const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 	const [availableTags, setAvailableTags] = useState<string[]>([]);
+	const [availableTypes, setAvailableTypes] = useState<string[]>([]);
+	const [availableGroups, setAvailableGroups] = useState<string[]>([]);
+	const [searchQuery, setSearchQuery] = useState('');
+	const [selectedTag, setSelectedTag] = useState('');
+	const [selectedType, setSelectedType] = useState('');
+	const [selectedGroup, setSelectedGroup] = useState('');
 	const [sidebarWidth, setSidebarWidth] = useState(
 		currentLayout?.defaultFileExplorerWidth || 250,
 	);
@@ -131,6 +136,22 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			});
 
 			setAvailableTags(Array.from(tags));
+			setAvailableTypes(
+				Array.from(new Set(userProjects.map((project) => project.type))),
+			);
+			setAvailableGroups(
+				Array.from(
+					new Set(
+						userProjects.map(
+							(project) =>
+								project.group ??
+								compilerRegistryService.get(project.compilerId ?? '')
+									?.projectGroup ??
+								project.type,
+						),
+					),
+				),
+			);
 		} catch (error) {
 			console.error('Failed to load projects:', error);
 		} finally {
@@ -168,40 +189,32 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		}
 	};
 
-	const handleSearch = async (query: string) => {
-		if (!query.trim()) {
-			setFilteredProjects(projects);
-			return;
-		}
+	useEffect(() => {
+		const query = searchQuery.trim().toLowerCase();
+		setFilteredProjects(
+			projects.filter(
+				(project) =>
+					(!query ||
+						project.name.toLowerCase().includes(query) ||
+						project.description.toLowerCase().includes(query) ||
+						project.tags.some((tag) => tag.toLowerCase().includes(query))) &&
+					(!selectedTag || project.tags.includes(selectedTag)) &&
+					(!selectedType || project.type === selectedType) &&
+					(!selectedGroup || (project.group ?? project.type) === selectedGroup),
+			),
+		);
+	}, [projects, searchQuery, selectedTag, selectedType, selectedGroup]);
 
-		const results = await searchProjects(query);
-		setFilteredProjects(results);
-	};
-
-	const handleFilterByTag = async (tag: string) => {
-		if (!tag) {
-			setFilteredProjects(projects);
-			return;
-		}
-
-		const results = await getProjectsByTag(tag);
-		setFilteredProjects(results);
-	};
-
-	const handleFilterByType = async (type: string) => {
-		if (!type) {
-			setFilteredProjects(projects);
-			return;
-		}
-
-		const results = await getProjectsByType(type as ProjectType);
-		setFilteredProjects(results);
-	};
+	const handleSearch = (query: string) => setSearchQuery(query);
+	const handleFilterByTag = (tag: string) => setSelectedTag(tag);
+	const handleFilterByType = (type: string) => setSelectedType(type);
+	const handleFilterByGroup = (group: string) => setSelectedGroup(group);
 
 	const handleCreateProject = async (projectData: {
 		name: string;
 		description: string;
 		type: ProjectType;
+		group?: ProjectGroup;
 		compilerId?: string;
 		tags: string[];
 		docUrl?: string;
@@ -222,6 +235,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						name: projectData.name,
 						description: projectData.description,
 						type: projectData.type,
+						group: projectData.group,
 						compilerId: projectData.compilerId,
 					}),
 				);
@@ -230,6 +244,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					newProject.name,
 					newProject.description,
 					newProject.type,
+					newProject.group,
 					newProject.id,
 				);
 			}
@@ -397,6 +412,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			project.name,
 			project.description,
 			project.type,
+			project.group,
 			project.id,
 		);
 	};
@@ -425,6 +441,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			project.name,
 			project.description,
 			project.type,
+			project.group,
 			project.id,
 		);
 	};
@@ -483,9 +500,12 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onSearch={handleSearch}
 						onFilterByTag={handleFilterByTag}
 						onFilterByType={handleFilterByType}
+						onFilterByGroup={handleFilterByGroup}
 						onOpenProject={openProject}
 						projects={projects}
 						availableTags={availableTags}
+						availableTypes={availableTypes}
+						availableGroups={availableGroups}
 					/>
 				</ResizablePanel>
 
@@ -510,6 +530,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						</div>
 					) : (
 						<ProjectList
+							// key={`${searchQuery}:${selectedTag}:${selectedType}:${selectedGroup}`}
 							projects={filteredProjects}
 							onOpenProject={openProject}
 							onOpenProjectDefault={handleOpenDefault}
