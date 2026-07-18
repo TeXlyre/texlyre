@@ -894,9 +894,10 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 				return;
 			}
 
-			goToPage(page);
+			if (containerRef.current?.offsetParent === null) return;
 
 			requestAnimationFrame(() => {
+				goToPage(page);
 				renderVisiblePages();
 			});
 		};

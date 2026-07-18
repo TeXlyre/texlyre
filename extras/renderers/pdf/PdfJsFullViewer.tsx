@@ -247,7 +247,11 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 				pendingPageRef.current = null;
 
 				try {
+					const viewerEl = pdfViewer.viewer as HTMLElement | undefined;
+					const laidOut = !!viewerEl && viewerEl.offsetParent !== null;
+
 					if (
+						laidOut &&
 						scrollView &&
 						typeof pdfViewer.scrollPageIntoView === 'function'
 					) {
@@ -257,8 +261,10 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 							scrollToPageDom(target);
 							requestAnimationFrame(() => scrollToPageDom(target));
 						});
-					} else {
+					} else if (laidOut) {
 						pdfViewer.currentPageNumber = target;
+					} else {
+						pendingPageRef.current = target;
 					}
 				} catch {
 					scrollToPageDom(target);

@@ -249,7 +249,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			},
 			setHighlight: (nextHighlight: Highlight) => {
 				setHighlight(nextHighlight);
-				if (nextHighlight) goToPage(nextHighlight.page);
+				if (nextHighlight) {
+					const targetPage = nextHighlight.page;
+					requestAnimationFrame(() => goToPage(targetPage));
+				}
 			},
 		}),
 		[goToPage, setPdfContent],
