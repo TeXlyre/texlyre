@@ -17,6 +17,7 @@ import type {
 import {
 	ChevronDownIcon,
 	ClearCompileIcon,
+	GlobeIcon,
 	PlayIcon,
 	StopIcon,
 	TrashIcon,
@@ -313,6 +314,9 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 					title={t('Compilation Options')}
 				>
 					<ChevronDownIcon />
+					<span className='external-button-status' aria-hidden='true'>
+						<GlobeIcon />
+					</span>
 				</button>
 			</div>
 

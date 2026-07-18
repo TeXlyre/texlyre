@@ -12,7 +12,7 @@ import type {
 	CompilerProvider,
 	CompilerUIField,
 } from '../../types/compilation';
-import { ChevronDownIcon, ExportIcon } from '../common/Icons';
+import { ChevronDownIcon, ExportIcon, GlobeIcon } from '../common/Icons';
 import { getFilenameFromPath } from '../../utils/fileUtils';
 import {
 	collectValues,
@@ -217,12 +217,16 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 				>
 					<ExportIcon />
 				</button>
+
 				<button
 					className='external-button dropdown-toggle'
 					onClick={toggleDropdown}
 					title={t('Export Options')}
 				>
 					<ChevronDownIcon />
+					<span className='external-button-status' aria-hidden='true'>
+						<GlobeIcon />
+					</span>
 				</button>
 			</div>
 

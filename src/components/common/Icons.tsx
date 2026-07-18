@@ -785,6 +785,34 @@ export const DuplicateIcon: React.FC = () => (
 	</svg>
 );
 
+export const UrlIcon: React.FC = () => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		width='16'
+		height='16'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+	>
+		<rect x='2' y='5' width='20' height='14' rx='2' />
+		<line x1='2' y1='9' x2='22' y2='9' />
+		<text
+			x='12'
+			y='16.2'
+			textAnchor='middle'
+			fontSize='7'
+			fontWeight='500'
+			stroke='none'
+			fill='currentColor'
+		>
+			www
+		</text>
+	</svg>
+);
+
 export const CopyUrlIcon: React.FC = () => (
 	<svg
 		xmlns='http://www.w3.org/2000/svg'

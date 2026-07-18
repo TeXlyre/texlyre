@@ -8,6 +8,7 @@ import { compilerRegistryService } from '../../services/CompilerRegistryService'
 import type { CompilerProvider } from '../../types/compilation';
 import type { ProjectType } from '../../types/projects';
 import { resolveLabel } from '../../utils/compilerUtils';
+import { GlobeIcon } from './Icons';
 
 interface TypesetterInfoProps {
 	type: ProjectType;
@@ -24,6 +25,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 	const [position, setPosition] = useState({ top: 0, left: 0 });
 	const buttonRef = useRef<HTMLButtonElement>(null);
 	const tooltipRef = useRef<HTMLDivElement>(null);
+	const isExternal = provider?.source === 'chelys';
 
 	useEffect(() => {
 		if (!showTooltip || !buttonRef.current || !tooltipRef.current) return;
@@ -218,6 +220,15 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 				onClick={() => setShowTooltip(!showTooltip)}
 			>
 				{getLabel()}
+				{isExternal && (
+					<span
+						className='external-typesetter-status'
+						title={t('External compiler')}
+						aria-hidden='true'
+					>
+						<GlobeIcon />
+					</span>
+				)}
 			</button>
 			{showTooltip &&
 				createPortal(

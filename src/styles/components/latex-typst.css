@@ -189,6 +189,26 @@ embed {
 	transition: background-color var(--transition-normal);
 }
 
+.external-button.compile-button,
+.external-button.export-button {
+	position: relative;
+}
+
+.external-button-status {
+	position: absolute;
+	top: -1px;
+	right: -1px;
+	display: inline-flex;
+	color: var(--pico-primary);
+	pointer-events: none;
+}
+
+.external-button-status svg {
+	width: 0.55rem;
+	height: 0.55rem;
+	stroke-width: 2.5;
+}
+
 .external-dropdown,
 .latex-dropdown,
 .typst-dropdown {
