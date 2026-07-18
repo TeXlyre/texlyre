@@ -35,6 +35,9 @@ import DeleteAccountModal from '../profile/DeleteAccountModal';
 import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
 import { NewProjectIcon } from '../common/Icons';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('ProjectApp');
 
 interface ProjectManagerProps {
 	onOpenProject: (
@@ -153,7 +156,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				),
 			);
 		} catch (error) {
-			console.error('[ProjectApp] Failed to load projects:', error);
+			moduleLog.error('Failed to load projects:', error);
 		} finally {
 			setIsLoading(false);
 		}
@@ -180,7 +183,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			}
 			await loadProjects();
 		} catch (error) {
-			console.error('[ProjectApp] Failed to delete projects:', error);
+			moduleLog.error('Failed to delete projects:', error);
 			setError(
 				error instanceof Error ? error.message : t('Failed to delete projects'),
 			);
@@ -249,7 +252,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				);
 			}
 		} catch (error) {
-			console.error('[ProjectApp] Failed to create project:', error);
+			moduleLog.error('Failed to create project:', error);
 			setError(
 				error instanceof Error ? error.message : t('Failed to create project'),
 			);
@@ -279,7 +282,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			setShowEditModal(false);
 			await loadProjects();
 		} catch (error) {
-			console.error('[ProjectApp] Failed to update project:', error);
+			moduleLog.error('Failed to update project:', error);
 			setError(
 				error instanceof Error ? error.message : t('Failed to update project'),
 			);
@@ -297,7 +300,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			setShowDeleteModal(false);
 			await loadProjects();
 		} catch (error) {
-			console.error('[ProjectApp] Failed to delete project:', error);
+			moduleLog.error('Failed to delete project:', error);
 			setError(
 				error instanceof Error ? error.message : t('Failed to delete project'),
 			);
@@ -311,7 +314,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			await toggleFavorite(projectId);
 			await loadProjects();
 		} catch (error) {
-			console.error('[ProjectApp] Failed to toggle favorite status:', error);
+			moduleLog.error('Failed to toggle favorite status:', error);
 		}
 	};
 
@@ -327,7 +330,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			setSelectedProjectsForExport(selectedProjects);
 			setShowExportModal(true);
 		} catch (error) {
-			console.error('[ProjectApp] Error preparing export:', error);
+			moduleLog.error('Error preparing export:', error);
 			setError(t('Failed to prepare projects for export'));
 		}
 	};
@@ -340,7 +343,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			setSelectedProjectsForDelete(selectedProjects);
 			setShowMultiDeleteModal(true);
 		} catch (error) {
-			console.error('[ProjectApp] Error preparing delete:', error);
+			moduleLog.error('Error preparing delete:', error);
 			setError(t('Failed to prepare projects for deletion'));
 		}
 	};
@@ -378,7 +381,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
 	const handleOpenDefault = (project: Project) => {
 		if (!project.docUrl) {
-			console.error('[ProjectApp] Project has no document URL:', project);
+			moduleLog.error('Project has no document URL:', project);
 			setError(
 				t(
 					'This project has no associated document. Please try creating a new project',
@@ -388,10 +391,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		}
 
 		if (!isValidYjsUrl(project.docUrl)) {
-			console.error(
-				'[ProjectApp] Invalid document URL format:',
-				project.docUrl,
-			);
+			moduleLog.error('Invalid document URL format:', project.docUrl);
 			setError(
 				t('Invalid document URL format: {url}', { url: project.docUrl }),
 			);
@@ -422,7 +422,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
 	const openProject = async (project: Project) => {
 		if (!project.docUrl) {
-			console.error('[ProjectApp] Project has no document URL:', project);
+			moduleLog.error('Project has no document URL:', project);
 			setError(
 				t(
 					'This project has no associated document. Please try creating a new project',
@@ -432,10 +432,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		}
 
 		if (!isValidYjsUrl(project.docUrl)) {
-			console.error(
-				'[ProjectApp] Invalid document URL format:',
-				project.docUrl,
-			);
+			moduleLog.error('Invalid document URL format:', project.docUrl);
 			setError(
 				t('Invalid document URL format: {url}', { url: project.docUrl }),
 			);

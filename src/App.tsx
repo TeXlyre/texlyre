@@ -77,6 +77,9 @@ import { SecretsContext, SecretsProvider } from './contexts/SecretsContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('App');
 
 compilerRegistryService.registerBuiltins();
 
@@ -111,7 +114,7 @@ function App() {
 				const settings = JSON.parse(storedSettings);
 				targetLanguage = settings.language || 'en';
 			} catch (error) {
-				console.warn('Failed to parse stored settings', error);
+				moduleLog.warn('Failed to parse stored settings', error);
 			}
 		}
 

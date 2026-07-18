@@ -1,6 +1,9 @@
 // src/services/CompilerRegistryService.ts
 import { t } from '@/i18n';
 import type { CompilerInputFile, CompilerProvider } from '../types/compilation';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('CompilerRegistryService');
 
 type RegistryListener = () => void;
 
@@ -221,7 +224,7 @@ class CompilerRegistryService {
 			try {
 				listener();
 			} catch (error) {
-				console.error('[CompilerRegistryService] Listener error:', error);
+				moduleLog.error('Listener error:', error);
 			}
 		});
 	}

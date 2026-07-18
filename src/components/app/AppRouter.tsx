@@ -30,6 +30,9 @@ import LoadingScreen from './LoadingScreen';
 import ProjectApp from './ProjectApp';
 import PrivacyModal from '../common/PrivacyModal';
 import ShareTargetModal from '../project/ShareTargetModal';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('AppRouter');
 
 interface UrlProjectParams {
 	newProjectName?: string;
@@ -69,7 +72,7 @@ const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
 
 		return params.newProjectName ? params : null;
 	} catch (error) {
-		console.error('[AppRouter] Error parsing URL project params:', error);
+		moduleLog.error('Error parsing URL project params:', error);
 		return null;
 	}
 };
@@ -99,7 +102,7 @@ const downloadAndExtractZip = async (
 			preserveTimestamp: false,
 		});
 	} catch (error) {
-		console.error('[AppRouter] Error downloading and extracting zip:', error);
+		moduleLog.error('Error downloading and extracting zip:', error);
 	}
 };
 
@@ -158,10 +161,7 @@ const AppRouter: React.FC = () => {
 
 				return project;
 			} catch (error) {
-				console.error(
-					'[AppRouter] Failed to create project for document:',
-					error,
-				);
+				moduleLog.error('Failed to create project for document:', error);
 				throw error;
 			}
 		},
@@ -194,7 +194,7 @@ const AppRouter: React.FC = () => {
 
 				return newProject.docUrl;
 			} catch (error) {
-				console.error('[AppRouter] Error creating project from URL:', error);
+				moduleLog.error('Error creating project from URL:', error);
 				return null;
 			} finally {
 				setIsCreatingProject(false);
@@ -340,8 +340,8 @@ const AppRouter: React.FC = () => {
 						}
 					}
 				} catch (error) {
-					console.error(
-						'[AppRouter] Error checking/creating project for shared document:',
+					moduleLog.error(
+						'Error checking/creating project for shared document:',
 						error,
 					);
 				}
@@ -394,7 +394,7 @@ const AppRouter: React.FC = () => {
 			const baseDocUrl = fragments.yjsUrl;
 
 			if (!isValidYjsUrl(baseDocUrl)) {
-				console.error('[AppRouter] Invalid document URL format:', baseDocUrl);
+				moduleLog.error('Invalid document URL format:', baseDocUrl);
 				return;
 			}
 
@@ -410,10 +410,7 @@ const AppRouter: React.FC = () => {
 			finalUrl = projectDocUrl;
 		} else {
 			if (!isValidYjsUrl(projectDocUrl)) {
-				console.error(
-					'[AppRouter] Invalid document URL format:',
-					projectDocUrl,
-				);
+				moduleLog.error('Invalid document URL format:', projectDocUrl);
 				return;
 			}
 

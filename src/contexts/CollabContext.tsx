@@ -19,6 +19,9 @@ import type {
 	CollabProviderType,
 } from '../types/collab';
 import type { YjsDocUrl } from '../types/yjs';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('CollabContext');
 
 export const CollabContext = createContext<CollabContextType | null>(null);
 
@@ -177,10 +180,7 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 				setProvider(undefined);
 			};
 		} catch (error) {
-			console.warn(
-				'[CollabContext] Connection failed, continuing in offline mode:',
-				error,
-			);
+			moduleLog.warn('Connection failed, continuing in offline mode:', error);
 			setIsConnected(false);
 			setDoc(undefined);
 			setProvider(undefined);

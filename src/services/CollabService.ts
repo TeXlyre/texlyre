@@ -15,6 +15,9 @@ import type {
 import type { YjsDocUrl } from '../types/yjs';
 import { parseUrlFragments } from '../utils/urlUtils';
 import { offlineService } from './OfflineService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('CollabService');
 
 interface OfflineDocContainer {
 	doc: Y.Doc;
@@ -111,8 +114,8 @@ class CollabService {
 			};
 		}
 
-		console.log(
-			`[CollabService] Creating new connection for: ${containerId} (offline: ${this.isOfflineMode()})`,
+		moduleLog.info(
+			`Creating new connection for: ${containerId} (offline: ${this.isOfflineMode()})`,
 		);
 
 		if (this.forceLocalConnections || this.isOfflineMode()) {
@@ -146,9 +149,7 @@ class CollabService {
 		};
 
 		this.docContainers.set(containerId, offlineContainer);
-		console.log(
-			`[CollabService] Created offline connection for: ${containerId}`,
-		);
+		moduleLog.info(`Created offline connection for: ${containerId}`);
 
 		return { doc, provider: null };
 	}
@@ -182,8 +183,8 @@ class CollabService {
 					const isDisconnected =
 						event.connected === false || event.status === 'disconnected';
 					if (isDisconnected) {
-						console.log(
-							`[CollabService] Connection lost for ${containerId}, attempting reconnect...`,
+						moduleLog.info(
+							`Connection lost for ${containerId}, attempting reconnect...`,
 						);
 						setTimeout(() => {
 							if (this.docContainers.has(containerId)) {
@@ -273,10 +274,10 @@ class CollabService {
 			awareness.setLocalStateField('name', user.username);
 			awareness.setLocalStateField('username', user.username);
 
-			console.log('Set awareness fields for user:', user.username);
+			moduleLog.info('Set awareness fields for user:', user.username);
 		} else if (container && 'isOffline' in container) {
-			console.log(
-				'[CollabService] Skipping user awareness in offline mode for:',
+			moduleLog.info(
+				'Skipping user awareness in offline mode for:',
 				user.username,
 			);
 		}
@@ -292,7 +293,7 @@ class CollabService {
 		container.refCount--;
 
 		if (container.refCount <= 0) {
-			console.log(`[CollabService] Destroying connection for: ${containerId}`);
+			moduleLog.info(`Destroying connection for: ${containerId}`);
 
 			if ('provider' in container && container.provider) {
 				const roomName = `${docId}-${collectionName}`;
@@ -370,7 +371,7 @@ class CollabService {
 
 			return (docData?.projectMetadata as any) ?? null;
 		} catch (error) {
-			console.error('[CollabService] Error checking document metadata:', error);
+			moduleLog.error('Error checking document metadata:', error);
 			return null;
 		} finally {
 			persistence.destroy();
@@ -391,12 +392,12 @@ class CollabService {
 		onProgress?: (current: number, total: number) => void,
 		collabOptions?: CollabConnectOptions,
 	): Promise<string> {
-		console.log(
-			`[CollabService] Starting bulk sync for project: ${projectId} (offline: ${this.isOfflineMode()})`,
+		moduleLog.info(
+			`Starting bulk sync for project: ${projectId} (offline: ${this.isOfflineMode()})`,
 		);
 
 		if (this.isOfflineMode()) {
-			console.log('[CollabService] Offline mode detected - local sync only');
+			moduleLog.info('Offline mode detected - local sync only');
 			onProgress?.(0, 0);
 			return 'offline-sync';
 		}
@@ -424,9 +425,7 @@ class CollabService {
 			metadataDoc.destroy();
 
 			if (!Array.isArray(documents) || documents.length === 0) {
-				console.log(
-					`[CollabService] No documents found for project: ${projectId}`,
-				);
+				moduleLog.info(`No documents found for project: ${projectId}`);
 				onProgress?.(0, 0);
 				return '';
 			}
@@ -437,16 +436,16 @@ class CollabService {
 				const isCurrentlyConnected = this.docContainers.has(containerId);
 
 				if (isCurrentlyConnected) {
-					console.log(
-						`[CollabService] Skipping document ${doc.name} (currently open for editing)`,
+					moduleLog.info(
+						`Skipping document ${doc.name} (currently open for editing)`,
 					);
 				}
 
 				return !isCurrentlyConnected;
 			});
 
-			console.log(
-				`[CollabService] Opening ${documentsToSync.length} documents for sync (${documents.length} total, ${documents.length - documentsToSync.length} currently being edited)`,
+			moduleLog.info(
+				`Opening ${documentsToSync.length} documents for sync (${documents.length} total, ${documents.length - documentsToSync.length} currently being edited)`,
 			);
 			onProgress?.(0, documentsToSync.length);
 
@@ -456,20 +455,17 @@ class CollabService {
 				const collectionName = `yjs_${doc.id}`;
 
 				try {
-					console.log(`[CollabService] Connecting to document: ${doc.name}`);
+					moduleLog.info(`Connecting to document: ${doc.name}`);
 					this.connect(projectId, collectionName, collabOptions);
 					connections.push({ docId: projectId, collectionName });
 				} catch (error) {
-					console.error(
-						`[CollabService] Error connecting to document ${doc.name}:`,
-						error,
-					);
+					moduleLog.error(`Error connecting to document ${doc.name}:`, error);
 				}
 			}
 
 			onProgress?.(documentsToSync.length, documentsToSync.length);
-			console.log(
-				`[CollabService] All ${connections.length} documents connected for sync. Real-time collaboration active.`,
+			moduleLog.info(
+				`All ${connections.length} documents connected for sync. Real-time collaboration active.`,
 			);
 
 			const syncId = `sync-${projectId}-${Date.now()}`;
@@ -479,34 +475,30 @@ class CollabService {
 
 			this.syncConnections.set(syncId, { connections, timeoutId });
 
-			console.log(
-				`[CollabService] Sync session ${syncId} active. All documents will auto-disconnect in 60 seconds.`,
+			moduleLog.info(
+				`Sync session ${syncId} active. All documents will auto-disconnect in 60 seconds.`,
 			);
 			return syncId;
 		} catch (error) {
-			console.error('[CollabService] Error during bulk sync:', error);
+			moduleLog.error('Error during bulk sync:', error);
 			throw error;
 		}
 	}
 
 	public stopSyncAllDocuments(syncId: string): void {
 		if (syncId === 'offline-sync') {
-			console.log(
-				'[CollabService] Offline sync session - no connections to stop',
-			);
+			moduleLog.info('Offline sync session - no connections to stop');
 			return;
 		}
 
 		const syncSession = this.syncConnections.get(syncId);
 		if (!syncSession) {
-			console.log(
-				`[CollabService] Sync session ${syncId} not found or already stopped`,
-			);
+			moduleLog.info(`Sync session ${syncId} not found or already stopped`);
 			return;
 		}
 
-		console.log(
-			`[CollabService] Stopping sync session ${syncId}, disconnecting ${syncSession.connections.length} documents`,
+		moduleLog.info(
+			`Stopping sync session ${syncId}, disconnecting ${syncSession.connections.length} documents`,
 		);
 
 		clearTimeout(syncSession.timeoutId);
@@ -515,15 +507,15 @@ class CollabService {
 			try {
 				this.disconnect(connection.docId, connection.collectionName);
 			} catch (error) {
-				console.error(
-					`[CollabService] Error disconnecting ${connection.collectionName}:`,
+				moduleLog.error(
+					`Error disconnecting ${connection.collectionName}:`,
 					error,
 				);
 			}
 		}
 
 		this.syncConnections.delete(syncId);
-		console.log(`[CollabService] Sync session ${syncId} stopped successfully`);
+		moduleLog.info(`Sync session ${syncId} stopped successfully`);
 	}
 
 	public getSyncSessions(): string[] {
@@ -602,18 +594,14 @@ class CollabService {
 	}
 
 	private handleNetworkChange(isOnline: boolean): void {
-		console.log(
-			`[CollabService] Network status changed: ${isOnline ? 'online' : 'offline'}`,
+		moduleLog.info(
+			`Network status changed: ${isOnline ? 'online' : 'offline'}`,
 		);
 
 		if (!isOnline) {
-			console.log(
-				'[CollabService] Network offline - collaboration features disabled',
-			);
+			moduleLog.info('Network offline - collaboration features disabled');
 		} else {
-			console.log(
-				'[CollabService] Network online - collaboration features enabled',
-			);
+			moduleLog.info('Network online - collaboration features enabled');
 		}
 	}
 

@@ -1,5 +1,5 @@
 // src/utils/urlUtils.ts
-import type { UrlFragments } from '../types/yjs.ts';
+import type { UrlFragments } from '../types/yjs';
 
 const LEGACY_YJS_PROJECT_ID_RE = /^[a-z0-9]{20,32}$/;
 const UUID_PROJECT_ID_RE =

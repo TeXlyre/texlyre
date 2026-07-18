@@ -16,9 +16,12 @@ import {
 	MoreVerticalIcon,
 	PlusIcon,
 	SyncIcon,
-} from '../common/Icons.tsx';
-import Modal from '../common/Modal.tsx';
-import DropdownMenu from '../common/DropdownMenu.tsx';
+} from '../common/Icons';
+import Modal from '../common/Modal';
+import DropdownMenu from '../common/DropdownMenu';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('DocumentExplorer');
 
 interface FileViewerProps {
 	documents: Document[];
@@ -155,7 +158,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 
 			setSyncSession(sessionId);
 		} catch (error) {
-			console.error('[DocumentExplorer] Error starting document sync:', error);
+			moduleLog.error('Error starting document sync:', error);
 		}
 	};
 
@@ -167,7 +170,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 			setSyncSession(null);
 			setSyncProgress({ current: 0, total: 0 });
 		} catch (error) {
-			console.error('[DocumentExplorer] Error stopping document sync:', error);
+			moduleLog.error('Error stopping document sync:', error);
 		}
 	};
 

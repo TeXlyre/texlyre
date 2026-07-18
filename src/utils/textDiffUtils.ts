@@ -1,6 +1,10 @@
 // src/utils/textDiffUtils.ts
 import { diff3Merge } from 'node-diff3';
 
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('textDiffUtils');
+
 export interface ThreeWayMergeResult {
 	merged: string;
 	hasConflicts: boolean;
@@ -106,7 +110,7 @@ export function computeReplacementChange(
 	while (
 		suffixLen < maxSuffixLen &&
 		normalizedOriginal[normalizedOriginal.length - 1 - suffixLen] ===
-		normalizedFormatted[normalizedFormatted.length - 1 - suffixLen]
+			normalizedFormatted[normalizedFormatted.length - 1 - suffixLen]
 	) {
 		suffixLen++;
 	}
@@ -121,7 +125,7 @@ export function computeReplacementChange(
 
 	// Sanity check: make sure we're not creating an invalid change
 	if (from > to || from < 0 || to > normalizedOriginal.length) {
-		console.error('[textDiffUtils] Invalid change detected:', {
+		moduleLog.error('Invalid change detected:', {
 			from,
 			to,
 			originalLength: normalizedOriginal.length,
@@ -135,17 +139,17 @@ export function computeReplacementChange(
 		insert +
 		normalizedOriginal.substring(to);
 	if (resultAfterChange !== normalizedFormatted) {
-		console.error(
-			'[textDiffUtils] Change validation failed - would not produce expected result',
+		moduleLog.error(
+			'Change validation failed - would not produce expected result',
 		);
-		console.error(
+		moduleLog.error(
 			'Expected:',
 			normalizedFormatted.substring(
 				Math.max(0, from - 20),
 				Math.min(normalizedFormatted.length, from + insert.length + 20),
 			),
 		);
-		console.error(
+		moduleLog.error(
 			'Would get:',
 			resultAfterChange.substring(
 				Math.max(0, from - 20),

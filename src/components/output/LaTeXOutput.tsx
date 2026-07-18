@@ -29,6 +29,9 @@ import {
 	toArrayBuffer,
 } from '../../utils/fileUtils';
 import { gotoEditor } from '../../utils/editorNavigator';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('LaTeXOutput');
 
 interface LaTeXOutputProps {
 	className?: string;
@@ -254,7 +257,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 			if (!file || !isLatexFile(file.path)) return;
 			gotoEditor({ kind: 'file', fileId: selectedFileId }, { line });
 		} catch (error) {
-			console.error('[LaTeXOutput] Error handling line click:', error);
+			moduleLog.error('Error handling line click:', error);
 		}
 	};
 

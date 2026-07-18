@@ -3,6 +3,9 @@ import { t } from '@/i18n';
 import { WasmToolsEngine } from '../extensions/wasm-tools/WasmToolsEngine';
 import type { TypstyleOptions } from '../extensions/wasm-tools/TypstyleEngine';
 import { notificationService } from './NotificationService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('ContentFormatterService');
 
 export interface LatexFormatOptions {
 	wrap: boolean;
@@ -33,7 +36,7 @@ class ContentFormatterService {
 			const result = await engine.formatLatex(input, options);
 			return result;
 		} catch (error) {
-			console.error('[ContentFormatterService] LaTeX format failed:', error);
+			moduleLog.error('LaTeX format failed:', error);
 			return {
 				success: false,
 				error: error instanceof Error ? error.message : t('Unknown error'),
@@ -51,7 +54,7 @@ class ContentFormatterService {
 			const result = await engine.formatTypst(input, options);
 			return result;
 		} catch (error) {
-			console.error('[ContentFormatterService] Typst format failed:', error);
+			moduleLog.error('Typst format failed:', error);
 			return {
 				success: false,
 				error: error instanceof Error ? error.message : t('Unknown error'),

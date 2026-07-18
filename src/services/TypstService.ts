@@ -23,6 +23,9 @@ import {
 	toArrayBuffer,
 } from '../utils/fileUtils';
 import { downloadFiles } from '../utils/zipUtils';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('TypstService');
 
 type TypstNotificationOptions = NotificationOptions<TypstOutputFormat>;
 type CompilationStatus =
@@ -362,7 +365,7 @@ class TypstService {
 				);
 			}
 		} catch (error) {
-			console.error('Failed to clear output directories:', error);
+			moduleLog.error('Failed to clear output directories:', error);
 		}
 	}
 
@@ -561,7 +564,7 @@ class TypstService {
 				sources[normalizedPath] =
 					typeof cleaned === 'string' ? cleaned : new Uint8Array(cleaned);
 			} catch (error) {
-				console.warn(`Failed to process file ${fileNode.path}:`, error);
+				moduleLog.warn(`Failed to process file ${fileNode.path}:`, error);
 			}
 		}
 
@@ -622,7 +625,7 @@ class TypstService {
 			const stored = await fileStorageService.getFile(file.id);
 			return stored?.content || null;
 		} catch (error) {
-			console.warn(`Failed to retrieve content for ${file.path}:`, error);
+			moduleLog.warn(`Failed to retrieve content for ${file.path}:`, error);
 			return null;
 		}
 	}
@@ -658,7 +661,7 @@ class TypstService {
 				showConflictDialog: false,
 			});
 		} catch (error) {
-			console.error('Failed to save compilation output:', error);
+			moduleLog.error('Failed to save compilation output:', error);
 		}
 	}
 
@@ -741,7 +744,7 @@ class TypstService {
 				showConflictDialog: false,
 			});
 		} catch (error) {
-			console.error('Failed to save compilation log:', error);
+			moduleLog.error('Failed to save compilation log:', error);
 		}
 	}
 

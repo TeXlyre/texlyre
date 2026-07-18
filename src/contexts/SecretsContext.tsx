@@ -10,6 +10,9 @@ import {
 
 import { t } from '@/i18n';
 import { useAuth } from '../hooks/useAuth';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('SecretsContext');
 
 export interface SecretValue {
 	value: string;
@@ -261,7 +264,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 				const { authService } = await import('../services/AuthService');
 				return await authService.verifyPassword(user.id, password);
 			} catch (error) {
-				console.error('[SecretsContext] Error verifying password:', error);
+				moduleLog.error('Error verifying password:', error);
 				return false;
 			}
 		},
@@ -299,7 +302,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 							lastModified: entry.lastModified,
 						});
 					} catch (error) {
-						console.error(
+						moduleLog.error(
 							`Error processing secret ${entry.pluginId}:${entry.secretKey}:`,
 							error,
 						);
@@ -308,7 +311,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 				setSecretsCache(newCache);
 			} catch (error) {
-				console.error('[SecretsContext] Error loading stored secrets:', error);
+				moduleLog.error('Error loading stored secrets:', error);
 				setSecretsCache(new Map());
 			}
 		},
@@ -450,7 +453,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 				localStorage.setItem(storageKey, JSON.stringify(secrets));
 			} catch (error) {
-				console.error('[SecretsContext] Error storing secret:', error);
+				moduleLog.error('Error storing secret:', error);
 				throw new Error('Failed to store secret');
 			}
 		},
@@ -517,14 +520,11 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 					return secretValue;
 				} catch (decryptError) {
-					console.error(
-						'[SecretsContext] Failed to decrypt secret:',
-						decryptError,
-					);
+					moduleLog.error('Failed to decrypt secret:', decryptError);
 					throw new Error('Invalid password or corrupted secret data');
 				}
 			} catch (error) {
-				console.error('[SecretsContext] Error retrieving secret:', error);
+				moduleLog.error('Error retrieving secret:', error);
 				return null;
 			}
 		},
@@ -581,10 +581,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 					localStorage.setItem(storageKey, JSON.stringify(filteredSecrets));
 				}
 			} catch (error) {
-				console.error(
-					'[SecretsContext] Error removing secret from storage:',
-					error,
-				);
+				moduleLog.error('Error removing secret from storage:', error);
 			}
 		},
 		[user, getSecretId, getStorageKey],
@@ -618,10 +615,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 						s.projectId === options?.projectId,
 				);
 			} catch (error) {
-				console.error(
-					'[SecretsContext] Error checking secret existence:',
-					error,
-				);
+				moduleLog.error('Error checking secret existence:', error);
 				return false;
 			}
 		},
@@ -658,7 +652,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 				return entry?.metadata || null;
 			} catch (error) {
-				console.error('[SecretsContext] Error getting secret metadata:', error);
+				moduleLog.error('Error getting secret metadata:', error);
 				return null;
 			}
 		},
@@ -696,7 +690,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 					setSecretsCache(new Map());
 				}
 			} catch (error) {
-				console.error('[SecretsContext] Error clearing secrets:', error);
+				moduleLog.error('Error clearing secrets:', error);
 			}
 		},
 		[user, getStorageKey],
@@ -704,7 +698,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 	useEffect(() => {
 		if (!user) {
-			console.error('[SecretsContext] User not found, clearing password.');
+			moduleLog.info('User not found, clearing password.');
 			clearPassword();
 		}
 	}, [user, clearPassword]);

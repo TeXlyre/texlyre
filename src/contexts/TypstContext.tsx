@@ -23,6 +23,9 @@ import {
 	replaceHash,
 	getProjectName,
 } from '../utils/urlUtils';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('TypstContext');
 
 export const TypstContext = createContext<TypstContextType | null>(null);
 
@@ -77,7 +80,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 		format: TypstOutputFormat = currentFormat,
 		pdfOptions?: TypstPdfOptions,
 	): Promise<void> => {
-		console.log('[TypstContext] compileDocument called', {
+		moduleLog.info('compileDocument called', {
 			mainFileName,
 			format,
 			pdfOptions,
@@ -120,7 +123,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 				{ allowRemoteUrls: previewAllowRemoteUrls },
 			);
 
-			console.log('[TypstContext] Compilation result', {
+			moduleLog.info('Compilation result', {
 				status: result.status,
 				format: result.format,
 				hasPdf: !!result.pdf,

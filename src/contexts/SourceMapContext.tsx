@@ -23,6 +23,9 @@ import { useTypst } from '../hooks/useTypst';
 import { useSettings } from '../hooks/useSettings';
 import { useProperties } from '../hooks/useProperties';
 import { gotoEditor, type EditorTarget } from '../utils/editorNavigator';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('SourceMapContext');
 
 export const SourceMapContext = createContext<SourceMapContextType | null>(
 	null,
@@ -261,9 +264,7 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({
 				);
 
 				if (!targetFile) {
-					console.warn(
-						`[SourceMapContext] Target file not found: ${result.file}`,
-					);
+					moduleLog.warn(`Target file not found: ${result.file}`);
 					return;
 				}
 
@@ -279,10 +280,7 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({
 
 				gotoEditor(target, { line: result.line }, { waitForReady: false });
 			} catch (error) {
-				console.error(
-					'[SourceMapContext] Reverse sync navigation failed:',
-					error,
-				);
+				moduleLog.error('Reverse sync navigation failed:', error);
 			}
 		},
 		[getActiveService],

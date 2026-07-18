@@ -10,6 +10,9 @@ import {
 	ZipAdapter,
 } from './StorageAdapterService';
 import { generateYjsProjectId } from '../utils/urlUtils';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('ProjectImportService');
 
 export interface ImportableProject {
 	id: string;
@@ -91,7 +94,7 @@ class ProjectImportService {
 				}
 			}
 		} catch (error) {
-			console.error('[ProjectImportService] Error scanning backup directory:', error);
+			moduleLog.error('Error scanning backup directory:', error);
 		}
 
 		return importableProjects;
@@ -128,7 +131,7 @@ class ProjectImportService {
 				});
 			}
 		} catch (error) {
-			console.error('[ProjectImportService] Error scanning zip file:', error);
+			moduleLog.error('Error scanning zip file:', error);
 		}
 
 		return importableProjects;
@@ -147,7 +150,7 @@ class ProjectImportService {
 
 			await this.processImport(data, projectIds, options, result);
 		} catch (error) {
-			console.error('[ProjectImportService] Error importing from backup:', error);
+			moduleLog.error('Error importing from backup:', error);
 			projectIds.forEach((id) => {
 				result.errors.push({
 					projectId: id,
@@ -174,7 +177,7 @@ class ProjectImportService {
 
 			await this.processImport(data, projectIds, options, result);
 		} catch (error) {
-			console.error('[ProjectImportService] Error importing from zip:', error);
+			moduleLog.error('Error importing from zip:', error);
 			projectIds.forEach((id) => {
 				result.errors.push({
 					projectId: id,

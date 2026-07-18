@@ -1,9 +1,12 @@
+import { createNamedLogger } from '@/utils/namedLogger';
+const moduleLog = createNamedLogger('Drawio Cursor');
+
 (() => {
 	const container = document.querySelector('.geDiagramContainer');
 	const canvas = document.querySelector('.geBackgroundPage');
 
 	if (!container || !canvas) {
-		console.warn('[Drawio Cursor] Container or canvas not found');
+		moduleLog.warn('Container or canvas not found');
 		return;
 	}
 

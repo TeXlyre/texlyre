@@ -4,6 +4,9 @@ import { parseUrlFragments } from '../utils/urlUtils';
 import { fileStorageService } from './FileStorageService';
 import { collabService } from './CollabService';
 import type { BibEntry } from '../types/bibliography';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('BibliographyImportService');
 
 export interface ImportResult {
 	success: boolean;
@@ -306,7 +309,7 @@ export class BibliographyImportService {
 			try {
 				callback(result);
 			} catch (error) {
-				console.error('[BibliographyImportService] Error in import notification callback:', error);
+				moduleLog.error('Error in import notification callback:', error);
 			}
 		});
 	}

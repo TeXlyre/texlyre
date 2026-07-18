@@ -1,4 +1,4 @@
-// extras/utils/mediaKeyboardUtils.ts
+// src/utils/mediaKeyboardUtils.ts
 const VOLUME_STEP = 0.1;
 const SEEK_STEP = 5;
 

@@ -4,23 +4,26 @@ import * as Y from 'yjs';
 
 import { fileStorageService } from '../services/FileStorageService';
 import type { Project } from '../types/projects';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('dbDeleteUtils');
 
 export async function deleteDatabase(dbName: string): Promise<void> {
 	return new Promise((resolve, reject) => {
 		const deleteRequest = indexedDB.deleteDatabase(dbName);
 
 		deleteRequest.onsuccess = () => {
-			console.log(`[dbDeleteUtils] Successfully deleted database: ${dbName}`);
+			moduleLog.info(`Successfully deleted database: ${dbName}`);
 			resolve();
 		};
 
 		deleteRequest.onerror = () => {
-			console.error(`[dbDeleteUtils] Failed to delete database: ${dbName}`);
+			moduleLog.error(`Failed to delete database: ${dbName}`);
 			reject(new Error(`Failed to delete database: ${dbName}`));
 		};
 
 		deleteRequest.onblocked = () => {
-			console.warn(`[dbDeleteUtils] Database deletion blocked: ${dbName}. Retrying...`);
+			moduleLog.warn(`Database deletion blocked: ${dbName}. Retrying...`);
 			setTimeout(async () => {
 				try {
 					await deleteDatabase(dbName);
@@ -37,12 +40,12 @@ export async function closeActiveConnections(projectId: string): Promise<void> {
 	try {
 		if (fileStorageService.isConnectedToProject(projectId)) {
 			fileStorageService.cleanup();
-			console.log(
-				`[dbDeleteUtils] Closed FileStorageService connection for project: ${projectId}`,
+			moduleLog.info(
+				`Closed FileStorageService connection for project: ${projectId}`,
 			);
 		}
 	} catch (error) {
-		console.warn('[dbDeleteUtils] Error closing FileStorageService connection:', error);
+		moduleLog.warn('Error closing FileStorageService connection:', error);
 	}
 }
 
@@ -72,15 +75,13 @@ export async function cleanupProjectDatabases(project: Project): Promise<void> {
 			try {
 				await deleteDatabase(collectionName);
 			} catch (error) {
-				console.warn(`[dbDeleteUtils] Failed to delete database ${collectionName}:`, error);
+				moduleLog.warn(`Failed to delete database ${collectionName}:`, error);
 			}
 		}
 
-		console.log(
-			`[dbDeleteUtils] Cleaned up databases for project: ${project.name}`,
-		);
+		moduleLog.info(`Cleaned up databases for project: ${project.name}`);
 	} catch (error) {
-		console.error('[dbDeleteUtils] Error cleaning up project databases:', error);
+		moduleLog.error('Error cleaning up project databases:', error);
 	}
 }
 
@@ -119,8 +120,8 @@ export async function cleanupDocumentDatabases(
 					try {
 						await deleteDatabase(docCollection);
 					} catch (error) {
-						console.warn(
-							`[dbDeleteUtils] Failed to delete document database ${docCollection}:`,
+						moduleLog.warn(
+							`Failed to delete document database ${docCollection}:`,
 							error,
 						);
 					}
@@ -128,7 +129,7 @@ export async function cleanupDocumentDatabases(
 			}
 		}
 	} catch (error) {
-		console.error('[dbDeleteUtils] Error cleaning up document databases:', error);
+		moduleLog.error('Error cleaning up document databases:', error);
 	}
 }
 

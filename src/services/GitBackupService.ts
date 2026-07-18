@@ -21,6 +21,9 @@ import {
 	fileStorageEventEmitter,
 } from './FileStorageService';
 import { ProjectDataService } from './ProjectDataService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('GitBackupService');
 
 const FILES_METADATA = '.texlyre_metadata.json';
 const PROJECT_METADATA = 'metadata.json';
@@ -37,12 +40,12 @@ export interface GitBackupStatus {
 export interface GitBackupActivity {
 	id: string;
 	type:
-	| 'backup_start'
-	| 'backup_complete'
-	| 'backup_error'
-	| 'import_start'
-	| 'import_complete'
-	| 'import_error';
+		| 'backup_start'
+		| 'backup_complete'
+		| 'backup_error'
+		| 'import_start'
+		| 'import_complete'
+		| 'import_error';
 	message: string;
 	timestamp: number;
 	data?: any;
@@ -69,16 +72,16 @@ export interface GitTreeItem {
 
 export type GitBackupChange =
 	| {
-		type: 'create' | 'update';
-		path: string;
-		content: string | Uint8Array | ArrayBuffer;
-		previousRef?: string;
-	}
+			type: 'create' | 'update';
+			path: string;
+			content: string | Uint8Array | ArrayBuffer;
+			previousRef?: string;
+	  }
 	| {
-		type: 'delete';
-		path: string;
-		previousRef?: string;
-	};
+			type: 'delete';
+			path: string;
+			previousRef?: string;
+	  };
 
 export interface GitBackupAdapter<TTarget> {
 	displayName: string;
@@ -184,7 +187,7 @@ export class GitBackupService<TTarget> {
 
 	private settingsCache: GitBackupSettings = {};
 
-	constructor(private adapter: GitBackupAdapter<TTarget>) { }
+	constructor(private adapter: GitBackupAdapter<TTarget>) {}
 
 	setCurrentProjectId(projectId: string | undefined): void {
 		if (this.currentProjectId === projectId) return;
@@ -276,8 +279,8 @@ export class GitBackupService<TTarget> {
 					error instanceof Error
 						? error.message
 						: t('Failed to connect to {provider}', {
-							provider: this.adapter.displayName,
-						}),
+								provider: this.adapter.displayName,
+							}),
 			};
 		}
 	}
@@ -364,8 +367,8 @@ export class GitBackupService<TTarget> {
 					error instanceof Error
 						? error.message
 						: t('Failed to connect to {provider}', {
-							provider: this.adapter.displayName,
-						}),
+								provider: this.adapter.displayName,
+							}),
 			};
 			this.notifyListeners();
 			return false;
@@ -540,7 +543,7 @@ export class GitBackupService<TTarget> {
 			try {
 				await this.importChanges(projectId, branch);
 			} catch (error) {
-				console.warn('Post-push reconciliation import failed:', error);
+				moduleLog.warn('Post-push reconciliation import failed:', error);
 				this.addActivity({
 					type: 'import_error',
 					message: t(
@@ -568,8 +571,8 @@ export class GitBackupService<TTarget> {
 			message: projectId
 				? t('Importing project: {projectId}', { projectId })
 				: t('Importing from {provider}...', {
-					provider: this.adapter.displayName,
-				}),
+						provider: this.adapter.displayName,
+					}),
 		});
 		this.notifyListeners();
 
@@ -617,7 +620,7 @@ export class GitBackupService<TTarget> {
 			await this.persistBaseline(resolvedCredentials, projectId);
 			fileStorageEventEmitter.emitChange();
 		} catch (error) {
-			console.error(error);
+			moduleLog.error(error);
 			this.handleError(
 				error,
 				'import_error',
@@ -1047,7 +1050,7 @@ export class GitBackupService<TTarget> {
 				});
 				fileStorageEventEmitter.emitChange();
 			} catch (error) {
-				console.error(`[GitBackupService] Failed to import missing project ${projId}:`, error);
+				moduleLog.error(`Failed to import missing project ${projId}:`, error);
 				this.addActivity({
 					type: 'import_error',
 					message: t('Failed to import missing project: {missingProjId}', {
@@ -1161,7 +1164,10 @@ export class GitBackupService<TTarget> {
 				);
 				remoteDocumentsMetadata = JSON.parse(metadataContent);
 			} catch (error) {
-				console.error('[GitBackupService] Failed to load documents metadata from remote:', error);
+				moduleLog.error(
+					'Failed to load documents metadata from remote:',
+					error,
+				);
 			}
 		}
 
@@ -1252,7 +1258,7 @@ export class GitBackupService<TTarget> {
 				importedCount++;
 			} catch (error) {
 				failedCount++;
-				console.error(`[GitBackupService] Failed to import file ${filePath}:`, error);
+				moduleLog.error(`Failed to import file ${filePath}:`, error);
 				this.addActivity({
 					type: 'import_error',
 					message: t('Failed to import file: {filePath}', { filePath }),
@@ -1297,7 +1303,7 @@ export class GitBackupService<TTarget> {
 				);
 				remoteFilesMetadata = JSON.parse(metadataContent);
 			} catch (error) {
-				console.error('[GitBackupService] Failed to load files metadata from remote:', error);
+				moduleLog.error('Failed to load files metadata from remote:', error);
 			}
 		}
 
@@ -1343,8 +1349,8 @@ export class GitBackupService<TTarget> {
 				);
 				fileStorageEventEmitter.emitChange();
 			} catch (error) {
-				console.error(
-					`[GitBackupService] Failed to restore deleted file metadata ${filePath}:`,
+				moduleLog.error(
+					`Failed to restore deleted file metadata ${filePath}:`,
 					error,
 				);
 			}
@@ -1390,35 +1396,35 @@ export class GitBackupService<TTarget> {
 
 		const fileToStore = remoteMetadata
 			? {
-				id:
-					existingFile?.id ||
-					remoteMetadata.id ||
-					`${this.adapter.importIdPrefix}-${Math.random().toString(36).substring(2, 15)}`,
-				name: remoteMetadata.name,
-				path: remoteMetadata.path,
-				type: remoteMetadata.type as 'file' | 'directory',
-				lastModified: remoteMetadata.lastModified || Date.now(),
-				size: remoteMetadata.size || fileSize,
-				mimeType: remoteMetadata.mimeType,
-				isBinary: remoteMetadata.isBinary,
-				documentId: remoteMetadata.documentId,
-				content: finalContent,
-				isDeleted: false,
-			}
+					id:
+						existingFile?.id ||
+						remoteMetadata.id ||
+						`${this.adapter.importIdPrefix}-${Math.random().toString(36).substring(2, 15)}`,
+					name: remoteMetadata.name,
+					path: remoteMetadata.path,
+					type: remoteMetadata.type as 'file' | 'directory',
+					lastModified: remoteMetadata.lastModified || Date.now(),
+					size: remoteMetadata.size || fileSize,
+					mimeType: remoteMetadata.mimeType,
+					isBinary: remoteMetadata.isBinary,
+					documentId: remoteMetadata.documentId,
+					content: finalContent,
+					isDeleted: false,
+				}
 			: {
-				id:
-					existingFile?.id ||
-					`${this.adapter.importIdPrefix}-${Math.random().toString(36).substring(2, 15)}`,
-				name: filePath.split('/').pop() || '',
-				path: filePath,
-				type: 'file' as const,
-				lastModified: Date.now(),
-				size: fileSize,
-				mimeType: getMimeType(filePath),
-				isBinary: binary,
-				content: finalContent,
-				isDeleted: false,
-			};
+					id:
+						existingFile?.id ||
+						`${this.adapter.importIdPrefix}-${Math.random().toString(36).substring(2, 15)}`,
+					name: filePath.split('/').pop() || '',
+					path: filePath,
+					type: 'file' as const,
+					lastModified: Date.now(),
+					size: fileSize,
+					mimeType: getMimeType(filePath),
+					isBinary: binary,
+					content: finalContent,
+					isDeleted: false,
+				};
 
 		await fileStorageService.storeFile(fileToStore, {
 			showConflictDialog: false,
@@ -1464,7 +1470,7 @@ export class GitBackupService<TTarget> {
 				},
 			);
 		} catch (error) {
-			console.warn('[GitBackupService] Failed to persist baseline commit sha:', error);
+			moduleLog.warn('Failed to persist baseline commit sha:', error);
 		}
 	}
 
@@ -1640,7 +1646,7 @@ export class GitBackupService<TTarget> {
 				);
 				return;
 			} catch (error) {
-				console.warn(`[GitBackupService] Commit attempt ${attempt} failed:`, error);
+				moduleLog.warn(`Commit attempt ${attempt} failed:`, error);
 				if (attempt === maxRetries) throw error;
 			}
 		}
@@ -1791,10 +1797,10 @@ export class GitBackupService<TTarget> {
 		const fullActivity: GitBackupActivity = entry
 			? { id: entry.id, timestamp: entry.timestamp, ...activity }
 			: {
-				id: Math.random().toString(36).substring(2),
-				timestamp: Date.now(),
-				...activity,
-			};
+					id: Math.random().toString(36).substring(2),
+					timestamp: Date.now(),
+					...activity,
+				};
 
 		const limit = this.getActivityHistoryLimit();
 		this.activities = [...this.activities.slice(-limit + 1), fullActivity];

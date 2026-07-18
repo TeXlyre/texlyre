@@ -22,6 +22,8 @@ import { formatFileSize } from '@/utils/fileUtils';
 import './styles.css';
 import { getPdfViewerSettings } from './settings';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './PdfViewerPlugin';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('PdfViewer');
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -110,7 +112,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 				setIsLoading(false);
 			} catch (error) {
 				if (!cancelled) {
-					console.error('[PdfViewer] Error loading PDF:', error);
+					moduleLog.error('Error loading PDF:', error);
 					setError(t('Failed to load PDF document'));
 					setIsLoading(false);
 				}
@@ -197,7 +199,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 				!error.message.includes('Rendering cancelled') &&
 				!error.message.includes('Worker was destroyed')
 			) {
-				console.error('[PdfViewer] Error rendering PDF page:', error);
+				moduleLog.error('Error rendering PDF page:', error);
 				setError(t('Failed to render page {page}', { page: currentPage }));
 			}
 		}

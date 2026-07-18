@@ -43,6 +43,9 @@ import DocumentExplorer from './DocumentExplorer';
 import Editor from './Editor';
 import FileExplorer from './FileExplorer';
 import SearchPanel from './SearchPanel';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('FileDocumentController');
 
 type LinkedFileInfo = {
 	fileName: string;
@@ -99,10 +102,7 @@ const getDocumentContent = async (
 
 		return textContent;
 	} catch (error) {
-		console.error(
-			'[FileDocumentController] Error getting document content:',
-			error,
-		);
+		moduleLog.error('Error getting document content:', error);
 		return '';
 	}
 };
@@ -422,16 +422,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					lastOpenedDocId: nextDocId,
 					lastOpenedFilePath: nextFilePath,
 				}).catch((error) => {
-					console.warn(
-						'[FileDocumentController] Failed to update project last opened state:',
-						error,
-					);
+					moduleLog.warn('Failed to update project last opened state:', error);
 				});
 			} catch (error) {
-				console.warn(
-					'[FileDocumentController] Error updating project last opened state:',
-					error,
-				);
+				moduleLog.warn('Error updating project last opened state:', error);
 			}
 		},
 		[getProjectById, updateProject],
@@ -462,10 +456,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 				setShowCurrentProjectExportModal(true);
 			}
 		} catch (error) {
-			console.error(
-				'[FileDocumentController] Error loading project for export:',
-				error,
-			);
+			moduleLog.error('Error loading project for export:', error);
 		}
 	};
 
@@ -490,10 +481,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 				}
 			}
 		} catch (error) {
-			console.error(
-				'[FileDocumentController] Error refreshing file content for outline:',
-				error,
-			);
+			moduleLog.error('Error refreshing file content for outline:', error);
 		}
 	};
 

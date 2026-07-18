@@ -37,6 +37,8 @@ import {
 	PLUGIN_NAME,
 	PLUGIN_VERSION,
 } from './MilkdownCollaborativeViewerPlugin';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('MilkdownCollaborativeViewer');
 
 const MAX_SAFE_MARKDOWN_BYTES = 20 * 1024 * 1024;
 
@@ -240,10 +242,7 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		};
 
 		connect().catch((err) => {
-			console.error(
-				'[MilkdownCollaborativeViewer] Error opening collaborative Markdown document:',
-				err,
-			);
+			moduleLog.error('Error opening collaborative Markdown document:', err);
 			setError(
 				t('Failed to open collaborative document: {error}', {
 					error: err instanceof Error ? err.message : t('Unknown error'),
@@ -373,10 +372,7 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			const bytes = new TextEncoder().encode(currentContent()).buffer;
 			await fileStorageService.updateFileContent(fileId, bytes);
 		} catch (err) {
-			console.error(
-				'[MilkdownCollaborativeViewer] Error saving Markdown file:',
-				err,
-			);
+			moduleLog.error('Error saving Markdown file:', err);
 			setError(
 				t('Failed to save file: {error}', {
 					error: err instanceof Error ? err.message : t('Unknown error'),

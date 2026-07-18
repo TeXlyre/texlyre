@@ -23,6 +23,9 @@ import {
 	toArrayBuffer,
 } from '../../utils/fileUtils';
 import { gotoEditor } from '../../utils/editorNavigator';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('TypstOutput');
 
 interface TypstOutputProps {
 	className?: string;
@@ -275,7 +278,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 			if (!file || !isTypstFile(file.path)) return;
 			gotoEditor({ kind: 'file', fileId: selectedFileId }, { line });
 		} catch (error) {
-			console.error('[TypstOutput] Error handling line click:', error);
+			moduleLog.error('Error handling line click:', error);
 		}
 	};
 

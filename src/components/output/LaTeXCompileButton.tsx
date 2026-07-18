@@ -32,6 +32,9 @@ import {
 	StopIcon,
 	TrashIcon,
 } from '../common/Icons';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('LaTeXCompileButton');
 
 interface LaTeXCompileButtonProps {
 	dropdownKey: string;
@@ -284,7 +287,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		if (!useSharedSettings || !projectEngine) return;
 		if (projectEngine === latexService.getCurrentEngineType()) return;
 		latexService.setEngine(projectEngine as LaTeXEngine).catch((err) => {
-			console.error('[LaTeXCompileButton] Failed to sync shared engine:', err);
+			moduleLog.error('Failed to sync shared engine:', err);
 		});
 	}, [projectEngine, useSharedSettings]);
 
@@ -375,10 +378,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 					await latexService.setEngine(requestedEngine);
 				}
 			} catch (error) {
-				console.error(
-					'[LaTeXCompileButton] Failed to initialize requested compiler:',
-					error,
-				);
+				moduleLog.error('Failed to initialize requested compiler:', error);
 				return;
 			} finally {
 				isInitializingRef.current = false;
@@ -451,7 +451,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 						return false;
 					}
 				} catch (error) {
-					console.warn('Error getting current file:', error);
+					moduleLog.warn('Error getting current file:', error);
 				}
 			}
 
@@ -509,7 +509,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		try {
 			await clearCache();
 		} catch (error) {
-			console.error('[LaTeXCompileButton] Failed to clear cache:', error);
+			moduleLog.error('Failed to clear cache:', error);
 		}
 	};
 
@@ -542,10 +542,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		try {
 			await compileWithClearCache(effectiveMainFile);
 		} catch (error) {
-			console.error(
-				'[LaTeXCompileButton] Failed to compile with cache clear:',
-				error,
-			);
+			moduleLog.error('Failed to compile with cache clear:', error);
 		}
 	}, [
 		effectiveMainFile,
@@ -584,7 +581,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 				setProperty('latex-engine', engine, { scope: 'project', projectId });
 			}
 		} catch (error) {
-			console.error('[LaTeXCompileButton] Failed to change engine:', error);
+			moduleLog.error('Failed to change engine:', error);
 		} finally {
 			setIsChangingEngine(false);
 		}
@@ -678,7 +675,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 			await latexService.deleteBusyTeXBundle(bundleId);
 			setBundleCacheStatus((prev) => ({ ...prev, [bundleId]: false }));
 		} catch (error) {
-			console.error('[LaTeXCompileButton] Failed to delete bundle:', error);
+			moduleLog.error('Failed to delete bundle:', error);
 		} finally {
 			setIsDeletingBundle(null);
 		}

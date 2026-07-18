@@ -15,6 +15,9 @@ import {
 	TemplatesIcon,
 	SettingsIcon,
 } from '../common/Icons';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('TemplateImportModal');
 
 interface TemplateCategory {
 	id: string;
@@ -127,7 +130,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 				) || [];
 			setAllTemplates(allTemplatesFlat);
 		} catch (error) {
-			console.error('[TemplateImportModal] Error loading templates:', error);
+			moduleLog.error('Error loading templates:', error);
 			setError(
 				error instanceof Error ? error.message : t('Failed to load templates'),
 			);
@@ -187,9 +190,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 				setLoadedImages((prev) => new Set(prev).add(templateId));
 			};
 			img.onerror = () => {
-				console.warn(
-					`[TemplateImportModal] Failed to load image for template ${templateId}`,
-				);
+				moduleLog.warn(`Failed to load image for template ${templateId}`);
 			};
 			img.src = imageUrl;
 		},

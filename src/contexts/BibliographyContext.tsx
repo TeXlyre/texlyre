@@ -21,6 +21,9 @@ import { parseUrlFragments } from '../utils/urlUtils';
 import { isBibFile } from '../utils/fileUtils';
 import type { FileNode } from '../types/files';
 import type { BibEntry, BibliographyFile } from '../types/bibliography';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('BibliographyContext');
 
 export type SortField = 'key' | 'title' | 'author' | 'year';
 export type SortOrder = 'asc' | 'desc';
@@ -367,10 +370,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 				})),
 			);
 		} catch (error) {
-			console.error(
-				'[BibliographyContext] Error refreshing available files:',
-				error,
-			);
+			moduleLog.error('Error refreshing available files:', error);
 			setAvailableBibFiles([]);
 		}
 	}, []);
@@ -400,7 +400,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 				await refreshAvailableFiles();
 				return filePath;
 			} catch (error) {
-				console.error('[BibliographyContext] Error creating bib file:', error);
+				moduleLog.error('Error creating bib file:', error);
 				return null;
 			}
 		},
@@ -437,18 +437,12 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 						})),
 					);
 				} catch (parseError) {
-					console.error(
-						`[BibliographyContext] Error parsing ${bibFile.path}:`,
-						parseError,
-					);
+					moduleLog.error(`Error parsing ${bibFile.path}:`, parseError);
 				}
 			}
 			return result;
 		} catch (error) {
-			console.error(
-				'[BibliographyContext] Error getting local entries:',
-				error,
-			);
+			moduleLog.error('Error getting local entries:', error);
 			return [];
 		}
 	}, [parser]);
@@ -602,10 +596,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 					})),
 				);
 			} catch (error) {
-				console.error(
-					'[BibliographyContext] Error fetching external entries:',
-					error,
-				);
+				moduleLog.error('Error fetching external entries:', error);
 				setExternalEntries([]);
 			} finally {
 				setIsLoading(false);
@@ -663,10 +654,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 						})),
 					);
 				} catch (error) {
-					console.error(
-						`[BibliographyContext] Error from ${provider.name}:`,
-						error,
-					);
+					moduleLog.error(`Error from ${provider.name}:`, error);
 				}
 			}
 			setExternalEntries(allExternal);
@@ -1055,7 +1043,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 			await fetchLocalEntries();
 			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
 		} catch (error) {
-			console.error('[BibliographyContext] Error importing entry:', error);
+			moduleLog.error('Error importing entry:', error);
 		} finally {
 			setImportingEntries((prev) => {
 				const s = new Set(prev);
@@ -1076,7 +1064,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 				await fetchLocalEntries();
 				document.dispatchEvent(new CustomEvent('refresh-file-tree'));
 			} catch (error) {
-				console.error('[BibliographyContext] Error deleting entry:', error);
+				moduleLog.error('Error deleting entry:', error);
 			}
 		},
 		[fetchLocalEntries],
@@ -1097,7 +1085,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 				await fetchLocalEntries();
 				document.dispatchEvent(new CustomEvent('refresh-file-tree'));
 			} catch (error) {
-				console.error('[BibliographyContext] Error updating entry:', error);
+				moduleLog.error('Error updating entry:', error);
 			}
 		},
 		[fetchLocalEntries],

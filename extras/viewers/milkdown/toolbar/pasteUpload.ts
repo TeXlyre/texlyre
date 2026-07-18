@@ -9,6 +9,8 @@ import {
 import { milkdownToolbarItems } from './milkdownItems';
 import { isToolbarButton } from './types';
 import { setPendingMilkdownImagePath } from './pendingImage';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('pasteUpload');
 
 function runMilkdownCommand(view: EditorView, key: string): boolean {
 	const item = milkdownToolbarItems.find(
@@ -26,12 +28,12 @@ function insertUploadedImage(
 		.then((uploadedPath) => {
 			setPendingMilkdownImagePath(uploadedPath);
 			if (!runMilkdownCommand(view, 'image')) {
-				console.warn('[pasteUpload] Milkdown image command not found');
+				moduleLog.warn('Milkdown image command not found');
 				setPendingMilkdownImagePath(null);
 			}
 		})
 		.catch((error) => {
-			console.error('[pasteUpload] Error handling pasted file in Milkdown:', error);
+			moduleLog.error('Error handling pasted file in Milkdown:', error);
 		});
 }
 

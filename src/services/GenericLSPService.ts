@@ -5,6 +5,10 @@ import {
 	type Transport,
 } from '@codemirror/lsp-client';
 
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('GenericLSPService');
+
 type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
 type StatusListener = (configId: string, status: ConnectionStatus) => void;
 type DiagnosticListener = (configId: string, params: any) => void;
@@ -59,9 +63,7 @@ class GenericLSPService {
 		this.setConnectionStatus(config.id, 'disconnected');
 
 		if (config.enabled && config.clientConfig) {
-			console.log(
-				`[GenericLSPService] Registering LSP server: ${config.name} (${config.id})`,
-			);
+			moduleLog.info(`Registering LSP server: ${config.name} (${config.id})`);
 			this.initializeClient(config);
 		}
 	}
@@ -78,7 +80,7 @@ class GenericLSPService {
 			try {
 				listener(configId, status);
 			} catch (error) {
-				console.error('[GenericLSPService] Status listener error:', error);
+				moduleLog.error('Status listener error:', error);
 			}
 		});
 	}
@@ -150,14 +152,9 @@ class GenericLSPService {
 			client.connect(wrappedTransport);
 			this.clients.set(config.id, client);
 			this.setConnectionStatus(config.id, 'connected');
-			console.log(
-				`[GenericLSPService] Connected to LSP server: ${config.name}`,
-			);
+			moduleLog.info(`Connected to LSP server: ${config.name}`);
 		} catch (error) {
-			console.error(
-				`[GenericLSPService] Failed to connect to ${config.name}:`,
-				error,
-			);
+			moduleLog.error(`Failed to connect to ${config.name}:`, error);
 			this.setConnectionStatus(config.id, 'error');
 		}
 	}
@@ -319,10 +316,7 @@ class GenericLSPService {
 						try {
 							listener(configId, parsed.params);
 						} catch (error) {
-							console.error(
-								'[GenericLSPService] Diagnostic listener error:',
-								error,
-							);
+							moduleLog.error('Diagnostic listener error:', error);
 						}
 					});
 				}
@@ -338,7 +332,7 @@ class GenericLSPService {
 						transport,
 					);
 				}
-			} catch { }
+			} catch {}
 
 			if (downstreamHandler) downstreamHandler(message);
 		});
@@ -367,7 +361,7 @@ class GenericLSPService {
 					if (parsed.method === 'initialized') {
 						return;
 					}
-				} catch { }
+				} catch {}
 
 				if (handshakeComplete) {
 					transport.send(message);
@@ -394,7 +388,7 @@ class GenericLSPService {
 			try {
 				listener(configId, params?.edit);
 			} catch (error) {
-				console.error('[GenericLSPService] Apply edit listener error:', error);
+				moduleLog.error('Apply edit listener error:', error);
 			}
 		});
 
@@ -481,7 +475,7 @@ class GenericLSPService {
 		};
 
 		ws.onerror = (error) => {
-			console.error('[GenericLSPService] WebSocket error:', error);
+			moduleLog.error('WebSocket error:', error);
 			this.setConnectionStatus(config.id, 'error');
 		};
 
@@ -531,11 +525,9 @@ class GenericLSPService {
 		if (client) {
 			try {
 				client.disconnect();
-				console.log(
-					`[GenericLSPService] Disconnecting from LSP server: ${configId}`,
-				);
+				moduleLog.info(`Disconnecting from LSP server: ${configId}`);
 			} catch (error) {
-				console.error(`[GenericLSPService] Error disconnecting LSP client ${configId}:`, error);
+				moduleLog.error(`Error disconnecting LSP client ${configId}:`, error);
 			}
 			this.clients.delete(configId);
 		}
@@ -580,11 +572,11 @@ class GenericLSPService {
 		const transportChanged =
 			updates.transportConfig !== undefined &&
 			JSON.stringify(updates.transportConfig) !==
-			JSON.stringify(config.transportConfig);
+				JSON.stringify(config.transportConfig);
 		const clientConfigChanged =
 			updates.clientConfig !== undefined &&
 			JSON.stringify(updates.clientConfig) !==
-			JSON.stringify(config.clientConfig);
+				JSON.stringify(config.clientConfig);
 		const hasConnectionChanges = transportChanged || clientConfigChanged;
 
 		if (!updated.enabled) {
@@ -610,9 +602,7 @@ class GenericLSPService {
 	}
 
 	cleanup() {
-		console.log(
-			`[GenericLSPService] Cleaning up ${this.clients.size} LSP connections`,
-		);
+		moduleLog.info(`Cleaning up ${this.clients.size} LSP connections`);
 		this.clients.forEach((_, configId) => {
 			this.disconnectClient(configId);
 		});

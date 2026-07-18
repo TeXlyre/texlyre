@@ -10,6 +10,9 @@ import {
 	conflictResolutionService,
 } from './ConflictResolutionService';
 import { fileConflictService } from './FileConflictService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('FileStorageService');
 
 type FileStorageListener = () => void;
 const listeners: FileStorageListener[] = [];
@@ -88,11 +91,9 @@ class FileStorageService {
 				},
 			});
 
-			console.log(
-				`[FileStorageService] Initialized for project: ${this.projectId}`,
-			);
+			moduleLog.info(`Initialized for project: ${this.projectId}`);
 		} catch (error) {
-			console.error('[FileStorageService] Failed to initialize file storage:', error);
+			moduleLog.error('Failed to initialize file storage:', error);
 			throw error;
 		}
 	}
@@ -134,8 +135,8 @@ class FileStorageService {
 				const fileToKeep = this.selectBestDuplicate(duplicates);
 				const filesToRemove = duplicates.filter((f) => f.id !== fileToKeep.id);
 
-				console.log(
-					`[FileStorageService] Auto-fixing ${duplicates.length} duplicates for path: ${path}`,
+				moduleLog.info(
+					`Auto-fixing ${duplicates.length} duplicates for path: ${path}`,
 				);
 
 				// Remove duplicates
@@ -153,7 +154,7 @@ class FileStorageService {
 			return { removed: removedCount, kept: keptCount };
 		} catch (error) {
 			tx.abort();
-			console.error('[FileStorageService] Error during auto-sanitization:', error);
+			moduleLog.error('Error during auto-sanitization:', error);
 			throw error;
 		}
 	}
@@ -665,7 +666,7 @@ class FileStorageService {
 				);
 			}
 		} catch (error) {
-			console.error(`[FileStorageService] Error cleaning up ${path}:`, error);
+			moduleLog.error(`Error cleaning up ${path}:`, error);
 		}
 	}
 
@@ -689,7 +690,7 @@ class FileStorageService {
 					movedIds.push(movedId);
 				}
 			} catch (error) {
-				console.error(`[FileStorageService] Failed to move file ${operation.fileId}:`, error);
+				moduleLog.error(`Failed to move file ${operation.fileId}:`, error);
 			}
 		}
 
@@ -702,7 +703,7 @@ class FileStorageService {
 	): Promise<string | null> {
 		const sourceFile = await this.getFile(operation.fileId);
 		if (!sourceFile) {
-			console.error(`[FileStorageService] Source file not found: ${operation.fileId}`);
+			moduleLog.error(`Source file not found: ${operation.fileId}`);
 			return null;
 		}
 
@@ -741,9 +742,7 @@ class FileStorageService {
 			return sourceFile.id;
 		}
 
-		console.log(
-			`[FileStorageService] Moving file from ${sourceFile.path} to ${newFullPath}`,
-		);
+		moduleLog.info(`Moving file from ${sourceFile.path} to ${newFullPath}`);
 
 		const existingFile = await this.getFileByPath(newFullPath, true);
 		const filesToDelete: string[] = [];
@@ -838,14 +837,14 @@ class FileStorageService {
 				allowLinkedFileDelete: true,
 			});
 
-			console.log(
-				`[FileStorageService] Successfully moved file from ${sourceFile.path} to ${newFullPath}`,
+			moduleLog.info(
+				`Successfully moved file from ${sourceFile.path} to ${newFullPath}`,
 			);
 
 			return newFileId;
 		} catch (error) {
-			console.error(
-				`[FileStorageService] Transaction failed for moving ${sourceFile.path} to ${newFullPath}:`,
+			moduleLog.error(
+				`Transaction failed for moving ${sourceFile.path} to ${newFullPath}:`,
 				error,
 			);
 			tx.abort();
@@ -1154,12 +1153,12 @@ class FileStorageService {
 				};
 
 				await this.storeFile(dirFile, { showConflictDialog: false });
-				console.log(`[FileStorageService] Created directory: ${currentPath}`);
+				moduleLog.info(`Created directory: ${currentPath}`);
 			} else if (existingDir.isDeleted) {
 				existingDir.isDeleted = false;
 				existingDir.lastModified = Date.now();
 				await this.storeFile(existingDir, { showConflictDialog: false });
-				console.log(`[FileStorageService] Restored directory: ${currentPath}`);
+				moduleLog.info(`Restored directory: ${currentPath}`);
 			}
 		}
 	}
@@ -1218,7 +1217,7 @@ class FileStorageService {
 		}
 		this.contentCache.clear();
 		this.projectId = '';
-		console.log('[FileStorageService] Cleaned up connection');
+		moduleLog.info('Cleaned up connection');
 	}
 
 	async switchToProject(docUrl: string): Promise<void> {
@@ -1226,8 +1225,8 @@ class FileStorageService {
 		const newProjectId = hash;
 
 		if (this.projectId !== newProjectId) {
-			console.log(
-				`[FileStorageService] Switching from project ${this.projectId} to ${newProjectId}`,
+			moduleLog.info(
+				`Switching from project ${this.projectId} to ${newProjectId}`,
 			);
 			await this.cleanup();
 			await this.initialize(docUrl);

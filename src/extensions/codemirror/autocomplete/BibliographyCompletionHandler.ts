@@ -10,6 +10,9 @@ import { filePathCacheService } from '../../../services/FilePathCacheService';
 import { BibtexParser } from '../../../utils/bibtexParser';
 import { isLatexFile, isTypstFile } from '../../../utils/fileUtils';
 import { citationCommandPatterns, bibtexEntryPatterns } from './patterns';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('BibliographyCompletionHandler');
 
 interface BibliographyEntry {
 	key: string;
@@ -30,14 +33,14 @@ export class BibliographyCompletionHandler {
 		await this.updateCache();
 	}
 
-	destroy() { }
+	destroy() {}
 
 	async updateCache() {
 		try {
 			const localEntries = await this.getLocalBibliographyEntries();
 			this.bibliographyCache = localEntries;
 		} catch (error) {
-			console.error('[BibliographyCompletionHandler] Error updating bibliography cache:', error);
+			moduleLog.error('Error updating bibliography cache:', error);
 		}
 	}
 
@@ -87,7 +90,7 @@ export class BibliographyCompletionHandler {
 
 			return allEntries;
 		} catch (error) {
-			console.error('[BibliographyCompletionHandler] Error getting local bibliography entries:', error);
+			moduleLog.error('Error getting local bibliography entries:', error);
 			return [];
 		}
 	}

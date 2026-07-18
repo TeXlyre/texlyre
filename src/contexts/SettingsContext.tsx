@@ -10,6 +10,9 @@ import {
 } from 'react';
 
 import { pluginRegistry } from '../plugins/PluginRegistry';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('SettingsContext');
 
 export type SettingType =
 	| 'checkbox'
@@ -205,8 +208,8 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				localStorageSettingsRef.current = {};
 			}
 		} catch (error) {
-			console.error(
-				'[SettingsContext] Error parsing settings from localStorage on initial load:',
+			moduleLog.error(
+				'Error parsing settings from localStorage on initial load:',
 				error,
 			);
 			localStorage.removeItem(userStorageKey);
@@ -242,10 +245,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 			localStorage.setItem(storageKey, JSON.stringify({ ...toSave, _version }));
 			localStorageSettingsRef.current = toSave;
 		} catch (error) {
-			console.error(
-				'[SettingsContext] Error saving settings to localStorage:',
-				error,
-			);
+			moduleLog.error('Error saving settings to localStorage:', error);
 		}
 	}, [settings, getStorageKey]);
 
@@ -288,10 +288,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 					return changed ? next : prev;
 				});
 			} catch (error) {
-				console.error(
-					'[SettingsContext] Error applying synced settings:',
-					error,
-				);
+				moduleLog.error('Error applying synced settings:', error);
 			}
 		};
 
@@ -352,10 +349,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				}
 
 				if (s.validate && !s.validate(validatedValue)) {
-					console.warn(
-						`[SettingsContext] Invalid value for ${id}:`,
-						validatedValue,
-					);
+					moduleLog.warn(`Invalid value for ${id}:`, validatedValue);
 					return s;
 				}
 

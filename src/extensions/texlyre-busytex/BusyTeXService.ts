@@ -17,6 +17,9 @@ import {
 } from '../../utils/fileUtils';
 import { cleanContent } from '../../utils/fileCommentUtils';
 import { findCompileArtifact } from '../../utils/compilerUtils';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('BusyTeXService');
 
 export const BUSYTEX_BUNDLE_URLS: Record<string, string> = {
 	basic: `${__BASE_PATH__}/core/busytex/texlive-basic.js`,
@@ -236,7 +239,7 @@ class BusyTeXService {
 				{ showConflictDialog: false },
 			);
 		} catch (error) {
-			console.warn('[BusyTeXService] Failed to persist misses cache:', error);
+			moduleLog.warn('Failed to persist misses cache:', error);
 		}
 	}
 
@@ -270,10 +273,7 @@ class BusyTeXService {
 				await busyTeXEngine.writeRemoteFiles(files);
 			}
 		} catch (error) {
-			console.warn(
-				'[BusyTeXService] Failed to load cached remote files:',
-				error,
-			);
+			moduleLog.warn('Failed to load cached remote files:', error);
 		}
 	}
 
@@ -325,7 +325,7 @@ class BusyTeXService {
 				showConflictDialog: false,
 			});
 		} catch (error) {
-			console.warn('[BusyTeXService] Failed to persist remote files:', error);
+			moduleLog.warn('Failed to persist remote files:', error);
 		}
 	}
 
@@ -370,7 +370,7 @@ class BusyTeXService {
 				});
 			}
 		} catch (error) {
-			console.error('[BusyTeXService] Failed to store work files:', error);
+			moduleLog.error('Failed to store work files:', error);
 		}
 	}
 
@@ -406,7 +406,7 @@ class BusyTeXService {
 				showConflictDialog: false,
 			});
 		} catch (error) {
-			console.error('[BusyTeXService] Failed to save output:', error);
+			moduleLog.error('Failed to save output:', error);
 		}
 	}
 
@@ -422,7 +422,7 @@ class BusyTeXService {
 				{ showConflictDialog: false },
 			);
 		} catch (error) {
-			console.error('[BusyTeXService] Failed to save log:', error);
+			moduleLog.error('Failed to save log:', error);
 		}
 	}
 
@@ -575,10 +575,7 @@ class BusyTeXService {
 				});
 			}
 		} catch (error) {
-			console.error(
-				'[BusyTeXService] Failed to collect stored work files:',
-				error,
-			);
+			moduleLog.error('Failed to collect stored work files:', error);
 		}
 		return artifacts;
 	}

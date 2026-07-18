@@ -9,6 +9,9 @@ import type {
 	CompilerTransportConfig,
 	CompilerUISchema,
 } from '../types/compilation';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('GenericTypesetterService');
 
 type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
 type StatusListener = (configId: string, status: ConnectionStatus) => void;
@@ -346,10 +349,7 @@ class GenericTypesetterService {
 			try {
 				listener(configId, status);
 			} catch (error) {
-				console.error(
-					'[GenericTypesetterService] Status listener error:',
-					error,
-				);
+				moduleLog.error('Status listener error:', error);
 			}
 		});
 	}

@@ -15,6 +15,9 @@ import type { BaseEngine } from './BaseEngine';
 import { DvipdfmxEngine } from './DvipdfmxEngine';
 import { PdfTeXEngine } from './PdfTeXEngine';
 import { XeTeXEngine } from './XeTeXEngine';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('SwiftLaTeXService');
 
 export type SwiftEngineType = 'pdftex' | 'xetex' | 'luatex';
 type InternalEngineKey = SwiftEngineType | 'dvipdfmx';
@@ -137,7 +140,7 @@ class SwiftLaTeXService {
 		try {
 			this.getCurrentEngine()?.stopCompilation();
 		} catch (error) {
-			console.warn('Error stopping compilation:', error);
+			moduleLog.warn('Error stopping compilation:', error);
 		}
 	}
 
@@ -293,7 +296,7 @@ class SwiftLaTeXService {
 		}
 		try {
 			this.getCurrentEngine()?.flushCache();
-		} catch { }
+		} catch {}
 	}
 
 	private getCacheDirectory(engineType: InternalEngineKey): string {
@@ -388,7 +391,7 @@ class SwiftLaTeXService {
 				}
 			}
 		} catch (error) {
-			console.error('[SwiftLaTeXService] Error loading cached files:', error);
+			moduleLog.error('Error loading cached files:', error);
 		}
 	}
 
@@ -442,7 +445,7 @@ class SwiftLaTeXService {
 		}
 
 		if (!mainFileProcessed)
-			console.warn(`[SwiftLaTeXService] Main file ${mainFileName} not found in file tree`);
+			moduleLog.warn(`Main file ${mainFileName} not found in file tree`);
 		return processed;
 	}
 
@@ -492,7 +495,7 @@ class SwiftLaTeXService {
 					);
 				}
 			} catch (error) {
-				console.error(`[SwiftLaTeXService] Error writing work file ${node.path}:`, error);
+				moduleLog.error(`Error writing work file ${node.path}:`, error);
 			}
 		}
 
@@ -509,7 +512,7 @@ class SwiftLaTeXService {
 					);
 				}
 			} catch (error) {
-				console.error(`[SwiftLaTeXService] Error writing cache file ${node.path}:`, error);
+				moduleLog.error(`Error writing cache file ${node.path}:`, error);
 			}
 		}
 
@@ -538,7 +541,7 @@ class SwiftLaTeXService {
 				this.getCacheDirectory(this.currentEngineType),
 			);
 		} catch (error) {
-			console.error('[SwiftLaTeXService] Error saving cache directory:', error);
+			moduleLog.error('Error saving cache directory:', error);
 		}
 	}
 
@@ -548,7 +551,7 @@ class SwiftLaTeXService {
 			const filtered = await this.filterWorkFilesExcludingCache(workFiles);
 			await this.batchStoreDirectoryContents(filtered, '/.texlyre_src/__work');
 		} catch (error) {
-			console.error('[SwiftLaTeXService] Error saving work directory:', error);
+			moduleLog.error('Error saving work directory:', error);
 		}
 	}
 
@@ -574,7 +577,7 @@ class SwiftLaTeXService {
 				if (!cachePaths.has(normalized)) filtered[p] = c;
 			}
 		} catch (error) {
-			console.error('[SwiftLaTeXService] Error filtering work files:', error);
+			moduleLog.error('Error filtering work files:', error);
 			return workFiles;
 		}
 		return filtered;
@@ -690,7 +693,7 @@ class SwiftLaTeXService {
 				});
 			}
 		} catch (error) {
-			console.error('[SwiftLaTeXService] Error saving compilation output:', error);
+			moduleLog.error('Error saving compilation output:', error);
 		}
 	}
 
@@ -705,7 +708,7 @@ class SwiftLaTeXService {
 				showConflictDialog: false,
 			});
 		} catch (error) {
-			console.error('[SwiftLaTeXService] Error saving compilation log:', error);
+			moduleLog.error('Error saving compilation log:', error);
 		}
 	}
 
@@ -781,7 +784,7 @@ class SwiftLaTeXService {
 			const raw = await fileStorageService.getFile(node.id);
 			if (raw?.content) return raw.content;
 		} catch (error) {
-			console.error('[SwiftLaTeXService] Error retrieving file content:', error);
+			moduleLog.error('Error retrieving file content:', error);
 		}
 		return null;
 	}
@@ -798,10 +801,10 @@ class SwiftLaTeXService {
 				current = current ? `${current}/${part}` : part;
 				try {
 					engine.makeMemFSFolder(current);
-				} catch { }
+				} catch {}
 			}
 		} catch (error: any) {
-			console.warn(`[SwiftLaTeXService] Error in directory creation: ${error.message}`);
+			moduleLog.warn(`Error in directory creation: ${error.message}`);
 		}
 	}
 
@@ -832,7 +835,7 @@ class SwiftLaTeXService {
 						mimeType: 'text/plain',
 					};
 				}
-			} catch { }
+			} catch {}
 		}
 
 		try {
@@ -852,7 +855,7 @@ class SwiftLaTeXService {
 					mimeType: 'text/plain',
 				};
 			}
-		} catch { }
+		} catch {}
 
 		return null;
 	}
@@ -880,7 +883,7 @@ class SwiftLaTeXService {
 				});
 			}
 		} catch (error) {
-			console.error('[SwiftLaTeXService] Error collecting stored work files:', error);
+			moduleLog.error('Error collecting stored work files:', error);
 		}
 		return artifacts;
 	}

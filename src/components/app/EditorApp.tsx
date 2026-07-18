@@ -58,6 +58,9 @@ import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
 import { isValidYjsUrl, pushHash } from '../../utils/urlUtils';
 import { clickWhenReady } from '../../utils/editorNavigator';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('EditorApp');
 
 interface EditorAppProps {
 	docUrl: YjsDocUrl;
@@ -428,10 +431,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 								);
 							}
 						} catch (error) {
-							console.error(
-								'[EditorApp] Failed to sync project metadata:',
-								error,
-							);
+							moduleLog.error('Failed to sync project metadata:', error);
 						}
 					};
 					syncProjectMetadata();
@@ -481,7 +481,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						setLinkedFileInfo(null);
 					}
 				} catch (error) {
-					console.error('[EditorApp] Error checking for linked file:', error);
+					moduleLog.error('Error checking for linked file:', error);
 					setLinkedFileInfo(null);
 				}
 			} else {

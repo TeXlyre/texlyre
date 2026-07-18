@@ -23,6 +23,8 @@ import DrawioSplashScreen from '../../viewers/drawio/DrawioSplashScreen';
 import DrawioPngExportButton from '../../viewers/drawio/DrawioPngExportButton';
 import DrawioSvgExportButton from '../../viewers/drawio/DrawioSvgExportButton';
 import { DrawioYjsAdapter } from './DrawioYjsAdapter';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('DrawioCollaborativeViewer');
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -246,10 +248,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					setError(null);
 				}
 			} catch (error) {
-				console.error(
-					'[DrawioCollaborativeViewer] Error decoding Draw.io content:',
-					error,
-				);
+				moduleLog.error('Error decoding Draw.io content:', error);
 				setError(
 					t('Failed to decode file content: {error}', {
 						error: error instanceof Error ? error.message : String(error),
@@ -283,9 +282,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			if (!fileId) return;
 
 			if (!contentToSave.trim()) {
-				console.warn(
-					'[DrawioCollaborativeViewer] Attempted to save empty content',
-				);
+				moduleLog.warn('Attempted to save empty content');
 				return;
 			}
 
@@ -301,10 +298,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				setHasChanges(false);
 				flashSavedIndicator();
 			} catch (error) {
-				console.error(
-					'[DrawioCollaborativeViewer] Error saving Draw.io file:',
-					error,
-				);
+				moduleLog.error('Error saving Draw.io file:', error);
 				setError(
 					t('Failed to save file: {error}', {
 						error: error instanceof Error ? error.message : t('Unknown error'),
@@ -403,10 +397,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error(
-				'[DrawioCollaborativeViewer] Error downloading file:',
-				error,
-			);
+			moduleLog.error('Error downloading file:', error);
 			setError(
 				t('Failed to download file: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),

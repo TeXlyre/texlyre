@@ -37,6 +37,9 @@ import {
 	TrashIcon,
 	ResetIcon,
 } from '../common/Icons';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('TypstCompileButton');
 
 interface TypstCompileButtonProps {
 	dropdownKey: string;
@@ -318,10 +321,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 						return false;
 					}
 				} catch (error) {
-					console.warn(
-						'[TypstCompileButton] Error getting current file:',
-						error,
-					);
+					moduleLog.warn('Error getting current file:', error);
 				}
 			}
 
@@ -382,7 +382,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 		try {
 			clearCache();
 		} catch (error) {
-			console.error('[TypstCompileButton] Failed to clear cache:', error);
+			moduleLog.error('Failed to clear cache:', error);
 		}
 	};
 
@@ -424,10 +424,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 			clearCache();
 			await compileDocument(effectiveMainFile, effectiveFormat, pdfOptions);
 		} catch (error) {
-			console.error(
-				'[TypstCompileButton] Failed to compile with cache clear:',
-				error,
-			);
+			moduleLog.error('Failed to compile with cache clear:', error);
 		}
 	};
 

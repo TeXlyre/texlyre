@@ -2,6 +2,9 @@
 import { fileStorageService } from './FileStorageService';
 import type { FileNode } from '../types/files';
 import { isTemporaryFile, isBinaryFile } from '../utils/fileUtils';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('SearchService');
 
 export interface SearchResult {
 	fileId: string;
@@ -269,7 +272,7 @@ class SearchService {
 				}
 			}
 		} catch (error) {
-			console.error(`[SearchService] Error searching file ${file.path}:`, error);
+			moduleLog.error(`Error searching file ${file.path}:`, error);
 		}
 
 		return result;
@@ -338,7 +341,7 @@ class SearchService {
 
 			return false;
 		} catch (error) {
-			console.error(`[SearchService] Error replacing in file ${fileId}:`, error);
+			moduleLog.error(`Error replacing in file ${fileId}:`, error);
 			return false;
 		}
 	}
@@ -424,7 +427,7 @@ class SearchService {
 
 			return false;
 		} catch (error) {
-			console.error(`[SearchService] Error replacing in document ${documentId}:`, error);
+			moduleLog.error(`Error replacing in document ${documentId}:`, error);
 			return false;
 		}
 	}

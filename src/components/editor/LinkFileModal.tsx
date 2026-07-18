@@ -10,6 +10,9 @@ import type { ProjectType } from '../../types/projects';
 import { isTemporaryFile } from '../../utils/fileUtils';
 import { FolderIcon } from '../common/Icons';
 import Modal from '../common/Modal';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('LinkFileModal');
 
 interface LinkFileModalProps {
 	isOpen: boolean;
@@ -92,7 +95,7 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 				// User cancelled due to conflict
 				return;
 			}
-			console.error('[LinkFileModal] Error creating linked file:', error);
+			moduleLog.error('Error creating linked file:', error);
 		} finally {
 			setIsCreating(false);
 		}

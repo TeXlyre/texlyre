@@ -21,6 +21,8 @@ import { gitLabAPIService } from './GitLabAPIService';
 import { gitLabBackupService } from './GitLabBackupService';
 import { GitLabIcon } from './Icon';
 import './styles.css';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('GitLabBackupModal');
 
 interface GitLabBackupModalProps {
 	isOpen: boolean;
@@ -178,10 +180,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
 							setDisplayBranch(storedBranch);
 						}
 					} catch (error) {
-						console.error(
-							'[GitLabBackupModal] Could not load stored credentials.',
-							error,
-						);
+						moduleLog.error('Could not load stored credentials.', error);
 					}
 				}
 			};
@@ -230,7 +229,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
 		try {
 			await operation();
 		} catch (error) {
-			console.error('[GitLabBackupModal] Operation failed:', error);
+			moduleLog.error('Operation failed:', error);
 			setError(
 				t('Operation failed: {error}', {
 					error: error instanceof Error ? error.message : String(error),
@@ -372,7 +371,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
 					setSelectedBranch(defaultBranch.name);
 				}
 			} catch (error) {
-				console.error('[GitLabBackupModal] Failed to load branches:', error);
+				moduleLog.error('Failed to load branches:', error);
 			}
 		}
 	};

@@ -18,6 +18,8 @@ import type { FileNode } from '@/types/files';
 import { formatFileSize } from '@/utils/fileUtils';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './TikzViewerPlugin';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('TikzViewer');
 
 const BASE_PATH = __BASE_PATH__;
 const TIKZ_STORAGE_KEY = '.tikz-editor-config';
@@ -197,7 +199,7 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			setIsLoading(false);
 			setError(null);
 		} catch (error) {
-			console.error('[TikzViewer] Error decoding TikZ content:', error);
+			moduleLog.error('Error decoding TikZ content:', error);
 			setError(
 				t('Failed to decode file content: {error}', {
 					error: error instanceof Error ? error.message : String(error),
@@ -254,7 +256,7 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				sendMessageToTikz({ action: 'status', modified: false });
 				flashSavedIndicator();
 			} catch (error) {
-				console.error('[TikzViewer] Error saving TikZ file:', error);
+				moduleLog.error('Error saving TikZ file:', error);
 				setError(
 					t('Failed to save file: {error}', {
 						error: error instanceof Error ? error.message : t('Unknown error'),
@@ -294,11 +296,7 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 						pendingExportRef.current.reject(new Error(String(message.error)));
 						pendingExportRef.current = null;
 					}
-					console.warn(
-						'[TikzViewer] TikZ editor embed error:',
-						message.error,
-						message,
-					);
+					moduleLog.warn('TikZ editor embed error:', message.error, message);
 					return;
 				}
 
@@ -372,10 +370,7 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					}
 				}
 			} catch (error) {
-				console.error(
-					'[TikzViewer] Error handling message from TikZ editor:',
-					error,
-				);
+				moduleLog.error('Error handling message from TikZ editor:', error);
 			}
 		},
 		[
@@ -431,7 +426,7 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('[TikzViewer] Error downloading TikZ file:', error);
+			moduleLog.error('Error downloading TikZ file:', error);
 			setError(
 				t('Failed to download file: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),
@@ -447,7 +442,7 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			await fileStorageService.storeFile(makeSvgFile(fileName, svgContent));
 			flashSavedIndicator();
 		} catch (error) {
-			console.error('[TikzViewer] Error saving SVG:', error);
+			moduleLog.error('Error saving SVG:', error);
 			setError(error instanceof Error ? error.message : String(error));
 		}
 	}, [requestExport, fileName, flashSavedIndicator]);

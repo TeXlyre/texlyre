@@ -1,3 +1,6 @@
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('OpenAlexAPIService');
+
 // extras/bibliography/openalex/OpenAlexAPIService.ts
 
 export interface OpenAlexWork {
@@ -221,7 +224,7 @@ export class OpenAlexAPIService {
 					results.push(...(data.results || []));
 				}
 			} catch (error) {
-				console.error('[OpenAlexAPIService] Error fetching chunk:', error);
+				moduleLog.error('Error fetching chunk:', error);
 			}
 		}
 

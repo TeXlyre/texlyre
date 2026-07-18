@@ -15,6 +15,9 @@ import {
 	type ProjectMetadata,
 	UnifiedDataStructureService,
 } from './DataStructureService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('ProjectDataService');
 
 export class ProjectDataService {
 	private unifiedService = new UnifiedDataStructureService();
@@ -46,12 +49,12 @@ export class ProjectDataService {
 			for (const projectId of projectIds) {
 				const specificProject = await authService.getProjectById(projectId);
 				if (!specificProject) {
-					console.warn(`[ProjectDataService] Project ${projectId} not found, skipping`);
+					moduleLog.warn(`Project ${projectId} not found, skipping`);
 					continue;
 				}
 				if (specificProject.ownerId !== userId) {
-					console.warn(
-						`[ProjectDataService] Project ${projectId} does not belong to user ${userId}, skipping`,
+					moduleLog.warn(
+						`Project ${projectId} does not belong to user ${userId}, skipping`,
 					);
 					continue;
 				}
@@ -148,7 +151,7 @@ export class ProjectDataService {
 						docPersistence.destroy();
 						docYDoc.destroy();
 					} catch (error) {
-						console.error(`[ProjectDataService] Error serializing document ${doc.id}:`, error);
+						moduleLog.error(`Error serializing document ${doc.id}:`, error);
 					}
 				}
 			}
@@ -156,7 +159,7 @@ export class ProjectDataService {
 			metadataPersistence.destroy();
 			metadataDoc.destroy();
 		} catch (error) {
-			console.error('[ProjectDataService] Error serializing project documents:', error);
+			moduleLog.error('Error serializing project documents:', error);
 		}
 
 		return { documents, documentContents };
@@ -209,7 +212,7 @@ export class ProjectDataService {
 				}
 			}
 		} catch (error) {
-			console.error('[ProjectDataService] Error serializing project files:', error);
+			moduleLog.error('Error serializing project files:', error);
 		}
 
 		return { files, fileContents, deletedFiles };
@@ -220,29 +223,25 @@ export class ProjectDataService {
 		newProjectId?: string,
 		newDocUrl?: string,
 	): Promise<void> {
-		console.log(
-			'[ProjectDataService] Starting deserialization to IndexedDB...',
-		);
-		console.log(
-			`[ProjectDataService] Found ${data.projectData.size} projects to deserialize`,
-		);
+		moduleLog.info('Starting deserialization to IndexedDB...');
+		moduleLog.info(`Found ${data.projectData.size} projects to deserialize`);
 
 		for (const [originalProjectId, projectData] of data.projectData) {
 			const projectId = newProjectId || originalProjectId;
 			const docUrl = newDocUrl || projectData.metadata.docUrl;
 
-			console.log(
-				`[ProjectDataService] Processing project ${projectId}: ${projectData.metadata.name}`,
+			moduleLog.info(
+				`Processing project ${projectId}: ${projectData.metadata.name}`,
 			);
-			console.log(`  - DocUrl: ${docUrl}`);
-			console.log(`  - Documents: ${projectData.documents.length}`);
-			console.log(`  - Files: ${projectData.files.length}`);
+			moduleLog.info(`  - DocUrl: ${docUrl}`);
+			moduleLog.info(`  - Documents: ${projectData.documents.length}`);
+			moduleLog.info(`  - Files: ${projectData.files.length}`);
 
 			const actualProjectId = docUrl.startsWith('yjs:')
 				? docUrl.slice(4)
 				: docUrl;
 
-			console.log(`  - Using project ID for DB: ${actualProjectId}`);
+			moduleLog.info(`  - Using project ID for DB: ${actualProjectId}`);
 
 			await this.deserializeProjectDocuments(
 				actualProjectId,
@@ -259,7 +258,7 @@ export class ProjectDataService {
 			);
 		}
 
-		console.log('[ProjectDataService] Deserialization to IndexedDB completed');
+		moduleLog.info('Deserialization to IndexedDB completed');
 	}
 
 	private async deserializeProjectDocuments(
@@ -277,8 +276,8 @@ export class ProjectDataService {
 		const dbName = `texlyre-project-${projectId}`;
 		const metadataCollection = `${dbName}-yjs_metadata`;
 
-		console.log(
-			`[ProjectDataService] Deserializing documents for project ${projectId} to database ${dbName} ...`,
+		moduleLog.info(
+			`Deserializing documents for project ${projectId} to database ${dbName} ...`,
 		);
 
 		try {
@@ -286,7 +285,7 @@ export class ProjectDataService {
 				const docContent = documentContents.get(doc.id);
 				if (docContent?.yjsState) {
 					const docCollection = `${dbName}-yjs_${doc.id}`;
-					console.log(
+					moduleLog.info(
 						`Restoring document ${doc.id} to collection ${docCollection}`,
 					);
 
@@ -303,11 +302,11 @@ export class ProjectDataService {
 				projectGroup,
 			);
 
-			console.log(
-				`[ProjectDataService] Successfully deserialized ${documents.length} documents for project ${projectId}`,
+			moduleLog.info(
+				`Successfully deserialized ${documents.length} documents for project ${projectId}`,
 			);
 		} catch (error) {
-			console.error('[ProjectDataService] Error deserializing project documents:', error);
+			moduleLog.error('Error deserializing project documents:', error);
 		}
 	}
 
@@ -446,12 +445,12 @@ export class ProjectDataService {
 				preserveDeletionStatus: false,
 			});
 
-			console.log(
-				`[ProjectDataService] Successfully imported ${files.length} files for project ${projectId} using fileStorageService`,
+			moduleLog.info(
+				`Successfully imported ${files.length} files for project ${projectId} using fileStorageService`,
 			);
 		} catch (error) {
-			console.error(
-				'[ProjectDataService] Error importing files via fileStorageService, falling back to direct DB access:',
+			moduleLog.error(
+				'Error importing files via fileStorageService, falling back to direct DB access:',
 				error,
 			);
 
@@ -492,8 +491,8 @@ export class ProjectDataService {
 			await tx.done;
 			db.close();
 
-			console.log(
-				`[ProjectDataService] Successfully imported ${files.length} files for project ${projectId} via fallback`,
+			moduleLog.info(
+				`Successfully imported ${files.length} files for project ${projectId} via fallback`,
 			);
 		}
 	}
@@ -534,8 +533,8 @@ export class ProjectDataService {
 			preserveDeletionStatus: false,
 		});
 
-		console.log(
-			`[ProjectDataService] Successfully deserialized ${files.length} files for project ${projectId}`,
+		moduleLog.info(
+			`Successfully deserialized ${files.length} files for project ${projectId}`,
 		);
 	}
 
@@ -568,8 +567,8 @@ export class ProjectDataService {
 		await this.deserializeProjectFiles(projectId, fileMetadata, fileContents);
 
 		if (data.documents.length > 0) {
-			console.log(
-				`[ProjectDataService] Importing ${data.documents.length} documents for project ${projectId}`,
+			moduleLog.info(
+				`Importing ${data.documents.length} documents for project ${projectId}`,
 			);
 		}
 	}

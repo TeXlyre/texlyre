@@ -1,6 +1,8 @@
 // extras/collaborative_viewers/drawio/yjs-integration/DrawioYjsAdapter.ts
 import type * as Y from 'yjs';
 import type { Awareness } from 'y-protocols/awareness';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('DrawioYjsAdapter');
 
 interface DrawioYjsAdapterOptions {
 	doc: Y.Doc;
@@ -88,7 +90,7 @@ export class DrawioYjsAdapter {
 				this.handleCursorPosition(message.position);
 			}
 		} catch (error) {
-			console.error('[DrawioYjsAdapter] Error handling message:', error);
+			moduleLog.error('Error handling message:', error);
 		}
 	}
 
@@ -110,10 +112,7 @@ export class DrawioYjsAdapter {
 			this.cursorTrackingEnabled = true;
 			this.startCursorBroadcasting();
 		} catch (error) {
-			console.error(
-				'[DrawioYjsAdapter] Error injecting cursor tracking:',
-				error,
-			);
+			moduleLog.error('Error injecting cursor tracking:', error);
 		}
 	}
 
@@ -187,7 +186,7 @@ export class DrawioYjsAdapter {
 				this.isReady = true;
 			}, 500);
 		} catch (error) {
-			console.error('[DrawioYjsAdapter] Error loading initial content:', error);
+			moduleLog.error('Error loading initial content:', error);
 		}
 	}
 
@@ -226,7 +225,7 @@ export class DrawioYjsAdapter {
 
 	private handleDrawioSave(xml: string): void {
 		if (!xml) {
-			console.warn('[DrawioYjsAdapter] Empty XML received');
+			moduleLog.warn('Empty XML received');
 			return;
 		}
 
@@ -259,7 +258,7 @@ export class DrawioYjsAdapter {
 
 			this.sendToDrawio({ action: 'status', modified: false });
 		} catch (error) {
-			console.error('[DrawioYjsAdapter] Error handling save:', error);
+			moduleLog.error('Error handling save:', error);
 		}
 	}
 
@@ -318,7 +317,7 @@ export class DrawioYjsAdapter {
 						resolve(message.data);
 					}
 				} catch (error) {
-					console.error('[DrawioYjsAdapter] Export error:', error);
+					moduleLog.error('Export error:', error);
 				}
 			};
 

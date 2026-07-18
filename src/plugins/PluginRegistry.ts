@@ -13,6 +13,10 @@ import type {
 	ThemePlugin,
 	ViewerPlugin,
 } from './PluginInterface';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('PluginRegistry');
+
 
 export const pluginSettings: Setting[] = [];
 
@@ -35,7 +39,7 @@ class PluginRegistryManager {
 	private loadPlugins() {
 		try {
 			if (plugins.viewers && Object.keys(plugins.viewers).length > 0) {
-				console.log('[PluginRegistry] Loading viewers:', Object.keys(plugins.viewers));
+				moduleLog.info('Loading viewers:', Object.keys(plugins.viewers));
 				Object.values(plugins.viewers).forEach((plugin: ViewerPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -45,8 +49,8 @@ class PluginRegistryManager {
 			}
 
 			if (plugins.collaborative_viewers && Object.keys(plugins.collaborative_viewers).length > 0) {
-				console.log(
-					'[PluginRegistry] Loading collaborative viewers:',
+				moduleLog.info(
+					'Loading collaborative viewers:',
 					Object.keys(plugins.collaborative_viewers),
 				);
 				Object.values(plugins.collaborative_viewers).forEach((plugin: CollaborativeViewerPlugin) => {
@@ -58,7 +62,7 @@ class PluginRegistryManager {
 			}
 
 			if (plugins.renderers && Object.keys(plugins.renderers).length > 0) {
-				console.log('[PluginRegistry] Loading renderers:', Object.keys(plugins.renderers));
+				moduleLog.info('Loading renderers:', Object.keys(plugins.renderers));
 				Object.values(plugins.renderers).forEach((plugin: RendererPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -68,7 +72,7 @@ class PluginRegistryManager {
 			}
 
 			if (plugins.loggers && Object.keys(plugins.loggers).length > 0) {
-				console.log('[PluginRegistry] Loading loggers:', Object.keys(plugins.loggers));
+				moduleLog.info('Loading loggers:', Object.keys(plugins.loggers));
 				Object.values(plugins.loggers).forEach((plugin: LoggerPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -78,7 +82,7 @@ class PluginRegistryManager {
 			}
 
 			if (plugins.bibliography && Object.keys(plugins.bibliography).length > 0) {
-				console.log('[PluginRegistry] Loading bibliography plugins:', Object.keys(plugins.bibliography));
+				moduleLog.info('Loading bibliography plugins:', Object.keys(plugins.bibliography));
 				Object.values(plugins.bibliography).forEach((plugin: BibliographyPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -88,7 +92,7 @@ class PluginRegistryManager {
 			}
 
 			if (plugins.lsp && Object.keys(plugins.lsp).length > 0) {
-				console.log('[PluginRegistry] Loading LSP plugins:', Object.keys(plugins.lsp));
+				moduleLog.info('Loading LSP plugins:', Object.keys(plugins.lsp));
 				Object.values(plugins.lsp).forEach((plugin: LSPPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -98,7 +102,7 @@ class PluginRegistryManager {
 			}
 
 			if (plugins.backup && Object.keys(plugins.backup).length > 0) {
-				console.log('[PluginRegistry] Loading backup plugins:', Object.keys(plugins.backup));
+				moduleLog.info('Loading backup plugins:', Object.keys(plugins.backup));
 				Object.values(plugins.backup).forEach((plugin: BackupPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -108,7 +112,7 @@ class PluginRegistryManager {
 			}
 
 			if (plugins.themes && Object.keys(plugins.themes).length > 0) {
-				console.log('[PluginRegistry] Loading themes:', Object.keys(plugins.themes));
+				moduleLog.info('Loading themes:', Object.keys(plugins.themes));
 				Object.values(plugins.themes).forEach((plugin: ThemePlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -117,7 +121,7 @@ class PluginRegistryManager {
 				});
 			}
 		} catch (error) {
-			console.error('Failed to load plugins:', error);
+			moduleLog.error('Failed to load plugins:', error);
 		}
 	}
 
@@ -176,7 +180,7 @@ class PluginRegistryManager {
 	}
 
 	registerPlugin(plugin: Plugin) {
-		console.log('[PluginRegistry] Registering plugin:', plugin.name, 'of type:', plugin.type);
+		moduleLog.info('Registering plugin:', plugin.name, 'of type:', plugin.type);
 
 		switch (plugin.type) {
 			case 'viewer':
@@ -206,7 +210,7 @@ class PluginRegistryManager {
 				this.registry.themes.push(plugin as ThemePlugin);
 				break;
 			default:
-				console.warn(`Unsupported plugin type: ${plugin.type}`);
+				moduleLog.warn(`Unsupported plugin type: ${plugin.type}`);
 		}
 	}
 

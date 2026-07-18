@@ -1,3 +1,6 @@
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('ZoteroAPIService');
+
 // extras/bibliography/zotero/ZoteroAPIService.ts
 interface ZoteroItem {
 	key: string;
@@ -83,7 +86,7 @@ export class ZoteroAPIService {
 				});
 			}
 		} catch (error) {
-			console.error('[ZoteroAPIService] Error fetching groups:', error);
+			moduleLog.error('Error fetching groups:', error);
 		}
 
 		return libraries;
@@ -134,7 +137,7 @@ export class ZoteroAPIService {
 					item.data.itemType !== 'attachment' && item.data.itemType !== 'note',
 			);
 		} catch (error) {
-			console.error('[ZoteroAPIService] Error fetching library items:', error);
+			moduleLog.error('Error fetching library items:', error);
 			throw error;
 		}
 	}
@@ -162,7 +165,7 @@ export class ZoteroAPIService {
 			const collections: ZoteroCollection[] = await response.json();
 			return new Map(collections.map((c) => [c.key, c.data.name]));
 		} catch (error) {
-			console.error('[ZoteroAPIService] Error fetching collections:', error);
+			moduleLog.error('Error fetching collections:', error);
 			return new Map();
 		}
 	}

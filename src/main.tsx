@@ -24,6 +24,9 @@ import { openDB } from 'idb';
 import './i18n';
 import App from './App';
 import { authService } from './services/AuthService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('main');
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -44,7 +47,7 @@ const setupGuestCleanup = () => {
 			const { authService } = await import('./services/AuthService');
 			await authService.cleanupExpiredGuests();
 		} catch (error) {
-			console.warn('[main] Guest cleanup failed:', error);
+			moduleLog.warn('Guest cleanup failed:', error);
 		}
 	};
 
@@ -70,13 +73,10 @@ const setupGuestCleanup = () => {
 async function clearExistingServiceWorkers() {
 	if ('serviceWorker' in navigator) {
 		const registrations = await navigator.serviceWorker.getRegistrations();
-		console.log(
-			'[main] Found existing service workers:',
-			registrations.length,
-		);
+		moduleLog.info('Found existing service workers:', registrations.length);
 		for (const registration of registrations) {
-			console.log(
-				'[main] Unregistering existing service worker:',
+			moduleLog.info(
+				'Unregistering existing service worker:',
 				registration.scope,
 			);
 			await registration.unregister();
@@ -100,27 +100,27 @@ if (
 ) {
 	(async () => {
 		if (clearServiceWorkerOnLoad) {
-			console.log('[main] Clearing existing service workers...');
+			moduleLog.info('Clearing existing service workers...');
 			await clearExistingServiceWorkers();
 		} else {
-			console.log('[main] Skipping clearing existing service workers');
+			moduleLog.info('Skipping clearing existing service workers');
 		}
 
 		const swPath = `${BASE_PATH}/sw.js`;
 		const scope = `${BASE_PATH}/`;
 
-		console.log('[main] Service Worker Registration ===');
-		console.log('Service Worker Path:', swPath);
-		console.log('Scope:', scope);
-		console.log('Full Service Worker URL:', window.location.origin + swPath);
+		moduleLog.info('Service Worker Registration ===');
+		moduleLog.info('Service Worker Path:', swPath);
+		moduleLog.info('Scope:', scope);
+		moduleLog.info('Full Service Worker URL:', window.location.origin + swPath);
 
 		try {
-			console.log('[main] Attempting service worker registration...');
+			moduleLog.info('Attempting service worker registration...');
 			const registration = await navigator.serviceWorker.register(swPath, {
 				scope,
 			});
-			console.log(
-				'[main] Service worker registered successfully:',
+			moduleLog.info(
+				'Service worker registered successfully:',
 				registration.scope,
 			);
 
@@ -131,7 +131,7 @@ if (
 				});
 			}
 		} catch (error) {
-			console.error('[main] Service worker registration failed:', error);
+			moduleLog.error('Service worker registration failed:', error);
 		}
 	})();
 }
@@ -168,8 +168,8 @@ async function initUserData(): Promise<void> {
 				_version: newVersion,
 			};
 			localStorage.setItem(settingsKey, JSON.stringify(mergedSettings));
-			console.log(
-				`[main]Settings updated from version ${existingSettingsVersion || 'none'} to ${newVersion}`,
+			moduleLog.info(
+				`Settings updated from version ${existingSettingsVersion || 'none'} to ${newVersion}`,
 			);
 		} else if (!existingSettings) {
 			localStorage.setItem(
@@ -185,8 +185,8 @@ async function initUserData(): Promise<void> {
 				_version: newVersion,
 			};
 			localStorage.setItem(propertiesKey, JSON.stringify(mergedProperties));
-			console.log(
-				`[main]Properties updated from version ${existingPropertiesVersion || 'none'} to ${newVersion}`,
+			moduleLog.info(
+				`Properties updated from version ${existingPropertiesVersion || 'none'} to ${newVersion}`,
 			);
 		} else if (!existingProperties) {
 			localStorage.setItem(
@@ -195,7 +195,7 @@ async function initUserData(): Promise<void> {
 			);
 		}
 	} catch (error) {
-		console.warn('[main] Failed to load default user data:', error);
+		moduleLog.warn('Failed to load default user data:', error);
 	}
 }
 
@@ -222,7 +222,7 @@ async function initDatabases() {
 			},
 		});
 	} catch (error) {
-		console.error('[main] Failed to initialize databases:', error);
+		moduleLog.error('Failed to initialize databases:', error);
 	}
 }
 
@@ -244,7 +244,7 @@ function setupDirection() {
 				direction = directionSetting;
 			}
 		} catch (error) {
-			console.warn('[main] Failed to parse settings for direction:', error);
+			moduleLog.warn('Failed to parse settings for direction:', error);
 		}
 	}
 
@@ -259,7 +259,7 @@ async function startApp() {
 			initUserData(),
 		]);
 	} catch (error) {
-		console.error('[main] Error during initialization:', error);
+		moduleLog.error('Error during initialization:', error);
 	}
 
 	ReactDOM.createRoot(document.getElementById('root')!).render(

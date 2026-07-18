@@ -19,6 +19,8 @@ import { PLUGIN_NAME, PLUGIN_VERSION } from './DrawioViewerPlugin';
 import DrawioSplashScreen from './DrawioSplashScreen';
 import DrawioPngExportButton from './DrawioPngExportButton';
 import DrawioSvgExportButton from './DrawioSvgExportButton';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('DrawioViewer');
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -160,7 +162,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			setIsLoading(false);
 			setError(null);
 		} catch (error) {
-			console.error('[DrawioViewer] Error decoding Draw.io content:', error);
+			moduleLog.error('Error decoding Draw.io content:', error);
 			setError(
 				t('Failed to decode file content: {error}', {
 					error: error instanceof Error ? error.message : String(error),
@@ -214,7 +216,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
 			const content = contentToSave || drawioContent;
 			if (!content.trim()) {
-				console.warn('[DrawioViewer] Attempted to save empty content');
+				moduleLog.warn('Attempted to save empty content');
 				return;
 			}
 
@@ -233,7 +235,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				sendMessageToDrawio({ action: 'status', modified: false });
 				flashSavedIndicator();
 			} catch (error) {
-				console.error('[DrawioViewer] Error saving Draw.io file:', error);
+				moduleLog.error('Error saving Draw.io file:', error);
 				setError(
 					t('Failed to save file: {error}', {
 						error: error instanceof Error ? error.message : t('Unknown error'),
@@ -255,11 +257,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				const message = JSON.parse(event.data);
 
 				if (message.error) {
-					console.warn(
-						'[DrawioViewer] Draw.io embed error:',
-						message.error,
-						message,
-					);
+					moduleLog.warn('Draw.io embed error:', message.error, message);
 					return;
 				}
 
@@ -310,8 +308,8 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				}
 
 				if (message.event === 'export') {
-					console.log(
-						'[DrawioViewer] Export event received, format:',
+					moduleLog.info(
+						'Export event received, format:',
 						message.format,
 						'data length:',
 						message.data?.length,
@@ -329,8 +327,8 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 							handleSave(xml);
 							sendMessageToDrawio({ action: 'status', modified: false });
 						} else {
-							console.warn(
-								'[DrawioViewer] Export did not include XML; cannot save to file.',
+							moduleLog.warn(
+								'Export did not include XML; cannot save to file.',
 								message,
 							);
 							setError(t('Export did not include XML'));
@@ -366,10 +364,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					return;
 				}
 			} catch (error) {
-				console.error(
-					'[DrawioViewer] Error handling message from draw.io:',
-					error,
-				);
+				moduleLog.error('Error handling message from draw.io:', error);
 			}
 		},
 		[
@@ -422,10 +417,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				if (options.shadow !== undefined) exportMessage.shadow = options.shadow;
 				if (options.grid !== undefined) exportMessage.grid = options.grid;
 
-				console.log(
-					'[DrawioViewer] Sending export message to draw.io:',
-					exportMessage,
-				);
+				moduleLog.info('Sending export message to draw.io:', exportMessage);
 				sendMessageToDrawio(exportMessage);
 			});
 		},
@@ -444,7 +436,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('[DrawioViewer] Error downloading file:', error);
+			moduleLog.error('Error downloading file:', error);
 			setError(
 				t('Failed to download file: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),

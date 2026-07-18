@@ -1,3 +1,6 @@
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('GitHubAPIService');
+
 // extras/backup/github/GitHubAPIService.ts
 interface GitHubFile {
 	name: string;
@@ -216,11 +219,11 @@ export class GitHubAPIService {
 	): Promise<string> {
 		const validatedItems = treeItems.filter((item) => {
 			if (!item.path || item.path.includes('//') || item.path.startsWith('/')) {
-				console.warn(`Invalid tree item path: ${item.path}`);
+				moduleLog.warn(`Invalid tree item path: ${item.path}`);
 				return false;
 			}
 			if (item.type === 'blob' && item.sha === undefined) {
-				console.warn(`Blob item missing sha: ${item.path}`);
+				moduleLog.warn(`Blob item missing sha: ${item.path}`);
 				return false;
 			}
 			return true;
@@ -239,7 +242,7 @@ export class GitHubAPIService {
 			);
 			return data.sha;
 		} catch (error) {
-			console.error('Tree creation failed with items:', validatedItems);
+			moduleLog.error('Tree creation failed with items:', validatedItems);
 			throw error;
 		}
 	}

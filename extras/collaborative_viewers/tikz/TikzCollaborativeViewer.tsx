@@ -21,6 +21,8 @@ import type { FileNode } from '@/types/files';
 import { formatFileSize } from '@/utils/fileUtils';
 import '../../viewers/tikz/styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './TikzCollaborativeViewerPlugin';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('TikzCollaborativeViewer');
 
 const BASE_PATH = __BASE_PATH__;
 const TIKZ_STORAGE_KEY = '.tikz-editor-config';
@@ -270,10 +272,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					setError(null);
 				}
 			} catch (error) {
-				console.error(
-					'[TikzCollaborativeViewer] Error decoding TikZ content:',
-					error,
-				);
+				moduleLog.error('Error decoding TikZ content:', error);
 				setError(
 					t('Failed to decode file content: {error}', {
 						error: error instanceof Error ? error.message : String(error),
@@ -331,10 +330,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				setHasChanges(false);
 				flashSavedIndicator();
 			} catch (error) {
-				console.error(
-					'[TikzCollaborativeViewer] Error saving TikZ file:',
-					error,
-				);
+				moduleLog.error('Error saving TikZ file:', error);
 				setError(
 					t('Failed to save file: {error}', {
 						error: error instanceof Error ? error.message : t('Unknown error'),
@@ -466,7 +462,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 						pendingExportRef.current.reject(new Error(String(message.error)));
 						pendingExportRef.current = null;
 					}
-					console.warn('TikZ editor embed error:', message.error, message);
+					moduleLog.warn('TikZ editor embed error:', message.error, message);
 					return;
 				}
 
@@ -519,10 +515,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					}
 				}
 			} catch (error) {
-				console.error(
-					'[TikzCollaborativeViewer] Error handling message from TikZ editor:',
-					error,
-				);
+				moduleLog.error('Error handling message from TikZ editor:', error);
 			}
 		},
 		[
@@ -585,7 +578,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			await fileStorageService.storeFile(makeSvgFile(fileName, svgContent));
 			flashSavedIndicator();
 		} catch (error) {
-			console.error('[TikzCollaborativeViewer] Error saving SVG:', error);
+			moduleLog.error('Error saving SVG:', error);
 			setError(error instanceof Error ? error.message : String(error));
 		}
 	}, [requestExport, fileName, flashSavedIndicator]);

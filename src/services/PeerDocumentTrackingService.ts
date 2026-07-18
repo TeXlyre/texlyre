@@ -3,6 +3,9 @@ import type { Awareness } from 'y-protocols/awareness';
 
 import { collabService } from './CollabService';
 import type { CollabConnectOptions } from '../types/collab';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('PeerDocumentTracking');
 
 type Listener = (docsWithPeers: Set<string>) => void;
 
@@ -103,7 +106,7 @@ class PeerDocumentTrackingService {
 				Array.from(tracker.localOpenDocs),
 			);
 		} catch (error) {
-			console.warn('[PeerDocumentTracking] Failed to publish openDocs:', error);
+			moduleLog.warn('Failed to publish openDocs:', error);
 		}
 	}
 
@@ -144,8 +147,8 @@ class PeerDocumentTrackingService {
 				);
 				tracker.backgroundDocs.add(docId);
 			} catch (error) {
-				console.warn(
-					`[PeerDocumentTracking] Failed to open background connection for ${docId}:`,
+				moduleLog.warn(
+					`Failed to open background connection for ${docId}:`,
 					error,
 				);
 			}

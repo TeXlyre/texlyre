@@ -3,6 +3,8 @@ import type { BibEntry } from '@/types/bibliography';
 import type { SecretsContextType } from '@/contexts/SecretsContext';
 import type { PropertiesContextType } from '@/contexts/PropertiesContext';
 import { zoteroAPIService } from './ZoteroAPIService';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('ZoteroService');
 
 interface ZoteroItemData {
 	itemType: string;
@@ -116,7 +118,7 @@ class ZoteroService {
 			this.connectionStatus = 'connected';
 			this.notifyStatusListeners();
 		} catch (error) {
-			console.error('[ZoteroService] Error connecting:', error);
+			moduleLog.error('Error connecting:', error);
 			this.connectionStatus = 'error';
 			this.notifyStatusListeners();
 			throw error;
@@ -212,7 +214,7 @@ class ZoteroService {
 				userId: userIdSecret.value,
 			};
 		} catch (error) {
-			console.error('[ZoteroService] Error retrieving credentials:', error);
+			moduleLog.error('Error retrieving credentials:', error);
 			return null;
 		}
 	}
@@ -402,10 +404,7 @@ class ZoteroService {
 				this.convertZoteroItemToBibEntry(item, collectionMap),
 			);
 		} catch (error) {
-			console.error(
-				'[ZoteroService] Error getting bibliography entries:',
-				error,
-			);
+			moduleLog.error('Error getting bibliography entries:', error);
 			this.connectionStatus = 'error';
 			this.notifyStatusListeners();
 			return [];

@@ -15,6 +15,9 @@ import type {
 	CommentContextType,
 	CommentRaw,
 } from '../types/comments';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('CommentContext');
 
 export const CommentContext = createContext<CommentContextType | null>(null);
 
@@ -56,9 +59,7 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 				commentElement.classList.remove('highlight-comment');
 			}, 2000);
 		} else {
-			console.log(
-				'[CommentContext] Comment item not found - is the comment panel open?',
-			);
+			moduleLog.info('Comment item not found - is the comment panel open?');
 		}
 	}, []);
 

@@ -18,6 +18,9 @@ import {
 
 import type { Comment } from '../../types/comments';
 import { commentBubbleExtension } from './CommentBubbleExtension';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('CommentExtension');
 
 export const addComment = StateEffect.define<{
 	id: string;
@@ -130,7 +133,7 @@ const commentRanges = StateField.define<CommentRange[]>({
 					closeEnd: positions.closeTag.end,
 				});
 			} else {
-				console.warn(`Invalid comment range for comment ${id}, skipping`);
+				moduleLog.warn(`Invalid comment range for comment ${id}, skipping`);
 			}
 		}
 
@@ -508,7 +511,7 @@ function deleteWholeCommentIfBoundary(
 
 		return true;
 	} catch (error) {
-		console.error('[CommentExtension] Error deleting comment chunk:', error);
+		moduleLog.error('Error deleting comment chunk:', error);
 		return false;
 	}
 }
@@ -652,8 +655,8 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 				comment.closeTagStart >= comment.closeTagEnd ||
 				comment.openTagEnd > comment.closeTagStart
 			) {
-				console.warn(
-					`[CommentExtension] Invalid comment positions for comment ${comment.id}, skipping`,
+				moduleLog.warn(
+					`Invalid comment positions for comment ${comment.id}, skipping`,
 				);
 				continue;
 			}
@@ -684,10 +687,7 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 			view.dispatch({ effects });
 		}
 	} catch (error) {
-		console.error(
-			'[CommentExtension] Error dispatching comment effects:',
-			error,
-		);
+		moduleLog.error('Error dispatching comment effects:', error);
 	}
 }
 
@@ -702,7 +702,7 @@ export function unwrapCommentById(view: EditorView, id: string): boolean {
 
 		return true;
 	} catch (error) {
-		console.error('[CommentExtension] Error unwrapping comment:', error);
+		moduleLog.error('Error unwrapping comment:', error);
 		return false;
 	}
 }
@@ -724,7 +724,7 @@ export function deleteCommentById(view: EditorView, id: string): boolean {
 
 		return true;
 	} catch (error) {
-		console.error('[CommentExtension] Error deleting comment:', error);
+		moduleLog.error('Error deleting comment:', error);
 		return false;
 	}
 }

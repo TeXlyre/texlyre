@@ -4,6 +4,9 @@ import JSZip from 'jszip';
 import { t } from '@/i18n';
 import { UnifiedDataStructureService } from './DataStructureService';
 import { isBinaryFile, toArrayBuffer } from '../utils/fileUtils';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('StorageAdapterService');
 
 export interface FileSystemAdapter {
 	writeFile(
@@ -17,7 +20,7 @@ export interface FileSystemAdapter {
 }
 
 export class DirectoryAdapter implements FileSystemAdapter {
-	constructor(private rootHandle: FileSystemDirectoryHandle) { }
+	constructor(private rootHandle: FileSystemDirectoryHandle) {}
 
 	async writeFile(
 		path: string,
@@ -36,7 +39,7 @@ export class DirectoryAdapter implements FileSystemAdapter {
 				await writable.write(data);
 				await writable.close();
 			} catch (error) {
-				await writable.abort().catch(() => { });
+				await writable.abort().catch(() => {});
 				throw error;
 			}
 		};
@@ -280,7 +283,7 @@ export class StorageAdapterService {
 			try {
 				account = await this.readJsonFile(adapter, paths.ACCOUNT);
 			} catch (error) {
-				console.warn('[StorageAdapterService] Could not read account.json, using null:', error);
+				moduleLog.warn('Could not read account.json, using null:', error);
 			}
 		}
 
@@ -290,7 +293,7 @@ export class StorageAdapterService {
 				userData = await this.readJsonFile(adapter, 'userdata.json');
 			}
 		} catch (error) {
-			console.warn('[StorageAdapterService] Could not read userdata.json:', error);
+			moduleLog.warn('Could not read userdata.json:', error);
 		}
 
 		const projectData = new Map();
@@ -466,11 +469,11 @@ export class StorageAdapterService {
 					documents.push({ ...doc, hasReadableContent: !!readableContent });
 					documentContents.set(doc.id, { yjsState, readableContent });
 				} catch (error) {
-					console.error(`[StorageAdapterService] Error reading document ${doc.id}:`, error);
+					moduleLog.error(`Error reading document ${doc.id}:`, error);
 				}
 			}
 		} catch (error) {
-			console.error('[StorageAdapterService] Error reading documents:', error);
+			moduleLog.error('Error reading documents:', error);
 		}
 
 		return [documents, documentContents];
@@ -489,7 +492,7 @@ export class StorageAdapterService {
 				if (contents.some((name) => name.endsWith('.yjs'))) {
 					return path;
 				}
-			} catch { }
+			} catch {}
 		}
 
 		return null;
@@ -572,7 +575,7 @@ export class StorageAdapterService {
 				}
 			}
 		} catch (error) {
-			console.error('[StorageAdapterService] Error reading files:', error);
+			moduleLog.error('Error reading files:', error);
 		}
 
 		return [files, fileContents];

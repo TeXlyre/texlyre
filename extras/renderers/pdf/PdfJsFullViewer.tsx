@@ -19,6 +19,8 @@ import {
 	type LatexPdfInteractionManager,
 	createLatexPdfInteractionManager,
 } from './latexInteraction';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('PdfJsFullViewer');
 
 type Highlight = {
 	page: number;
@@ -407,22 +409,19 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 					pdfDocument,
 					{
 						onInstalled: (adapterNames) => {
-							console.info(
-								'[PdfJsFullViewer] LaTeX PDF interaction adapters installed:',
+							moduleLog.info(
+								'LaTeX PDF interaction adapters installed:',
 								adapterNames,
 							);
 						},
 						onWarning: (message, detail) => {
-							console.warn(`[PdfJsFullViewer] ${message}`, detail);
+							moduleLog.warn(`${message}`, detail);
 						},
 					},
 				);
 
 				interactionManagerRef.current.installWhenReady().catch((error) => {
-					console.warn(
-						'[PdfJsFullViewer] LaTeX PDF interactions failed:',
-						error,
-					);
+					moduleLog.warn('LaTeX PDF interactions failed:', error);
 				});
 			};
 

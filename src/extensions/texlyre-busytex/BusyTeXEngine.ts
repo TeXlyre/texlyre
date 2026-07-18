@@ -5,6 +5,9 @@ import type { FileInput, TexliveRemoteFile } from 'texlyre-busytex';
 import type { CompileResult } from '../../types/compilation';
 import type { FileNode } from '../../types/files';
 import { isTemporaryFile, toArrayBuffer } from '../../utils/fileUtils';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('BusyTeXEngine');
 
 export type BusyTeXEngineType =
 	| 'busytex-pdftex'
@@ -270,7 +273,7 @@ export class BusyTeXEngine {
 		try {
 			await this.runner.writeTexliveRemoteFiles(files);
 		} catch (error) {
-			console.warn('[BusyTeXEngine] Failed to write remote files:', error);
+			moduleLog.warn('Failed to write remote files:', error);
 		}
 	}
 

@@ -7,6 +7,9 @@ import type {
 	SourceMapService,
 } from '../types/sourceMap';
 import type { TypstPageInfo } from '../types/typst';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('TypstSourceMapService');
 
 interface AnnotatedRect {
 	page: number;
@@ -193,7 +196,7 @@ class TypstSourceMapService implements SourceMapService {
 				this.fileInCodeBlock = new Map(data.result.fileInCodeBlock);
 				this.notifyListeners();
 			} else {
-				console.error('[TypstSourceMapService] Build failed:', data.error);
+				moduleLog.error('Build failed:', data.error);
 				this.forwardMap = null;
 				this.reverseMap = null;
 				this.fileInCodeBlock = new Map();
@@ -203,7 +206,7 @@ class TypstSourceMapService implements SourceMapService {
 		};
 
 		this.worker.onerror = (ev) => {
-			console.error('[TypstSourceMapService] Worker error:', ev);
+			moduleLog.error('Worker error:', ev);
 			this.forwardMap = null;
 			this.reverseMap = null;
 			this.fileInCodeBlock = new Map();

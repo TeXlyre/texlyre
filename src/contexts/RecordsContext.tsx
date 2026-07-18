@@ -8,6 +8,10 @@ import {
 	useRef,
 } from 'react';
 
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('RecordsContext');
+
 export interface RecordEntry<T = unknown> {
 	id: string;
 	timestamp: number;
@@ -89,10 +93,7 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 		try {
 			localStorage.setItem(getStorageKey(), JSON.stringify(recordsRef.current));
 		} catch (error) {
-			console.error(
-				'[RecordsContext] Error saving records to localStorage:',
-				error,
-			);
+			moduleLog.error('Error saving records to localStorage:', error);
 		}
 	}, [getStorageKey]);
 
@@ -101,10 +102,7 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 			const stored = localStorage.getItem(getStorageKey());
 			recordsRef.current = stored ? JSON.parse(stored) : {};
 		} catch (error) {
-			console.error(
-				'[RecordsContext] Error parsing records from localStorage:',
-				error,
-			);
+			moduleLog.error('Error parsing records from localStorage:', error);
 			recordsRef.current = {};
 		} finally {
 			isLoaded.current = true;

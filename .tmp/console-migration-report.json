@@ -1,0 +1,4755 @@
+{
+  "generatedAt": "2026-07-18T21:51:55.318Z",
+  "mode": "write",
+  "root": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre",
+  "roots": [
+    "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src",
+    "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras"
+  ],
+  "options": {
+    "importSpecifier": "@/utils/namedLogger",
+    "factoryName": "createNamedLogger",
+    "bindingName": "moduleLog",
+    "includeGenerated": false
+  },
+  "summary": {
+    "scannedFiles": 671,
+    "actionableFiles": 147,
+    "directConsoleCalls": 675,
+    "skippedFiles": 0,
+    "failedFiles": 0,
+    "mixedPrefixFiles": 0,
+    "filesWithUnsupportedForms": 0
+  },
+  "results": [
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/forgejo/ForgejoAPIService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/forgejo/ForgejoBackupModal.tsx",
+      "calls": 3,
+      "scope": "ForgejoBackupModal",
+      "prefixes": [
+        "ForgejoBackupModal"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/forgejo/ForgejoBackupPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/forgejo/ForgejoBackupService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/forgejo/ForgejoBackupStatusIndicator.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/forgejo/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/forgejo/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/forgejo/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitea/GiteaAPIService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitea/GiteaBackupModal.tsx",
+      "calls": 3,
+      "scope": "GiteaBackupModal",
+      "prefixes": [
+        "GiteaBackupModal"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitea/GiteaBackupPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitea/GiteaBackupService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitea/GiteaBackupStatusIndicator.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitea/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitea/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitea/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/github/GitHubAPIService.ts",
+      "calls": 3,
+      "scope": "GitHubAPIService",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/github/GitHubBackupModal.tsx",
+      "calls": 3,
+      "scope": "GitHubBackupModal",
+      "prefixes": [
+        "GitHubBackupModal"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/github/GitHubBackupPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/github/GitHubBackupService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/github/GitHubBackupStatusIndicator.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/github/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/github/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/github/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitlab/GitLabAPIService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitlab/GitLabBackupModal.tsx",
+      "calls": 3,
+      "scope": "GitLabBackupModal",
+      "prefixes": [
+        "GitLabBackupModal"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitlab/GitLabBackupPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitlab/GitLabBackupService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitlab/GitLabBackupStatusIndicator.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitlab/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitlab/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/gitlab/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/backup/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/jabref/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/jabref/JabRefBibliographyPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/jabref/JabRefLSP.ts",
+      "calls": 4,
+      "scope": "JabRefLSP",
+      "prefixes": [
+        "JabRefLSP"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/jabref/JabRefPanel.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/jabref/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/jabref/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/openalex/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/openalex/OpenAlexAPIService.ts",
+      "calls": 1,
+      "scope": "OpenAlexAPIService",
+      "prefixes": [
+        "OpenAlexAPIService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/openalex/OpenAlexBibliographyPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/openalex/OpenAlexConnectionModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/openalex/OpenAlexPanel.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/openalex/OpenAlexService.ts",
+      "calls": 3,
+      "scope": "OpenAlexService",
+      "prefixes": [
+        "OpenAlexService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/openalex/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/openalex/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/zotero/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/zotero/ZoteroAPIService.ts",
+      "calls": 3,
+      "scope": "ZoteroAPIService",
+      "prefixes": [
+        "ZoteroAPIService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/zotero/ZoteroBibliographyPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/zotero/ZoteroConnectionModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/zotero/ZoteroPanel.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/zotero/ZoteroService.ts",
+      "calls": 3,
+      "scope": "ZoteroService",
+      "prefixes": [
+        "ZoteroService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/zotero/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/bibliography/zotero/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/bibtex/BibtexCollaborativeViewer.tsx",
+      "calls": 7,
+      "scope": "BibtexCollaborativeViewer",
+      "prefixes": [
+        "BibtexCollaborativeViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/bibtex/BibtexCollaborativeViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/bibtex/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/drawio/DrawioCollaborativeViewer.tsx",
+      "calls": 4,
+      "scope": "DrawioCollaborativeViewer",
+      "prefixes": [
+        "DrawioCollaborativeViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/drawio/DrawioCollaborativeViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/drawio/DrawioYjsAdapter.ts",
+      "calls": 6,
+      "scope": "DrawioYjsAdapter",
+      "prefixes": [
+        "DrawioYjsAdapter"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/drawio/drawio-cursor-tracking.js",
+      "calls": 1,
+      "scope": "Drawio Cursor",
+      "prefixes": [
+        "Drawio Cursor"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/drawio/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/milkdown/MilkdownCollabStrategy.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/milkdown/MilkdownCollaborativeViewer.tsx",
+      "calls": 2,
+      "scope": "MilkdownCollaborativeViewer",
+      "prefixes": [
+        "MilkdownCollaborativeViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/milkdown/MilkdownCollaborativeViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/milkdown/TextBridgeStrategy.ts",
+      "calls": 1,
+      "scope": "TextBridgeStrategy",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/milkdown/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/tikz/TikzCollaborativeViewer.tsx",
+      "calls": 5,
+      "scope": "TikzCollaborativeViewer",
+      "prefixes": [
+        "TikzCollaborativeViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/tikz/TikzCollaborativeViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/collaborative_viewers/tikz/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/loggers/latex_visualizer/LaTeXVisualizer.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/loggers/latex_visualizer/LaTeXVisualizerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/loggers/latex_visualizer/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/loggers/latex_visualizer/parser.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/loggers/typst_visualizer/TypstVisualizer.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/loggers/typst_visualizer/TypstVisualizerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/loggers/typst_visualizer/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/loggers/typst_visualizer/parser.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/lsp/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/canvas/CanvasRenderer.tsx",
+      "calls": 1,
+      "scope": "CanvasRenderer",
+      "prefixes": [
+        "CanvasRenderer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/canvas/CanvasRendererPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/canvas/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/canvas/pdfRenderer.ts",
+      "calls": 1,
+      "scope": "CanvasRenderer",
+      "prefixes": [
+        "CanvasRenderer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/canvas/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/canvas/svg-worker.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/canvas/svgRenderer.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/pdf/PdfJsFullViewer.tsx",
+      "calls": 3,
+      "scope": "PdfJsFullViewer",
+      "prefixes": [
+        "PdfJsFullViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/pdf/PdfRenderer.tsx",
+      "calls": 2,
+      "scope": "PdfRenderer",
+      "prefixes": [
+        "PdfRenderer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/pdf/PdfRendererPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/pdf/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/pdf/latexInteraction/AcroTexAdapter.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/pdf/latexInteraction/AnimateAdapter.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/pdf/latexInteraction/LatexPdfInteractionManager.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/pdf/latexInteraction/OcgAdapter.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/pdf/latexInteraction/dom.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/pdf/latexInteraction/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/pdf/latexInteraction/interactionDetection.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/pdf/latexInteraction/types.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/renderers/pdf/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/themes/texlyre_mobile/TeXlyreMobileTheme.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/themes/texlyre_mobile/colors.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/themes/texlyre_mobile/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/themes/texlyre_mobile/styles/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/themes/texlyre_slim/TeXlyreSlimTheme.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/themes/texlyre_slim/colors.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/themes/texlyre_slim/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/themes/texlyre_slim/styles/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/themes/texlyre_wide/TeXlyreWideTheme.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/themes/texlyre_wide/colors.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/themes/texlyre_wide/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/themes/texlyre_wide/styles/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/bibtex/BibtexTableView.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/bibtex/BibtexViewer.tsx",
+      "calls": 14,
+      "scope": "BibtexViewer",
+      "prefixes": [
+        "BibtexViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/bibtex/BibtexViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/bibtex/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/bibtex/TidyOptionsPanel.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/bibtex/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/bibtex/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/bibtex/tidyOptions.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/drawio/DrawioPngExportButton.tsx",
+      "calls": 4,
+      "scope": "DrawioPngExportButton",
+      "prefixes": [
+        "DrawioPngExportButton"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/drawio/DrawioSplashScreen.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/drawio/DrawioSvgExportButton.tsx",
+      "calls": 4,
+      "scope": "DrawioSvgExportButton",
+      "prefixes": [
+        "DrawioSvgExportButton"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/drawio/DrawioViewer.tsx",
+      "calls": 9,
+      "scope": "DrawioViewer",
+      "prefixes": [
+        "DrawioViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/drawio/DrawioViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/drawio/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/drawio/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/drawio/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/image/CombinedImageViewer.tsx",
+      "calls": 1,
+      "scope": "CombinedImageViewer",
+      "prefixes": [
+        "CombinedImageViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/image/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/image/ImageViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/image/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/image/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/media/CombinedMediaViewer.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/media/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/media/MediaViewerPlugin.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/media/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/media/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/MilkdownEditor.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/MilkdownTextPane.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/MilkdownViewer.tsx",
+      "calls": 2,
+      "scope": "MilkdownViewer",
+      "prefixes": [
+        "MilkdownViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/MilkdownViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/imageResolver.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/linkClick.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/milkdownSetup.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/plugins/math.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/toolbar/MilkdownToolbar.tsx",
+      "calls": 2,
+      "scope": "MilkdownToolbar",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/toolbar/helpers.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/toolbar/milkdownItems.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/toolbar/pasteUpload.ts",
+      "calls": 2,
+      "scope": "pasteUpload",
+      "prefixes": [
+        "pasteUpload"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/toolbar/pendingImage.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/milkdown/toolbar/types.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/pdf/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/pdf/PdfViewer.tsx",
+      "calls": 2,
+      "scope": "PdfViewer",
+      "prefixes": [
+        "PdfViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/pdf/PdfViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/pdf/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/pdf/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/tikz/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/tikz/TikzViewer.tsx",
+      "calls": 6,
+      "scope": "TikzViewer",
+      "prefixes": [
+        "TikzViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/tikz/TikzViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/tikz/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/extras/viewers/tikz/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/App.tsx",
+      "calls": 1,
+      "scope": "App",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/app/AppRouter.tsx",
+      "calls": 7,
+      "scope": "AppRouter",
+      "prefixes": [
+        "AppRouter"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/app/AppSettingBootrap.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/app/AuthApp.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/app/EditorApp.tsx",
+      "calls": 2,
+      "scope": "EditorApp",
+      "prefixes": [
+        "EditorApp"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/app/LoadingScreen.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/app/ProjectApp.tsx",
+      "calls": 12,
+      "scope": "ProjectApp",
+      "prefixes": [
+        "ProjectApp"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/auth/GuestConsentModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/auth/GuestUpgradeBanner.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/auth/GuestUpgradeModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/auth/ImportAccount.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/auth/Login.tsx",
+      "calls": 3,
+      "scope": "Login",
+      "prefixes": [
+        "Login"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/auth/PasswordInfo.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/auth/PasswordModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/auth/Register.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/backup/BackupDiscoveryModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/backup/BackupModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/backup/BackupStatusIndicator.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/backup/ProjectBackupControls.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/bibliography/BibliographyPanel.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/bibliography/LSPToggleButton.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/chat/ChatMessage.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/chat/ChatPanel.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/collab/CollabModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/collab/CollabStatusIndicator.tsx",
+      "calls": 1,
+      "scope": "CollabStatusIndicator",
+      "prefixes": [
+        "CollabStatusIndicator"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/collab/FileSyncModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/comments/CommentButton.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/comments/CommentItem.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/comments/CommentModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/comments/CommentPanel.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/comments/CommentToggleButton.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/CollaboratorAvatars.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/CopyField.tsx",
+      "calls": 1,
+      "scope": "CopyField",
+      "prefixes": [
+        "CopyField"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/DropdownMenu.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/Icons.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/InfoTooltip.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/KeyboardShortcutsModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/Modal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/NumberInput.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/OfflineBanner.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/PluginHeader.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/PluginToolbar.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/PositionedDropdown.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/PrivacyModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/ResizablePanel.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/SplashScreen.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/TagInput.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/Toast.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/ToastContainer.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/common/TypesetterInfo.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/conflicts/ConflictResolutionModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/conflicts/MergeEditor.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/ContentFormatterButton.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/DocumentExplorer.tsx",
+      "calls": 2,
+      "scope": "DocumentExplorer",
+      "prefixes": [
+        "DocumentExplorer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/Editor.tsx",
+      "calls": 6,
+      "scope": "Editor",
+      "prefixes": [
+        "Editor"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/EditorTabs.tsx",
+      "calls": 1,
+      "scope": "EditorTabs",
+      "prefixes": [
+        "EditorTabs"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/FileConflictModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/FileCreationMenu.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/FileDocumentController.tsx",
+      "calls": 5,
+      "scope": "FileDocumentController",
+      "prefixes": [
+        "FileDocumentController"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/FileExplorer.tsx",
+      "calls": 12,
+      "scope": "FileExplorer",
+      "prefixes": [
+        "FileExplorer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/FileOperationsModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/FileTreeItem.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/LaTeXOutline.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/LaTeXOutlineItem.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/LinkFileModal.tsx",
+      "calls": 1,
+      "scope": "LinkFileModal",
+      "prefixes": [
+        "LinkFileModal"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/SearchPanel.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/SearchReplaceModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/SourceMapButton.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/StatisticsModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/TypstOutline.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/TypstOutlineItem.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/UnlinkedDocumentNotice.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/editor/ZipHandlingModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/output/ExternalCompileButton.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/output/ExternalCompilerOutput.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/output/ExternalExportButton.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/output/LaTeXCompileButton.tsx",
+      "calls": 7,
+      "scope": "LaTeXCompileButton",
+      "prefixes": [
+        "LaTeXCompileButton"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/output/LaTeXExportButton.tsx",
+      "calls": 1,
+      "scope": "LaTeXExportButton",
+      "prefixes": [
+        "LaTeXExportButton"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/output/LaTeXOutput.tsx",
+      "calls": 1,
+      "scope": "LaTeXOutput",
+      "prefixes": [
+        "LaTeXOutput"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/output/PopoutViewerToggleButton.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/output/PopoutViewerWindow.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/output/SourceMapFloatingButton.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/output/TypstCompileButton.tsx",
+      "calls": 3,
+      "scope": "TypstCompileButton",
+      "prefixes": [
+        "TypstCompileButton"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/output/TypstExportButton.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/output/TypstOutput.tsx",
+      "calls": 1,
+      "scope": "TypstOutput",
+      "prefixes": [
+        "TypstOutput"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/output/externalCompilerSchema.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/profile/DeleteAccountModal.tsx",
+      "calls": 1,
+      "scope": "DeleteAccountModal",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/profile/ExportAccountModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/profile/ProfileAccountIdentitySection.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/profile/ProfileChelysConnectionSection.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/profile/ProfileLocalStorageDataSection.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/profile/ProfileSettingsModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/profile/UserDropdown.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/project/ProjectCard.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/project/ProjectDeleteModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/project/ProjectExportModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/project/ProjectForm.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/project/ProjectImportModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/project/ProjectList.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/project/ProjectPanel.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/project/ShareProjectButton.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/project/ShareProjectModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/project/ShareTargetModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/project/TemplateImportModal.tsx",
+      "calls": 2,
+      "scope": "TemplateImportModal",
+      "prefixes": [
+        "TemplateImportModal"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/project/UrlImportModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/project/YjsLinkImportModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/settings/LanguageToggleButton.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/settings/SettingControl.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/settings/SettingsButton.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/settings/SettingsCodeMirror.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/settings/SettingsLanguage.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/settings/SettingsModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/components/settings/ThemeToggleButton.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/AuthContext.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/BibliographyContext.tsx",
+      "calls": 9,
+      "scope": "BibliographyContext",
+      "prefixes": [
+        "BibliographyContext"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/ChatContext.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/ChelysContext.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/CollabContext.tsx",
+      "calls": 1,
+      "scope": "CollabContext",
+      "prefixes": [
+        "CollabContext"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/CommentContext.tsx",
+      "calls": 1,
+      "scope": "CommentContext",
+      "prefixes": [
+        "CommentContext"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/ContentFormatterContext.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/EditorContext.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/EditorTabsContext.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/ExternalCompilerContext.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/FileSyncContext.tsx",
+      "calls": 13,
+      "scope": "FileSyncContext",
+      "prefixes": [
+        "FileSyncContext"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/FileSystemBackupContext.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/FileTreeContext.tsx",
+      "calls": 22,
+      "scope": "FileTreeContext",
+      "prefixes": [
+        "FileTreeContext"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/LSPConfigContext.tsx",
+      "calls": 2,
+      "scope": "LSPConfigContext",
+      "prefixes": [
+        "LSPConfigContext"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/LaTeXContext.tsx",
+      "calls": 1,
+      "scope": "LaTeXContext",
+      "prefixes": [
+        "LaTeXContext"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/LanguageContext.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/OfflineContext.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/PropertiesContext.tsx",
+      "calls": 5,
+      "scope": "PropertiesContext",
+      "prefixes": [
+        "PropertiesContext"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/RecordsContext.tsx",
+      "calls": 2,
+      "scope": "RecordsContext",
+      "prefixes": [
+        "RecordsContext"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/SearchContext.tsx",
+      "calls": 3,
+      "scope": "SearchContext",
+      "prefixes": [
+        "SearchContext"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/SecretsContext.tsx",
+      "calls": 11,
+      "scope": "SecretsContext",
+      "prefixes": [
+        "SecretsContext"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/SettingsContext.tsx",
+      "calls": 4,
+      "scope": "SettingsContext",
+      "prefixes": [
+        "SettingsContext"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/SourceMapContext.tsx",
+      "calls": 2,
+      "scope": "SourceMapContext",
+      "prefixes": [
+        "SourceMapContext"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/ThemeContext.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/TypesetterConfigContext.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/contexts/TypstContext.tsx",
+      "calls": 2,
+      "scope": "TypstContext",
+      "prefixes": [
+        "TypstContext"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/BidiExtension.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/BurstDeferLanguage.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/CodeActionsLSPExtension.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/CommentBubbleExtension.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/CommentExtension.ts",
+      "calls": 6,
+      "scope": "CommentExtension",
+      "prefixes": [
+        "CommentExtension"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/ConflictsGutterExtension.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/GenericLSPExtension.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/HighlightThemeExtension.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/LinkNavigationExtension.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/ListingsExtension.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/MathLiveExtension.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/PasteExtension.ts",
+      "calls": 2,
+      "scope": "PasteExtension",
+      "prefixes": [
+        "PasteExtension"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/PathAndBibAutocompleteExtension.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/SafeTypstPatch.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/SearchHighlightExtension.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/ToolbarExtension.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/autocomplete/BibliographyCompletionHandler.ts",
+      "calls": 2,
+      "scope": "BibliographyCompletionHandler",
+      "prefixes": [
+        "BibliographyCompletionHandler"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/autocomplete/FilePathCompletionHandler.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/autocomplete/ReferenceCompletionHandler.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/autocomplete/patterns.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/bidi/patterns.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/linkNavigation/LinkDetector.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/linkNavigation/LinkNavigator.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/linkNavigation/patterns.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/mathlive/MathDetector.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/mathlive/MathWidget.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/mathlive/SymbolData.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/mathlive/SymbolSearchPanel.ts",
+      "calls": 1,
+      "scope": "SymbolSearchPanel",
+      "prefixes": [
+        "SymbolSearchPanel"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/mathlive/patterns.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/toolbar/codemirrorItems.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/toolbar/colorScope.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/toolbar/colorScopeItems.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/toolbar/helpers.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/toolbar/latexItems.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/toolbar/tableItems.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/toolbar/tableScope.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/toolbar/tableScopeItems.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/toolbar/toolbarItems.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/toolbar/types.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/codemirror/toolbar/typstItems.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/swiftlatex/BaseEngine.ts",
+      "calls": 2,
+      "scope": "BaseEngine",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/swiftlatex/DvipdfmxEngine.ts",
+      "calls": 1,
+      "scope": "DvipdfmxEngine",
+      "prefixes": [
+        "DvipdfmxEngine"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/swiftlatex/EngineLoader.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/swiftlatex/PdfTeXEngine.ts",
+      "calls": 2,
+      "scope": "PdfTeXEngine",
+      "prefixes": [
+        "PdfTeXEngine"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/swiftlatex/SwiftLaTeXService.ts",
+      "calls": 13,
+      "scope": "SwiftLaTeXService",
+      "prefixes": [
+        "SwiftLaTeXService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/swiftlatex/XeTeXEngine.ts",
+      "calls": 2,
+      "scope": "XeTeXEngine",
+      "prefixes": [
+        "XeTeXEngine"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/texlyre-busytex/BusyTeXEngine.ts",
+      "calls": 1,
+      "scope": "BusyTeXEngine",
+      "prefixes": [
+        "BusyTeXEngine"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/texlyre-busytex/BusyTeXService.ts",
+      "calls": 7,
+      "scope": "BusyTeXService",
+      "prefixes": [
+        "BusyTeXService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/typst.ts/LongPathPackageRegistry.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/typst.ts/TypstCompilerEngine.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/typst.ts/svgNavigation.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/typst.ts/typst-sourcemap-worker.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/typst.ts/typst-worker.ts",
+      "calls": 3,
+      "scope": "typst-worker",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/wasm-tools/TypstyleEngine.ts",
+      "calls": 1,
+      "scope": "TypstyleEngine",
+      "prefixes": [
+        "TypstyleEngine"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/wasm-tools/WasmToolsEngine.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/yjs/CollabWebrtc.ts",
+      "calls": 4,
+      "scope": "CollabWebrtc",
+      "prefixes": [
+        "CollabWebrtc"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/extensions/yjs/CollabWebsocket.ts",
+      "calls": 4,
+      "scope": "CollabWebsocket",
+      "prefixes": [
+        "CollabWebsocket"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/editor/EditorEvents.ts",
+      "calls": 8,
+      "scope": "EditorEvents",
+      "prefixes": [
+        "EditorEvents"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/editor/editorClipboard.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/editor/editorSearchHighlights.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/editor/useEditorView.ts",
+      "calls": 5,
+      "scope": "useEditorView",
+      "prefixes": [
+        "useEditorView"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/editor/yjsBinding.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useAuth.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useBibliography.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useChat.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useChelys.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useCollab.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useComments.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useContentFormatter.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useEditor.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useEditorTabs.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useExternalCompiler.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useFileSync.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useFileSystemBackup.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useFileTree.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useGlobalKeyboard.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useLSPConfig.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useLaTeX.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useLanguage.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useOffline.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/usePeerDocumentTracking.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/usePersistentState.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/usePluginFileInfo.ts",
+      "calls": 1,
+      "scope": "usePluginFileInfo",
+      "prefixes": [
+        "usePluginFileInfo"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useProperties.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useRecords.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useSearch.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useSecrets.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useSettings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useSourceMap.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useTheme.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useTypst.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/hooks/useUrlMetadata.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/i18n.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/main.tsx",
+      "calls": 18,
+      "scope": "main",
+      "prefixes": [
+        "main"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/PluginInterface.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/PluginRegistry.ts",
+      "calls": 11,
+      "scope": "PluginRegistry",
+      "prefixes": [
+        "PluginRegistry"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/forgejo/ForgejoAPIService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/forgejo/ForgejoBackupModal.tsx",
+      "calls": 3,
+      "scope": "ForgejoBackupModal",
+      "prefixes": [
+        "ForgejoBackupModal"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/forgejo/ForgejoBackupPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/forgejo/ForgejoBackupService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/forgejo/ForgejoBackupStatusIndicator.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/forgejo/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/forgejo/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/forgejo/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitea/GiteaAPIService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitea/GiteaBackupModal.tsx",
+      "calls": 3,
+      "scope": "GiteaBackupModal",
+      "prefixes": [
+        "GiteaBackupModal"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitea/GiteaBackupPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitea/GiteaBackupService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitea/GiteaBackupStatusIndicator.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitea/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitea/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitea/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/github/GitHubAPIService.ts",
+      "calls": 3,
+      "scope": "GitHubAPIService",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/github/GitHubBackupModal.tsx",
+      "calls": 3,
+      "scope": "GitHubBackupModal",
+      "prefixes": [
+        "GitHubBackupModal"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/github/GitHubBackupPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/github/GitHubBackupService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/github/GitHubBackupStatusIndicator.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/github/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/github/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/github/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitlab/GitLabAPIService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitlab/GitLabBackupModal.tsx",
+      "calls": 3,
+      "scope": "GitLabBackupModal",
+      "prefixes": [
+        "GitLabBackupModal"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitlab/GitLabBackupPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitlab/GitLabBackupService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitlab/GitLabBackupStatusIndicator.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitlab/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitlab/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/gitlab/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/backup/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/jabref/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/jabref/JabRefBibliographyPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/jabref/JabRefLSP.ts",
+      "calls": 4,
+      "scope": "JabRefLSP",
+      "prefixes": [
+        "JabRefLSP"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/jabref/JabRefPanel.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/jabref/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/jabref/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/openalex/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/openalex/OpenAlexAPIService.ts",
+      "calls": 1,
+      "scope": "OpenAlexAPIService",
+      "prefixes": [
+        "OpenAlexAPIService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/openalex/OpenAlexBibliographyPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/openalex/OpenAlexConnectionModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/openalex/OpenAlexPanel.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/openalex/OpenAlexService.ts",
+      "calls": 3,
+      "scope": "OpenAlexService",
+      "prefixes": [
+        "OpenAlexService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/openalex/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/openalex/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/zotero/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/zotero/ZoteroAPIService.ts",
+      "calls": 3,
+      "scope": "ZoteroAPIService",
+      "prefixes": [
+        "ZoteroAPIService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/zotero/ZoteroBibliographyPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/zotero/ZoteroConnectionModal.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/zotero/ZoteroPanel.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/zotero/ZoteroService.ts",
+      "calls": 3,
+      "scope": "ZoteroService",
+      "prefixes": [
+        "ZoteroService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/zotero/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/bibliography/zotero/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/bibtex/BibtexCollaborativeViewer.tsx",
+      "calls": 7,
+      "scope": "BibtexCollaborativeViewer",
+      "prefixes": [
+        "BibtexCollaborativeViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/bibtex/BibtexCollaborativeViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/bibtex/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/drawio/DrawioCollaborativeViewer.tsx",
+      "calls": 4,
+      "scope": "DrawioCollaborativeViewer",
+      "prefixes": [
+        "DrawioCollaborativeViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/drawio/DrawioCollaborativeViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/drawio/DrawioYjsAdapter.ts",
+      "calls": 6,
+      "scope": "DrawioYjsAdapter",
+      "prefixes": [
+        "DrawioYjsAdapter"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/drawio/drawio-cursor-tracking.js",
+      "calls": 1,
+      "scope": "Drawio Cursor",
+      "prefixes": [
+        "Drawio Cursor"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/drawio/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/milkdown/MilkdownCollabStrategy.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/milkdown/MilkdownCollaborativeViewer.tsx",
+      "calls": 2,
+      "scope": "MilkdownCollaborativeViewer",
+      "prefixes": [
+        "MilkdownCollaborativeViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/milkdown/MilkdownCollaborativeViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/milkdown/TextBridgeStrategy.ts",
+      "calls": 1,
+      "scope": "TextBridgeStrategy",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/milkdown/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/tikz/TikzCollaborativeViewer.tsx",
+      "calls": 5,
+      "scope": "TikzCollaborativeViewer",
+      "prefixes": [
+        "TikzCollaborativeViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/tikz/TikzCollaborativeViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/collaborative_viewers/tikz/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/loggers/latex_visualizer/LaTeXVisualizer.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/loggers/latex_visualizer/LaTeXVisualizerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/loggers/latex_visualizer/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/loggers/latex_visualizer/parser.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/loggers/typst_visualizer/TypstVisualizer.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/loggers/typst_visualizer/TypstVisualizerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/loggers/typst_visualizer/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/loggers/typst_visualizer/parser.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/lsp/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/canvas/CanvasRenderer.tsx",
+      "calls": 1,
+      "scope": "CanvasRenderer",
+      "prefixes": [
+        "CanvasRenderer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/canvas/CanvasRendererPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/canvas/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/canvas/pdfRenderer.ts",
+      "calls": 1,
+      "scope": "CanvasRenderer",
+      "prefixes": [
+        "CanvasRenderer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/canvas/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/canvas/svg-worker.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/canvas/svgRenderer.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/pdf/PdfJsFullViewer.tsx",
+      "calls": 3,
+      "scope": "PdfJsFullViewer",
+      "prefixes": [
+        "PdfJsFullViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/pdf/PdfRenderer.tsx",
+      "calls": 2,
+      "scope": "PdfRenderer",
+      "prefixes": [
+        "PdfRenderer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/pdf/PdfRendererPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/pdf/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/pdf/latexInteraction/AcroTexAdapter.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/pdf/latexInteraction/AnimateAdapter.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/pdf/latexInteraction/LatexPdfInteractionManager.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/pdf/latexInteraction/OcgAdapter.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/pdf/latexInteraction/dom.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/pdf/latexInteraction/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/pdf/latexInteraction/interactionDetection.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/pdf/latexInteraction/types.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/renderers/pdf/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/themes/texlyre_mobile/TeXlyreMobileTheme.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/themes/texlyre_mobile/colors.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/themes/texlyre_mobile/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/themes/texlyre_mobile/styles/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/themes/texlyre_slim/TeXlyreSlimTheme.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/themes/texlyre_slim/colors.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/themes/texlyre_slim/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/themes/texlyre_slim/styles/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/themes/texlyre_wide/TeXlyreWideTheme.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/themes/texlyre_wide/colors.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/themes/texlyre_wide/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/themes/texlyre_wide/styles/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/bibtex/BibtexTableView.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/bibtex/BibtexViewer.tsx",
+      "calls": 14,
+      "scope": "BibtexViewer",
+      "prefixes": [
+        "BibtexViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/bibtex/BibtexViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/bibtex/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/bibtex/TidyOptionsPanel.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/bibtex/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/bibtex/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/bibtex/tidyOptions.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/drawio/DrawioPngExportButton.tsx",
+      "calls": 4,
+      "scope": "DrawioPngExportButton",
+      "prefixes": [
+        "DrawioPngExportButton"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/drawio/DrawioSplashScreen.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/drawio/DrawioSvgExportButton.tsx",
+      "calls": 4,
+      "scope": "DrawioSvgExportButton",
+      "prefixes": [
+        "DrawioSvgExportButton"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/drawio/DrawioViewer.tsx",
+      "calls": 9,
+      "scope": "DrawioViewer",
+      "prefixes": [
+        "DrawioViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/drawio/DrawioViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/drawio/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/drawio/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/drawio/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/image/CombinedImageViewer.tsx",
+      "calls": 1,
+      "scope": "CombinedImageViewer",
+      "prefixes": [
+        "CombinedImageViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/image/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/image/ImageViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/image/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/image/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/media/CombinedMediaViewer.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/media/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/media/MediaViewerPlugin.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/media/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/media/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/MilkdownEditor.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/MilkdownTextPane.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/MilkdownViewer.tsx",
+      "calls": 2,
+      "scope": "MilkdownViewer",
+      "prefixes": [
+        "MilkdownViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/MilkdownViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/imageResolver.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/linkClick.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/milkdownSetup.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/plugins/math.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/toolbar/MilkdownToolbar.tsx",
+      "calls": 2,
+      "scope": "MilkdownToolbar",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/toolbar/helpers.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/toolbar/milkdownItems.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/toolbar/pasteUpload.ts",
+      "calls": 2,
+      "scope": "pasteUpload",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/toolbar/pendingImage.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/milkdown/toolbar/types.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/pdf/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/pdf/PdfViewer.tsx",
+      "calls": 2,
+      "scope": "PdfViewer",
+      "prefixes": [
+        "PdfViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/pdf/PdfViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/pdf/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/pdf/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/tikz/Icon.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/tikz/TikzViewer.tsx",
+      "calls": 6,
+      "scope": "TikzViewer",
+      "prefixes": [
+        "TikzViewer"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/tikz/TikzViewerPlugin.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/tikz/index.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/plugins/viewers/tikz/settings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/AccountExportService.ts",
+      "calls": 15,
+      "scope": "AccountExportService",
+      "prefixes": [
+        "AccountExportService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/AuthService.ts",
+      "calls": 21,
+      "scope": "AuthService",
+      "prefixes": [
+        "AuthService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/AutoSaveService.ts",
+      "calls": 1,
+      "scope": "AutoSaveService",
+      "prefixes": [
+        "AutoSaveService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/BibliographyImportService.ts",
+      "calls": 1,
+      "scope": "BibliographyImportService",
+      "prefixes": [
+        "BibliographyImportService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/ChelysAccountSyncService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/ChelysService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/CollabService.ts",
+      "calls": 25,
+      "scope": "CollabService",
+      "prefixes": [
+        "CollabService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/CommentService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/CompilerRegistryService.ts",
+      "calls": 1,
+      "scope": "CompilerRegistryService",
+      "prefixes": [
+        "CompilerRegistryService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/ConflictResolutionService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/ContentFormatterService.ts",
+      "calls": 2,
+      "scope": "ContentFormatterService",
+      "prefixes": [
+        "ContentFormatterService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/DataStructureService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/DuplicateKeyDetectionService.ts",
+      "calls": 3,
+      "scope": "DuplicateKeyDetectionService",
+      "prefixes": [
+        "DuplicateKeyDetectionService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/FileConflictService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/FileOperationNotificationService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/FilePathCacheService.ts",
+      "calls": 2,
+      "scope": "FilePathCacheService",
+      "prefixes": [
+        "FilePathCacheService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/FileStorageService.ts",
+      "calls": 14,
+      "scope": "FileStorageService",
+      "prefixes": [
+        "FileStorageService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/FileSyncService.ts",
+      "calls": 32,
+      "scope": "FileSyncService",
+      "prefixes": [
+        "FileSyncService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/FileSystemBackupService.ts",
+      "calls": 1,
+      "scope": "FileSystemBackupService",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/GenericLSPService.ts",
+      "calls": 10,
+      "scope": "GenericLSPService",
+      "prefixes": [
+        "GenericLSPService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/GenericTypesetterService.ts",
+      "calls": 1,
+      "scope": "GenericTypesetterService",
+      "prefixes": [
+        "GenericTypesetterService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/GitBackupService.ts",
+      "calls": 9,
+      "scope": "GitBackupService",
+      "prefixes": [
+        "GitBackupService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/LaTeXService.ts",
+      "calls": 2,
+      "scope": "LaTeXService",
+      "prefixes": [
+        "LaTeXService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/LaTeXSourceMapService.ts",
+      "calls": 1,
+      "scope": "LaTeXSourceMapService",
+      "prefixes": [
+        "LaTeXSourceMapService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/LaTeXStatisticsService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/LinkNavigationService.ts",
+      "calls": 4,
+      "scope": "LinkNavigationService",
+      "prefixes": [
+        "LinkNavigationService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/NotificationService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/OfflineService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/PeerDocumentTrackingService.ts",
+      "calls": 2,
+      "scope": "PeerDocumentTracking",
+      "prefixes": [
+        "PeerDocumentTracking"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/PopoutViewerService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/ProjectDataService.ts",
+      "calls": 22,
+      "scope": "ProjectDataService",
+      "prefixes": [
+        "ProjectDataService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/ProjectImportService.ts",
+      "calls": 4,
+      "scope": "ProjectImportService",
+      "prefixes": [
+        "ProjectImportService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/SearchService.ts",
+      "calls": 3,
+      "scope": "SearchService",
+      "prefixes": [
+        "SearchService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/ShareTargetService.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/StorageAdapterService.ts",
+      "calls": 5,
+      "scope": "StorageAdapterService",
+      "prefixes": [
+        "StorageAdapterService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/TypstService.ts",
+      "calls": 5,
+      "scope": "TypstService",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/TypstSourceMapService.ts",
+      "calls": 2,
+      "scope": "TypstSourceMapService",
+      "prefixes": [
+        "TypstSourceMapService"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/services/TypstStatisticsService.ts",
+      "calls": 2,
+      "scope": "TypstStatisticsService",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/settings/registerCollabSettings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/settings/registerContentFormatterSettings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/settings/registerEditorSettings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/settings/registerFileSyncSettings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/settings/registerFileSystemBackupSettings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/settings/registerFileTreeSettings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/settings/registerLSPConfigSettings.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/settings/registerLanguageSettings.tsx",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/settings/registerLatexSettings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/settings/registerOfflineSettings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/settings/registerThemeSettings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/settings/registerTypesetterConfigSettings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/settings/registerTypstSettings.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/auth.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/backup.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/bibliography.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/chat.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/collab.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/comments.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/compilation.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/cursor.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/documents.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/editor.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/editorTabs.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/fileSync.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/files.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/latex.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/lsp.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/projects.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/sourceMap.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/statistics.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/texlyre.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/typst.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/userdata.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/types/yjs.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/authUtils.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/bibtexParser.ts",
+      "calls": 1,
+      "scope": "bibtexParser",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/chelysWebauthn.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/clipboardUtils.ts",
+      "calls": 7,
+      "scope": "clipboardUtils",
+      "prefixes": [
+        "clipboardUtils"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/colorUtils.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/compilerUtils.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/dateUtils.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/dbDeleteUtils.ts",
+      "calls": 10,
+      "scope": "dbDeleteUtils",
+      "prefixes": [
+        "dbDeleteUtils"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/editorNavigator.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/fileCommentUtils.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/fileUtils.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/latexOutlineParser.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/latexSynctexParser.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/mediaKeyboardUtils.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/namedLogger.ts",
+      "calls": 5,
+      "scope": "namedLogger",
+      "prefixes": [],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/pdfStandardsUtils.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/popover/ColorPicker.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/popover/ImagePicker.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/popover/TableGridSelector.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/popover/popoverAnchor.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/svgSanitizer.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "changed",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/textDiffUtils.ts",
+      "calls": 4,
+      "scope": "textDiffUtils",
+      "prefixes": [
+        "textDiffUtils"
+      ],
+      "mixedPrefixes": false,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/typstOutlineParser.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/urlMetadataExtractor.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/urlUtils.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/userDataUtils.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/utils/zipUtils.ts",
+      "calls": 0,
+      "unsupported": []
+    },
+    {
+      "status": "unchanged",
+      "filePath": "/run/media/abawi/e38fddf9-a92e-4c73-b905-995771f8fc3a/playground/PycharmProjects/web/texlyre/src/vite-env.d.ts",
+      "calls": 0,
+      "unsupported": []
+    }
+  ]
+}

@@ -2,6 +2,9 @@
 import type { CompileResult } from '../../types/compilation';
 import { BaseEngine, type EngineConfig } from './BaseEngine';
 import { EngineLoader } from './EngineLoader';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('XeTeXEngine');
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -47,7 +50,7 @@ export class XeTeXEngine extends BaseEngine {
 
 	setTexliveEndpoint(endpoint: string): void {
 		this.engine.setTexliveEndpoint(endpoint);
-		console.log(`[XeTeXEngine] TeX Live endpoint set for XeTeX: ${endpoint}`);
+		moduleLog.info(`TeX Live endpoint set for XeTeX: ${endpoint}`);
 	}
 
 	writeMemFSFile(filename: string, content: string | Uint8Array): void {
@@ -92,7 +95,7 @@ export class XeTeXEngine extends BaseEngine {
 			this.setStatus('ready');
 			// this.flushCache();
 
-			console.log('[XeTeXEngine] XeTeX compilation result:', {
+			moduleLog.info('XeTeX compilation result:', {
 				status: result.status,
 				hasPdf: !!result.pdf,
 				hasXdv: !!result.xdv,

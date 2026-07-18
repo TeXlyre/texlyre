@@ -26,6 +26,9 @@ import {
 	TrashIcon,
 	OptionsIcon,
 } from '../common/Icons';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('LaTeXExportButton');
 
 interface LaTeXExportButtonProps {
 	className?: string;
@@ -334,7 +337,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 			await latexService.deleteBusyTeXBundle(bundleId);
 			setBundleCacheStatus((prev) => ({ ...prev, [bundleId]: false }));
 		} catch (error) {
-			console.error('[LaTeXExportButton] Failed to delete bundle:', error);
+			moduleLog.error('Failed to delete bundle:', error);
 		} finally {
 			setIsDeletingBundle(null);
 		}

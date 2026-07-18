@@ -24,6 +24,9 @@ import {
 	getProjectName,
 } from '../utils/urlUtils';
 import { popoutViewerService } from '../services/PopoutViewerService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('LaTeXContext');
 
 export const LaTeXContext = createContext<LaTeXContextType | null>(null);
 
@@ -255,7 +258,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			await latexService.clearCacheDirectories();
 			await refreshFileTree();
 		} catch (error) {
-			console.error('[LaTeXContext] Failed to clear cache:', error);
+			moduleLog.error('Failed to clear cache:', error);
 			setCompileError('Failed to clear cache');
 		}
 	};

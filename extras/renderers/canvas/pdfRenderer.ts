@@ -2,6 +2,8 @@
 import type { RefObject } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import 'pdfjs-dist/web/pdf_viewer.css';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('CanvasRenderer');
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -505,6 +507,6 @@ async function handleInternalLink(
 		});
 		document.dispatchEvent(event);
 	} catch (error) {
-		console.warn('[CanvasRenderer] Failed to resolve internal link:', error);
+		moduleLog.warn('Failed to resolve internal link:', error);
 	}
 }

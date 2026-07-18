@@ -3,6 +3,9 @@ import type React from 'react';
 import { createContext, useCallback, useState, useEffect } from 'react';
 
 import { searchService, type SearchResult } from '../services/SearchService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('SearchContext');
 
 export interface SearchContextType {
 	query: string;
@@ -73,7 +76,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({
 				searchResults.reduce((sum, r) => sum + (r.matchCount || 0), 0),
 			);
 		} catch (error) {
-			console.error('[SearchContext] Search error:', error);
+			moduleLog.error('Search error:', error);
 			setResults([]);
 			setTotalMatches(0);
 		} finally {
@@ -112,7 +115,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({
 
 				return success;
 			} catch (error) {
-				console.error('[SearchContext] Replace error:', error);
+				moduleLog.error('Replace error:', error);
 				return false;
 			} finally {
 				setIsReplacing(false);
@@ -148,7 +151,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			return count;
 		} catch (error) {
-			console.error('[SearchContext] Replace all error:', error);
+			moduleLog.error('Replace all error:', error);
 			return 0;
 		} finally {
 			setIsReplacing(false);

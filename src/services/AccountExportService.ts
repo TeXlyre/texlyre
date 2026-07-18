@@ -8,6 +8,9 @@ import { UnifiedDataStructureService } from './DataStructureService';
 import { ProjectDataService } from './ProjectDataService';
 import { StorageAdapterService, ZipAdapter } from './StorageAdapterService';
 import { importUserData, exportUserData } from '../utils/userDataUtils';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('AccountExportService');
 
 export interface ExportOptions {
 	includeAccount?: boolean;
@@ -203,7 +206,7 @@ class AccountExportService {
 
 			saveAs(zipBlob, fileName);
 		} catch (error) {
-			console.error('[AccountExportService] Error exporting:', error);
+			moduleLog.error('Error exporting:', error);
 			throw new Error(t('Failed to export data'));
 		}
 	}
@@ -258,8 +261,8 @@ class AccountExportService {
 				try {
 					await fileStorageService.initialize(`yjs:${actualProjectId}`);
 				} catch (error) {
-					console.warn(
-						`[AccountExportService] Could not initialize FileStorageService for project ${projectId}:`,
+					moduleLog.warn(
+						`Could not initialize FileStorageService for project ${projectId}:`,
 						error,
 					);
 				}
@@ -301,8 +304,8 @@ class AccountExportService {
 						}
 					}
 				} catch (error) {
-					console.error(
-						`[AccountExportService] Error exporting files from FileStorageService for project ${projectId}:`,
+					moduleLog.error(
+						`Error exporting files from FileStorageService for project ${projectId}:`,
 						error,
 					);
 				}
@@ -351,8 +354,8 @@ class AccountExportService {
 						}
 					}
 				} catch (error) {
-					console.error(
-						`[AccountExportService] Error exporting files from serialized data for project ${projectId}:`,
+					moduleLog.error(
+						`Error exporting files from serialized data for project ${projectId}:`,
 						error,
 					);
 				}
@@ -360,8 +363,8 @@ class AccountExportService {
 
 			// If still no files exported, log a warning
 			if (!filesExported) {
-				console.warn(
-					`[AccountExportService] No files were exported for project ${projectData.metadata.name}. The project folder will be empty.`,
+				moduleLog.warn(
+					`No files were exported for project ${projectData.metadata.name}. The project folder will be empty.`,
 				);
 			}
 		}
@@ -404,7 +407,7 @@ class AccountExportService {
 				await this.authenticateImportedUser(importedUser);
 			}
 		} catch (error) {
-			console.error('[AccountExportService] Error importing account:', error);
+			moduleLog.error('Error importing account:', error);
 			throw new Error(t('Failed to import account data'));
 		}
 	}
@@ -421,22 +424,20 @@ class AccountExportService {
 			const existingUser = await authService.getUserById(userData.id);
 
 			if (existingUser) {
-				console.warn(
-					`[AccountExportService] User ${userData.username} already exists - skipping user import`,
+				moduleLog.warn(
+					`User ${userData.username} already exists - skipping user import`,
 				);
 				return existingUser;
 			}
 
 			const importedUser = await this.createUserFromImport(userData);
 
-			console.log(
-				`[AccountExportService] Successfully imported user: ${userData.username}`,
-			);
+			moduleLog.info(`Successfully imported user: ${userData.username}`);
 			return importedUser;
 		} catch (error) {
-			console.error('[AccountExportService] Error importing user data:', error);
-			console.warn(
-				'[AccountExportService] User import failed - projects will be imported for current user',
+			moduleLog.error('Error importing user data:', error);
+			moduleLog.warn(
+				'User import failed - projects will be imported for current user',
 			);
 			return null;
 		}
@@ -465,9 +466,7 @@ class AccountExportService {
 
 		await authDb.put('users', userToImport);
 
-		console.log(
-			`[AccountExportService] Successfully imported user: ${userData.username}`,
-		);
+		moduleLog.info(`Successfully imported user: ${userData.username}`);
 		return userToImport;
 	}
 
@@ -478,8 +477,8 @@ class AccountExportService {
 			throw new Error(t('Failed to authenticate imported user'));
 		}
 
-		console.log(
-			`[AccountExportService] Successfully authenticated imported user: ${user.username}`,
+		moduleLog.info(
+			`Successfully authenticated imported user: ${user.username}`,
 		);
 	}
 
@@ -505,8 +504,8 @@ class AccountExportService {
 			if (!existingProject) {
 				await this.createProjectDirectly(projectData, targetUser.id);
 
-				console.log(
-					`[AccountExportService] Imported project: ${projectData.name} for user: ${targetUser.username}`,
+				moduleLog.info(
+					`Imported project: ${projectData.name} for user: ${targetUser.username}`,
 				);
 			} else {
 				if (
@@ -521,7 +520,7 @@ class AccountExportService {
 						isFavorite: projectData.isFavorite,
 					});
 
-					console.log(`[AccountExportService] Updated existing project: ${projectData.name}`);
+					moduleLog.info(`Updated existing project: ${projectData.name}`);
 				}
 			}
 		}
@@ -554,8 +553,8 @@ class AccountExportService {
 
 		await authDb.put('projects', newProject);
 
-		console.log(
-			`[AccountExportService] Created project directly: ${projectData.name} with docUrl: ${projectData.docUrl}`,
+		moduleLog.info(
+			`Created project directly: ${projectData.name} with docUrl: ${projectData.docUrl}`,
 		);
 	}
 }
