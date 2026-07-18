@@ -8,6 +8,9 @@ import {
 	isTemporaryFile,
 } from '../utils/fileUtils';
 import { fileStorageEventEmitter } from './FileStorageService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('FilePathCacheService');
 
 type CacheUpdateCallback = (files: FileNode[]) => void;
 type FilePathUpdateCallback = (filePath: string) => void;
@@ -535,7 +538,7 @@ class FilePathCacheService {
 
 				this.labelContentCache.set(file.id, entry);
 			} catch (error) {
-				console.warn(
+				moduleLog.warn(
 					`Failed to read content for label extraction: ${file.path}`,
 					error,
 				);
@@ -564,7 +567,7 @@ class FilePathCacheService {
 					false,
 				);
 			} catch (error) {
-				console.error('Error fetching files for path cache:', error);
+				moduleLog.error('Error fetching files for path cache:', error);
 				this.cachedFiles = [];
 			}
 		}

@@ -6,6 +6,9 @@ import type {
 	SourceMapService,
 } from '../types/sourceMap';
 import { parseSynctex } from '../utils/latexSynctexParser';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('LaTeXSourceMapService');
 
 class LaTeXSourceMapService implements SourceMapService {
 	private data: SourceMapData | null = null;
@@ -22,7 +25,7 @@ class LaTeXSourceMapService implements SourceMapService {
 			this.data = parseSynctex(bytes);
 			this.notifyListeners();
 		} catch (error) {
-			console.error('[LaTeXSourceMapService] Failed to parse synctex:', error);
+			moduleLog.error('Failed to parse synctex:', error);
 			this.data = null;
 			this.notifyListeners();
 		}

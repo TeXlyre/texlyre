@@ -34,6 +34,8 @@ import { useProperties } from '@/hooks/useProperties';
 import type { RendererProps } from '@/plugins/PluginInterface';
 import { PdfJsFullViewer, type PdfJsFullViewerHandle } from './PdfJsFullViewer';
 import './styles.css';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('PdfRenderer');
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -228,7 +230,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 					setIsLoading(false);
 				});
 		} catch (error) {
-			console.error('Error creating PDF data:', error);
+			moduleLog.error('Error creating PDF data:', error);
 			setError(
 				t('Failed to process PDF content: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),
@@ -249,7 +251,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			},
 			setHighlight: (nextHighlight: Highlight) => {
 				setHighlight(nextHighlight);
-				if (nextHighlight) goToPage(nextHighlight.page);
+				if (nextHighlight) {
+					const targetPage = nextHighlight.page;
+					requestAnimationFrame(() => goToPage(targetPage));
+				}
 			},
 		}),
 		[goToPage, setPdfContent],
@@ -479,7 +484,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			document.body.removeChild(link);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('Export error:', error);
+			moduleLog.error('Export error:', error);
 			setError(t('Failed to export PDF'));
 		}
 	}, [fileName, onDownload]);

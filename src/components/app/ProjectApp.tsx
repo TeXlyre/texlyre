@@ -3,11 +3,12 @@ import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { t } from '@/i18n';
+import { compilerRegistryService } from '../../services/CompilerRegistryService';
 import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 import { useAuth } from '../../hooks/useAuth';
 import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
 import { useTheme } from '../../hooks/useTheme';
-import type { Project } from '../../types/projects';
+import type { Project, ProjectType, ProjectGroup } from '../../types/projects';
 import {
 	isValidYjsUrl,
 	buildUrlWithFragments,
@@ -34,13 +35,17 @@ import DeleteAccountModal from '../profile/DeleteAccountModal';
 import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
 import { NewProjectIcon } from '../common/Icons';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('ProjectApp');
 
 interface ProjectManagerProps {
 	onOpenProject: (
 		docUrl: string,
 		projectName?: string,
 		projectDescription?: string,
-		projectType?: 'latex' | 'typst',
+		projectType?: ProjectType,
+		projectGroup?: ProjectGroup,
 		projectId?: string,
 	) => void;
 	onLogout: () => void;
@@ -53,9 +58,6 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const {
 		user,
 		getProjects,
-		getProjectsByTag,
-		getProjectsByType,
-		searchProjects,
 		createProject,
 		updateProject,
 		deleteProject,
@@ -85,6 +87,12 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [isLoading, setIsLoading] = useState(true);
 	const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 	const [availableTags, setAvailableTags] = useState<string[]>([]);
+	const [availableTypes, setAvailableTypes] = useState<string[]>([]);
+	const [availableGroups, setAvailableGroups] = useState<string[]>([]);
+	const [searchQuery, setSearchQuery] = useState('');
+	const [selectedTag, setSelectedTag] = useState('');
+	const [selectedType, setSelectedType] = useState('');
+	const [selectedGroup, setSelectedGroup] = useState('');
 	const [sidebarWidth, setSidebarWidth] = useState(
 		currentLayout?.defaultFileExplorerWidth || 250,
 	);
@@ -131,8 +139,24 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			});
 
 			setAvailableTags(Array.from(tags));
+			setAvailableTypes(
+				Array.from(new Set(userProjects.map((project) => project.type))),
+			);
+			setAvailableGroups(
+				Array.from(
+					new Set(
+						userProjects.map(
+							(project) =>
+								project.group ??
+								compilerRegistryService.get(project.compilerId ?? '')
+									?.projectGroup ??
+								project.type,
+						),
+					),
+				),
+			);
 		} catch (error) {
-			console.error('Failed to load projects:', error);
+			moduleLog.error('Failed to load projects:', error);
 		} finally {
 			setIsLoading(false);
 		}
@@ -159,7 +183,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			}
 			await loadProjects();
 		} catch (error) {
-			console.error('Failed to delete projects:', error);
+			moduleLog.error('Failed to delete projects:', error);
 			setError(
 				error instanceof Error ? error.message : t('Failed to delete projects'),
 			);
@@ -168,40 +192,33 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		}
 	};
 
-	const handleSearch = async (query: string) => {
-		if (!query.trim()) {
-			setFilteredProjects(projects);
-			return;
-		}
+	useEffect(() => {
+		const query = searchQuery.trim().toLowerCase();
+		setFilteredProjects(
+			projects.filter(
+				(project) =>
+					(!query ||
+						project.name.toLowerCase().includes(query) ||
+						project.description.toLowerCase().includes(query) ||
+						project.tags.some((tag) => tag.toLowerCase().includes(query))) &&
+					(!selectedTag || project.tags.includes(selectedTag)) &&
+					(!selectedType || project.type === selectedType) &&
+					(!selectedGroup || (project.group ?? project.type) === selectedGroup),
+			),
+		);
+	}, [projects, searchQuery, selectedTag, selectedType, selectedGroup]);
 
-		const results = await searchProjects(query);
-		setFilteredProjects(results);
-	};
-
-	const handleFilterByTag = async (tag: string) => {
-		if (!tag) {
-			setFilteredProjects(projects);
-			return;
-		}
-
-		const results = await getProjectsByTag(tag);
-		setFilteredProjects(results);
-	};
-
-	const handleFilterByType = async (type: string) => {
-		if (!type) {
-			setFilteredProjects(projects);
-			return;
-		}
-
-		const results = await getProjectsByType(type as 'latex' | 'typst');
-		setFilteredProjects(results);
-	};
+	const handleSearch = (query: string) => setSearchQuery(query);
+	const handleFilterByTag = (tag: string) => setSelectedTag(tag);
+	const handleFilterByType = (type: string) => setSelectedType(type);
+	const handleFilterByGroup = (group: string) => setSelectedGroup(group);
 
 	const handleCreateProject = async (projectData: {
 		name: string;
 		description: string;
-		type: 'latex' | 'typst';
+		type: ProjectType;
+		group?: ProjectGroup;
+		compilerId?: string;
 		tags: string[];
 		docUrl?: string;
 		isFavorite: boolean;
@@ -221,6 +238,8 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						name: projectData.name,
 						description: projectData.description,
 						type: projectData.type,
+						group: projectData.group,
+						compilerId: projectData.compilerId,
 					}),
 				);
 				onOpenProject(
@@ -228,11 +247,12 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					newProject.name,
 					newProject.description,
 					newProject.type,
+					newProject.group,
 					newProject.id,
 				);
 			}
 		} catch (error) {
-			console.error('Failed to create project:', error);
+			moduleLog.error('Failed to create project:', error);
 			setError(
 				error instanceof Error ? error.message : t('Failed to create project'),
 			);
@@ -262,7 +282,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			setShowEditModal(false);
 			await loadProjects();
 		} catch (error) {
-			console.error('Failed to update project:', error);
+			moduleLog.error('Failed to update project:', error);
 			setError(
 				error instanceof Error ? error.message : t('Failed to update project'),
 			);
@@ -280,7 +300,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			setShowDeleteModal(false);
 			await loadProjects();
 		} catch (error) {
-			console.error('Failed to delete project:', error);
+			moduleLog.error('Failed to delete project:', error);
 			setError(
 				error instanceof Error ? error.message : t('Failed to delete project'),
 			);
@@ -294,7 +314,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			await toggleFavorite(projectId);
 			await loadProjects();
 		} catch (error) {
-			console.error('Failed to toggle favorite status:', error);
+			moduleLog.error('Failed to toggle favorite status:', error);
 		}
 	};
 
@@ -310,7 +330,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			setSelectedProjectsForExport(selectedProjects);
 			setShowExportModal(true);
 		} catch (error) {
-			console.error('Error preparing export:', error);
+			moduleLog.error('Error preparing export:', error);
 			setError(t('Failed to prepare projects for export'));
 		}
 	};
@@ -323,7 +343,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			setSelectedProjectsForDelete(selectedProjects);
 			setShowMultiDeleteModal(true);
 		} catch (error) {
-			console.error('Error preparing delete:', error);
+			moduleLog.error('Error preparing delete:', error);
 			setError(t('Failed to prepare projects for deletion'));
 		}
 	};
@@ -361,7 +381,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
 	const handleOpenDefault = (project: Project) => {
 		if (!project.docUrl) {
-			console.error('Project has no document URL:', project);
+			moduleLog.error('Project has no document URL:', project);
 			setError(
 				t(
 					'This project has no associated document. Please try creating a new project',
@@ -371,7 +391,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		}
 
 		if (!isValidYjsUrl(project.docUrl)) {
-			console.error('Invalid document URL format:', project.docUrl);
+			moduleLog.error('Invalid document URL format:', project.docUrl);
 			setError(
 				t('Invalid document URL format: {url}', { url: project.docUrl }),
 			);
@@ -395,13 +415,14 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			project.name,
 			project.description,
 			project.type,
+			project.group,
 			project.id,
 		);
 	};
 
 	const openProject = async (project: Project) => {
 		if (!project.docUrl) {
-			console.error('Project has no document URL:', project);
+			moduleLog.error('Project has no document URL:', project);
 			setError(
 				t(
 					'This project has no associated document. Please try creating a new project',
@@ -411,7 +432,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		}
 
 		if (!isValidYjsUrl(project.docUrl)) {
-			console.error('Invalid document URL format:', project.docUrl);
+			moduleLog.error('Invalid document URL format:', project.docUrl);
 			setError(
 				t('Invalid document URL format: {url}', { url: project.docUrl }),
 			);
@@ -423,6 +444,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			project.name,
 			project.description,
 			project.type,
+			project.group,
 			project.id,
 		);
 	};
@@ -481,9 +503,12 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onSearch={handleSearch}
 						onFilterByTag={handleFilterByTag}
 						onFilterByType={handleFilterByType}
+						onFilterByGroup={handleFilterByGroup}
 						onOpenProject={openProject}
 						projects={projects}
 						availableTags={availableTags}
+						availableTypes={availableTypes}
+						availableGroups={availableGroups}
 					/>
 				</ResizablePanel>
 
@@ -508,6 +533,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						</div>
 					) : (
 						<ProjectList
+							// key={`${searchQuery}:${selectedTag}:${selectedType}:${selectedGroup}`}
 							projects={filteredProjects}
 							onOpenProject={openProject}
 							onOpenProjectDefault={handleOpenDefault}

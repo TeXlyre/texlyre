@@ -5,6 +5,9 @@ import type { TypstOutputFormat } from '../../types/typst';
 import { sanitizeSvg } from '../../utils/svgSanitizer';
 import { normalizeTypstSvgNavigation } from './svgNavigation';
 import { longPathFetchPackageRegistry } from './LongPathPackageRegistry';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('typst-worker');
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -107,7 +110,7 @@ async function loadFonts(baseUrl: string = `${BASE_PATH}/assets/fonts`) {
 			fontPaths.push(...fontList.map((font: string) => `${baseUrl}/${font}`));
 		}
 	} catch {
-		console.warn('fonts.json not found, using default font list');
+		moduleLog.warn('fonts.json not found, using default font list');
 		fontPaths.push(...defaultFonts.map((font) => `${baseUrl}/${font}`));
 	}
 
@@ -115,13 +118,13 @@ async function loadFonts(baseUrl: string = `${BASE_PATH}/assets/fonts`) {
 		try {
 			const response = await fetch(path);
 			if (!response.ok) {
-				console.warn(`Failed to fetch font: ${path}`);
+				moduleLog.warn(`Failed to fetch font: ${path}`);
 				return null;
 			}
 			const buffer = await response.arrayBuffer();
 			return new Uint8Array(buffer);
 		} catch (error) {
-			console.warn(`Error loading font ${path}:`, error);
+			moduleLog.warn(`Error loading font ${path}:`, error);
 			return null;
 		}
 	});

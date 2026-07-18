@@ -3,7 +3,10 @@ import type React from 'react';
 import { useRef } from 'react';
 
 import { t } from '@/i18n';
+import type { ProjectType } from '../../types/projects';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
+import { compilerRegistryService } from '../../services/CompilerRegistryService';
+import { resolveLabel } from '../../utils/compilerUtils';
 import { FilePlusIcon } from '../common/Icons';
 import DropdownMenu from '../common/DropdownMenu';
 
@@ -12,7 +15,7 @@ interface FileCreationMenuProps {
 	onClose: () => void;
 	onCreate: (fileName: string, extension: string) => void;
 	triggerElement: HTMLElement | null;
-	projectType: 'latex' | 'typst';
+	projectType: ProjectType;
 	parentPath?: string;
 	mode?: 'dropdown' | 'submenu';
 }
@@ -39,32 +42,17 @@ const FileCreationMenu: React.FC<FileCreationMenuProps> = ({
 		(targetRef as React.RefObject<HTMLElement | null>).current = triggerElement;
 	}
 
+	const projectInputFiles =
+		compilerRegistryService.getInputFilesForProjectType(projectType);
+
 	const fileTemplates: FileTemplate[] = [
-		...(projectType === 'latex'
-			? [
-					{
-						label: t('LaTeX File'),
-						extension: '.tex',
-						category: 'project' as const,
-					},
-					{
-						label: t('LaTeX Class'),
-						extension: '.cls',
-						category: 'project' as const,
-					},
-					{
-						label: t('LaTeX Style'),
-						extension: '.sty',
-						category: 'project' as const,
-					},
-				]
-			: [
-					{
-						label: t('Typst File'),
-						extension: '.typ',
-						category: 'project' as const,
-					},
-				]),
+		...projectInputFiles.map((input) => ({
+			label: input.label
+				? resolveLabel(input.label)
+				: `.${input.extension} File`,
+			extension: `.${input.extension}`,
+			category: 'project' as const,
+		})),
 		...pluginRegistry.getEditableViewersWithExtensions().flatMap((viewer) => {
 			const extensions = viewer.getSupportedExtensions?.() || [];
 			return extensions.map((ext) => ({

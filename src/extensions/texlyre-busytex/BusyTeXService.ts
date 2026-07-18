@@ -4,8 +4,8 @@ import { isPackageCached, deletePackageCache } from 'texlyre-busytex';
 import type { TexliveRemoteFile } from 'texlyre-busytex';
 
 import { busyTeXEngine, BUSYTEX_CACHE_DIR, MISSES_KEY } from './BusyTeXEngine';
-import type { BusyTeXEngineType, BusyTeXCompileResult } from './BusyTeXEngine';
-import type { CompileResult } from '../swiftlatex/BaseEngine';
+import type { BusyTeXEngineType } from './BusyTeXEngine';
+import type { CompileResult } from '../../types/compilation';
 import type { FileNode } from '../../types/files';
 import { fileStorageService } from '../../services/FileStorageService';
 import { latexSourceMapService } from '../../services/LaTeXSourceMapService';
@@ -16,6 +16,10 @@ import {
 	toArrayBuffer,
 } from '../../utils/fileUtils';
 import { cleanContent } from '../../utils/fileCommentUtils';
+import { findCompileArtifact } from '../../utils/compilerUtils';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('BusyTeXService');
 
 export const BUSYTEX_BUNDLE_URLS: Record<string, string> = {
 	basic: `${__BASE_PATH__}/core/busytex/texlive-basic.js`,
@@ -120,7 +124,7 @@ class BusyTeXService {
 	async compile(
 		mainFileName: string,
 		fileNodes: FileNode[],
-	): Promise<CompileResult & { synctex?: Uint8Array }> {
+	): Promise<CompileResult> {
 		if (!busyTeXEngine.isReady()) {
 			await this.initialize(busyTeXEngine.getCurrentEngineType());
 		}
@@ -153,8 +157,12 @@ class BusyTeXService {
 		if (result.status === 0 && result.pdf) {
 			await this.saveCompilationOutput(mainFileName, result);
 
-			if (result.synctex) {
-				latexSourceMapService.loadFromBytes(result.synctex);
+			const synctex = findCompileArtifact(result.artifacts, 'synctex', [
+				'.synctex',
+				'.synctex.gz',
+			]);
+			if (synctex) {
+				latexSourceMapService.loadFromBytes(synctex.data);
 			} else {
 				latexSourceMapService.clear();
 			}
@@ -231,7 +239,7 @@ class BusyTeXService {
 				{ showConflictDialog: false },
 			);
 		} catch (error) {
-			console.warn('[BusyTeXService] Failed to persist misses cache:', error);
+			moduleLog.warn('Failed to persist misses cache:', error);
 		}
 	}
 
@@ -265,10 +273,7 @@ class BusyTeXService {
 				await busyTeXEngine.writeRemoteFiles(files);
 			}
 		} catch (error) {
-			console.warn(
-				'[BusyTeXService] Failed to load cached remote files:',
-				error,
-			);
+			moduleLog.warn('Failed to load cached remote files:', error);
 		}
 	}
 
@@ -320,7 +325,7 @@ class BusyTeXService {
 				showConflictDialog: false,
 			});
 		} catch (error) {
-			console.warn('[BusyTeXService] Failed to persist remote files:', error);
+			moduleLog.warn('Failed to persist remote files:', error);
 		}
 	}
 
@@ -365,13 +370,13 @@ class BusyTeXService {
 				});
 			}
 		} catch (error) {
-			console.error('[BusyTeXService] Failed to store work files:', error);
+			moduleLog.error('Failed to store work files:', error);
 		}
 	}
 
 	private async saveCompilationOutput(
 		mainFile: string,
-		result: BusyTeXCompileResult,
+		result: CompileResult,
 	): Promise<void> {
 		try {
 			const outputFiles: FileNode[] = [];
@@ -401,7 +406,7 @@ class BusyTeXService {
 				showConflictDialog: false,
 			});
 		} catch (error) {
-			console.error('[BusyTeXService] Failed to save output:', error);
+			moduleLog.error('Failed to save output:', error);
 		}
 	}
 
@@ -417,7 +422,7 @@ class BusyTeXService {
 				{ showConflictDialog: false },
 			);
 		} catch (error) {
-			console.error('[BusyTeXService] Failed to save log:', error);
+			moduleLog.error('Failed to save log:', error);
 		}
 	}
 
@@ -570,10 +575,7 @@ class BusyTeXService {
 				});
 			}
 		} catch (error) {
-			console.error(
-				'[BusyTeXService] Failed to collect stored work files:',
-				error,
-			);
+			moduleLog.error('Failed to collect stored work files:', error);
 		}
 		return artifacts;
 	}

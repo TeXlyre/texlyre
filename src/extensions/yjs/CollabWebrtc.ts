@@ -2,6 +2,10 @@
 import { WebrtcProvider } from 'y-webrtc';
 import type * as Y from 'yjs';
 
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('CollabWebrtc');
+
 interface WebrtcProviderOptions {
 	signaling?: string[];
 	password?: string;
@@ -36,7 +40,7 @@ class WebrtcProviderRegistry {
 
 			return provider;
 		} catch (error) {
-			console.error(
+			moduleLog.error(
 				`Error creating WebRTC provider for room ${roomName}:`,
 				error,
 			);
@@ -46,7 +50,7 @@ class WebrtcProviderRegistry {
 
 	releaseProvider(roomName: string): boolean {
 		if (!this.providers.has(roomName)) {
-			console.warn(
+			moduleLog.warn(
 				`Attempted to release nonexistent provider for room: ${roomName}`,
 			);
 			return false;
@@ -56,14 +60,12 @@ class WebrtcProviderRegistry {
 		entry.refCount -= 1;
 
 		if (entry.refCount <= 0) {
-			console.log(
-				`[CollabWebrtc] Destroying WebRTC provider for room: ${roomName}`,
-			);
+			moduleLog.info(`Destroying WebRTC provider for room: ${roomName}`);
 			try {
 				entry.provider.disconnect();
 				entry.provider.destroy();
 			} catch (error) {
-				console.error(
+				moduleLog.error(
 					`Error destroying WebRTC provider for room ${roomName}:`,
 					error,
 				);

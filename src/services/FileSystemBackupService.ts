@@ -14,6 +14,9 @@ import {
 	DirectoryAdapter,
 	StorageAdapterService,
 } from './StorageAdapterService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('FileSystemBackupService');
 
 class FileSystemBackupService {
 	private rootHandle: FileSystemDirectoryHandle | null = null;
@@ -371,7 +374,7 @@ class FileSystemBackupService {
 				projectData: existingData.projectData || new Map(),
 			};
 		} catch (error) {
-			console.warn('Could not read existing backup data:', error);
+			moduleLog.warn('Could not read existing backup data:', error);
 			return { projects: [], projectData: new Map() };
 		}
 	}
@@ -462,6 +465,7 @@ class FileSystemBackupService {
 			name: projectMetadata.name,
 			description: projectMetadata.description,
 			type: projectMetadata.type || 'latex',
+			group: projectMetadata.group,
 			docUrl: projectMetadata.docUrl,
 			createdAt: projectMetadata.createdAt,
 			updatedAt: Date.now(),

@@ -1,9 +1,14 @@
-// src/components/projects/ProjectForm.tsx
+// src/components/project/ProjectForm.tsx
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { t } from '@/i18n';
-import type { Project } from '../../types/projects.ts';
+import { compilerRegistryService } from '../../services/CompilerRegistryService';
+import type {
+	Project,
+	ProjectGroup,
+	ProjectType,
+} from '../../types/projects.ts';
 import { TagInput } from '../common/TagInput';
 
 interface ProjectFormProps {
@@ -11,7 +16,9 @@ interface ProjectFormProps {
 	onSubmit: (projectData: {
 		name: string;
 		description: string;
-		type: 'latex' | 'typst';
+		type: ProjectType;
+		group?: ProjectGroup;
+		compilerId?: string;
 		tags: string[];
 		docUrl?: string;
 		isFavorite: boolean;
@@ -32,21 +39,93 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 }) => {
 	const [name, setName] = useState('');
 	const [description, setDescription] = useState('');
-	const [type, setType] = useState<'latex' | 'typst'>('latex');
+	const [type, setType] = useState<ProjectType>('latex');
+	const [compilerId, setCompilerId] = useState<string | undefined>();
+	const [registryVersion, setRegistryVersion] = useState(
+		compilerRegistryService.getVersion(),
+	);
 	const [tags, setTags] = useState<string[]>([]);
 	const [docUrl, setDocUrl] = useState('');
 	const [isFavorite, setIsFavorite] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
+	useEffect(
+		() =>
+			compilerRegistryService.onChange(() =>
+				setRegistryVersion(compilerRegistryService.getVersion()),
+			),
+		[],
+	);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: registryVersion invalidates the registry snapshot. */
+	const projectTypeOptions = useMemo(
+		() => compilerRegistryService.listProjectTypes(),
+		[registryVersion],
+	);
+
+	const selectedProvider = compilerId
+		? compilerRegistryService.get(compilerId)
+		: compilerRegistryService.getForProjectType(type);
+	const selectedGroup = selectedProvider
+		? compilerRegistryService.getProjectGroup(selectedProvider)
+		: type;
+	const selectedSource =
+		selectedProvider?.source ??
+		(compilerId?.startsWith('internal:') ? 'builtin' : 'chelys');
+	const selectedProjectTypeOptions = projectTypeOptions.some(
+		(option) =>
+			option.projectType === selectedGroup && option.source === selectedSource,
+	)
+		? projectTypeOptions
+		: [
+				...projectTypeOptions,
+				{
+					projectType: selectedGroup,
+					label: `${type} (${t('Unavailable')})`,
+					source: selectedSource,
+					compilerId: compilerId ?? '',
+					unavailable: true,
+				},
+			];
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: registryVersion invalidates the registry snapshot. */
+	const compilerOptions = useMemo(
+		() => compilerRegistryService.listForProjectGroup(selectedGroup),
+		[selectedGroup, registryVersion],
+	);
+
+	const internalCompilerOptions = compilerOptions.filter(
+		({ source }) => source === 'builtin',
+	);
+	const externalCompilerOptions = compilerOptions.filter(
+		({ source }) => source !== 'builtin',
+	);
+
 	useEffect(() => {
-		if (project) {
-			setName(project.name);
-			setDescription(project.description || '');
-			setType(project.type);
-			setTags(project.tags || []);
-			setDocUrl(project.docUrl || '');
-			setIsFavorite(project.isFavorite);
+		if (
+			!compilerOptions.length ||
+			(compilerId && compilerOptions.some(({ id }) => id === compilerId))
+		) {
+			return;
 		}
+
+		const provider = compilerOptions[0];
+		setCompilerId(provider.id);
+		setType(provider.projectType as ProjectType);
+	}, [compilerOptions, compilerId]);
+
+	useEffect(() => {
+		if (!project) {
+			return;
+		}
+
+		setName(project.name);
+		setDescription(project.description || '');
+		setType(project.type);
+		setCompilerId(project.compilerId);
+		setTags(project.tags || []);
+		setDocUrl(project.docUrl || '');
+		setIsFavorite(project.isFavorite);
 	}, [project]);
 
 	const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
@@ -61,6 +140,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 			name: name.trim(),
 			description: description.trim(),
 			type,
+			group: selectedGroup as ProjectGroup,
+			compilerId,
 			tags,
 			docUrl: docUrl || undefined,
 			isFavorite,
@@ -76,6 +157,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 					{t('Project Name')}
 					<span className='required'>*</span>
 				</label>
+
 				{disableNameAndDescription ? (
 					<div className='disabled-field'>
 						<span>{name}</span>
@@ -97,6 +179,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 
 			<div className='form-group'>
 				<label htmlFor='project-description'>{t('Description')}</label>
+
 				{disableNameAndDescription ? (
 					<div className='disabled-field'>
 						<span>{description || 'No description'}</span>
@@ -117,9 +200,16 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 
 			<div className='form-group'>
 				<label htmlFor='project-type'>{t('Typesetter Type')}</label>
+
 				{disableNameAndDescription ? (
 					<div className='disabled-field'>
-						<span>{type === 'latex' ? 'LaTeX' : 'Typst'}</span>
+						<span>
+							{selectedProjectTypeOptions.find(
+								(option) =>
+									option.projectType === selectedGroup &&
+									option.source === selectedSource,
+							)?.label ?? selectedGroup}
+						</span>
 						<div className='field-note'>
 							{t('Open the project to edit its typesetter type')}
 						</div>
@@ -127,15 +217,98 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 				) : (
 					<select
 						id='project-type'
-						value={type}
-						onChange={(e) => setType(e.target.value as 'latex' | 'typst')}
+						value={`${selectedSource}:${selectedGroup}`}
+						onChange={(e) => {
+							const option = selectedProjectTypeOptions.find(
+								({ source, projectType }) =>
+									`${source}:${projectType}` === e.target.value,
+							);
+							const provider = option
+								? compilerRegistryService.get(option.compilerId)
+								: undefined;
+
+							if (!provider) return;
+							setType(provider.projectType as ProjectType);
+							setCompilerId(provider.id);
+						}}
 						disabled={isSubmitting}
 					>
-						<option value='latex'>{t('LaTeX')}</option>
-						<option value='typst'>{t('Typst')}</option>
+						{(['builtin', 'chelys'] as const).map((source) => {
+							const options = selectedProjectTypeOptions.filter(
+								(option) => option.source === source,
+							);
+							if (!options.length) return null;
+
+							return (
+								<optgroup
+									key={source}
+									label={source === 'builtin' ? t('Internal') : t('External')}
+								>
+									{options.map((option) => (
+										<option
+											key={`${source}:${option.projectType}`}
+											value={`${source}:${option.projectType}`}
+											disabled={'unavailable' in option}
+										>
+											{option.label}
+										</option>
+									))}
+								</optgroup>
+							);
+						})}
 					</select>
 				)}
 			</div>
+
+			{selectedGroup !== type && (
+				<div className='form-group'>
+					<label htmlFor='project-compiler'>{t('Compiler')}</label>
+
+					{disableNameAndDescription ? (
+						<div className='disabled-field'>
+							<span>
+								{compilerOptions.find(({ id }) => id === compilerId)?.label ??
+									compilerOptions[0]?.label}
+							</span>
+							<div className='field-note'>
+								{t('Open the project to edit its compiler')}
+							</div>
+						</div>
+					) : (
+						<select
+							id='project-compiler'
+							value={compilerId ?? ''}
+							onChange={(e) => {
+								const provider = compilerRegistryService.get(e.target.value);
+								if (!provider) return;
+
+								setType(provider.projectType as ProjectType);
+								setCompilerId(provider.id);
+							}}
+							disabled={isSubmitting}
+						>
+							{internalCompilerOptions.length > 0 && (
+								<optgroup label={t('Internal')}>
+									{internalCompilerOptions.map((provider) => (
+										<option key={provider.id} value={provider.id}>
+											{provider.label}
+										</option>
+									))}
+								</optgroup>
+							)}
+							{externalCompilerOptions.length > 0 && (
+								<optgroup label={t('External')}>
+									{externalCompilerOptions.map((provider) => (
+										<option key={provider.id} value={provider.id}>
+											{provider.label}
+										</option>
+									))}
+								</optgroup>
+							)}
+						</select>
+					)}
+				</div>
+			)}
 
 			{!simpleMode && (
 				<>
@@ -174,6 +347,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 				>
 					{t('Cancel')}
 				</button>
+
 				<button
 					type='submit'
 					className='button primary'

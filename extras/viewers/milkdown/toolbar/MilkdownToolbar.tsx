@@ -10,6 +10,8 @@ import PluginToolbar, {
 } from '@/components/common/PluginToolbar';
 import { milkdownToolbarItems } from './milkdownItems';
 import { isToolbarButton } from './types';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('MilkdownToolbar');
 
 interface MilkdownToolbarProps {
 	getCurrentFilePath: () => string;
@@ -45,11 +47,11 @@ const MilkdownToolbar: React.FC<MilkdownToolbarProps> = ({
 				const view = ctx.get(editorViewCtx);
 				const didRun = item.command(view, getCurrentFilePath);
 				if (!didRun) {
-					console.warn(`Milkdown toolbar command did not apply: ${key}`);
+					moduleLog.warn(`Milkdown toolbar command did not apply: ${key}`);
 				}
 			});
 		} catch (error) {
-			console.warn('Milkdown toolbar command failed:', error);
+			moduleLog.warn('Milkdown toolbar command failed:', error);
 		}
 	};
 

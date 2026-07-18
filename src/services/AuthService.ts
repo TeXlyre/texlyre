@@ -5,11 +5,14 @@ import * as Y from 'yjs';
 
 import { t } from '@/i18n';
 import type { User } from '../types/auth';
-import type { Project } from '../types/projects';
+import type { Project, ProjectType, ProjectGroup } from '../types/projects';
 import { generateRandomColor } from '../utils/colorUtils';
 import { cleanupProjectDatabases } from '../utils/dbDeleteUtils';
 import { generateYjsProjectId } from '../utils/urlUtils';
 import { fileSystemBackupService } from './FileSystemBackupService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('AuthService');
 
 const shouldAutoSync = (): boolean => {
 	return localStorage.getItem('texlyre-auto-sync') === 'true';
@@ -55,21 +58,21 @@ class AuthService {
 					const user = await this.getUserById(userId);
 					if (user) {
 						if (this.isGuestUser(user) && this.isGuestExpired(user)) {
-							console.log(`[AuthService] Guest session expired: ${userId}`);
+							moduleLog.info(`Guest session expired: ${userId}`);
 							await this.cleanupExpiredGuest(user);
 							localStorage.removeItem('texlyre-current-user');
 						} else {
 							this.currentUser = user;
-							console.log(
-								`[AuthService] Restored user session: ${user.username} (${this.isGuestUser(user) ? 'guest' : 'full'})`,
+							moduleLog.info(
+								`Restored user session: ${user.username} (${this.isGuestUser(user) ? 'guest' : 'full'})`,
 							);
 						}
 					} else {
-						console.log(`[AuthService] User not found: ${userId}`);
+						moduleLog.info(`User not found: ${userId}`);
 						localStorage.removeItem('texlyre-current-user');
 					}
 				} catch (error) {
-					console.error('Error restoring user session:', error);
+					moduleLog.error('Error restoring user session:', error);
 					localStorage.removeItem('texlyre-current-user');
 				}
 			}
@@ -77,7 +80,7 @@ class AuthService {
 			// Run cleanup on initialization
 			this.cleanupExpiredGuests();
 		} catch (error) {
-			console.error('Failed to initialize database:', error);
+			moduleLog.error('Failed to initialize database:', error);
 			throw error;
 		}
 	}
@@ -104,7 +107,7 @@ class AuthService {
 
 	async createGuestAccount(): Promise<User> {
 		if (!this.db) {
-			console.log('[AuthService] Database not initialized, initializing...');
+			moduleLog.info('Database not initialized, initializing...');
 			await this.initialize();
 		}
 
@@ -130,7 +133,7 @@ class AuthService {
 		};
 
 		try {
-			console.log(`[AuthService] Creating guest user with ID: ${userId}`);
+			moduleLog.info(`Creating guest user with ID: ${userId}`);
 			await this.db?.put(this.USER_STORE, guestUser);
 
 			const verifyUser = await this.db?.get(this.USER_STORE, userId);
@@ -141,12 +144,10 @@ class AuthService {
 			this.currentUser = guestUser;
 			localStorage.setItem('texlyre-current-user', userId);
 
-			console.log(
-				`[AuthService] Successfully created guest account: ${sessionId}`,
-			);
+			moduleLog.info(`Successfully created guest account: ${sessionId}`);
 			return guestUser;
 		} catch (error) {
-			console.error('Failed to create guest account:', error);
+			moduleLog.error('Failed to create guest account:', error);
 			throw new Error(
 				t(
 					'Failed to create guest session. Please refresh the page and try again',
@@ -212,8 +213,8 @@ class AuthService {
 		this.currentUser = upgradedUser;
 		localStorage.setItem('texlyre-current-user', newUserId);
 
-		console.log(
-			`[AuthService] Upgraded guest account ${oldGuestId} to full account: ${username} (${newUserId})`,
+		moduleLog.info(
+			`Upgraded guest account ${oldGuestId} to full account: ${username} (${newUserId})`,
 		);
 		return upgradedUser;
 	}
@@ -236,11 +237,11 @@ class AuthService {
 				await this.db.put(this.PROJECT_STORE, updatedProject);
 			}
 
-			console.log(
-				`[AuthService] Transferred ${guestProjects.length} projects from guest ${oldUserId} to user ${newUserId}`,
+			moduleLog.info(
+				`Transferred ${guestProjects.length} projects from guest ${oldUserId} to user ${newUserId}`,
 			);
 		} catch (error) {
-			console.error('Error transferring guest projects:', error);
+			moduleLog.error('Error transferring guest projects:', error);
 		}
 	}
 
@@ -263,11 +264,11 @@ class AuthService {
 				await this.cleanupExpiredGuest(expiredGuest);
 			}
 
-			console.log(
-				`[AuthService] Cleaned up ${expiredGuests.length} expired guest accounts`,
+			moduleLog.info(
+				`Cleaned up ${expiredGuests.length} expired guest accounts`,
 			);
 		} catch (error) {
-			console.error('Error during guest cleanup:', error);
+			moduleLog.error('Error during guest cleanup:', error);
 		}
 	}
 
@@ -275,18 +276,16 @@ class AuthService {
 		if (!this.db) return;
 
 		try {
-			console.log(`[AuthService] Cleaning up guest: ${guestUser.id}`);
+			moduleLog.info(`Cleaning up guest: ${guestUser.id}`);
 
 			const guestProjects = await this.getProjectsByUser(guestUser.id);
-			console.log(
-				`[AuthService] Found ${guestProjects.length} guest projects to cleanup`,
-			);
+			moduleLog.info(`Found ${guestProjects.length} guest projects to cleanup`);
 
 			for (const project of guestProjects) {
 				try {
 					await cleanupProjectDatabases(project);
 				} catch (error) {
-					console.warn(
+					moduleLog.warn(
 						`Failed to cleanup project database for ${project.id}:`,
 						error,
 					);
@@ -300,7 +299,7 @@ class AuthService {
 					try {
 						await projectTx.objectStore('projects').delete(project.id);
 					} catch (error) {
-						console.warn(`Failed to delete project ${project.id}:`, error);
+						moduleLog.warn(`Failed to delete project ${project.id}:`, error);
 					}
 				}
 			}
@@ -309,11 +308,9 @@ class AuthService {
 			const userTx = this.db.transaction(this.USER_STORE, 'readwrite');
 			await userTx.objectStore('users').delete(guestUser.id);
 
-			console.log(
-				`[AuthService] Successfully cleaned up guest: ${guestUser.id}`,
-			);
+			moduleLog.info(`Successfully cleaned up guest: ${guestUser.id}`);
 		} catch (error) {
-			console.error(`Error cleaning up guest ${guestUser.id}:`, error);
+			moduleLog.error(`Error cleaning up guest ${guestUser.id}:`, error);
 		}
 	}
 
@@ -496,12 +493,13 @@ class AuthService {
 		return this.updateUser(updatedUser);
 	}
 
-	private createNewDocumentUrl(
+	private async createNewDocumentUrl(
 		projectId: string = generateYjsProjectId(),
 		projectName = 'Untitled Project',
 		projectDescription = '',
-		projectType: 'latex' | 'typst' = 'latex',
-	): string {
+		projectType: ProjectType = 'latex',
+		projectGroup: ProjectGroup = 'tex',
+	): Promise<string> {
 		try {
 			const dbName = `texlyre-project-${projectId}`;
 			const yjsCollection = `${dbName}-yjs_metadata`;
@@ -520,17 +518,29 @@ class AuthService {
 					name: projectName,
 					description: projectDescription,
 					type: projectType,
+					group: projectGroup,
 				});
 			});
 
-			setTimeout(() => {
-				persistence.destroy();
-				ydoc.destroy();
-			}, 1000);
+			await new Promise<void>((resolve) => {
+				const timeout = setTimeout(resolve, 2000);
+				if (persistence.synced) {
+					clearTimeout(timeout);
+					resolve();
+					return;
+				}
+				persistence.once('synced', () => {
+					clearTimeout(timeout);
+					resolve();
+				});
+			});
+
+			persistence.destroy();
+			ydoc.destroy();
 
 			return `yjs:${projectId}`;
 		} catch (error) {
-			console.error('Error creating new document:', error);
+			moduleLog.error('Error creating new document:', error);
 			throw new Error(t('Failed to create document for project'));
 		}
 	}
@@ -552,12 +562,13 @@ class AuthService {
 
 		const docUrl =
 			project.docUrl ||
-			this.createNewDocumentUrl(
+			(await this.createNewDocumentUrl(
 				projectId,
 				project.name,
 				project.description,
 				project.type,
-			);
+				project.group,
+			));
 
 		const now = Date.now();
 		const newProject: Project = {
@@ -623,7 +634,7 @@ class AuthService {
 		}
 		return this.createProject({
 			...project,
-			docUrl: project.docUrl || this.createNewDocumentUrl(),
+			docUrl: project.docUrl || (await this.createNewDocumentUrl()),
 		});
 	}
 
@@ -685,7 +696,7 @@ class AuthService {
 		);
 	}
 
-	async getProjectsByType(type: 'latex' | 'typst'): Promise<Project[]> {
+	async getProjectsByType(type: ProjectType): Promise<Project[]> {
 		if (!this.db) await this.initialize();
 
 		if (!this.currentUser) {
@@ -697,6 +708,23 @@ class AuthService {
 		return projects.filter(
 			(project) =>
 				project.ownerId === this.currentUser?.id && project.type === type,
+		);
+	}
+
+	async getProjectsByGroup(group: ProjectGroup): Promise<Project[]> {
+		if (!this.db) await this.initialize();
+
+		if (!this.currentUser) {
+			return [];
+		}
+
+		const tx = this.db?.transaction(this.PROJECT_STORE, 'readonly');
+		const projects: Project[] = await tx.store.getAll();
+
+		return projects.filter(
+			(project) =>
+				project.ownerId === this.currentUser?.id &&
+				(project.group ?? project.type) === group,
 		);
 	}
 
@@ -717,7 +745,41 @@ class AuthService {
 				(project.name.toLowerCase().includes(lowerQuery) ||
 					project.description.toLowerCase().includes(lowerQuery) ||
 					project.type.toLowerCase().includes(lowerQuery) ||
+					project.group?.toLowerCase().includes(lowerQuery) ||
 					project.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))),
+		);
+	}
+
+	async filterProjects(
+		query = '',
+		tag = '',
+		type: ProjectType | '' = '',
+		group: ProjectGroup | '' = '',
+	): Promise<Project[]> {
+		if (!this.db) await this.initialize();
+
+		if (!this.currentUser) {
+			return [];
+		}
+
+		const tx = this.db?.transaction(this.PROJECT_STORE, 'readonly');
+		const projects: Project[] = await tx.store.getAll();
+		const lowerQuery = query.trim().toLowerCase();
+
+		return projects.filter(
+			(project) =>
+				project.ownerId === this.currentUser?.id &&
+				(!tag || project.tags.includes(tag)) &&
+				(!type || project.type === type) &&
+				(!group || (project.group ?? project.type) === group) &&
+				(!lowerQuery ||
+					project.name.toLowerCase().includes(lowerQuery) ||
+					project.description.toLowerCase().includes(lowerQuery) ||
+					project.type.toLowerCase().includes(lowerQuery) ||
+					(project.group ?? project.type).toLowerCase().includes(lowerQuery) ||
+					project.tags.some((projectTag) =>
+						projectTag.toLowerCase().includes(lowerQuery),
+					)),
 		);
 	}
 

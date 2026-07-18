@@ -2,6 +2,9 @@
 import debounce from 'lodash/debounce';
 
 import { fileStorageService } from './FileStorageService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('AutoSaveService');
 
 interface AutoSaveOptions {
 	enabled: boolean;
@@ -27,9 +30,7 @@ class AutoSaveService {
 				const contentToSave = getContent();
 
 				if (contentToSave === null || contentToSave === undefined) {
-					console.log(
-						'[AutoSaveService] Autosave skipped: content is null/undefined',
-					);
+					moduleLog.info('Autosave skipped: content is null/undefined');
 					return;
 				}
 

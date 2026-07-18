@@ -4,16 +4,28 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 import { t } from '@/i18n';
+import { compilerRegistryService } from '../../services/CompilerRegistryService';
+import type { CompilerProvider } from '../../types/compilation';
+import type { ProjectType } from '../../types/projects';
+import { resolveLabel } from '../../utils/compilerUtils';
+import { GlobeIcon } from './Icons';
 
 interface TypesetterInfoProps {
-	type: 'latex' | 'typst';
+	type: ProjectType;
+	provider?: CompilerProvider | null;
 }
 
-const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
+const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
+	type,
+	provider: providerProp,
+}) => {
+	const provider =
+		providerProp ?? compilerRegistryService.getForProjectType(type);
 	const [showTooltip, setShowTooltip] = useState(false);
 	const [position, setPosition] = useState({ top: 0, left: 0 });
 	const buttonRef = useRef<HTMLButtonElement>(null);
 	const tooltipRef = useRef<HTMLDivElement>(null);
+	const isExternal = provider?.source === 'chelys';
 
 	useEffect(() => {
 		if (!showTooltip || !buttonRef.current || !tooltipRef.current) return;
@@ -77,26 +89,45 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
 		};
 	}, [showTooltip]);
 
+	const externalInfo = provider?.ui?.info;
+	const isInternalLatex = provider?.id === 'internal:latex';
+	const isInternalTypst = provider?.id === 'internal:typst';
+
+	const getLabel = () => {
+		if (isInternalLatex) return 'LaTeX';
+		if (isInternalTypst) return 'Typst';
+		if (externalInfo) return resolveLabel(externalInfo.title);
+		return provider?.label ?? type;
+	};
+
 	const getTooltipContent = () => {
-		if (type === 'latex') {
+		if (isInternalLatex) {
 			return (
 				<>
 					<h4 className='typesetter-tooltip-title'>{t('LaTeX')}</h4>
 					<div className='typesetter-tooltip-section'>
-						<strong>{t('LaTeX Engine:')}</strong>{' '}
+						<strong>
+							{t('{typesetter} Engine:', { typesetter: t('LaTeX') })}
+						</strong>{' '}
 						{t('SwiftLaTeX v20/02/2022 (TeX Live 2020, 10/04/2020)')}
 						<br />
-						<strong>{t('LaTeX Compilers:')}</strong>
+						<strong>
+							{t('{typesetter} Compilers:', { typesetter: t('LaTeX') })}
+						</strong>
 						<ul>
 							<li>{t('pdfTeX (2020)')}</li>
 							<li>{t('XeTeX (2020)')}</li>
 						</ul>
 					</div>
 					<div className='typesetter-tooltip-section'>
-						<strong>{t('LaTeX Engine:')}</strong>{' '}
+						<strong>
+							{t('{typesetter} Engine:', { typesetter: t('LaTeX') })}
+						</strong>{' '}
 						{t('BusyTeX: texlyre-busytex v1.2.3 (TeX Live 2026, 01/03/2026)')}
 						<br />
-						<strong>{t('LaTeX Compilers:')}</strong>
+						<strong>
+							{t('{typesetter} Compilers:', { typesetter: t('LaTeX') })}
+						</strong>
 						<ul>
 							<li>{t('pdfTeX (2026)')}</li>
 							<li>{t('XeTeX (2026)')}</li>
@@ -110,30 +141,69 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
 			);
 		}
 
+		if (isInternalTypst) {
+			return (
+				<>
+					<h4 className='typesetter-tooltip-title'>{t('Typst')}</h4>
+					<div className='typesetter-tooltip-section'>
+						<strong>
+							{t('{typesetter} Engine:', { typesetter: t('Typst') })}
+						</strong>{' '}
+						{t('@myriaddreamin/typst.ts v0.8.0-rc1')}
+					</div>
+					<div className='typesetter-tooltip-section'>
+						<strong>
+							{t('{typesetter} Renderer:', { typesetter: t('Typst') })}
+						</strong>{' '}
+						{t('@texlyre/typst-ts-renderer v0.8.0-rc1')}
+					</div>
+					<div className='typesetter-tooltip-section'>
+						<strong>
+							{t('{typesetter} Compiler:', { typesetter: t('Typst') })}
+						</strong>{' '}
+						{t('@texlyre/typst-ts-compiler v0.8.0-rc1')}
+					</div>
+					<div className='typesetter-tooltip-section'>
+						<strong>
+							{t('{typesetter} Version:', { typesetter: t('Typst') })}
+						</strong>{' '}
+						{t('0.15.0 (15/06/2026)')}
+					</div>
+					<div className='typesetter-tooltip-section'>
+						<strong>{t('Output Format:')}</strong>
+						<ul>
+							<li>{t('PDF')}</li>
+							<li>{t('SVG')}</li>
+						</ul>
+					</div>
+				</>
+			);
+		}
+
+		if (externalInfo) {
+			return (
+				<>
+					<h4 className='typesetter-tooltip-title'>
+						{resolveLabel(externalInfo.title)}
+					</h4>
+					{externalInfo.rows.map((row, index) => (
+						<div
+							className='typesetter-tooltip-section'
+							key={`${resolveLabel(row.label)}-${index}`}
+						>
+							<strong>{resolveLabel(row.label)}</strong>{' '}
+							{resolveLabel(row.value)}
+						</div>
+					))}
+				</>
+			);
+		}
+
 		return (
 			<>
-				<h4 className='typesetter-tooltip-title'>{t('Typst')}</h4>
+				<h4 className='typesetter-tooltip-title'>{provider?.label ?? type}</h4>
 				<div className='typesetter-tooltip-section'>
-					<strong>{t('Typst Engine:')}</strong>{' '}
-					{t('@myriaddreamin/typst.ts v0.8.0-rc1')}
-				</div>
-				<div className='typesetter-tooltip-section'>
-					<strong>{t('Typst Renderer:')}</strong>{' '}
-					{t('@texlyre/typst-ts-renderer v0.8.0-rc1')}
-				</div>
-				<div className='typesetter-tooltip-section'>
-					<strong>{t('Typst Compiler:')}</strong>{' '}
-					{t('@texlyre/typst-ts-compiler v0.8.0-rc1')}
-				</div>
-				<div className='typesetter-tooltip-section'>
-					<strong>{t('Typst Version:')}</strong> {t('0.15.0 (15/06/2026)')}
-				</div>
-				<div className='typesetter-tooltip-section'>
-					<strong>{t('Output Formats:')}</strong>
-					<ul>
-						<li>{t('PDF')}</li>
-						<li>{t('SVG')}</li>
-					</ul>
+					{t('No typesetter information available.')}
 				</div>
 			</>
 		);
@@ -149,7 +219,16 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
 				onMouseLeave={() => setShowTooltip(false)}
 				onClick={() => setShowTooltip(!showTooltip)}
 			>
-				{type === 'latex' ? 'LaTeX' : 'Typst'}
+				{getLabel()}
+				{isExternal && (
+					<span
+						className='external-typesetter-status'
+						title={t('External compiler')}
+						aria-hidden='true'
+					>
+						<GlobeIcon />
+					</span>
+				)}
 			</button>
 			{showTooltip &&
 				createPortal(

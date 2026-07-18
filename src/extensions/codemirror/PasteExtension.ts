@@ -8,6 +8,9 @@ import {
 	uploadPastedFile,
 } from '../../utils/clipboardUtils';
 import { runToolbarCommand } from './ToolbarExtension';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('PasteExtension');
 
 let pendingImagePath: string | null = null;
 
@@ -29,12 +32,12 @@ export const createPasteExtension = (
 				const fileType = detectFileType(fileName, view.state.doc.toString());
 				const didRun = runToolbarCommand(view, `${fileType}-figure`);
 				if (!didRun) {
-					console.warn('Figure command not found in toolbar');
+					moduleLog.warn('Figure command not found in toolbar');
 					pendingImagePath = null;
 				}
 			})
 			.catch((error) => {
-				console.error('Error handling pasted file:', error);
+				moduleLog.error('Error handling pasted file:', error);
 			});
 	};
 

@@ -22,7 +22,11 @@ import {
 	serializeStandards,
 	toggleStandard,
 } from '../../utils/pdfStandardsUtils';
-import { isTypstFile, isTemporaryFile } from '../../utils/fileUtils';
+import {
+	isTypstFile,
+	isTemporaryFile,
+	getFilenameFromPath,
+} from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
 import {
 	OptionsIcon,
@@ -33,6 +37,9 @@ import {
 	TrashIcon,
 	ResetIcon,
 } from '../common/Icons';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('TypstCompileButton');
 
 interface TypstCompileButtonProps {
 	dropdownKey: string;
@@ -314,7 +321,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 						return false;
 					}
 				} catch (error) {
-					console.warn('Error getting current file:', error);
+					moduleLog.warn('Error getting current file:', error);
 				}
 			}
 
@@ -375,7 +382,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 		try {
 			clearCache();
 		} catch (error) {
-			console.error('Failed to clear cache:', error);
+			moduleLog.error('Failed to clear cache:', error);
 		}
 	};
 
@@ -417,7 +424,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 			clearCache();
 			await compileDocument(effectiveMainFile, effectiveFormat, pdfOptions);
 		} catch (error) {
-			console.error('Failed to compile with cache clear:', error);
+			moduleLog.error('Failed to compile with cache clear:', error);
 		}
 	};
 
@@ -485,14 +492,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 		});
 	};
 
-	const getFileName = (path?: string) => {
-		if (!path) return t('No .typ file');
-		return path.split('/').pop() || path;
-	};
-
 	const getDisplayName = (path?: string) => {
-		if (!path) return t('No .typ file');
-
 		if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
 			const doc = documents.find((d) => d.id === selectedDocId);
 			if (doc) {
@@ -500,7 +500,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 			}
 		}
 
-		return getFileName(path);
+		return getFilenameFromPath(path, '.typ');
 	};
 
 	const isDisabled = isInitializing || (!isCompiling && !effectiveMainFile);
@@ -517,7 +517,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 							? `${t('Stop Compilation')} ${useSharedSettings ? t('(F8)') : ''}`
 							: isInitializing
 								? t('Initializing Compiler...')
-								: `${t('Compile Typst Document')} ${useSharedSettings ? t('(F9)') : ''}`
+								: `${t('Compile {typesetter}', { typesetter: t('Typst') })} ${useSharedSettings ? t('(F9)') : ''}`
 					}
 				>
 					{isCompiling ? (
@@ -584,7 +584,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 							<option value='auto'>{t('Auto-detect')}</option>
 							{availableTypstFiles.map((filePath) => (
 								<option key={filePath} value={filePath}>
-									{getFileName(filePath)}
+									{getFilenameFromPath(filePath, '.typ')}
 								</option>
 							))}
 						</select>

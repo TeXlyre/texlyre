@@ -21,6 +21,8 @@ import { giteaAPIService } from './GiteaAPIService';
 import { giteaBackupService } from './GiteaBackupService';
 import { GiteaIcon } from './Icon';
 import './styles.css';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('GiteaBackupModal');
 
 interface GiteaBackupModalProps {
 	isOpen: boolean;
@@ -178,7 +180,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
 							setDisplayBranch(storedBranch);
 						}
 					} catch (error) {
-						console.log('Could not load stored credentials.', error);
+						moduleLog.error('Could not load stored credentials.', error);
 					}
 				}
 			};
@@ -224,7 +226,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
 		try {
 			await operation();
 		} catch (error) {
-			console.error('Operation failed:', error);
+			moduleLog.error('Operation failed:', error);
 			setError(
 				t('Operation failed: {error}', {
 					error: error instanceof Error ? error.message : String(error),
@@ -379,7 +381,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
 					setSelectedBranch(defaultBranch.name);
 				}
 			} catch (error) {
-				console.error('Failed to load branches:', error);
+				moduleLog.error('Failed to load branches:', error);
 			}
 		}
 	};

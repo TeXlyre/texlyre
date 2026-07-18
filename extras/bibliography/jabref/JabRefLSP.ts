@@ -4,6 +4,8 @@ import { genericLSPService } from '@/services/GenericLSPService';
 import { bibliographyImportService } from '@/services/BibliographyImportService';
 import type { BibEntry } from '@/types/bibliography';
 import { BibtexParser, type BibtexEntry } from '@/utils/bibtexParser';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('JabRefLSP');
 
 export type JabRefLSPConfig = {
 	id: string;
@@ -152,13 +154,13 @@ export const createJabRefLSP = () => {
 	): Promise<BibEntry[]> => {
 		const status = getConnectionStatus();
 		if (status !== 'connected') {
-			console.warn('[JabRefLSP] Not connected to LSP server');
+			moduleLog.warn('Not connected to LSP server');
 			return [];
 		}
 
 		const client = genericLSPService.getClient(id);
 		if (!client) {
-			console.warn('[JabRefLSP] LSP client not available');
+			moduleLog.warn('LSP client not available');
 			return [];
 		}
 
@@ -172,12 +174,12 @@ export const createJabRefLSP = () => {
 			);
 
 			const completionItems = response?.items || [];
-			console.log(
-				`[JabRefLSP] Retrieved ${completionItems.length} entries from LSP server`,
+			moduleLog.info(
+				`Retrieved ${completionItems.length} entries from LSP server`,
 			);
 			return completionItems.map((item: any) => parseCompletionItem(item));
 		} catch (error) {
-			console.error('[JabRefLSP] Error getting bibliography entries:', error);
+			moduleLog.error('Error getting bibliography entries:', error);
 			return [];
 		}
 	};

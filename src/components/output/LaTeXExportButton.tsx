@@ -12,7 +12,11 @@ import { useProperties } from '../../hooks/useProperties';
 import type { LaTeXEngine } from '../../types/latex';
 import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
-import { isLatexMainFile, isTemporaryFile } from '../../utils/fileUtils';
+import {
+	getFilenameFromPath,
+	isLatexMainFile,
+	isTemporaryFile,
+} from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
 import { latexService } from '../../services/LaTeXService';
 import { BUSYTEX_BUNDLE_LABELS } from '../../extensions/texlyre-busytex/BusyTeXService';
@@ -22,6 +26,9 @@ import {
 	TrashIcon,
 	OptionsIcon,
 } from '../common/Icons';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('LaTeXExportButton');
 
 interface LaTeXExportButtonProps {
 	className?: string;
@@ -330,24 +337,18 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 			await latexService.deleteBusyTeXBundle(bundleId);
 			setBundleCacheStatus((prev) => ({ ...prev, [bundleId]: false }));
 		} catch (error) {
-			console.error('Failed to delete bundle:', error);
+			moduleLog.error('Failed to delete bundle:', error);
 		} finally {
 			setIsDeletingBundle(null);
 		}
 	};
 
-	const getFileName = (path?: string) => {
-		if (!path) return t('No .tex file');
-		return path.split('/').pop() || path;
-	};
-
 	const getDisplayName = (path?: string) => {
-		if (!path) return t('No .tex file');
 		if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
 			const found = documents.find((d) => d.id === selectedDocId);
 			if (found) return `${found.name} ${t('(linked)')}`;
 		}
-		return getFileName(path);
+		return getFilenameFromPath(path, '.tex');
 	};
 
 	const isDisabled =
@@ -405,7 +406,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 							<option value='auto'>{t('Auto-detect')}</option>
 							{availableTexFiles.map((filePath) => (
 								<option key={filePath} value={filePath}>
-									{getFileName(filePath)}
+									{getFilenameFromPath(filePath, '.tex')}
 								</option>
 							))}
 						</select>
@@ -413,7 +414,9 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 				)}
 
 				<div className='dropdown-section'>
-					<div className='dropdown-title'>{t('LaTeX Engine:')}</div>
+					<div className='dropdown-title'>
+						{t('{typesetter} Engine:', { typesetter: t('LaTeX') })}
+					</div>
 					<div className='format-selector-group'>
 						<select
 							value={selectedEngine}

@@ -1,5 +1,5 @@
 // src/utils/urlUtils.ts
-import type { UrlFragments } from '../types/yjs.ts';
+import type { UrlFragments } from '../types/yjs';
 
 const LEGACY_YJS_PROJECT_ID_RE = /^[a-z0-9]{20,32}$/;
 const UUID_PROJECT_ID_RE =
@@ -64,6 +64,19 @@ export function buildUrlWithFragments(
 	}
 
 	return url;
+}
+
+export function getProjectName(fallback = 'TeXlyre'): string {
+	if (document.title && document.title !== 'TeXlyre') {
+		return document.title;
+	}
+
+	const { yjsUrl } = parseUrlFragments(window.location.hash.substring(1));
+	if (yjsUrl) {
+		return `Project ${yjsUrl.slice(4).substring(0, 8)}`;
+	}
+
+	return fallback;
 }
 
 export function pushHash(hash: string): void {

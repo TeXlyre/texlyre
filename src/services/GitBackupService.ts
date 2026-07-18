@@ -21,6 +21,9 @@ import {
 	fileStorageEventEmitter,
 } from './FileStorageService';
 import { ProjectDataService } from './ProjectDataService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('GitBackupService');
 
 const FILES_METADATA = '.texlyre_metadata.json';
 const PROJECT_METADATA = 'metadata.json';
@@ -540,7 +543,7 @@ export class GitBackupService<TTarget> {
 			try {
 				await this.importChanges(projectId, branch);
 			} catch (error) {
-				console.warn('Post-push reconciliation import failed:', error);
+				moduleLog.warn('Post-push reconciliation import failed:', error);
 				this.addActivity({
 					type: 'import_error',
 					message: t(
@@ -617,7 +620,7 @@ export class GitBackupService<TTarget> {
 			await this.persistBaseline(resolvedCredentials, projectId);
 			fileStorageEventEmitter.emitChange();
 		} catch (error) {
-			console.error(error);
+			moduleLog.error(error);
 			this.handleError(
 				error,
 				'import_error',
@@ -1047,7 +1050,7 @@ export class GitBackupService<TTarget> {
 				});
 				fileStorageEventEmitter.emitChange();
 			} catch (error) {
-				console.error(`Failed to import missing project ${projId}:`, error);
+				moduleLog.error(`Failed to import missing project ${projId}:`, error);
 				this.addActivity({
 					type: 'import_error',
 					message: t('Failed to import missing project: {missingProjId}', {
@@ -1161,7 +1164,10 @@ export class GitBackupService<TTarget> {
 				);
 				remoteDocumentsMetadata = JSON.parse(metadataContent);
 			} catch (error) {
-				console.error('Failed to load documents metadata from remote:', error);
+				moduleLog.error(
+					'Failed to load documents metadata from remote:',
+					error,
+				);
 			}
 		}
 
@@ -1252,7 +1258,7 @@ export class GitBackupService<TTarget> {
 				importedCount++;
 			} catch (error) {
 				failedCount++;
-				console.error(`Failed to import file ${filePath}:`, error);
+				moduleLog.error(`Failed to import file ${filePath}:`, error);
 				this.addActivity({
 					type: 'import_error',
 					message: t('Failed to import file: {filePath}', { filePath }),
@@ -1297,7 +1303,7 @@ export class GitBackupService<TTarget> {
 				);
 				remoteFilesMetadata = JSON.parse(metadataContent);
 			} catch (error) {
-				console.error('Failed to load files metadata from remote:', error);
+				moduleLog.error('Failed to load files metadata from remote:', error);
 			}
 		}
 
@@ -1343,7 +1349,7 @@ export class GitBackupService<TTarget> {
 				);
 				fileStorageEventEmitter.emitChange();
 			} catch (error) {
-				console.error(
+				moduleLog.error(
 					`Failed to restore deleted file metadata ${filePath}:`,
 					error,
 				);
@@ -1464,7 +1470,7 @@ export class GitBackupService<TTarget> {
 				},
 			);
 		} catch (error) {
-			console.warn('Failed to persist baseline commit sha:', error);
+			moduleLog.warn('Failed to persist baseline commit sha:', error);
 		}
 	}
 
@@ -1640,7 +1646,7 @@ export class GitBackupService<TTarget> {
 				);
 				return;
 			} catch (error) {
-				console.warn(`Commit attempt ${attempt} failed:`, error);
+				moduleLog.warn(`Commit attempt ${attempt} failed:`, error);
 				if (attempt === maxRetries) throw error;
 			}
 		}

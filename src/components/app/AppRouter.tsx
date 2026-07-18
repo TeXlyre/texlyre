@@ -30,6 +30,9 @@ import LoadingScreen from './LoadingScreen';
 import ProjectApp from './ProjectApp';
 import PrivacyModal from '../common/PrivacyModal';
 import ShareTargetModal from '../project/ShareTargetModal';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('AppRouter');
 
 interface UrlProjectParams {
 	newProjectName?: string;
@@ -37,6 +40,7 @@ interface UrlProjectParams {
 	newProjectType?: string;
 	newProjectTags?: string;
 	newProjectFiles?: string;
+	newProjectGroup?: string;
 	compile?: string;
 	file?: string;
 }
@@ -53,6 +57,8 @@ const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
 				params.newProjectDescription = decodeURIComponent(part.slice(22));
 			} else if (part.startsWith('newProjectType:')) {
 				params.newProjectType = decodeURIComponent(part.slice(15));
+			} else if (part.startsWith('newProjectGroup:')) {
+				params.newProjectGroup = decodeURIComponent(part.slice(16));
 			} else if (part.startsWith('newProjectTags:')) {
 				params.newProjectTags = decodeURIComponent(part.slice(15));
 			} else if (part.startsWith('newProjectFiles:')) {
@@ -66,7 +72,7 @@ const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
 
 		return params.newProjectName ? params : null;
 	} catch (error) {
-		console.error('Error parsing URL project params:', error);
+		moduleLog.error('Error parsing URL project params:', error);
 		return null;
 	}
 };
@@ -96,7 +102,7 @@ const downloadAndExtractZip = async (
 			preserveTimestamp: false,
 		});
 	} catch (error) {
-		console.error('Error downloading and extracting zip:', error);
+		moduleLog.error('Error downloading and extracting zip:', error);
 	}
 };
 
@@ -130,7 +136,13 @@ const AppRouter: React.FC = () => {
 	const processedProjectHashRef = useRef<string | null>(null);
 
 	const createProjectForDocument = useCallback(
-		async (docUrl: string, name: string, description: string, type: string) => {
+		async (
+			docUrl: string,
+			name: string,
+			description: string,
+			type: string,
+			group?: string,
+		) => {
 			try {
 				await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -138,6 +150,7 @@ const AppRouter: React.FC = () => {
 					name,
 					description,
 					type,
+					group,
 					docUrl,
 					tags: [],
 					isFavorite: false,
@@ -148,7 +161,7 @@ const AppRouter: React.FC = () => {
 
 				return project;
 			} catch (error) {
-				console.error('Failed to create project for document:', error);
+				moduleLog.error('Failed to create project for document:', error);
 				throw error;
 			}
 		},
@@ -166,6 +179,7 @@ const AppRouter: React.FC = () => {
 					name: params.newProjectName,
 					description: params.newProjectDescription || '',
 					type: params.newProjectType || 'latex',
+					group: params.newProjectGroup || undefined,
 					tags: params.newProjectTags?.split(',') || [],
 					isFavorite: false,
 				});
@@ -180,7 +194,7 @@ const AppRouter: React.FC = () => {
 
 				return newProject.docUrl;
 			} catch (error) {
-				console.error('Error creating project from URL:', error);
+				moduleLog.error('Error creating project from URL:', error);
 				return null;
 			} finally {
 				setIsCreatingProject(false);
@@ -326,7 +340,7 @@ const AppRouter: React.FC = () => {
 						}
 					}
 				} catch (error) {
-					console.error(
+					moduleLog.error(
 						'Error checking/creating project for shared document:',
 						error,
 					);
@@ -380,7 +394,7 @@ const AppRouter: React.FC = () => {
 			const baseDocUrl = fragments.yjsUrl;
 
 			if (!isValidYjsUrl(baseDocUrl)) {
-				console.error('Invalid document URL format:', baseDocUrl);
+				moduleLog.error('Invalid document URL format:', baseDocUrl);
 				return;
 			}
 
@@ -396,7 +410,7 @@ const AppRouter: React.FC = () => {
 			finalUrl = projectDocUrl;
 		} else {
 			if (!isValidYjsUrl(projectDocUrl)) {
-				console.error('Invalid document URL format:', projectDocUrl);
+				moduleLog.error('Invalid document URL format:', projectDocUrl);
 				return;
 			}
 

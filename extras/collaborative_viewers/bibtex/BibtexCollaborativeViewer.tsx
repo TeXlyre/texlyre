@@ -40,6 +40,8 @@ import {
 import { BibtexTableView } from '../../viewers/bibtex/BibtexTableView';
 import '../../viewers/bibtex/styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './BibtexCollaborativeViewerPlugin';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('BibtexCollaborativeViewer');
 
 function getPluginToggleButtons(fileTypes: string[] | undefined) {
 	if (!fileTypes?.length) return { lsp: [], bib: [] };
@@ -65,7 +67,7 @@ function parseContent(content: string): BibtexEntry[] {
 	try {
 		return BibtexParser.parse(content);
 	} catch (error) {
-		console.warn('Failed to parse BibTeX content:', error);
+		moduleLog.warn('Failed to parse BibTeX content:', error);
 		return [];
 	}
 }
@@ -348,7 +350,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 							changes: changes,
 						});
 					} catch (error) {
-						console.warn(
+						moduleLog.warn(
 							'Range error during diff dispatch, replacing full content:',
 							error,
 						);
@@ -378,7 +380,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
 			onUpdateContent(contentToSave);
 		} catch (error) {
-			console.error('Error saving processed BibTeX file:', error);
+			moduleLog.error('Error saving processed BibTeX file:', error);
 			setError(
 				t('Failed to save file: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),
@@ -414,10 +416,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			try {
 				text = new TextDecoder('utf-8').decode(content);
 			} catch (error) {
-				console.error(
-					'BibtexCollaborativeViewer: Error decoding content:',
-					error,
-				);
+				moduleLog.error('Error decoding content:', error);
 				setError(
 					t('Failed to decode file content: {error}', {
 						error: error instanceof Error ? error.message : String(error),
@@ -456,14 +455,14 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: viewRef is accessed imperatively and is not a reactive dep. */
 	useEffect(() => {
 		if (viewMode === 'table' && currentView === 'processed') {
-			console.log(
+			moduleLog.info(
 				'Switching to table view - syncing with processed editor content',
 			);
 
 			if (viewRef.current) {
 				const currentEditorContent = viewRef.current.state?.doc?.toString();
 				if (currentEditorContent && currentEditorContent !== processedContent) {
-					console.log(
+					moduleLog.info(
 						'Processed editor content differs from state, updating...',
 					);
 					setProcessedContent(currentEditorContent);
@@ -584,7 +583,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('Error exporting file:', error);
+			moduleLog.error('Error exporting file:', error);
 			setError(
 				t('Failed to export file: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),

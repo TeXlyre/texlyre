@@ -18,7 +18,14 @@ import type {
 } from '../types/typst';
 import { typstService } from '../services/TypstService';
 import { popoutViewerService } from '../services/PopoutViewerService';
-import { parseUrlFragments, replaceHash } from '../utils/urlUtils';
+import {
+	parseUrlFragments,
+	replaceHash,
+	getProjectName,
+} from '../utils/urlUtils';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('TypstContext');
 
 export const TypstContext = createContext<TypstContextType | null>(null);
 
@@ -68,26 +75,12 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 		});
 	}, []);
 
-	const getProjectName = (): string => {
-		if (document.title && document.title !== 'TeXlyre') {
-			return document.title;
-		}
-
-		const hash = window.location.hash;
-		if (hash.includes('yjs:')) {
-			const projectId = hash.split('yjs:')[1].split('&')[0];
-			return `Project ${projectId.substring(0, 8)}`;
-		}
-
-		return 'Typst Project';
-	};
-
 	const compileDocument = async (
 		mainFileName: string,
 		format: TypstOutputFormat = currentFormat,
 		pdfOptions?: TypstPdfOptions,
 	): Promise<void> => {
-		console.log('[TypstContext] compileDocument called', {
+		moduleLog.info('compileDocument called', {
 			mainFileName,
 			format,
 			pdfOptions,
@@ -118,7 +111,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 		setIsCompiling(true);
 		setActiveCompiler('typst');
 
-		setCompiledPdf(null);
+		// setCompiledPdf(null);
 		setCompiledCanvas(null);
 
 		try {
@@ -130,7 +123,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 				{ allowRemoteUrls: previewAllowRemoteUrls },
 			);
 
-			console.log('[TypstContext] Compilation result', {
+			moduleLog.info('Compilation result', {
 				status: result.status,
 				format: result.format,
 				hasPdf: !!result.pdf,
@@ -160,7 +153,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 								content: result.pdf,
 								mimeType: 'application/pdf',
 								fileName,
-								projectName: getProjectName(),
+								projectName: getProjectName(t('Typst Project')),
 							});
 						}
 						break;
@@ -183,7 +176,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 								content: result.canvas,
 								mimeType: 'image/svg+xml',
 								fileName: svgFileName,
-								projectName: getProjectName(),
+								projectName: getProjectName(t('Typst Project')),
 							});
 						}
 						break;
@@ -205,7 +198,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 								content: result.canvas,
 								mimeType: 'application/pdf',
 								fileName: canvasPdfFileName,
-								projectName: getProjectName(),
+								projectName: getProjectName(t('Typst Project')),
 							});
 						}
 						break;

@@ -49,3 +49,18 @@
 .typesetter-tooltip-section li:last-child {
 	margin-bottom: 0;
 }
+
+.type-info-help .external-typesetter-status {
+	display: inline-flex;
+	align-items: center;
+	margin-left: var(--space-xs);
+	vertical-align: middle;
+	color: var(--pico-primary);
+	padding-left: var(--space-xs);
+}
+
+.type-info-help .external-typesetter-status svg {
+	width: 0.85rem;
+	height: 0.85rem;
+	margin-bottom: var(--space-xs);
+}

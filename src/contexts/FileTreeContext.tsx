@@ -28,6 +28,9 @@ import {
 	stringToArrayBuffer,
 } from '../utils/fileUtils';
 import { batchExtractZip } from '../utils/zipUtils';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('FileTreeContext');
 
 export const FileTreeContext = createContext<FileTreeContextType | null>(null);
 
@@ -73,7 +76,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					setFileTree(tree);
 					setIsLoading(false);
 				} catch (error) {
-					console.error('Failed to initialize file storage:', error);
+					moduleLog.error('Failed to initialize file storage:', error);
 					setIsLoading(false);
 				}
 			};
@@ -87,7 +90,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			setFileTree(tree);
 			return tree;
 		} catch (error) {
-			console.error('Error refreshing file tree:', error);
+			moduleLog.error('Error refreshing file tree:', error);
 			return [];
 		}
 	}, []);
@@ -149,7 +152,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				await refreshFileTree();
 			} catch (error) {
-				console.error('Error uploading files:', error);
+				moduleLog.error('Error uploading files:', error);
 			} finally {
 				setIsLoading(false);
 			}
@@ -234,7 +237,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					error instanceof Error &&
 					error.message !== t('File operation cancelled by user')
 				) {
-					console.error('Failed to store ZIP file:', error);
+					moduleLog.error('Failed to store ZIP file:', error);
 					throw error;
 				}
 			}
@@ -312,50 +315,63 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 							: docUrl;
 						const collectionName = `yjs_${createdDocId}`;
 
-						const signalingServersSetting = getSetting(
-							'collab-signaling-servers',
+						const signalingServers =
+							(getSetting('collab-signaling-servers')?.value as
+								| string
+								| undefined) ?? 'ws://ywebrtc.localhost:8082/';
+						const awarenessTimeout =
+							(getSetting('collab-awareness-timeout')?.value as
+								| number
+								| undefined) ?? 30;
+						const autoReconnect =
+							(getSetting('collab-auto-reconnect')?.value as
+								| boolean
+								| undefined) ?? false;
+
+						const serversToUse = signalingServers
+							.split(',')
+							.map((s) => s.trim());
+
+						const { doc: newYDoc } = collabService.connect(
+							projectId,
+							collectionName,
+							{
+								signalingServers: serversToUse,
+								autoReconnect,
+								awarenessTimeout: awarenessTimeout * 1000,
+							},
 						);
-						const awarenessTimeoutSetting = getSetting(
-							'collab-awareness-timeout',
+
+						const container = collabService.getDocContainer(
+							projectId,
+							collectionName,
 						);
-						const autoReconnectSetting = getSetting('collab-auto-reconnect');
-
-						// Only proceed if all collaboration settings are available
-						if (
-							signalingServersSetting &&
-							awarenessTimeoutSetting &&
-							autoReconnectSetting
-						) {
-							const signalingServers = signalingServersSetting.value as string;
-							const awarenessTimeout = awarenessTimeoutSetting.value as number;
-							const autoReconnect = autoReconnectSetting.value as boolean;
-
-							const serversToUse = signalingServers
-								.split(',')
-								.map((s) => s.trim());
-
-							const { doc: newYDoc } = collabService.connect(
-								projectId,
-								collectionName,
-								{
-									signalingServers: serversToUse,
-									autoReconnect,
-									awarenessTimeout: awarenessTimeout * 1000,
-								},
-							);
-
-							await new Promise((resolve) => setTimeout(resolve, 100));
-
-							newYDoc.transact(() => {
-								const ytext = newYDoc.getText('codemirror');
-								if (ytext.length === 0) {
-									ytext.insert(0, textContent);
+						if (container?.persistence) {
+							await new Promise<void>((resolve) => {
+								const timeout = setTimeout(resolve, 2000);
+								if (container.persistence.synced) {
+									clearTimeout(timeout);
+									resolve();
+									return;
 								}
+								container.persistence.once('synced', () => {
+									clearTimeout(timeout);
+									resolve();
+								});
 							});
-							collabService.disconnect(projectId, collectionName);
-
-							setupFileSyncListener(createdDocId, fileId);
 						}
+
+						newYDoc.transact(() => {
+							const ytext = newYDoc.getText('codemirror');
+							if (ytext.length === 0) {
+								ytext.insert(0, textContent);
+							}
+						});
+
+						await new Promise((resolve) => setTimeout(resolve, 500));
+						collabService.disconnect(projectId, collectionName);
+
+						setupFileSyncListener(createdDocId, fileId);
 					}
 
 					await refreshFileTree();
@@ -373,7 +389,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				) {
 					return;
 				}
-				console.error('Error linking file to document:', error);
+				moduleLog.error('Error linking file to document:', error);
 			}
 		},
 		[
@@ -422,7 +438,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				) {
 					return;
 				}
-				console.error('Error unlinking file from document:', error);
+				moduleLog.error('Error unlinking file from document:', error);
 			}
 		},
 		[changeDoc, doc, refreshFileTree],
@@ -447,7 +463,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					error instanceof Error &&
 					error.message !== t('File operation cancelled by user')
 				) {
-					console.error('Error creating directory:', error);
+					moduleLog.error('Error creating directory:', error);
 				}
 			}
 		},
@@ -507,7 +523,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				await refreshFileTree();
 			} catch (error) {
-				console.error('Error in batch delete:', error);
+				moduleLog.error('Error in batch delete:', error);
 				if (error instanceof Error) {
 					const operationId = `batch-delete-${Date.now()}`;
 					fileOperationNotificationService.showError(
@@ -559,7 +575,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					error instanceof Error &&
 					error.message !== t('File operation cancelled by user')
 				) {
-					console.error('Error in batch move:', error);
+					moduleLog.error('Error in batch move:', error);
 				}
 				throw error;
 			}
@@ -624,7 +640,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					error instanceof Error &&
 					error.message !== t('Unlink operation cancelled by user')
 				) {
-					console.error('Error in batch unlink:', error);
+					moduleLog.error('Error in batch unlink:', error);
 				}
 				throw error;
 			}
@@ -644,7 +660,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			const file = await fileStorageService.getFile(fileId);
 			return file?.content;
 		} catch (error) {
-			console.error('Error getting file content:', error);
+			moduleLog.error('Error getting file content:', error);
 			return undefined;
 		}
 	}, []);
@@ -653,7 +669,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 		try {
 			return await fileStorageService.getFile(fileId);
 		} catch (error) {
-			console.error('Error getting file:', error);
+			moduleLog.error('Error getting file:', error);
 			return undefined;
 		}
 	}, []);
@@ -663,12 +679,12 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			try {
 				const sourceFile = await fileStorageService.getFile(sourceId);
 				if (!sourceFile) {
-					console.error('Source file not found');
+					moduleLog.error('Source file not found');
 					return;
 				}
 
-				console.log(
-					`[FileTreeContext] Moving ${sourceFile.name} from ${sourceFile.path} to directory ${targetPath}`,
+				moduleLog.info(
+					`Moving ${sourceFile.name} from ${sourceFile.path} to directory ${targetPath}`,
 				);
 
 				// For move operations, we pass the target directory path
@@ -680,15 +696,15 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					},
 				]);
 
-				console.log('[FileTreeContext] Move completed, new IDs:', movedIds);
+				moduleLog.info('Move completed, new IDs:', movedIds);
 				await refreshFileTree();
 			} catch (error) {
-				console.error('Error in moveFileOrDirectory:', error);
+				moduleLog.error('Error in moveFileOrDirectory:', error);
 				if (
 					error instanceof Error &&
 					error.message !== t('File operation cancelled by user')
 				) {
-					console.error('Error moving file or directory:', error);
+					moduleLog.error('Error moving file or directory:', error);
 				}
 			}
 		},
@@ -709,8 +725,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					return fileId;
 				}
 
-				console.log(
-					`[FileTreeContext] Renaming ${originalFile.name} from ${oldPath} to ${newFullPath}`,
+				moduleLog.info(
+					`Renaming ${originalFile.name} from ${oldPath} to ${newFullPath}`,
 				);
 
 				// For rename operations, we pass the full new path
@@ -725,7 +741,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					{ showConflictDialog: true },
 				);
 
-				console.log('Rename completed, new IDs:', movedIds);
+				moduleLog.info('Rename completed, new IDs:', movedIds);
 
 				// If no files were moved (cancelled), return original ID
 				if (movedIds.length === 0) {
@@ -741,14 +757,14 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				await refreshFileTree();
 				return newFileId;
 			} catch (error) {
-				console.error('Error in renameFile:', error);
+				moduleLog.error('Error in renameFile:', error);
 				if (
 					error instanceof Error &&
 					error.message === t('File operation cancelled by user')
 				) {
 					throw error;
 				}
-				console.error('Error renaming/moving file:', error);
+				moduleLog.error('Error renaming/moving file:', error);
 				throw error;
 			}
 		},
@@ -762,7 +778,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				await fileStorageService.updateFileContent(fileId, contentBuffer);
 				await refreshFileTree();
 			} catch (error) {
-				console.error('Error updating file content:', error);
+				moduleLog.error('Error updating file content:', error);
 			}
 		},
 		[refreshFileTree],

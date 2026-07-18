@@ -48,6 +48,8 @@ import {
 	destroyPdf,
 	type PdfRenderContext,
 } from './pdfRenderer';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('CanvasRenderer');
 
 export interface CanvasRendererHandle {
 	updateSvgContent: (content: ArrayBuffer | string) => void;
@@ -739,7 +741,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 					);
 				});
 			} catch (error) {
-				console.error('[CanvasRenderer] Failed to parse content:', error);
+				moduleLog.error('Failed to parse content:', error);
 				setError(
 					t('Failed to parse content: {error}', {
 						error: error instanceof Error ? error.message : t('Unknown error'),
@@ -894,9 +896,10 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 				return;
 			}
 
-			goToPage(page);
+			if (containerRef.current?.offsetParent === null) return;
 
 			requestAnimationFrame(() => {
+				goToPage(page);
 				renderVisiblePages();
 			});
 		};

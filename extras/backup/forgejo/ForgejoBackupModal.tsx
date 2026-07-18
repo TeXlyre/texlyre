@@ -21,6 +21,8 @@ import { forgejoAPIService } from './ForgejoAPIService';
 import { forgejoBackupService } from './ForgejoBackupService';
 import { ForgejoIcon } from './Icon';
 import './styles.css';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('ForgejoBackupModal');
 
 interface ForgejoBackupModalProps {
 	isOpen: boolean;
@@ -179,7 +181,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 							setDisplayBranch(storedBranch);
 						}
 					} catch (error) {
-						console.log('Could not load stored credentials.', error);
+						moduleLog.error('Could not load stored credentials.', error);
 					}
 				}
 			};
@@ -225,7 +227,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 		try {
 			await operation();
 		} catch (error) {
-			console.error('Operation failed:', error);
+			moduleLog.error('Operation failed:', error);
 			setError(
 				t('Operation failed: {error}', {
 					error: error instanceof Error ? error.message : String(error),
@@ -384,7 +386,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 					setSelectedBranch(defaultBranch.name);
 				}
 			} catch (error) {
-				console.error('Failed to load branches:', error);
+				moduleLog.error('Failed to load branches:', error);
 			}
 		}
 	};

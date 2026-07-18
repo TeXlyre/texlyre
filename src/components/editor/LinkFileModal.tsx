@@ -6,9 +6,13 @@ import { t } from '@/i18n';
 import { useFileTree } from '../../hooks/useFileTree';
 import { fileStorageService } from '../../services/FileStorageService';
 import type { FileNode } from '../../types/files';
+import type { ProjectType } from '../../types/projects';
 import { isTemporaryFile } from '../../utils/fileUtils';
 import { FolderIcon } from '../common/Icons';
 import Modal from '../common/Modal';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('LinkFileModal');
 
 interface LinkFileModalProps {
 	isOpen: boolean;
@@ -16,7 +20,7 @@ interface LinkFileModalProps {
 	documentId: string;
 	documentName: string;
 	onLinked: () => void;
-	projectType?: 'latex' | 'typst';
+	projectType?: ProjectType;
 }
 
 const LinkFileModal: React.FC<LinkFileModalProps> = ({
@@ -91,7 +95,7 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 				// User cancelled due to conflict
 				return;
 			}
-			console.error('Error creating linked file:', error);
+			moduleLog.error('Error creating linked file:', error);
 		} finally {
 			setIsCreating(false);
 		}

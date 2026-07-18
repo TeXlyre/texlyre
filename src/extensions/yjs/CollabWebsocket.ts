@@ -2,6 +2,10 @@
 import { WebsocketProvider } from 'y-websocket';
 import type * as Y from 'yjs';
 
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('CollabWebsocket');
+
 interface WebsocketProviderOptions {
 	serverUrl: string;
 	params?: Record<string, string>;
@@ -36,7 +40,7 @@ class WebsocketProviderRegistry {
 
 			return provider;
 		} catch (error) {
-			console.error(
+			moduleLog.error(
 				`Error creating WebSocket provider for room ${roomName}:`,
 				error,
 			);
@@ -46,7 +50,7 @@ class WebsocketProviderRegistry {
 
 	releaseProvider(roomName: string): boolean {
 		if (!this.providers.has(roomName)) {
-			console.warn(
+			moduleLog.warn(
 				`Attempted to release nonexistent provider for room: ${roomName}`,
 			);
 			return false;
@@ -56,14 +60,12 @@ class WebsocketProviderRegistry {
 		entry.refCount -= 1;
 
 		if (entry.refCount <= 0) {
-			console.log(
-				`[CollabWebsocket] Destroying WebSocket provider for room: ${roomName}`,
-			);
+			moduleLog.info(`Destroying WebSocket provider for room: ${roomName}`);
 			try {
 				entry.provider.disconnect();
 				entry.provider.destroy();
 			} catch (error) {
-				console.error(
+				moduleLog.error(
 					`Error destroying WebSocket provider for room ${roomName}:`,
 					error,
 				);

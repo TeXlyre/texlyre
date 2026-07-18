@@ -145,7 +145,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 						title={
 							enabledServices.length === 1
 								? `Open ${enabledServices[0].name}`
-								: 'Backup Options'
+								: t('Backup Options')
 						}
 					>
 						<div

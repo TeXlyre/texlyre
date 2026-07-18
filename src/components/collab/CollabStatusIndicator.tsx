@@ -17,6 +17,9 @@ import {
 	UsersIcon,
 	OfflineIcon,
 } from '../common/Icons';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('CollabStatusIndicator');
 
 interface CollabStatusIndicatorProps {
 	className?: string;
@@ -89,7 +92,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 			const projectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
 			await collabService.syncAllDocuments(projectId, (_current, _total) => {});
 		} catch (error) {
-			console.error('Error syncing documents:', error);
+			moduleLog.error('Error syncing documents:', error);
 		} finally {
 			setIsSyncing(false);
 		}

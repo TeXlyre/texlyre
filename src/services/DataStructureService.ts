@@ -1,7 +1,7 @@
 // src/services/DataStructureService.ts
 import type { User } from '../types/auth';
 import type { FileNode } from '../types/files';
-import type { Project } from '../types/projects';
+import type { Project, ProjectGroup, ProjectType } from '../types/projects';
 import type { TypstPdfOptions, TypstOutputFormat } from '../types/typst';
 import type { LaTeXEngine } from '../types/latex';
 
@@ -15,7 +15,9 @@ export interface ProjectMetadata {
 	id: string;
 	name: string;
 	description: string;
-	type?: 'latex' | 'typst';
+	type?: ProjectType;
+	group?: ProjectGroup;
+	compilerId?: string;
 	mainFile?: string;
 	latexEngine?: LaTeXEngine;
 	typstEngine?: string;
@@ -85,53 +87,39 @@ export class UnifiedDataStructureService {
 	} as const;
 
 	createManifest(mode: 'backup' | 'export' | 'import'): UnifiedManifest {
-		return {
-			version: this.VERSION,
-			lastSync: Date.now(),
-			mode,
-		};
+		return { version: this.VERSION, lastSync: Date.now(), mode };
 	}
 
 	getProjectPath(projectId: string): string {
 		return `${this.PATHS.PROJECTS_DIR}/${projectId}`;
 	}
-
 	getProjectMetadataPath(projectId: string): string {
 		return `${this.getProjectPath(projectId)}/metadata.json`;
 	}
-
 	getDocumentsPath(projectId: string): string {
 		return `${this.getProjectPath(projectId)}/${this.PATHS.DOCUMENTS_DIR}`;
 	}
-
 	getDocumentYjsPath(projectId: string, docId: string): string {
 		return `${this.getDocumentsPath(projectId)}/${docId}.yjs`;
 	}
-
 	getDocumentContentPath(projectId: string, docId: string): string {
 		return `${this.getDocumentsPath(projectId)}/${docId}.txt`;
 	}
-
 	getDocumentMetadataPath(projectId: string): string {
 		return `${this.getDocumentsPath(projectId)}/${this.PATHS.FILES_METADATA}`;
 	}
-
 	getLegacyDocumentMetadataPath(projectId: string): string {
 		return `${this.getDocumentsPath(projectId)}/${this.PATHS.LEGACY_FILES_METADATA}`;
 	}
-
 	getFilesPath(projectId: string): string {
 		return `${this.getProjectPath(projectId)}/${this.PATHS.FILES_DIR}`;
 	}
-
 	getFileContentPath(projectId: string, relativePath: string): string {
 		return `${this.getFilesPath(projectId)}/${relativePath}`;
 	}
-
 	getFilesMetadataPath(projectId: string): string {
 		return `${this.getFilesPath(projectId)}/${this.PATHS.FILES_METADATA}`;
 	}
-
 	getLegacyFilesMetadataPath(projectId: string): string {
 		return `${this.getFilesPath(projectId)}/${this.PATHS.LEGACY_FILES_METADATA}`;
 	}
@@ -145,6 +133,8 @@ export class UnifiedDataStructureService {
 			name: project.name,
 			description: project.description,
 			type: project.type,
+			group: project.group,
+			compilerId: project.compilerId,
 			docUrl: project.docUrl,
 			createdAt: project.createdAt,
 			updatedAt: project.updatedAt,
@@ -152,13 +142,8 @@ export class UnifiedDataStructureService {
 			tags: project.tags,
 			isFavorite: project.isFavorite,
 		};
-
-		if (mode === 'backup') {
-			metadata.lastSync = Date.now();
-		} else {
-			metadata.exportedAt = Date.now();
-		}
-
+		if (mode === 'backup') metadata.lastSync = Date.now();
+		else metadata.exportedAt = Date.now();
 		return metadata;
 	}
 
@@ -168,6 +153,8 @@ export class UnifiedDataStructureService {
 			name: metadata.name,
 			description: metadata.description,
 			type: metadata.type || 'latex',
+			group: metadata.group,
+			compilerId: metadata.compilerId,
 			docUrl: metadata.docUrl,
 			createdAt: metadata.createdAt,
 			updatedAt: metadata.updatedAt,

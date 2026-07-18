@@ -29,6 +29,8 @@ import { fileStorageService } from '@/services/FileStorageService';
 import { formatFileSize } from '@/utils/fileUtils';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './ImageViewerPlugin';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('CombinedImageViewer');
 
 interface ImageTransform {
 	scale: number;
@@ -189,7 +191,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 				setHasChanges(false);
 			}
 		} catch (error) {
-			console.error('Error saving image:', error);
+			moduleLog.error('Error saving image:', error);
 		} finally {
 			setIsSaving(false);
 		}

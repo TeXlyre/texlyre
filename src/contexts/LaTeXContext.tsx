@@ -18,8 +18,15 @@ import type {
 	LaTeXEngine,
 } from '../types/latex';
 import { LATEX_ENGINES } from '../types/latex';
-import { parseUrlFragments, replaceHash } from '../utils/urlUtils';
+import {
+	parseUrlFragments,
+	replaceHash,
+	getProjectName,
+} from '../utils/urlUtils';
 import { popoutViewerService } from '../services/PopoutViewerService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('LaTeXContext');
 
 export const LaTeXContext = createContext<LaTeXContextType | null>(null);
 
@@ -91,20 +98,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		busyTeXBundles,
 	]);
 
-	const getProjectName = (): string => {
-		if (document.title && document.title !== 'TeXlyre') {
-			return document.title;
-		}
-
-		const hash = window.location.hash;
-		if (hash.includes('yjs:')) {
-			const projectId = hash.split('yjs:')[1].split('&')[0];
-			return `Project ${projectId.substring(0, 8)}`;
-		}
-
-		return 'LaTeX Project';
-	};
-
 	const compileDocument = async (
 		mainFileName: string,
 		format: LaTeXOutputFormat = currentFormat,
@@ -122,7 +115,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		setCompileError(null);
 		setActiveCompiler('latex');
 
-		setCompiledPdf(null);
+		// setCompiledPdf(null);
 		setCompiledCanvas(null);
 
 		try {
@@ -149,7 +142,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 							content: result.pdf,
 							mimeType: 'application/pdf',
 							fileName,
-							projectName: getProjectName(),
+							projectName: getProjectName(t('LaTeX Project')),
 						});
 						break;
 					}
@@ -167,7 +160,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 							content: result.pdf,
 							mimeType: 'application/pdf',
 							fileName: canvasFileName,
-							projectName: getProjectName(),
+							projectName: getProjectName(t('LaTeX Project')),
 						});
 						break;
 					}
@@ -265,7 +258,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			await latexService.clearCacheDirectories();
 			await refreshFileTree();
 		} catch (error) {
-			console.error('Failed to clear cache:', error);
+			moduleLog.error('Failed to clear cache:', error);
 			setCompileError('Failed to clear cache');
 		}
 	};
@@ -314,7 +307,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 							content: result.pdf,
 							mimeType: 'application/pdf',
 							fileName,
-							projectName: getProjectName(),
+							projectName: getProjectName(t('LaTeX Project')),
 						});
 						break;
 					}
@@ -332,7 +325,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 							content: result.pdf,
 							mimeType: 'application/pdf',
 							fileName: canvasFileName,
-							projectName: getProjectName(),
+							projectName: getProjectName(t('LaTeX Project')),
 						});
 						break;
 					}

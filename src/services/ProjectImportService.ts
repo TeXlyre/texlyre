@@ -10,6 +10,9 @@ import {
 	ZipAdapter,
 } from './StorageAdapterService';
 import { generateYjsProjectId } from '../utils/urlUtils';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('ProjectImportService');
 
 export interface ImportableProject {
 	id: string;
@@ -91,7 +94,7 @@ class ProjectImportService {
 				}
 			}
 		} catch (error) {
-			console.error('Error scanning backup directory:', error);
+			moduleLog.error('Error scanning backup directory:', error);
 		}
 
 		return importableProjects;
@@ -128,7 +131,7 @@ class ProjectImportService {
 				});
 			}
 		} catch (error) {
-			console.error('Error scanning zip file:', error);
+			moduleLog.error('Error scanning zip file:', error);
 		}
 
 		return importableProjects;
@@ -147,7 +150,7 @@ class ProjectImportService {
 
 			await this.processImport(data, projectIds, options, result);
 		} catch (error) {
-			console.error('Error importing from backup:', error);
+			moduleLog.error('Error importing from backup:', error);
 			projectIds.forEach((id) => {
 				result.errors.push({
 					projectId: id,
@@ -174,7 +177,7 @@ class ProjectImportService {
 
 			await this.processImport(data, projectIds, options, result);
 		} catch (error) {
-			console.error('Error importing from zip:', error);
+			moduleLog.error('Error importing from zip:', error);
 			projectIds.forEach((id) => {
 				result.errors.push({
 					projectId: id,
@@ -245,6 +248,7 @@ class ProjectImportService {
 						name: finalProjectName,
 						description: projectMetadata.description,
 						type: projectMetadata.type || 'latex',
+						group: projectMetadata.group,
 						docUrl: finalDocUrl,
 						tags: projectMetadata.tags || [],
 						isFavorite: false,
@@ -328,6 +332,7 @@ class ProjectImportService {
 			name: projectData.name,
 			description: projectData.description,
 			type: projectData.type || 'latex',
+			group: projectData.group,
 			docUrl: projectData.docUrl,
 			createdAt: now,
 			updatedAt: now,
@@ -337,24 +342,6 @@ class ProjectImportService {
 		};
 
 		await authDb.put('projects', newProject);
-	}
-
-	private async updateProjectCollaborators(
-		projectId: string,
-		collaboratorIds: string[],
-	): Promise<void> {
-		try {
-			const project = await authService.getProjectById(projectId);
-			if (project) {
-				const updatedProject = {
-					...project,
-					collaboratorIds,
-				} as Project & { collaboratorIds: string[] };
-				await authService.updateProject(updatedProject);
-			}
-		} catch (error) {
-			console.error('Error updating project collaborators:', error);
-		}
 	}
 }
 

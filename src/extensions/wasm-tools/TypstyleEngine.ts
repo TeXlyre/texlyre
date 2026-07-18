@@ -1,5 +1,8 @@
 // src/extensions/wasm-tools/TypstyleEngine.ts
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('TypstyleEngine');
 
 export interface TypstyleOptions {
 	lineWidth?: number;
@@ -25,7 +28,7 @@ export class TypstyleEngine {
 			const module = await import('@typstyle/typstyle-wasm-bundler');
 			this.wasmModule = module;
 		} catch (error) {
-			console.error('[TypstyleEngine] Initialization failed:', error);
+			moduleLog.error('Initialization failed:', error);
 			throw error;
 		}
 	}

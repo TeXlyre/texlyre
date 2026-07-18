@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 
 import { fileStorageService } from '../services/FileStorageService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('usePluginFileInfo');
 
 interface PluginFileInfo {
 	fileName: string;
@@ -31,7 +34,7 @@ export const usePluginFileInfo = (fileId?: string, fileName?: string) => {
 						});
 					}
 				} catch (error) {
-					console.error('Error loading file info:', error);
+					moduleLog.error('Error loading file info:', error);
 				}
 			} else if (fileName) {
 				setFileInfo({

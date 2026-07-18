@@ -9,9 +9,12 @@ import {
 	isBinaryFile,
 	isTemporaryFile,
 	toArrayBuffer,
-} from '../utils/fileUtils.ts';
+} from '../utils/fileUtils';
 import { fileStorageService } from './FileStorageService';
 import { notificationService } from './NotificationService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('FileSyncService');
 
 export type ConflictResolution = 'prefer-latest' | 'prefer-local' | 'notify';
 
@@ -191,7 +194,7 @@ class FileSyncService {
 
 			return syncInfo;
 		} catch (error) {
-			console.error('Error getting local file sync info:', error);
+			moduleLog.error('Error getting local file sync info:', error);
 			return [];
 		}
 	}
@@ -346,8 +349,8 @@ class FileSyncService {
 			if (docUrl) {
 				await fileStorageService.initialize(docUrl);
 			}
-			console.log(
-				`[FileSyncService] Uploading ${fileIds.length} files for request ${requestId}`,
+			moduleLog.info(
+				`Uploading ${fileIds.length} files for request ${requestId}`,
 			);
 
 			const uploader = new FilePizzaUploader({
@@ -362,7 +365,7 @@ class FileSyncService {
 
 			for (const file of filesFromDb) {
 				if (!file) {
-					console.warn('File data not found for one of the IDs');
+					moduleLog.warn('File data not found for one of the IDs');
 					continue;
 				}
 
@@ -401,16 +404,14 @@ class FileSyncService {
 				throw new Error(t('Failed to generate shareable links'));
 			}
 
-			console.log(
-				`[FileSyncService] Generated shareable link: ${shareableLinks.short}`,
-			);
+			moduleLog.info(`Generated shareable link: ${shareableLinks.short}`);
 
 			this.releaseUploader(requestId);
 			this.activeUploaders.set(requestId, uploader);
 
 			return { link: shareableLinks.short };
 		} catch (error) {
-			console.error('Error uploading files:', error);
+			moduleLog.error('Error uploading files:', error);
 			throw error;
 		}
 	}
@@ -475,8 +476,8 @@ class FileSyncService {
 					fileContent.byteOffset + fileContent.byteLength,
 				);
 			} else {
-				console.warn(
-					'[FileSyncService] Unknown content type, attempting direct use:',
+				moduleLog.warn(
+					'Unknown content type, attempting direct use:',
 					fileContent,
 				);
 				processedContent = fileContent;
@@ -507,7 +508,7 @@ class FileSyncService {
 
 			return newFile;
 		} catch (error) {
-			console.error(
+			moduleLog.error(
 				`Error preparing file ${downloadedFile.fileName} for storage:`,
 				error,
 			);
@@ -525,7 +526,7 @@ class FileSyncService {
 		docUrl?: string,
 	): Promise<void> {
 		return new Promise((resolve, reject) => {
-			console.log(`[FileSyncService] Starting download from: ${link}`);
+			moduleLog.info(`Starting download from: ${link}`);
 
 			const downloader = new FilePizzaDownloader({
 				filePizzaServerUrl: filePizzaServerUrl,
@@ -540,7 +541,7 @@ class FileSyncService {
 					try {
 						downloader.cancelDownload?.();
 					} catch (error) {
-						console.warn('Error during downloader cleanup:', error);
+						moduleLog.warn('Error during downloader cleanup:', error);
 					}
 					this.activeDownloaders.delete(link);
 				}
@@ -567,8 +568,8 @@ class FileSyncService {
 					receivedFiles.length >= expectedFileCount &&
 					expectedFileCount > 0
 				) {
-					console.log(
-						`[FileSyncService] All ${expectedFileCount} files received, processing for batch save...`,
+					moduleLog.info(
+						`All ${expectedFileCount} files received, processing for batch save...`,
 					);
 
 					try {
@@ -598,9 +599,7 @@ class FileSyncService {
 								}
 
 								if (isDeleted) {
-									console.log(
-										`[FileSyncService] Marking file for deletion: ${expectedPath}`,
-									);
+									moduleLog.info(`Marking file for deletion: ${expectedPath}`);
 									filesToDelete.push(expectedPath);
 								} else {
 									const fileNode = await this.prepareFileNodeForStorage(
@@ -614,9 +613,7 @@ class FileSyncService {
 									}
 								}
 							} else {
-								console.warn(
-									`[FileSyncService] Unexpected file received: ${file.fileName}`,
-								);
+								moduleLog.warn(`Unexpected file received: ${file.fileName}`);
 							}
 						}
 
@@ -636,14 +633,9 @@ class FileSyncService {
 										hardDelete: false,
 										allowLinkedFileDelete: true,
 									});
-									console.log(
-										`[FileSyncService] Successfully deleted file: ${filePath}`,
-									);
+									moduleLog.info(`Successfully deleted file: ${filePath}`);
 								} catch (error) {
-									console.warn(
-										`[FileSyncService] Failed to delete file ${filePath}:`,
-										error,
-									);
+									moduleLog.warn(`Failed to delete file ${filePath}:`, error);
 								}
 							}
 						}
@@ -682,24 +674,22 @@ class FileSyncService {
 			downloader
 				.initialize()
 				.then(() => {
-					console.log(
-						'[FileSyncService] Downloader initialized, setting up event handlers',
-					);
+					moduleLog.info('Downloader initialized, setting up event handlers');
 
 					downloader.on('error', (error) => {
-						console.error('[FileSyncService] Downloader error:', error);
+						moduleLog.error('Downloader error:', error);
 						clearTimeout(timeout);
 						rejectOnce(error);
 					});
 
 					downloader.on('passwordRequired', () => {
-						console.log('[FileSyncService] Password required for download');
+						moduleLog.info('Password required for download');
 						clearTimeout(timeout);
 						rejectOnce(new Error(t('Password required for download')));
 					});
 
 					downloader.on('passwordInvalid', (message) => {
-						console.log('[FileSyncService] Invalid password:', message);
+						moduleLog.info('Invalid password:', message);
 						clearTimeout(timeout);
 						rejectOnce(
 							new Error(t('Invalid password: {message}', { message })),
@@ -707,8 +697,8 @@ class FileSyncService {
 					});
 
 					downloader.on('info', (filesInfo) => {
-						console.log(
-							`[FileSyncService] Received file info, ${filesInfo.length} files available`,
+						moduleLog.info(
+							`Received file info, ${filesInfo.length} files available`,
 						);
 						if (filesInfo.length === 0) {
 							clearTimeout(timeout);
@@ -718,31 +708,28 @@ class FileSyncService {
 
 						expectedFileCount = filesInfo.length;
 						const availableFiles = filesInfo.map((f) => f.fileName);
-						console.log('[FileSyncService] Available files:', availableFiles);
-						console.log('[FileSyncService] Expected files:', expectedFiles);
+						moduleLog.info('Available files:', availableFiles);
+						moduleLog.info('Expected files:', expectedFiles);
 
 						downloader.startDownload().catch((error) => {
-							console.error(
-								'[FileSyncService] Error starting download:',
-								error,
-							);
+							moduleLog.error('Error starting download:', error);
 							clearTimeout(timeout);
 							rejectOnce(error);
 						});
 					});
 
 					downloader.on('fileComplete', (file) => {
-						console.log(`[FileSyncService] File completed: ${file.fileName}`);
+						moduleLog.info(`File completed: ${file.fileName}`);
 						receivedFiles.push(file);
 						checkIfAllFilesReceived();
 					});
 
 					downloader.on('complete', (files) => {
-						console.log(
-							`[FileSyncService] Download complete event, files array length: ${files.length}`,
+						moduleLog.info(
+							`Download complete event, files array length: ${files.length}`,
 						);
-						console.log(
-							`[FileSyncService] Received files from fileComplete events: ${receivedFiles.length}`,
+						moduleLog.info(
+							`Received files from fileComplete events: ${receivedFiles.length}`,
 						);
 						clearTimeout(timeout);
 
@@ -760,23 +747,24 @@ class FileSyncService {
 
 					this.activeDownloaders.set(link, downloader);
 
-					console.log(`[FileSyncService] Connecting to: ${link}`);
+					moduleLog.info(`Connecting to: ${link}`);
 					return downloader.connect(link);
 				})
 				.then((connected) => {
 					if (!connected) {
 						clearTimeout(timeout);
-						rejectOnce(new Error(t('Failed to connect to FilePizza link')));
+						rejectOnce(
+							new Error(
+								t('Failed to connect to {provider}', {
+									provider: t('FilePizza'),
+								}),
+							),
+						);
 					}
-					console.log(
-						'[FileSyncService] Connected successfully, waiting for file info...',
-					);
+					moduleLog.info('Connected successfully, waiting for file info...');
 				})
 				.catch((error) => {
-					console.error(
-						'[FileSyncService] Connection/initialization error:',
-						error,
-					);
+					moduleLog.error('Connection/initialization error:', error);
 					clearTimeout(timeout);
 					rejectOnce(error);
 				});
@@ -790,19 +778,19 @@ class FileSyncService {
 		try {
 			uploader.stop?.();
 		} catch (error) {
-			console.error('Error stopping uploader:', error);
+			moduleLog.error('Error stopping uploader:', error);
 		}
 		this.activeUploaders.delete(requestId);
 	}
 
 	cleanup(): void {
-		console.log('[FileSyncService] Cleaning up active connections');
+		moduleLog.info('Cleaning up active connections');
 
 		this.activeUploaders.forEach((uploader) => {
 			try {
 				uploader.stop?.();
 			} catch (error) {
-				console.error('Error stopping uploader:', error);
+				moduleLog.error('Error stopping uploader:', error);
 			}
 		});
 
@@ -810,7 +798,7 @@ class FileSyncService {
 			try {
 				downloader.cancelDownload?.();
 			} catch (error) {
-				console.error('Error canceling downloader:', error);
+				moduleLog.error('Error canceling downloader:', error);
 			}
 		});
 

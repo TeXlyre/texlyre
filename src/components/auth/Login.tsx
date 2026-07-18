@@ -9,6 +9,9 @@ import { ChelysAccountNotFoundError } from '../../utils/chelysWebauthn';
 import GuestConsentModal from './GuestConsentModal';
 import PrivacyModal from '../common/PrivacyModal';
 import { PasskeyIcon } from '../common/Icons';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('Login');
 
 interface LoginProps {
 	onLoginSuccess: () => void;
@@ -120,13 +123,13 @@ const Login: React.FC<LoginProps> = ({
 		setIsLoading(true);
 
 		try {
-			console.log('[Login] Starting guest session creation...');
+			moduleLog.info('Starting guest session creation...');
 			const guestUser = await createGuestAccount();
-			console.log('[Login] Guest session created successfully:', guestUser.id);
+			moduleLog.info('Guest session created successfully:', guestUser.id);
 			setShowGuestModal(false);
 			onLoginSuccess();
 		} catch (error) {
-			console.error('[Login] Guest session creation failed:', error);
+			moduleLog.error('Guest session creation failed:', error);
 			setError(
 				error instanceof Error
 					? error.message

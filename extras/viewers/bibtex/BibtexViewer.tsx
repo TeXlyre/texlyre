@@ -35,12 +35,14 @@ import { type TidyOptions, getPresetOptions } from './tidyOptions';
 import { BibtexTableView } from './BibtexTableView';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './BibtexViewerPlugin';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('BibtexViewer');
 
 const parseContent = (content: string): BibtexEntry[] => {
 	try {
 		return BibtexParser.parse(content);
 	} catch (error) {
-		console.warn('Failed to parse BibTeX content:', error);
+		moduleLog.warn('Failed to parse BibTeX content:', error);
 		return [];
 	}
 };
@@ -173,10 +175,14 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	}, [fileId, fileInfo.filePath]);
 
 	const handleOriginalContentUpdate = (newContent: string) => {
-		console.log('Original content updated:', newContent.length, 'characters');
+		moduleLog.info(
+			'Original content updated:',
+			newContent.length,
+			'characters',
+		);
 		setBibtexContent(newContent);
 		const newParsed = parseContent(newContent);
-		console.log('Parsed entries:', newParsed.length);
+		moduleLog.info('Parsed entries:', newParsed.length);
 		setParsedEntries(newParsed);
 		setUpdateCounter((prev) => prev + 1);
 		setUpdateCounter((prev) => prev + 1);
@@ -184,10 +190,14 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	};
 
 	const handleProcessedContentUpdate = (newContent: string) => {
-		console.log('Processed content updated:', newContent.length, 'characters');
+		moduleLog.info(
+			'Processed content updated:',
+			newContent.length,
+			'characters',
+		);
 		setProcessedContent(newContent);
 		const newParsed = parseContent(newContent);
-		console.log('Processed parsed entries:', newParsed.length);
+		moduleLog.info('Processed parsed entries:', newParsed.length);
 		setProcessedParsedEntries(newParsed);
 		setUpdateCounter((prev) => prev + 1);
 		setHasChanges(true);
@@ -372,7 +382,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			processedViewRef.current?.state?.doc?.toString() || processedContent;
 
 		if (!currentEditorContent.trim()) {
-			console.warn('BibtexViewer: Attempted to save empty content');
+			moduleLog.warn('Attempted to save empty content');
 			return;
 		}
 
@@ -392,7 +402,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			setHasChanges(false);
 			setCurrentView('original');
 		} catch (error) {
-			console.error('Error saving BibTeX file:', error);
+			moduleLog.error('Error saving BibTeX file:', error);
 			setError(
 				t('Failed to save file: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),
@@ -422,10 +432,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					}, 500);
 				}
 			} catch (error) {
-				console.error(
-					'BibtexViewer: Error decoding ArrayBuffer content:',
-					error,
-				);
+				moduleLog.error('Error decoding ArrayBuffer content:', error);
 				setBibtexContent('');
 				setProcessedContent('');
 				setParsedEntries([]);
@@ -454,10 +461,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					}, 500);
 				}
 			} catch (error) {
-				console.error(
-					'BibtexViewer: Error decoding Uint8Array content:',
-					error,
-				);
+				moduleLog.error('Error decoding Uint8Array content:', error);
 				setBibtexContent('');
 				setProcessedContent('');
 				setParsedEntries([]);
@@ -618,7 +622,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('Error exporting file:', error);
+			moduleLog.error('Error exporting file:', error);
 			setError(
 				t('Failed to export file: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),
@@ -636,13 +640,13 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: Refs (originalViewRef, processedViewRef) are accessed imperatively and are not reactive deps. */
 	useEffect(() => {
 		if (viewMode === 'table') {
-			console.log('Switching to table view - syncing with editor content');
+			moduleLog.info('Switching to table view - syncing with editor content');
 
 			if (currentView === 'original' && originalViewRef.current) {
 				const currentEditorContent =
 					originalViewRef.current.state?.doc?.toString();
 				if (currentEditorContent && currentEditorContent !== bibtexContent) {
-					console.log(
+					moduleLog.info(
 						'Original editor content differs from state, updating...',
 					);
 					setBibtexContent(currentEditorContent);
@@ -654,7 +658,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				const currentEditorContent =
 					processedViewRef.current.state?.doc?.toString();
 				if (currentEditorContent && currentEditorContent !== processedContent) {
-					console.log(
+					moduleLog.info(
 						'Processed editor content differs from state, updating...',
 					);
 					setProcessedContent(currentEditorContent);
@@ -667,7 +671,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	}, [viewMode, currentView, bibtexContent, processedContent, parseContent]);
 
 	useEffect(() => {
-		console.log('Current entries changed:', {
+		moduleLog.info('Current entries changed:', {
 			viewMode,
 			currentView,
 			entriesCount: currentEntries.length,

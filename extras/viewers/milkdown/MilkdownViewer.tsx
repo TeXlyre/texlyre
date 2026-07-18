@@ -32,6 +32,8 @@ import { createMilkdownPasteHandler } from './toolbar/pasteUpload';
 import { getEnabledMilkdownPluginIds } from './settings';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './MilkdownViewerPlugin';
 import './styles.css';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('MilkdownViewer');
 
 const MAX_SAFE_MARKDOWN_BYTES = 20 * 1024 * 1024;
 
@@ -219,7 +221,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 			const bytes = new TextEncoder().encode(getCurrentContent()).buffer;
 			await fileStorageService.updateFileContent(fileId, bytes);
 		} catch (err) {
-			console.error('Error saving Markdown file:', err);
+			moduleLog.error('Error saving Markdown file:', err);
 
 			setError(
 				t('Failed to save file: {error}', {
@@ -278,7 +280,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 					const bytes = new TextEncoder().encode(content).buffer;
 					await fileStorageService.updateFileContent(saveFileId, bytes);
 				},
-				onError: (error) => console.error('Auto-save failed:', error),
+				onError: (error) => moduleLog.error('Auto-save failed:', error),
 			},
 		);
 

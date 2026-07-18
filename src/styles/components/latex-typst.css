@@ -1,3 +1,4 @@
+.external-output-container,
 .latex-output-container,
 .typst-output-container {
 	background-color: var(--pico-secondary-background);
@@ -10,6 +11,7 @@
 	overflow: hidden;
 }
 
+.external-header-buttons,
 .latex-header-buttons,
 .typst-header-buttons {
 	position: absolute;
@@ -19,6 +21,7 @@
 	z-index: 10;
 }
 
+.external-export-buttons,
 .latex-export-buttons,
 .typst-export-buttons {
 	display: flex;
@@ -26,6 +29,7 @@
 	position: relative;
 }
 
+.external-output,
 .latex-output,
 .typst-output {
 	display: flex;
@@ -144,6 +148,7 @@ embed {
 	overflow: auto;
 }
 
+.external-compile-buttons,
 .latex-compile-buttons,
 .typst-compile-buttons {
 	display: flex;
@@ -169,6 +174,7 @@ embed {
 	align-items: center;
 }
 
+.external-button,
 .latex-button,
 .typst-button,
 .export-button {
@@ -183,6 +189,27 @@ embed {
 	transition: background-color var(--transition-normal);
 }
 
+.external-button.compile-button,
+.external-button.export-button {
+	position: relative;
+}
+
+.external-button-status {
+	position: absolute;
+	top: -1px;
+	right: -1px;
+	display: inline-flex;
+	color: var(--pico-primary);
+	pointer-events: none;
+}
+
+.external-button-status svg {
+	width: 0.55rem;
+	height: 0.55rem;
+	stroke-width: 2.5;
+}
+
+.external-dropdown,
 .latex-dropdown,
 .typst-dropdown {
 	position: absolute;
@@ -199,6 +226,7 @@ embed {
 	overflow: hidden;
 }
 
+.compile-button-group .external-button,
 .compile-button-group .latex-button,
 .compile-button-group .typst-button {
 	border-radius: 0;
@@ -220,6 +248,7 @@ embed {
 	width: 20px;
 }
 
+.external-button:hover:not(:disabled),
 .latex-button:hover:not(:disabled),
 .typst-button:hover:not(:disabled) {
 	background-color: var(--pico-primary-focus);

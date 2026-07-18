@@ -2,6 +2,7 @@
 import type { ChatMessage } from './chat';
 import type { TypstPdfOptions, TypstOutputFormat } from './typst';
 import type { LaTeXEngine, LaTeXOutputFormat } from './latex';
+import type { ProjectType, ProjectGroup } from './projects';
 
 export interface Document {
 	id: string;
@@ -17,7 +18,9 @@ export interface DocumentList {
 	projectMetadata?: {
 		name: string;
 		description: string;
-		type?: 'latex' | 'typst';
+		type?: ProjectType;
+		group?: ProjectGroup;
+		compilerId?: string;
 		mainFile?: string;
 		latexEngine?: LaTeXEngine;
 		typstEngine?: string;

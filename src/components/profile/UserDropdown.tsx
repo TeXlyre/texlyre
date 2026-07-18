@@ -131,7 +131,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 						) : (
 							<>
 								<LogoutIcon />
-								<span>{t('Logout')}</span>
+								<span>{t('Log out')}</span>
 							</>
 						)}
 					</button>

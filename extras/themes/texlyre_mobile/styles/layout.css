@@ -197,6 +197,7 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 }
 
 [data-layout="texlyre-mobile"] .panel-content,
+[data-layout="texlyre-mobile"] .external-output-container .panel-content,
 [data-layout="texlyre-mobile"] .latex-output-container .panel-content,
 [data-layout="texlyre-mobile"] .typst-output-container .panel-content {
 	display: flex !important;
@@ -222,6 +223,7 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	will-change: transform;
 }
 
+[data-layout="texlyre-mobile"] .external-outline,
 [data-layout="texlyre-mobile"] .latex-outline,
 [data-layout="texlyre-mobile"] .typst-outline {
 	width: 100% !important;
@@ -244,6 +246,8 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 }
 
 /* Output */
+[data-layout="texlyre-mobile"] .external-output,
+[data-layout="texlyre-mobile"] .external-output-container,
 [data-layout="texlyre-mobile"] .latex-output,
 [data-layout="texlyre-mobile"] .latex-output-container,
 [data-layout="texlyre-mobile"] .typst-output,
@@ -373,6 +377,10 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	body.mobile-view-editor
 	.main-content
 	> .sidebar-container,
+[data-layout="texlyre-mobile"]
+	body.mobile-view-editor
+	.external-output-container,
+[data-layout="texlyre-mobile"] body.mobile-view-editor .external-output,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .latex-output-container,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .latex-output,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .typst-output-container,
@@ -444,6 +452,10 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	display: flex !important;
 }
 
+[data-layout="texlyre-mobile"]
+	body.mobile-view-output
+	.external-output-container,
+[data-layout="texlyre-mobile"] body.mobile-view-output .external-output,
 [data-layout="texlyre-mobile"] body.mobile-view-output .latex-output-container,
 [data-layout="texlyre-mobile"] body.mobile-view-output .latex-output,
 [data-layout="texlyre-mobile"] body.mobile-view-output .typst-output-container,
@@ -460,6 +472,10 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	display: flex !important;
 }
 
+[data-layout="texlyre-mobile"]
+	body.mobile-view-output
+	.external-output-container,
+[data-layout="texlyre-mobile"] body.mobile-view-output .external-output,
 [data-layout="texlyre-mobile"] body.mobile-view-output .latex-output-container,
 [data-layout="texlyre-mobile"] body.mobile-view-output .latex-output,
 [data-layout="texlyre-mobile"] body.mobile-view-output .typst-output-container,
@@ -473,6 +489,7 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	overflow-y: auto !important;
 }
 
+[data-layout="texlyre-mobile"] body.mobile-view-output .external-output,
 [data-layout="texlyre-mobile"] body.mobile-view-output .latex-output,
 [data-layout="texlyre-mobile"] body.mobile-view-output .typst-output,
 [data-layout="texlyre-mobile"] body.mobile-view-output .output-content {

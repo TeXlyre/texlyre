@@ -3,6 +3,9 @@ import { isBibFile } from '../utils/fileUtils';
 import { gotoEditor } from '../utils/editorNavigator';
 import { fileStorageService } from './FileStorageService';
 import { filePathCacheService } from './FilePathCacheService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('LinkNavigationService');
 
 export interface DetectedLink {
 	from: number;
@@ -73,9 +76,9 @@ class LinkNavigationService {
 				}
 			}
 
-			console.warn(`Bibliography entry not found: ${key}`);
+			moduleLog.warn(`Bibliography entry not found: ${key}`);
 		} catch (error) {
-			console.error('Error navigating to bib entry:', error);
+			moduleLog.error('Error navigating to bib entry:', error);
 		}
 	}
 
@@ -131,10 +134,10 @@ class LinkNavigationService {
 					}),
 				);
 			} else {
-				console.warn(`File not found: ${this.stripFileFragment(filePath)}`);
+				moduleLog.warn(`File not found: ${this.stripFileFragment(filePath)}`);
 			}
 		} catch (error) {
-			console.error('Error navigating to file:', error);
+			moduleLog.error('Error navigating to file:', error);
 		}
 	}
 

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { t } from '@/i18n';
 import { LinkIcon, TrashIcon } from '../common/Icons';
 import Modal from '../common/Modal';
+import type { ProjectType } from '../../types/projects';
 import LinkFileModal from './LinkFileModal';
 
 interface UnlinkedDocumentNoticeProps {
@@ -12,7 +13,7 @@ interface UnlinkedDocumentNoticeProps {
 	documentName: string;
 	onDeleteDocument: (docId: string) => void;
 	onDocumentLinked: () => void;
-	projectType?: 'latex' | 'typst';
+	projectType?: ProjectType;
 }
 
 const UnlinkedDocumentNotice: React.FC<UnlinkedDocumentNoticeProps> = ({

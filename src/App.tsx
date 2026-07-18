@@ -67,6 +67,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ChelysProvider } from './contexts/ChelysContext';
 import { EditorProvider } from './contexts/EditorContext';
 import { LSPConfigProvider } from './contexts/LSPConfigContext';
+import { TypesetterConfigProvider } from './contexts/TypesetterConfigContext';
+import { compilerRegistryService } from './services/CompilerRegistryService';
 import { FileSystemBackupProvider } from './contexts/FileSystemBackupContext';
 import { OfflineProvider } from './contexts/OfflineContext';
 import { PropertiesProvider } from './contexts/PropertiesContext';
@@ -75,6 +77,11 @@ import { SecretsContext, SecretsProvider } from './contexts/SecretsContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('App');
+
+compilerRegistryService.registerBuiltins();
 
 function App() {
 	const [isInitializing, setIsInitializing] = useState(true);
@@ -107,7 +114,7 @@ function App() {
 				const settings = JSON.parse(storedSettings);
 				targetLanguage = settings.language || 'en';
 			} catch (error) {
-				console.warn('Failed to parse stored settings', error);
+				moduleLog.warn('Failed to parse stored settings', error);
 			}
 		}
 
@@ -138,9 +145,11 @@ function App() {
 											<SecretsProvider>
 												<FileSystemBackupProvider>
 													<LSPConfigProvider>
-														<EditorProvider>
-															<AppContent />
-														</EditorProvider>
+														<TypesetterConfigProvider>
+															<EditorProvider>
+																<AppContent />
+															</EditorProvider>
+														</TypesetterConfigProvider>
 													</LSPConfigProvider>
 												</FileSystemBackupProvider>
 											</SecretsProvider>

@@ -19,6 +19,8 @@ import { PLUGIN_NAME, PLUGIN_VERSION } from './DrawioViewerPlugin';
 import DrawioSplashScreen from './DrawioSplashScreen';
 import DrawioPngExportButton from './DrawioPngExportButton';
 import DrawioSvgExportButton from './DrawioSvgExportButton';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('DrawioViewer');
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -160,7 +162,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			setIsLoading(false);
 			setError(null);
 		} catch (error) {
-			console.error('Error decoding Draw.io content:', error);
+			moduleLog.error('Error decoding Draw.io content:', error);
 			setError(
 				t('Failed to decode file content: {error}', {
 					error: error instanceof Error ? error.message : String(error),
@@ -186,7 +188,6 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	const sendMessageToDrawio = useCallback(
 		(message: any) => {
 			if (iframeLoaded && iframeRef.current?.contentWindow) {
-				console.log('Sending message to draw.io:', message);
 				iframeRef.current.contentWindow.postMessage(
 					JSON.stringify(message),
 					drawioOrigin,
@@ -215,7 +216,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
 			const content = contentToSave || drawioContent;
 			if (!content.trim()) {
-				console.warn('Attempted to save empty content');
+				moduleLog.warn('Attempted to save empty content');
 				return;
 			}
 
@@ -234,7 +235,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				sendMessageToDrawio({ action: 'status', modified: false });
 				flashSavedIndicator();
 			} catch (error) {
-				console.error('Error saving Draw.io file:', error);
+				moduleLog.error('Error saving Draw.io file:', error);
 				setError(
 					t('Failed to save file: {error}', {
 						error: error instanceof Error ? error.message : t('Unknown error'),
@@ -256,11 +257,9 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				const message = JSON.parse(event.data);
 
 				if (message.error) {
-					console.warn('Draw.io embed error:', message.error, message);
+					moduleLog.warn('Draw.io embed error:', message.error, message);
 					return;
 				}
-
-				console.log('Received message from draw.io:', message.event);
 
 				if (message.event === 'init') {
 					setIframeLoaded(true);
@@ -284,8 +283,6 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				}
 
 				if (message.event === 'save') {
-					console.log('Save event received, XML length:', message.xml?.length);
-
 					setDrawioContent(message.xml);
 					setHasChanges(true);
 
@@ -301,11 +298,6 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				}
 
 				if (message.event === 'autosave') {
-					console.log(
-						'Autosave event received, XML length:',
-						message.xml?.length,
-					);
-
 					setDrawioContent(message.xml);
 					setHasChanges(true);
 
@@ -316,7 +308,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				}
 
 				if (message.event === 'export') {
-					console.log(
+					moduleLog.info(
 						'Export event received, format:',
 						message.format,
 						'data length:',
@@ -335,7 +327,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 							handleSave(xml);
 							sendMessageToDrawio({ action: 'status', modified: false });
 						} else {
-							console.warn(
+							moduleLog.warn(
 								'Export did not include XML; cannot save to file.',
 								message,
 							);
@@ -372,7 +364,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					return;
 				}
 			} catch (error) {
-				console.error('Error handling message from draw.io:', error);
+				moduleLog.error('Error handling message from draw.io:', error);
 			}
 		},
 		[
@@ -425,7 +417,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				if (options.shadow !== undefined) exportMessage.shadow = options.shadow;
 				if (options.grid !== undefined) exportMessage.grid = options.grid;
 
-				console.log('Sending export message to draw.io:', exportMessage);
+				moduleLog.info('Sending export message to draw.io:', exportMessage);
 				sendMessageToDrawio(exportMessage);
 			});
 		},
@@ -444,7 +436,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('Error downloading file:', error);
+			moduleLog.error('Error downloading file:', error);
 			setError(
 				t('Failed to download file: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),

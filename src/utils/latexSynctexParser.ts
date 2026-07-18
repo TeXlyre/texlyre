@@ -116,13 +116,26 @@ const buildIndex = (text: string): Index => {
 			continue;
 		}
 
-		if (kind !== 'h' && kind !== '[' && kind !== '(') continue;
+		if (kind !== 'h' && kind !== '[' && kind !== '(' && kind !== 'r') continue;
 
 		const fields = parseRecord(raw);
 		if (!fields) continue;
 
 		const file = inputs.get(fields.tag);
 		if (!file || page === 0) continue;
+
+		const key = `${file}:${fields.line}`;
+
+		if (kind === 'r') {
+			const list = byFileLine.get(key);
+			const last = list?.[list.length - 1];
+			if (last && last.width === 0) {
+				last.width = fields.width * SP_TO_PT;
+				if (last.height === 0) last.height = fields.height * SP_TO_PT;
+				if (last.depth === 0) last.depth = fields.depth * SP_TO_PT;
+			}
+			continue;
+		}
 
 		const box: Box = {
 			page,
@@ -137,7 +150,6 @@ const buildIndex = (text: string): Index => {
 			isVbox: kind === '[',
 		};
 
-		const key = `${file}:${fields.line}`;
 		const list = byFileLine.get(key);
 		if (list) list.push(box);
 		else byFileLine.set(key, [box]);

@@ -3,6 +3,10 @@ import type { RefObject } from 'react';
 import type { EditorView as CompatEditorView } from 'codemirror';
 import { EditorView as CMEditorView } from '@codemirror/view';
 
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('EditorEvents');
+
 interface EditorEventHandlerOptions {
 	isViewOnly: boolean;
 	isEditingFile: boolean;
@@ -124,7 +128,7 @@ export const registerEditorEventHandlers = (
 					currentContent.length,
 				)
 			) {
-				console.warn('Invalid comment response range, skipping');
+				moduleLog.warn('Invalid comment response range, skipping');
 				return;
 			}
 
@@ -145,7 +149,7 @@ export const registerEditorEventHandlers = (
 
 			refreshCommentsSoon(10);
 		} catch (error) {
-			console.error('Error processing comment response:', error);
+			moduleLog.error('Error processing comment response:', error);
 		}
 	};
 
@@ -175,7 +179,7 @@ export const registerEditorEventHandlers = (
 					currentContent.length,
 				)
 			) {
-				console.warn('Invalid comment deletion range, skipping');
+				moduleLog.warn('Invalid comment deletion range, skipping');
 				return;
 			}
 
@@ -196,7 +200,7 @@ export const registerEditorEventHandlers = (
 
 			refreshCommentsSoon();
 		} catch (error) {
-			console.error('Error processing comment deletion:', error);
+			moduleLog.error('Error processing comment deletion:', error);
 		}
 	};
 
@@ -232,7 +236,7 @@ export const registerEditorEventHandlers = (
 					currentContent.length,
 				)
 			) {
-				console.warn('Invalid comment update range, skipping');
+				moduleLog.warn('Invalid comment update range, skipping');
 				return;
 			}
 
@@ -253,7 +257,7 @@ export const registerEditorEventHandlers = (
 
 			refreshCommentsSoon();
 		} catch (error) {
-			console.error('Error processing comment update:', error);
+			moduleLog.error('Error processing comment update:', error);
 		}
 	};
 
@@ -315,7 +319,7 @@ export const registerEditorEventHandlers = (
 				view.focus();
 			}
 		} catch (error) {
-			console.error('Error in Codemirror line navigation:', error);
+			moduleLog.error('Error in Codemirror line navigation:', error);
 		}
 	};
 
@@ -365,7 +369,7 @@ export const registerEditorEventHandlers = (
 				view.focus();
 			}
 		} catch (error) {
-			console.error('Error in Codemirror character navigation:', error);
+			moduleLog.error('Error in Codemirror character navigation:', error);
 		}
 	};
 

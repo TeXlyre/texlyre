@@ -1,9 +1,8 @@
 // src/extensions/swiftlatex/BaseEngine.ts
-export interface CompileResult {
-	pdf?: Uint8Array;
-	status: number;
-	log: string;
-}
+import type { CompileResult } from '../../types/compilation';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('BaseEngine');
 
 export interface EngineConfig {
 	name: string;
@@ -108,7 +107,7 @@ export abstract class BaseEngine {
 			try {
 				this.engine.closeWorker();
 			} catch (error) {
-				console.warn('Error during engine cleanup:', error);
+				moduleLog.warn('Error during engine cleanup:', error);
 			}
 			this.engine = undefined;
 		}
@@ -122,7 +121,7 @@ export abstract class BaseEngine {
 				this.setStatus('error');
 				this.status = 'ready';
 			} catch (error) {
-				console.warn('Error stopping compilation:', error);
+				moduleLog.warn('Error stopping compilation:', error);
 			}
 		}
 	}

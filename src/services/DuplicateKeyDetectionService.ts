@@ -2,6 +2,9 @@
 import { t } from '@/i18n';
 import { fileStorageService } from './FileStorageService';
 import { notificationService } from './NotificationService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('DuplicateKeyDetectionService');
 
 class DuplicateKeyDetectionService {
 	private observer: MutationObserver | null = null;
@@ -42,14 +45,12 @@ class DuplicateKeyDetectionService {
 				const now = Date.now();
 				if (now - this.lastErrorLogTime > 5000) {
 					this.lastErrorLogTime = now;
-					console.log(
-						`[DuplicateKeyDetectionService] Found and fixed ${result.removed} duplicates`,
-					);
+					moduleLog.info(`Found and fixed ${result.removed} duplicates`);
 					this.handleDuplicateKeyError();
 				}
 			}
 		} catch (error) {
-			console.error('Error checking for duplicates:', error);
+			moduleLog.error('Error checking for duplicates:', error);
 		}
 	}
 
@@ -87,7 +88,7 @@ class DuplicateKeyDetectionService {
 				notificationService.dismiss(operationId);
 			}
 		} catch (error) {
-			console.error('Error auto-sanitizing duplicates:', error);
+			moduleLog.error('Error auto-sanitizing duplicates:', error);
 			notificationService.showError(
 				t('Failed to fix duplicate files automatically'),
 				{ operationId },

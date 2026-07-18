@@ -8,6 +8,8 @@ import type {
 	MilkdownCollabStrategy,
 	MilkdownCollabStrategyOptions,
 } from './MilkdownCollabStrategy';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('TextBridgeStrategy');
 
 const isMissingEditorViewError = (error: unknown): boolean =>
 	error instanceof Error &&
@@ -105,7 +107,7 @@ export class TextBridgeStrategy implements MilkdownCollabStrategy {
 					return;
 				}
 
-				console.warn('Milkdown collaborative replace failed:', error);
+				moduleLog.warn('Milkdown collaborative replace failed:', error);
 			} finally {
 				if (this.pendingFrame === null) {
 					this.applyingRemote = false;

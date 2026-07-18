@@ -180,7 +180,7 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
 				{connectionStatus === 'error' && (
 					<div className='zotero-error'>
 						<p className='error-message'>
-							{t('Failed to connect to Zotero. Please check your credentials.')}
+							{t('Failed to connect to {provider}', { provider: 'Zotero' })}
 						</p>
 						<div className='backup-toolbar'>
 							<div className='primary-actions'>

@@ -4,6 +4,9 @@ import { useState } from 'react';
 
 import { t } from '@/i18n';
 import { CopyUrlIcon } from './Icons';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('CopyField');
 
 interface CopyFieldProps {
 	value: string;
@@ -36,7 +39,7 @@ const CopyField: React.FC<CopyFieldProps> = ({
 			setStatus('copied');
 			setTimeout(() => setStatus('idle'), 2000);
 		} catch (error) {
-			console.error('Failed to copy to clipboard:', error);
+			moduleLog.error('Failed to copy to clipboard:', error);
 			setStatus('error');
 			setTimeout(() => setStatus('idle'), 2000);
 		}

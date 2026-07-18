@@ -27,6 +27,9 @@ import type {
 	FileSyncVerification,
 } from '../types/fileSync';
 import type { YjsDocUrl } from '../types/yjs';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('FileSyncContext');
 
 const LOCAL_FILE_MAP_ORIGIN = 'file-sync-local-update';
 
@@ -106,7 +109,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				...notification,
 			};
 
-			console.log('[FileSyncContext] Adding notification:', fullNotification);
+			moduleLog.info('Adding notification:', fullNotification);
 			setNotifications((prev) => [...prev, fullNotification]);
 		},
 		[syncNotificationsEnabled],
@@ -206,15 +209,11 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				ydocRef.current!.getMap('fileSync').set(user.id, localFiles);
 			}, LOCAL_FILE_MAP_ORIGIN);
 
-			console.log(
-				'[FileSyncContext] Updated local file map with',
-				localFiles.length,
-				'files',
-			);
+			moduleLog.info('Updated local file map with', localFiles.length, 'files');
 
 			return localFiles;
 		} catch (error) {
-			console.error('Error updating local file map:', error);
+			moduleLog.error('Error updating local file map:', error);
 			addNotification({
 				type: 'sync_error',
 				message: `Failed to update file map: ${
@@ -305,7 +304,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
 		const disconnected = new Set(disconnectedPeers);
 		for (const peerId of disconnectedPeers) {
-			console.log(`[FileSyncContext] Removing disconnected peer: ${peerId}`);
+			moduleLog.info(`Removing disconnected peer: ${peerId}`);
 			fileSyncMap.delete(peerId);
 		}
 
@@ -386,8 +385,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 						conflictResolutionStrategy as any,
 					);
 
-					console.log(
-						`[FileSyncContext] Files to request for peer ${peerId}:`,
+					moduleLog.info(
+						`Files to request for peer ${peerId}:`,
 						filesToRequest.length,
 					);
 
@@ -430,7 +429,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 					}, 1000);
 				});
 			} catch (error) {
-				console.error('Error checking and requesting files:', error);
+				moduleLog.error('Error checking and requesting files:', error);
 				addNotification({
 					type: 'sync_error',
 					message: `Error during file check: ${
@@ -492,7 +491,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 					data: { requestId: request.id, fileCount: request.files.length },
 				});
 			} catch (error) {
-				console.error('Error handling incoming sync request:', error);
+				moduleLog.error('Error handling incoming sync request:', error);
 
 				fileSyncService.showErrorNotification(
 					`Failed to prepare files: ${
@@ -605,7 +604,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				await refreshFileTree();
 				await updateLocalFileMap();
 			} catch (error) {
-				console.error('Error downloading files:', error);
+				moduleLog.error('Error downloading files:', error);
 
 				const message =
 					error instanceof Error ? error.message : 'unknown error';
@@ -743,7 +742,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 			return;
 		}
 
-		console.log('[FileSyncContext] Performing sync cycle...');
+		moduleLog.info('Performing sync cycle...');
 		cleanupExpiredHolds();
 		cleanupCompletedRequests();
 		const localFiles = await updateLocalFileMap();
@@ -763,14 +762,14 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		if (syncThrottleRef.current) clearTimeout(syncThrottleRef.current);
 
 		syncThrottleRef.current = setTimeout(() => {
-			console.log('[FileSyncContext] File storage changed, triggering sync.');
+			moduleLog.info('File storage changed, triggering sync.');
 			performSync();
 			syncThrottleRef.current = null;
 		}, 1000);
 	}, [performSync]);
 
 	const enableSync = useCallback(() => {
-		console.log('[FileSyncContext] Enabling file sync');
+		moduleLog.info('Enabling file sync');
 		fileSyncService.showSuccessNotification(t('File sync enabled'), {
 			duration: 2000,
 		});
@@ -780,7 +779,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 	}, [performSync]);
 
 	const disableSync = useCallback(() => {
-		console.log('[FileSyncContext] Disabling file sync');
+		moduleLog.info('Disabling file sync');
 		fileSyncService.cleanup();
 		activeHoldsRef.current.clear();
 		processedRequestsRef.current.clear();
@@ -878,7 +877,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 			awarenessCleanupRef.current = () =>
 				awareness?.off('change', handleAwarenessChange);
 		} catch (error) {
-			console.error('Error initializing YJS doc for file sync:', error);
+			moduleLog.error('Error initializing YJS doc for file sync:', error);
 			fileSyncService.showErrorNotification(
 				t('Failed to initialize file sync'),
 				{

@@ -1,3 +1,7 @@
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('bibtexParser');
+
 // src/utils/bibtexParser.ts
 export interface BibtexEntry {
 	id: string;
@@ -316,7 +320,7 @@ export class BibtexParser {
 	): string {
 		const position = BibtexParser.findEntryPosition(content, updatedEntry);
 		if (!position) {
-			console.warn('Could not find entry position for:', updatedEntry.id);
+			moduleLog.warn('Could not find entry position for:', updatedEntry.id);
 			return content;
 		}
 

@@ -7,12 +7,14 @@ import { ExternalLinkIcon } from '../common/Icons';
 
 interface PopoutViewerToggleButtonProps {
 	className?: string;
+	buttonClassName?: string;
 	projectId: string;
 	title?: string;
 }
 
 const PopoutViewerToggleButton: React.FC<PopoutViewerToggleButtonProps> = ({
 	className = '',
+	buttonClassName = 'latex-button',
 	projectId,
 	title = 'Open in new window',
 }) => {
@@ -44,7 +46,7 @@ const PopoutViewerToggleButton: React.FC<PopoutViewerToggleButtonProps> = ({
 
 	return (
 		<button
-			className={`latex-button popout-viewer-toggle ${className} ${isWindowOpen ? 'active' : ''}`}
+			className={`${buttonClassName} popout-viewer-toggle ${className} ${isWindowOpen ? 'active' : ''}`}
 			onClick={handleToggle}
 			title={title}
 		>

@@ -2,26 +2,27 @@
 import { nanoid } from 'nanoid';
 
 import { t } from '@/i18n';
-import type { CompileResult } from '../extensions/swiftlatex/BaseEngine';
 import {
 	swiftLaTeXService,
 	type SwiftEngineType,
 } from '../extensions/swiftlatex/SwiftLaTeXService';
 import { busyTexService } from '../extensions/texlyre-busytex/BusyTeXService';
 import type { BusyTeXEngineType } from '../extensions/texlyre-busytex/BusyTeXEngine';
+import type { CompileResult } from '../types/compilation';
 import type { FileNode } from '../types/files';
 import { downloadFiles } from '../utils/zipUtils';
 import { fileStorageService } from './FileStorageService';
-import { notificationService } from './NotificationService';
+import {
+	notificationService,
+	type NotificationOptions,
+} from './NotificationService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('LaTeXService');
 
 export type EngineType = SwiftEngineType | BusyTeXEngineType;
 
-type NotificationOptions = {
-	operationId?: string;
-	duration?: number;
-	data?: Record<string, any>;
-	format?: string;
-};
+type LaTeXNotificationOptions = NotificationOptions<string>;
 type ExportFile = { content: Uint8Array; name: string; mimeType: string };
 
 const SUPPORTED_ENGINES: EngineType[] = [
@@ -139,7 +140,10 @@ class LaTeXService {
 
 		try {
 			this.showLoadingNotification(
-				t('Compiling LaTeX document...'),
+				t('Compiling {typesetter} to {format}...', {
+					typesetter: t('LaTeX'),
+					format: format.toUpperCase(),
+				}),
 				operationId,
 				format,
 			);
@@ -163,18 +167,29 @@ class LaTeXService {
 	async clearCacheDirectories(): Promise<void> {
 		const operationId = `latex-clear-cache-${nanoid()}`;
 		try {
-			this.showLoadingNotification(t('Clearing LaTeX cache...'), operationId);
+			this.showLoadingNotification(
+				t('Clearing {typesetter} cache...', { typesetter: t('LaTeX') }),
+				operationId,
+			);
 			await swiftLaTeXService.clearCache();
-			this.showSuccessNotification(t('LaTeX cache cleared successfully'), {
-				operationId,
-				duration: 2000,
-			});
+			this.showSuccessNotification(
+				t('{typesetter} cache cleared successfully', {
+					typesetter: t('LaTeX'),
+				}),
+				{
+					operationId,
+					duration: 2000,
+				},
+			);
 		} catch (error) {
-			console.error('Error clearing cache directories:', error);
-			this.showErrorNotification(t('Failed to clear LaTeX cache'), {
-				operationId,
-				duration: 3000,
-			});
+			moduleLog.error('Error clearing cache directories:', error);
+			this.showErrorNotification(
+				t('Failed to clear {typesetter} cache', { typesetter: t('LaTeX') }),
+				{
+					operationId,
+					duration: 3000,
+				},
+			);
 			throw error;
 		}
 	}
@@ -247,7 +262,7 @@ class LaTeXService {
 		try {
 			await swiftLaTeXService.reinitialize();
 		} catch (error) {
-			console.error('Failed to reinitialize engine:', error);
+			moduleLog.error('Failed to reinitialize engine:', error);
 			throw error;
 		}
 	}
@@ -268,7 +283,7 @@ class LaTeXService {
 
 	showSuccessNotification(
 		message: string,
-		options: NotificationOptions = {},
+		options: LaTeXNotificationOptions = {},
 	): void {
 		if (this.canNotify(options.format))
 			notificationService.showSuccess(message, options);
@@ -276,7 +291,7 @@ class LaTeXService {
 
 	showErrorNotification(
 		message: string,
-		options: NotificationOptions = {},
+		options: LaTeXNotificationOptions = {},
 	): void {
 		if (this.canNotify(options.format))
 			notificationService.showError(message, options);
@@ -284,7 +299,7 @@ class LaTeXService {
 
 	showInfoNotification(
 		message: string,
-		options: NotificationOptions = {},
+		options: LaTeXNotificationOptions = {},
 	): void {
 		if (this.canNotify(options.format))
 			notificationService.showInfo(message, options);
@@ -321,7 +336,7 @@ class LaTeXService {
 		)
 			return;
 		this.showLoadingNotification(
-			t('Initializing LaTeX engine...'),
+			t('Initializing SwiftLaTeX engine...'),
 			operationId,
 			format,
 		);
@@ -470,15 +485,23 @@ class LaTeXService {
 			result.status === 0 && result.pdf && result.pdf.length > 0;
 		if (succeeded) {
 			this.showSuccessNotification(
-				t('LaTeX compilation completed successfully'),
+				t('{typesetter} {format} compilation completed', {
+					typesetter: t('LaTeX'),
+					format: format.toUpperCase(),
+				}),
 				{ operationId, duration: 3000, format },
 			);
 		} else {
-			this.showErrorNotification(t('LaTeX compilation failed'), {
-				operationId,
-				duration: 5000,
-				format,
-			});
+			this.showErrorNotification(
+				t('{typesetter} compilation failed', {
+					typesetter: t('LaTeX'),
+				}),
+				{
+					operationId,
+					duration: 5000,
+					format,
+				},
+			);
 		}
 	}
 

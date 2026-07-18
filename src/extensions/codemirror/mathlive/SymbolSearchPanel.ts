@@ -9,6 +9,9 @@ import {
 	type SymbolCandidate,
 } from './SymbolData';
 import type { FileType } from './patterns';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('SymbolSearchPanel');
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -224,7 +227,7 @@ export class SymbolSearchPanel {
 
 			this.updateResults();
 		} catch (error) {
-			console.error('[SymbolSearchPanel] Classification error:', error);
+			moduleLog.error('Classification error:', error);
 			this.showError(String(error));
 		}
 	}

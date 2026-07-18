@@ -6,10 +6,11 @@ export type NotificationType =
 	| 'info'
 	| 'sync';
 
-export interface NotificationOptions {
+export interface NotificationOptions<F extends string = string> {
 	operationId?: string;
-	duration?: number; // 0 for persistent, undefined for default
+	duration?: number;
 	data?: Record<string, any>;
+	format?: F;
 }
 
 class NotificationService {

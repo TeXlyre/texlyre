@@ -65,6 +65,9 @@ import {
 import { PluginControlGroup, PluginHeader } from '../common/PluginHeader';
 import PluginToolbar, { type ToolbarEntry } from '../common/PluginToolbar';
 import UnlinkedDocumentNotice from './UnlinkedDocumentNotice';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('Editor');
 
 interface EditorComponentProps {
 	content: string | ArrayBuffer;
@@ -407,7 +410,7 @@ const EditorContent: React.FC<{
 				});
 				updateComments(view.state.doc.toString());
 			} catch (error) {
-				console.error('Error adding comment:', error);
+				moduleLog.error('Error adding comment:', error);
 			}
 		};
 
@@ -476,7 +479,7 @@ const EditorContent: React.FC<{
 				await copyCleanTextToClipboard(content);
 			}
 		} catch (error) {
-			console.error('Error copying linked file:', error);
+			moduleLog.error('Error copying linked file:', error);
 		}
 	}, [linkedFileInfo?.fileId]);
 
@@ -502,7 +505,7 @@ const EditorContent: React.FC<{
 				URL.revokeObjectURL(url);
 			}
 		} catch (error) {
-			console.error('Error downloading linked file:', error);
+			moduleLog.error('Error downloading linked file:', error);
 		}
 	}, [linkedFileInfo?.fileId, linkedFileInfo?.fileName]);
 
@@ -862,7 +865,7 @@ const EditorContent: React.FC<{
 						projectType={doc?.projectMetadata?.type || 'latex'}
 						onDeleteDocument={(docId) => {
 							if (!changeDoc) {
-								console.error(
+								moduleLog.error(
 									'Cannot delete document: changeData not available',
 								);
 								return;
@@ -1043,7 +1046,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 						}
 					}
 				} catch (error) {
-					console.error('Error loading file path:', error);
+					moduleLog.error('Error loading file path:', error);
 				}
 			}
 		};
@@ -1102,7 +1105,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('Error exporting file:', error);
+			moduleLog.error('Error exporting file:', error);
 		}
 	};
 

@@ -11,7 +11,7 @@ import {
 import type { TemplateProject } from '../../types/projects';
 import { formatDate } from '../../utils/dateUtils';
 import {
-	GlobeIcon,
+	UrlIcon,
 	ShareIcon,
 	ImportIcon,
 	TemplatesIcon,
@@ -293,7 +293,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 										opacity: isScanning || isImporting ? 0.5 : 1,
 									}}
 								>
-									<GlobeIcon />
+									<UrlIcon />
 									<div>
 										<strong>{t('From URL')}</strong>
 										<p>

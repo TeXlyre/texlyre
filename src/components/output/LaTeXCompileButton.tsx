@@ -15,6 +15,7 @@ import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
 import type { LaTeXOutputFormat, LaTeXEngine } from '../../types/latex';
 import {
+	getFilenameFromPath,
 	isLatexFile,
 	isLatexMainFile,
 	isTemporaryFile,
@@ -31,6 +32,9 @@ import {
 	StopIcon,
 	TrashIcon,
 } from '../common/Icons';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('LaTeXCompileButton');
 
 interface LaTeXCompileButtonProps {
 	dropdownKey: string;
@@ -283,7 +287,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		if (!useSharedSettings || !projectEngine) return;
 		if (projectEngine === latexService.getCurrentEngineType()) return;
 		latexService.setEngine(projectEngine as LaTeXEngine).catch((err) => {
-			console.error('Failed to sync shared engine:', err);
+			moduleLog.error('Failed to sync shared engine:', err);
 		});
 	}, [projectEngine, useSharedSettings]);
 
@@ -374,7 +378,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 					await latexService.setEngine(requestedEngine);
 				}
 			} catch (error) {
-				console.error('Failed to initialize requested compiler:', error);
+				moduleLog.error('Failed to initialize requested compiler:', error);
 				return;
 			} finally {
 				isInitializingRef.current = false;
@@ -447,7 +451,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 						return false;
 					}
 				} catch (error) {
-					console.warn('Error getting current file:', error);
+					moduleLog.warn('Error getting current file:', error);
 				}
 			}
 
@@ -505,7 +509,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		try {
 			await clearCache();
 		} catch (error) {
-			console.error('Failed to clear cache:', error);
+			moduleLog.error('Failed to clear cache:', error);
 		}
 	};
 
@@ -538,7 +542,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		try {
 			await compileWithClearCache(effectiveMainFile);
 		} catch (error) {
-			console.error('Failed to compile with cache clear:', error);
+			moduleLog.error('Failed to compile with cache clear:', error);
 		}
 	}, [
 		effectiveMainFile,
@@ -577,7 +581,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 				setProperty('latex-engine', engine, { scope: 'project', projectId });
 			}
 		} catch (error) {
-			console.error('Failed to change engine:', error);
+			moduleLog.error('Failed to change engine:', error);
 		} finally {
 			setIsChangingEngine(false);
 		}
@@ -671,20 +675,13 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 			await latexService.deleteBusyTeXBundle(bundleId);
 			setBundleCacheStatus((prev) => ({ ...prev, [bundleId]: false }));
 		} catch (error) {
-			console.error('Failed to delete bundle:', error);
+			moduleLog.error('Failed to delete bundle:', error);
 		} finally {
 			setIsDeletingBundle(null);
 		}
 	};
 
-	const getFileName = (path?: string) => {
-		if (!path) return t('No .tex file');
-		return path.split('/').pop() || path;
-	};
-
 	const getDisplayName = (path?: string) => {
-		if (!path) return t('No .tex file');
-
 		if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
 			const doc = documents.find((d) => d.id === selectedDocId);
 			if (doc) {
@@ -692,7 +689,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 			}
 		}
 
-		return getFileName(path);
+		return getFilenameFromPath(path, '.tex');
 	};
 
 	const isDisabled =
@@ -712,7 +709,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 							? `${t('Stop Compilation')} ${useSharedSettings ? t('(F8)') : ''}`
 							: isChangingEngine
 								? t('Switching Engine...')
-								: `${t('Compile LaTeX Document')} ${useSharedSettings ? t('(F9)') : ''}`
+								: `${t('Compile {typesetter}', { typesetter: t('LaTeX') })} ${useSharedSettings ? t('(F9)') : ''}`
 					}
 				>
 					{isCompiling ? (
@@ -793,7 +790,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 							<option value='auto'>{t('Auto-detect')}</option>
 							{availableTexFiles.map((filePath) => (
 								<option key={filePath} value={filePath}>
-									{getFileName(filePath)}
+									{getFilenameFromPath(filePath, '.tex')}
 								</option>
 							))}
 						</select>
@@ -811,7 +808,9 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
 				<div className='dropdown-section'>
 					<div className='format-selector-header'>
-						<div className='dropdown-title'>{t('LaTeX Engine:')}</div>
+						<div className='dropdown-title'>
+							{t('{typesetter} Engine:', { typesetter: t('LaTeX') })}
+						</div>
 					</div>
 					<div className='format-selector-group'>
 						<select

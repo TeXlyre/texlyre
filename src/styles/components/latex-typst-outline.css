@@ -1,3 +1,4 @@
+.external-outline,
 .latex-outline,
 .typst-outline {
 	border-top: 1px solid var(--accent-border);
@@ -11,6 +12,7 @@
 	overflow: hidden;
 }
 
+.external-outline-header,
 .latex-outline-header,
 .typst-outline-header {
 	display: flex;

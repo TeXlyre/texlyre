@@ -1,10 +1,10 @@
 // src/extensions/swiftlatex/PdfTeXEngine.ts
-import {
-	BaseEngine,
-	type CompileResult,
-	type EngineConfig,
-} from './BaseEngine';
+import type { CompileResult } from '../../types/compilation';
+import { BaseEngine, type EngineConfig } from './BaseEngine';
 import { EngineLoader } from './EngineLoader';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('PdfTeXEngine');
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -46,7 +46,7 @@ export class PdfTeXEngine extends BaseEngine {
 
 	setTexliveEndpoint(endpoint: string): void {
 		this.engine.setTexliveEndpoint(endpoint);
-		console.log(`[PdfTeXEngine] TeX Live endpoint set for PdfTeX: ${endpoint}`);
+		moduleLog.info(`TeX Live endpoint set for PdfTeX: ${endpoint}`);
 	}
 
 	writeMemFSFile(filename: string, content: string | Uint8Array): void {
@@ -91,7 +91,7 @@ export class PdfTeXEngine extends BaseEngine {
 			this.setStatus('ready');
 			// this.flushCache();
 
-			console.log('[PdfTeXEngine] PDFTeX compilation result:', {
+			moduleLog.info('PDFTeX compilation result:', {
 				status: result.status,
 				hasPdf: !!result.pdf,
 				pdfSize: result.pdf?.length,

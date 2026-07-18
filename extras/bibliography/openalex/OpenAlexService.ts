@@ -7,6 +7,8 @@ import type {
 	OpenAlexFilters,
 	OpenAlexSearchParams,
 } from './OpenAlexAPIService';
+import { createNamedLogger } from '@/logging';
+const moduleLog = createNamedLogger('OpenAlexService');
 
 interface OpenAlexCredentials {
 	apiKey?: string;
@@ -121,7 +123,7 @@ class OpenAlexService {
 			this.connectionStatus = 'connected';
 			this.notifyStatusListeners();
 		} catch (error) {
-			console.error('[OpenAlexService] Connection error:', error);
+			moduleLog.error('Connection error:', error);
 			this.connectionStatus = 'error';
 			this.notifyStatusListeners();
 			throw error;
@@ -328,7 +330,7 @@ class OpenAlexService {
 			);
 			return result.works.map((w) => this.convertWorkToBibEntry(w));
 		} catch (error) {
-			console.error('[OpenAlexService] Search error:', error);
+			moduleLog.error('Search error:', error);
 			this.connectionStatus = 'error';
 			this.notifyStatusListeners();
 			return [];
@@ -351,7 +353,7 @@ class OpenAlexService {
 			);
 			return works.map((w) => this.convertWorkToBibEntry(w));
 		} catch (error) {
-			console.error('[OpenAlexService] Error fetching linked entries:', error);
+			moduleLog.error('Error fetching linked entries:', error);
 			return [];
 		}
 	}

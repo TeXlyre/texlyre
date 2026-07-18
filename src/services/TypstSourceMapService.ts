@@ -7,6 +7,9 @@ import type {
 	SourceMapService,
 } from '../types/sourceMap';
 import type { TypstPageInfo } from '../types/typst';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('TypstSourceMapService');
 
 interface AnnotatedRect {
 	page: number;
@@ -145,7 +148,7 @@ class TypstSourceMapService implements SourceMapService {
 		this.forwardMap = null;
 		this.reverseMap = null;
 		this.fileInCodeBlock = new Map();
-		this.notify();
+		this.notifyListeners();
 	}
 
 	addListener(listener: () => void): () => void {
@@ -191,25 +194,25 @@ class TypstSourceMapService implements SourceMapService {
 				this.forwardMap = new Map(data.result.forwardEntries);
 				this.reverseMap = new Map(data.result.reverseEntries);
 				this.fileInCodeBlock = new Map(data.result.fileInCodeBlock);
-				this.notify();
+				this.notifyListeners();
 			} else {
-				console.error('[TypstSourceMapService] Build failed:', data.error);
+				moduleLog.error('Build failed:', data.error);
 				this.forwardMap = null;
 				this.reverseMap = null;
 				this.fileInCodeBlock = new Map();
-				this.notify();
+				this.notifyListeners();
 			}
 			this.currentJobId = null;
 		};
 
 		this.worker.onerror = (ev) => {
-			console.error('[TypstSourceMapService] Worker error:', ev);
+			moduleLog.error('Worker error:', ev);
 			this.forwardMap = null;
 			this.reverseMap = null;
 			this.fileInCodeBlock = new Map();
 			this.currentJobId = null;
 			this.worker = null;
-			this.notify();
+			this.notifyListeners();
 		};
 
 		return this.worker;
@@ -228,7 +231,7 @@ class TypstSourceMapService implements SourceMapService {
 		}
 	}
 
-	private notify(): void {
+	private notifyListeners(): void {
 		this.listeners.forEach((l) => {
 			l();
 		});

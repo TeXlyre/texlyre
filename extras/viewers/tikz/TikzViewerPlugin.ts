@@ -32,7 +32,7 @@ const tikzViewerPlugin: ViewerPlugin = {
 		{
 			extension: 'tikz',
 			mimeType: 'text/x-tikz',
-			fileLabel: t('TikZ File'),
+			fileLabel: t('{editor} File', { editor: t('TikZ') }),
 		},
 	],
 

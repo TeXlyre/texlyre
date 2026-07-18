@@ -173,8 +173,7 @@
 .projects-list {
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-sd);
-	margin-top: var(--space-md);
+	gap: var(--space-xs);
 }
 
 .project-quick-list {
@@ -327,7 +326,6 @@
 .project-type-info .type-info-help {
 	background: var(--pico-secondary-background);
 	align-items: center;
-	justify-content: center;
 	padding: var(--space-xs);
 	margin-top: var(--space-md);
 	font-size: 0.8rem;

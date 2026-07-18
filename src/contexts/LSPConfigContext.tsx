@@ -13,6 +13,9 @@ import type { LSPClientConfig } from '@codemirror/lsp-client';
 
 import { useSettings } from '../hooks/useSettings';
 import { genericLSPService } from '../services/GenericLSPService';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('LSPConfigContext');
 
 interface LSPConfig {
 	id: string;
@@ -74,9 +77,7 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({
 	}, [settingValue]);
 
 	useEffect(() => {
-		console.log(
-			`[LSPConfigContext] Loaded ${storedConfigs.length} LSP configurations`,
-		);
+		moduleLog.info(`Loaded ${storedConfigs.length} LSP configurations`);
 		setConfigs(storedConfigs);
 	}, [storedConfigs]);
 
@@ -112,10 +113,7 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({
 					genericLSPService.registerConfig(registration);
 				}
 			} catch (error) {
-				console.error(
-					`[LSPConfigContext] Invalid LSP config for ${config.id}:`,
-					error,
-				);
+				moduleLog.error(`Invalid LSP config for ${config.id}:`, error);
 			}
 		});
 

@@ -8,6 +8,9 @@ import type {
 	StatisticsOptions,
 } from '../types/statistics';
 import { TypstCompilerEngine } from '../extensions/typst.ts/TypstCompilerEngine';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('TypstStatisticsService');
 
 const RESOURCE_EXT =
 	/\.(mp4|webm|ogv|mov|mp3|ogg|oga|opus|wav|flac|m4a|png|jpg|jpeg|gif|webp|svg|pdf|bib|bibtex|cls|sty|dataurl|toml|csv|json|yml|yaml|xml|html|txt|md|markdown|cbor|typ|typst)$/i;
@@ -358,7 +361,7 @@ class TypstStatisticsService {
 				sources[key] =
 					typeof content === 'string' ? content : new Uint8Array(content);
 			} catch (error) {
-				console.warn(`Failed to load resource file ${file.path}:`, error);
+				moduleLog.warn(`Failed to load resource file ${file.path}:`, error);
 			}
 		}
 
@@ -431,7 +434,7 @@ class TypstStatisticsService {
 			const storedFile = await fileStorageService.getFile(file.id);
 			return storedFile?.content || null;
 		} catch (error) {
-			console.warn(`Failed to retrieve content for ${file.path}:`, error);
+			moduleLog.warn(`Failed to retrieve content for ${file.path}:`, error);
 			return null;
 		}
 	}

@@ -22,9 +22,14 @@ export function useRegisterContentFormatterSettings() {
 			category: t('Viewers'),
 			subcategory: t('Text Editor'),
 			type: 'checkbox',
-			label: t('Show LaTeX formatting notifications'),
+			label: t('{typesetter} formatting notifications', {
+				typesetter: t('LaTeX'),
+			}),
 			description: t(
-				'Display notifications for LaTeX content formatting activities',
+				'Display notifications for {typesetter} content formatting activities',
+				{
+					typesetter: t('LaTeX'),
+				},
 			),
 			defaultValue: initialLatexNotifications,
 		});
@@ -34,9 +39,14 @@ export function useRegisterContentFormatterSettings() {
 			category: t('Viewers'),
 			subcategory: t('Text Editor'),
 			type: 'checkbox',
-			label: t('Show Typst formatting notifications'),
+			label: t('{typesetter} formatting notifications', {
+				typesetter: t('Typst'),
+			}),
 			description: t(
-				'Display notifications for Typst content formatting activities',
+				'Display notifications for {typesetter} content formatting activities',
+				{
+					typesetter: t('Typst'),
+				},
 			),
 			defaultValue: initialTypstNotifications,
 		});

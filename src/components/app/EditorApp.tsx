@@ -10,6 +10,7 @@ import { FileSyncProvider } from '../../contexts/FileSyncContext';
 import { FileTreeProvider } from '../../contexts/FileTreeContext';
 import { LaTeXProvider } from '../../contexts/LaTeXContext';
 import { TypstProvider } from '../../contexts/TypstContext';
+import { ExternalCompilerProvider } from '../../contexts/ExternalCompilerContext';
 import { SourceMapProvider } from '../../contexts/SourceMapContext';
 import { ContentFormatterProvider } from '../../contexts/ContentFormatterContext';
 import { useAuth } from '../../hooks/useAuth';
@@ -20,11 +21,13 @@ import { useGlobalKeyboard } from '../../hooks/useGlobalKeyboard';
 import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
 import { useOffline } from '../../hooks/useOffline';
 import { fileStorageService } from '../../services/FileStorageService';
+import { compilerRegistryService } from '../../services/CompilerRegistryService';
 import { popoutViewerService } from '../../services/PopoutViewerService';
 import type { DocumentList } from '../../types/documents';
 import type { YjsDocUrl } from '../../types/yjs';
 import type { TypstOutputFormat } from '../../types/typst';
 import type { LaTeXEngine } from '../../types/latex';
+import type { ProjectType, ProjectGroup } from '../../types/projects';
 import BackupModal from '../backup/BackupModal';
 import BackupStatusIndicator from '../backup/BackupStatusIndicator';
 import ChatPanel from '../chat/ChatPanel';
@@ -39,6 +42,8 @@ import LaTeXCompileButton from '../output/LaTeXCompileButton';
 import LaTeXExportButton from '../output/LaTeXExportButton';
 import TypstCompileButton from '../output/TypstCompileButton';
 import TypstExportButton from '../output/TypstExportButton';
+import ExternalCompileButton from '../output/ExternalCompileButton';
+import ExternalExportButton from '../output/ExternalExportButton';
 import ExportAccountModal from '../profile/ExportAccountModal';
 import DeleteAccountModal from '../profile/DeleteAccountModal';
 import ProfileSettingsModal from '../profile/ProfileSettingsModal';
@@ -53,6 +58,9 @@ import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
 import { isValidYjsUrl, pushHash } from '../../utils/urlUtils';
 import { clickWhenReady } from '../../utils/editorNavigator';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('EditorApp');
 
 interface EditorAppProps {
 	docUrl: YjsDocUrl;
@@ -106,7 +114,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const lastSyncedMetadata = useRef({
 		name: '',
 		description: '',
-		type: 'latex' as 'latex' | 'typst',
+		type: 'latex' as ProjectType,
+		compilerId: undefined as string | undefined,
 		mainFile: undefined as string | undefined,
 		latexEngine: undefined as LaTeXEngine | undefined,
 		typstEngine: undefined as string | undefined,
@@ -128,6 +137,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 	const projectType = doc?.projectMetadata?.type || 'latex';
 	const projectTypeKnown = doc?.projectMetadata?.type !== undefined;
+	const projectCompilerId = doc?.projectMetadata?.compilerId;
+	const activeCompilerProvider = compilerRegistryService.resolve(
+		projectType,
+		projectCompilerId,
+	);
 
 	useGlobalKeyboard();
 
@@ -191,7 +205,9 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const handleUpdateProjectMetadata = (projectData: {
 		name: string;
 		description: string;
-		type?: 'latex' | 'typst';
+		type?: ProjectType;
+		group?: ProjectGroup;
+		compilerId?: string;
 	}) => {
 		setIsSubmitting(true);
 		changeDoc((d) => {
@@ -200,11 +216,15 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					name: projectData.name,
 					description: projectData.description,
 					type: projectData.type || 'latex',
+					group: projectData.group,
+					compilerId: projectData.compilerId,
 				};
 			} else {
 				d.projectMetadata.name = projectData.name;
 				d.projectMetadata.description = projectData.description;
 				d.projectMetadata.type = projectData.type || 'latex';
+				d.projectMetadata.group = projectData.group;
+				d.projectMetadata.compilerId = projectData.compilerId;
 			}
 		});
 		setIsSubmitting(false);
@@ -233,6 +253,12 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const handleExpandTypstOutput = () => {
 		if (!popoutViewerService.isWindowOpen()) {
 			document.dispatchEvent(new CustomEvent('expand-typst-output'));
+		}
+	};
+
+	const handleExpandExternalOutput = () => {
+		if (!popoutViewerService.isWindowOpen()) {
+			document.dispatchEvent(new CustomEvent('expand-external-output'));
 		}
 	};
 
@@ -337,6 +363,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						name: parsedMetadata.name || 'Untitled Project',
 						description: parsedMetadata.description || '',
 						type: parsedMetadata.type || 'latex',
+						compilerId: parsedMetadata.compilerId,
 						mainFile: parsedMetadata.mainFile,
 						latexEngine: parsedMetadata.latexEngine,
 						typstEngine: parsedMetadata.typstEngine,
@@ -354,6 +381,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				name,
 				description,
 				type,
+				compilerId,
 				mainFile,
 				latexEngine,
 				typstEngine,
@@ -371,6 +399,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					lastSyncedMetadata.current.name !== name ||
 					lastSyncedMetadata.current.description !== description ||
 					lastSyncedMetadata.current.type !== type ||
+					lastSyncedMetadata.current.compilerId !== compilerId ||
 					lastSyncedMetadata.current.mainFile !== mainFile ||
 					lastSyncedMetadata.current.latexEngine !== latexEngine ||
 					lastSyncedMetadata.current.typstEngine !== typstEngine ||
@@ -380,6 +409,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						name,
 						description: description || '',
 						type: type || 'latex',
+						compilerId,
 						mainFile,
 						latexEngine,
 						typstEngine,
@@ -394,10 +424,14 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 									name,
 									description: description || '',
 									type: type || 'latex',
+									compilerId,
 								});
+								document.dispatchEvent(
+									new CustomEvent('project-metadata-updated'),
+								);
 							}
 						} catch (error) {
-							console.error('Failed to sync project metadata:', error);
+							moduleLog.error('Failed to sync project metadata:', error);
 						}
 					};
 					syncProjectMetadata();
@@ -447,7 +481,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						setLinkedFileInfo(null);
 					}
 				} catch (error) {
-					console.error('Error checking for linked file:', error);
+					moduleLog.error('Error checking for linked file:', error);
 					setLinkedFileInfo(null);
 				}
 			} else {
@@ -509,17 +543,44 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			/>,
 		];
 
-		return projectType === 'typst' ? (
-			<>
-				{typstButtons[0]}
-				{typstButtons[1]}
-			</>
-		) : (
-			<>
-				{latexButtons[0]}
-				{latexButtons[1]}
-			</>
-		);
+		if (activeCompilerProvider?.source === 'chelys') {
+			return (
+				<>
+					<ExternalCompileButton
+						provider={activeCompilerProvider}
+						className='header-compile-button'
+						onExpandExternalOutput={handleExpandExternalOutput}
+						linkedFileInfo={linkedFileInfo}
+						useSharedSettings={true}
+					/>
+					<ExternalExportButton
+						provider={activeCompilerProvider}
+						className='output-export-button'
+						linkedFileInfo={linkedFileInfo}
+					/>
+				</>
+			);
+		}
+
+		if (projectType === 'typst') {
+			return (
+				<>
+					{typstButtons[0]}
+					{typstButtons[1]}
+				</>
+			);
+		}
+
+		if (projectType === 'latex') {
+			return (
+				<>
+					{latexButtons[0]}
+					{latexButtons[1]}
+				</>
+			);
+		}
+
+		return null;
 	};
 
 	if (!isConnected && !doc) {
@@ -624,7 +685,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 			<footer>
 				<div className='project-type-badge'>
-					{t('Typesetter: ')} <TypesetterInfo type={projectType} />
+					{t('Typesetter: ')}{' '}
+					<TypesetterInfo
+						type={projectType}
+						provider={activeCompilerProvider}
+					/>
 				</div>
 
 				<p className='texlyre-info'>
@@ -700,6 +765,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						name: projectName,
 						description: projectDescription,
 						type: projectType || 'latex',
+						compilerId: projectCompilerId,
 						docUrl: docUrl,
 						createdAt: 0,
 						updatedAt: 0,
@@ -790,11 +856,13 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 					<FileSyncProvider docUrl={props.docUrl}>
 						<LaTeXProvider>
 							<TypstProvider>
-								<SourceMapProvider>
-									<ContentFormatterProvider>
-										<EditorAppView {...props} />
-									</ContentFormatterProvider>
-								</SourceMapProvider>
+								<ExternalCompilerProvider>
+									<SourceMapProvider>
+										<ContentFormatterProvider>
+											<EditorAppView {...props} />
+										</ContentFormatterProvider>
+									</SourceMapProvider>
+								</ExternalCompilerProvider>
 							</TypstProvider>
 						</LaTeXProvider>
 					</FileSyncProvider>

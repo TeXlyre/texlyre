@@ -43,7 +43,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as Y from 'yjs';
 import { UndoManager } from 'yjs';
 
-import { safeTypst as typst } from '../../extensions/codemirror/SafeTypstPatch.ts';
+import { safeTypst as typst } from '../../extensions/codemirror/SafeTypstPatch';
 import { resolveHighlightTheme } from '../../extensions/codemirror/HighlightThemeExtension';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
 import { latexTypstBidiIsolates } from '../../extensions/codemirror/BidiExtension';
@@ -52,12 +52,12 @@ import {
 	createFilePathAutocompleteExtension,
 	setCurrentFilePath,
 	refreshBibliographyCache,
-} from '../../extensions/codemirror/PathAndBibAutocompleteExtension.ts';
+} from '../../extensions/codemirror/PathAndBibAutocompleteExtension';
 import {
 	getGenericLSPExtensionsForFile,
 	getGenericLSPCompletionSources,
 } from '../../extensions/codemirror/GenericLSPExtension';
-import { createCodeActionsExtension } from '../../extensions/codemirror/CodeActionsLSPExtension.ts';
+import { createCodeActionsExtension } from '../../extensions/codemirror/CodeActionsLSPExtension';
 import {
 	createToolbarController,
 	type ToolbarController,
@@ -73,8 +73,8 @@ import {
 } from '../../extensions/codemirror/LinkNavigationExtension';
 import { useAuth } from '../useAuth';
 import { useEditor } from '../useEditor';
-import { autoSaveService } from '../../services/AutoSaveService.ts';
-import { detectFileType, isBibFile } from '../../utils/fileUtils.ts';
+import { autoSaveService } from '../../services/AutoSaveService';
+import { detectFileType, isBibFile } from '../../utils/fileUtils';
 import { collabService } from '../../services/CollabService';
 import { fileStorageService } from '../../services/FileStorageService';
 import { filePathCacheService } from '../../services/FilePathCacheService';
@@ -87,6 +87,9 @@ import {
 	createYjsEditorBindingExtensions,
 	type YjsEditorBindingResult,
 } from './yjsBinding';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('useEditorView');
 
 type FileTypeInfo = {
 	fileType: ReturnType<typeof detectFileType>;
@@ -214,7 +217,7 @@ export const useEditorView = (
 					}),
 				);
 			} catch (error) {
-				console.error('Error saving file:', error);
+				moduleLog.error('Error saving file:', error);
 			}
 		},
 		[currentFileId, isEditingFile, fileName],
@@ -254,7 +257,7 @@ export const useEditorView = (
 					);
 				}
 			} catch (error) {
-				console.error('Error saving document to linked file:', error);
+				moduleLog.error('Error saving document to linked file:', error);
 			}
 		},
 		[documentId, isEditingFile],
@@ -536,7 +539,7 @@ export const useEditorView = (
 						);
 						return true;
 					} catch (error) {
-						console.error('Error in commentKeymap:', error);
+						moduleLog.error('Error in commentKeymap:', error);
 						return false;
 					}
 				},
@@ -764,7 +767,7 @@ export const useEditorView = (
 				updateLinkNavigationFileName(view, fileName);
 			}
 		} catch (error) {
-			console.error('Error creating editor view:', error);
+			moduleLog.error('Error creating editor view:', error);
 		}
 
 		return () => {
@@ -887,7 +890,7 @@ export const useEditorView = (
 						else if (!isEditingFile && documentId)
 							await saveDocumentToLinkedFile(content);
 					},
-					onError: (error) => console.error('Auto-save failed:', error),
+					onError: (error) => moduleLog.error('Auto-save failed:', error),
 				},
 			);
 		};

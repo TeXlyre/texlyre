@@ -10,6 +10,9 @@ import {
 } from 'react';
 
 import { pluginRegistry } from '../plugins/PluginRegistry';
+import { createNamedLogger } from '@/logging';
+
+const moduleLog = createNamedLogger('SettingsContext');
 
 export type SettingType =
 	| 'checkbox'
@@ -21,6 +24,9 @@ export type SettingType =
 	| 'language-select';
 
 export const DEFERRED_UPDATE_TYPES: SettingType[] = ['number', 'text'];
+
+const isEqual = (a: unknown, b: unknown): boolean =>
+	JSON.stringify(a) === JSON.stringify(b);
 
 export interface SettingOption {
 	label: string;
@@ -202,7 +208,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				localStorageSettingsRef.current = {};
 			}
 		} catch (error) {
-			console.error(
+			moduleLog.error(
 				'Error parsing settings from localStorage on initial load:',
 				error,
 			);
@@ -228,22 +234,18 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 			{} as Record<string, unknown>,
 		);
 
-		const existingSettings = localStorageSettingsRef.current || {};
-		const toSave = { ...existingSettings, ...registeredSettings };
-
 		try {
 			const storageKey = getStorageKey();
 			const currentStored = localStorage.getItem(storageKey);
-			const currentVersion = currentStored
-				? JSON.parse(currentStored)._version
-				: undefined;
+			const { _version, ...currentEntries } = currentStored
+				? JSON.parse(currentStored)
+				: {};
 
-			localStorage.setItem(
-				storageKey,
-				JSON.stringify({ ...toSave, _version: currentVersion }),
-			);
+			const toSave = { ...currentEntries, ...registeredSettings };
+			localStorage.setItem(storageKey, JSON.stringify({ ...toSave, _version }));
+			localStorageSettingsRef.current = toSave;
 		} catch (error) {
-			console.error('Error saving settings to localStorage:', error);
+			moduleLog.error('Error saving settings to localStorage:', error);
 		}
 	}, [settings, getStorageKey]);
 
@@ -260,6 +262,43 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 		return () =>
 			window.removeEventListener('language-changed', handleLanguageChange);
 	}, [registerSetting]);
+
+	useEffect(() => {
+		const handleStoreChanged = (event: Event) => {
+			const detail = (event as CustomEvent).detail;
+			if (detail && detail.store !== 'settings') return;
+
+			try {
+				const stored = localStorage.getItem(getStorageKey());
+				if (!stored) return;
+				const { _version, ...entries } = JSON.parse(stored);
+				localStorageSettingsRef.current = entries;
+
+				setSettings((prev) => {
+					let changed = false;
+					const next = prev.map((s) => {
+						if (s.strictDefaultValue) return s;
+						const incoming = entries[s.id];
+						if (incoming === undefined || isEqual(incoming, s.value)) return s;
+						if (s.validate && !s.validate(incoming)) return s;
+						if (s.onChange) setTimeout(() => s.onChange?.(incoming), 0);
+						changed = true;
+						return { ...s, value: incoming };
+					});
+					return changed ? next : prev;
+				});
+			} catch (error) {
+				moduleLog.error('Error applying synced settings:', error);
+			}
+		};
+
+		window.addEventListener('chelys-account-store-changed', handleStoreChanged);
+		return () =>
+			window.removeEventListener(
+				'chelys-account-store-changed',
+				handleStoreChanged,
+			);
+	}, [getStorageKey]);
 
 	const getSettings = () => settings;
 
@@ -310,7 +349,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				}
 
 				if (s.validate && !s.validate(validatedValue)) {
-					console.warn(`Invalid value for ${id}:`, validatedValue);
+					moduleLog.warn(`Invalid value for ${id}:`, validatedValue);
 					return s;
 				}
 

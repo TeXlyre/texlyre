@@ -42,7 +42,10 @@ export function useRegisterTypstSettings() {
 			subcategory: t('Typst'),
 			type: 'checkbox',
 			label: t('Auto-compile on project open'),
-			description: t('Automatically compile Typst when opening a project'),
+			description: t(
+				'Automatically compile {typesetter} when opening a project',
+				{ typesetter: t('Typst') },
+			),
 			defaultValue: initialAutoCompile,
 		});
 
@@ -53,11 +56,19 @@ export function useRegisterTypstSettings() {
 			type: 'select',
 			label: t('Auto-navigate to main file on compile'),
 			description: t(
-				'Control when to automatically navigate to the main Typst file during compilation',
+				'Control when to automatically navigate to the main {typesetter} file during compilation',
+				{
+					typesetter: t('Typst'),
+				},
 			),
 			defaultValue: initialAutoNavigate,
 			options: [
-				{ label: t('Only when no Typst file is open'), value: 'conditional' },
+				{
+					label: t('Only when no {typesetter} file is open', {
+						typesetter: t('Typst'),
+					}),
+					value: 'conditional',
+				},
 				{ label: t('Always navigate to main file'), value: 'always' },
 				{ label: t('Never navigate to main file'), value: 'never' },
 			],
@@ -69,7 +80,9 @@ export function useRegisterTypstSettings() {
 			subcategory: t('Typst'),
 			type: 'select',
 			label: t('Default output format'),
-			description: t('Default format for Typst compilation'),
+			description: t('Default format for {typesetter} compilation', {
+				typesetter: t('Typst'),
+			}),
 			defaultValue: initialDefaultFormat,
 			options: [
 				{ label: t('PDF'), value: 'pdf' },
@@ -97,7 +110,10 @@ export function useRegisterTypstSettings() {
 			type: 'checkbox',
 			label: t('Show compilation notifications'),
 			description: t(
-				'Display notifications for Typst compilation activities (PDF only)',
+				'Display notifications for {typesetter} compilation activities (PDF only)',
+				{
+					typesetter: t('Typst'),
+				},
 			),
 			defaultValue: true,
 		});

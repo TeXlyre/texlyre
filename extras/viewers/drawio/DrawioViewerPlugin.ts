@@ -37,13 +37,13 @@ const drawioViewerPlugin: ViewerPlugin = {
 	// getSupportedExtensions: () => DRAWIO_EXTENSIONS.map((ext, idx) => ({
 	//     extension: ext,
 	//     mimeType: DRAWIO_MIMETYPES[idx],
-	//     fileLabel: t('Draw.io File')
+	//     fileLabel: t('{editor} File', { editor: t('Draw.io') })
 	// })),
 	getSupportedExtensions: () => [
 		{
 			extension: DRAWIO_EXTENSIONS[0],
 			mimeType: DRAWIO_MIMETYPES[0],
-			fileLabel: t('Draw.io File'),
+			fileLabel: t('{editor} File', { editor: t('Draw.io') }),
 		},
 	],
 
