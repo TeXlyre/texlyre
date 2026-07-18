@@ -155,7 +155,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 
 			setSyncSession(sessionId);
 		} catch (error) {
-			console.error('Error starting document sync:', error);
+			console.error('[DocumentExplorer] Error starting document sync:', error);
 		}
 	};
 
@@ -167,7 +167,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 			setSyncSession(null);
 			setSyncProgress({ current: 0, total: 0 });
 		} catch (error) {
-			console.error('Error stopping document sync:', error);
+			console.error('[DocumentExplorer] Error stopping document sync:', error);
 		}
 	};
 

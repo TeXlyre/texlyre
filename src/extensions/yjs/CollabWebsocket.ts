@@ -37,7 +37,7 @@ class WebsocketProviderRegistry {
 			return provider;
 		} catch (error) {
 			console.error(
-				`Error creating WebSocket provider for room ${roomName}:`,
+				`[CollabWebsocket] Error creating WebSocket provider for room ${roomName}:`,
 				error,
 			);
 			throw error;
@@ -64,7 +64,7 @@ class WebsocketProviderRegistry {
 				entry.provider.destroy();
 			} catch (error) {
 				console.error(
-					`Error destroying WebSocket provider for room ${roomName}:`,
+					`[CollabWebsocket] Error destroying WebSocket provider for room ${roomName}:`,
 					error,
 				);
 			}

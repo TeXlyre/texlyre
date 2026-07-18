@@ -203,7 +203,7 @@ class AccountExportService {
 
 			saveAs(zipBlob, fileName);
 		} catch (error) {
-			console.error('Error exporting:', error);
+			console.error('[AccountExportService] Error exporting:', error);
 			throw new Error(t('Failed to export data'));
 		}
 	}
@@ -259,7 +259,7 @@ class AccountExportService {
 					await fileStorageService.initialize(`yjs:${actualProjectId}`);
 				} catch (error) {
 					console.warn(
-						`Could not initialize FileStorageService for project ${projectId}:`,
+						`[AccountExportService] Could not initialize FileStorageService for project ${projectId}:`,
 						error,
 					);
 				}
@@ -302,7 +302,7 @@ class AccountExportService {
 					}
 				} catch (error) {
 					console.error(
-						`Error exporting files from FileStorageService for project ${projectId}:`,
+						`[AccountExportService] Error exporting files from FileStorageService for project ${projectId}:`,
 						error,
 					);
 				}
@@ -352,7 +352,7 @@ class AccountExportService {
 					}
 				} catch (error) {
 					console.error(
-						`Error exporting files from serialized data for project ${projectId}:`,
+						`[AccountExportService] Error exporting files from serialized data for project ${projectId}:`,
 						error,
 					);
 				}
@@ -361,7 +361,7 @@ class AccountExportService {
 			// If still no files exported, log a warning
 			if (!filesExported) {
 				console.warn(
-					`No files were exported for project ${projectData.metadata.name}. The project folder will be empty.`,
+					`[AccountExportService] No files were exported for project ${projectData.metadata.name}. The project folder will be empty.`,
 				);
 			}
 		}
@@ -404,7 +404,7 @@ class AccountExportService {
 				await this.authenticateImportedUser(importedUser);
 			}
 		} catch (error) {
-			console.error('Error importing account:', error);
+			console.error('[AccountExportService] Error importing account:', error);
 			throw new Error(t('Failed to import account data'));
 		}
 	}
@@ -422,7 +422,7 @@ class AccountExportService {
 
 			if (existingUser) {
 				console.warn(
-					`User ${userData.username} already exists - skipping user import`,
+					`[AccountExportService] User ${userData.username} already exists - skipping user import`,
 				);
 				return existingUser;
 			}
@@ -434,9 +434,9 @@ class AccountExportService {
 			);
 			return importedUser;
 		} catch (error) {
-			console.error('Error importing user data:', error);
+			console.error('[AccountExportService] Error importing user data:', error);
 			console.warn(
-				'User import failed - projects will be imported for current user',
+				'[AccountExportService] User import failed - projects will be imported for current user',
 			);
 			return null;
 		}
@@ -521,7 +521,7 @@ class AccountExportService {
 						isFavorite: projectData.isFavorite,
 					});
 
-					console.log(`Updated existing project: ${projectData.name}`);
+					console.log(`[AccountExportService] Updated existing project: ${projectData.name}`);
 				}
 			}
 		}
@@ -555,7 +555,7 @@ class AccountExportService {
 		await authDb.put('projects', newProject);
 
 		console.log(
-			`Created project directly: ${projectData.name} with docUrl: ${projectData.docUrl}`,
+			`[AccountExportService] Created project directly: ${projectData.name} with docUrl: ${projectData.docUrl}`,
 		);
 	}
 }

@@ -246,7 +246,10 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					setError(null);
 				}
 			} catch (error) {
-				console.error('Error decoding Draw.io content:', error);
+				console.error(
+					'[DrawioCollaborativeViewer] Error decoding Draw.io content:',
+					error,
+				);
 				setError(
 					t('Failed to decode file content: {error}', {
 						error: error instanceof Error ? error.message : String(error),
@@ -280,7 +283,9 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			if (!fileId) return;
 
 			if (!contentToSave.trim()) {
-				console.warn('Attempted to save empty content');
+				console.warn(
+					'[DrawioCollaborativeViewer] Attempted to save empty content',
+				);
 				return;
 			}
 
@@ -296,7 +301,10 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				setHasChanges(false);
 				flashSavedIndicator();
 			} catch (error) {
-				console.error('Error saving Draw.io file:', error);
+				console.error(
+					'[DrawioCollaborativeViewer] Error saving Draw.io file:',
+					error,
+				);
 				setError(
 					t('Failed to save file: {error}', {
 						error: error instanceof Error ? error.message : t('Unknown error'),
@@ -395,7 +403,10 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('Error downloading file:', error);
+			console.error(
+				'[DrawioCollaborativeViewer] Error downloading file:',
+				error,
+			);
 			setError(
 				t('Failed to download file: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),

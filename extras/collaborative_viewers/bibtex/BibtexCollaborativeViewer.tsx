@@ -378,7 +378,10 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
 			onUpdateContent(contentToSave);
 		} catch (error) {
-			console.error('Error saving processed BibTeX file:', error);
+			console.error(
+				'[BibtexCollaborativeViewer] Error saving processed BibTeX file:',
+				error,
+			);
 			setError(
 				t('Failed to save file: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),
@@ -415,7 +418,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				text = new TextDecoder('utf-8').decode(content);
 			} catch (error) {
 				console.error(
-					'BibtexCollaborativeViewer: Error decoding content:',
+					'[BibtexCollaborativeViewer] Error decoding content:',
 					error,
 				);
 				setError(
@@ -584,7 +587,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('Error exporting file:', error);
+			console.error('[BibtexCollaborativeViewer] Error exporting file:', error);
 			setError(
 				t('Failed to export file: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),

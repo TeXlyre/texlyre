@@ -189,7 +189,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 				setHasChanges(false);
 			}
 		} catch (error) {
-			console.error('Error saving image:', error);
+			console.error('[CombinedImageViewer] Error saving image:', error);
 		} finally {
 			setIsSaving(false);
 		}

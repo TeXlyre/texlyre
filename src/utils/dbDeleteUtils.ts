@@ -15,12 +15,12 @@ export async function deleteDatabase(dbName: string): Promise<void> {
 		};
 
 		deleteRequest.onerror = () => {
-			console.error(`Failed to delete database: ${dbName}`);
+			console.error(`[dbDeleteUtils] Failed to delete database: ${dbName}`);
 			reject(new Error(`Failed to delete database: ${dbName}`));
 		};
 
 		deleteRequest.onblocked = () => {
-			console.warn(`Database deletion blocked: ${dbName}. Retrying...`);
+			console.warn(`[dbDeleteUtils] Database deletion blocked: ${dbName}. Retrying...`);
 			setTimeout(async () => {
 				try {
 					await deleteDatabase(dbName);
@@ -42,7 +42,7 @@ export async function closeActiveConnections(projectId: string): Promise<void> {
 			);
 		}
 	} catch (error) {
-		console.warn('Error closing FileStorageService connection:', error);
+		console.warn('[dbDeleteUtils] Error closing FileStorageService connection:', error);
 	}
 }
 
@@ -72,7 +72,7 @@ export async function cleanupProjectDatabases(project: Project): Promise<void> {
 			try {
 				await deleteDatabase(collectionName);
 			} catch (error) {
-				console.warn(`Failed to delete database ${collectionName}:`, error);
+				console.warn(`[dbDeleteUtils] Failed to delete database ${collectionName}:`, error);
 			}
 		}
 
@@ -80,7 +80,7 @@ export async function cleanupProjectDatabases(project: Project): Promise<void> {
 			`[dbDeleteUtils] Cleaned up databases for project: ${project.name}`,
 		);
 	} catch (error) {
-		console.error('Error cleaning up project databases:', error);
+		console.error('[dbDeleteUtils] Error cleaning up project databases:', error);
 	}
 }
 
@@ -120,7 +120,7 @@ export async function cleanupDocumentDatabases(
 						await deleteDatabase(docCollection);
 					} catch (error) {
 						console.warn(
-							`Failed to delete document database ${docCollection}:`,
+							`[dbDeleteUtils] Failed to delete document database ${docCollection}:`,
 							error,
 						);
 					}
@@ -128,7 +128,7 @@ export async function cleanupDocumentDatabases(
 			}
 		}
 	} catch (error) {
-		console.error('Error cleaning up document databases:', error);
+		console.error('[dbDeleteUtils] Error cleaning up document databases:', error);
 	}
 }
 

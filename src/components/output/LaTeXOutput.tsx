@@ -254,7 +254,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 			if (!file || !isLatexFile(file.path)) return;
 			gotoEditor({ kind: 'file', fileId: selectedFileId }, { line });
 		} catch (error) {
-			console.error('Error handling line click:', error);
+			console.error('[LaTeXOutput] Error handling line click:', error);
 		}
 	};
 

@@ -69,7 +69,7 @@ const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
 
 		return params.newProjectName ? params : null;
 	} catch (error) {
-		console.error('Error parsing URL project params:', error);
+		console.error('[AppRouter] Error parsing URL project params:', error);
 		return null;
 	}
 };
@@ -99,7 +99,7 @@ const downloadAndExtractZip = async (
 			preserveTimestamp: false,
 		});
 	} catch (error) {
-		console.error('Error downloading and extracting zip:', error);
+		console.error('[AppRouter] Error downloading and extracting zip:', error);
 	}
 };
 
@@ -158,7 +158,10 @@ const AppRouter: React.FC = () => {
 
 				return project;
 			} catch (error) {
-				console.error('Failed to create project for document:', error);
+				console.error(
+					'[AppRouter] Failed to create project for document:',
+					error,
+				);
 				throw error;
 			}
 		},
@@ -191,7 +194,7 @@ const AppRouter: React.FC = () => {
 
 				return newProject.docUrl;
 			} catch (error) {
-				console.error('Error creating project from URL:', error);
+				console.error('[AppRouter] Error creating project from URL:', error);
 				return null;
 			} finally {
 				setIsCreatingProject(false);
@@ -338,7 +341,7 @@ const AppRouter: React.FC = () => {
 					}
 				} catch (error) {
 					console.error(
-						'Error checking/creating project for shared document:',
+						'[AppRouter] Error checking/creating project for shared document:',
 						error,
 					);
 				}
@@ -391,7 +394,7 @@ const AppRouter: React.FC = () => {
 			const baseDocUrl = fragments.yjsUrl;
 
 			if (!isValidYjsUrl(baseDocUrl)) {
-				console.error('Invalid document URL format:', baseDocUrl);
+				console.error('[AppRouter] Invalid document URL format:', baseDocUrl);
 				return;
 			}
 
@@ -407,7 +410,10 @@ const AppRouter: React.FC = () => {
 			finalUrl = projectDocUrl;
 		} else {
 			if (!isValidYjsUrl(projectDocUrl)) {
-				console.error('Invalid document URL format:', projectDocUrl);
+				console.error(
+					'[AppRouter] Invalid document URL format:',
+					projectDocUrl,
+				);
 				return;
 			}
 

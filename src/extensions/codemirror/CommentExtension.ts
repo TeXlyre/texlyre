@@ -508,7 +508,7 @@ function deleteWholeCommentIfBoundary(
 
 		return true;
 	} catch (error) {
-		console.error('Error deleting comment chunk:', error);
+		console.error('[CommentExtension] Error deleting comment chunk:', error);
 		return false;
 	}
 }
@@ -653,7 +653,7 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 				comment.openTagEnd > comment.closeTagStart
 			) {
 				console.warn(
-					`Invalid comment positions for comment ${comment.id}, skipping`,
+					`[CommentExtension] Invalid comment positions for comment ${comment.id}, skipping`,
 				);
 				continue;
 			}
@@ -684,7 +684,10 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 			view.dispatch({ effects });
 		}
 	} catch (error) {
-		console.error('Error dispatching comment effects:', error);
+		console.error(
+			'[CommentExtension] Error dispatching comment effects:',
+			error,
+		);
 	}
 }
 
@@ -699,7 +702,7 @@ export function unwrapCommentById(view: EditorView, id: string): boolean {
 
 		return true;
 	} catch (error) {
-		console.error('Error unwrapping comment:', error);
+		console.error('[CommentExtension] Error unwrapping comment:', error);
 		return false;
 	}
 }
@@ -721,7 +724,7 @@ export function deleteCommentById(view: EditorView, id: string): boolean {
 
 		return true;
 	} catch (error) {
-		console.error('Error deleting comment:', error);
+		console.error('[CommentExtension] Error deleting comment:', error);
 		return false;
 	}
 }

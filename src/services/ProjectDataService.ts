@@ -46,12 +46,12 @@ export class ProjectDataService {
 			for (const projectId of projectIds) {
 				const specificProject = await authService.getProjectById(projectId);
 				if (!specificProject) {
-					console.warn(`Project ${projectId} not found, skipping`);
+					console.warn(`[ProjectDataService] Project ${projectId} not found, skipping`);
 					continue;
 				}
 				if (specificProject.ownerId !== userId) {
 					console.warn(
-						`Project ${projectId} does not belong to user ${userId}, skipping`,
+						`[ProjectDataService] Project ${projectId} does not belong to user ${userId}, skipping`,
 					);
 					continue;
 				}
@@ -148,7 +148,7 @@ export class ProjectDataService {
 						docPersistence.destroy();
 						docYDoc.destroy();
 					} catch (error) {
-						console.error(`Error serializing document ${doc.id}:`, error);
+						console.error(`[ProjectDataService] Error serializing document ${doc.id}:`, error);
 					}
 				}
 			}
@@ -156,7 +156,7 @@ export class ProjectDataService {
 			metadataPersistence.destroy();
 			metadataDoc.destroy();
 		} catch (error) {
-			console.error('Error serializing project documents:', error);
+			console.error('[ProjectDataService] Error serializing project documents:', error);
 		}
 
 		return { documents, documentContents };
@@ -209,7 +209,7 @@ export class ProjectDataService {
 				}
 			}
 		} catch (error) {
-			console.error('Error serializing project files:', error);
+			console.error('[ProjectDataService] Error serializing project files:', error);
 		}
 
 		return { files, fileContents, deletedFiles };
@@ -282,7 +282,6 @@ export class ProjectDataService {
 		);
 
 		try {
-			// First, restore all individual document states
 			for (const doc of documents) {
 				const docContent = documentContents.get(doc.id);
 				if (docContent?.yjsState) {
@@ -294,8 +293,6 @@ export class ProjectDataService {
 					await this.restoreYjsDocument(docCollection, docContent.yjsState);
 				}
 			}
-
-			// Then, create the metadata document
 			await this.createMetadataDocument(
 				metadataCollection,
 				documents,
@@ -310,7 +307,7 @@ export class ProjectDataService {
 				`[ProjectDataService] Successfully deserialized ${documents.length} documents for project ${projectId}`,
 			);
 		} catch (error) {
-			console.error('Error deserializing project documents:', error);
+			console.error('[ProjectDataService] Error deserializing project documents:', error);
 		}
 	}
 
@@ -443,7 +440,6 @@ export class ProjectDataService {
 				};
 			});
 
-			// Use batchStoreFiles with conflict resolution disabled for import
 			await fileStorageService.batchStoreFiles(filesToStore, {
 				showConflictDialog: false,
 				preserveTimestamp: true,
@@ -455,7 +451,7 @@ export class ProjectDataService {
 			);
 		} catch (error) {
 			console.error(
-				'Error importing files via fileStorageService, falling back to direct DB access:',
+				'[ProjectDataService] Error importing files via fileStorageService, falling back to direct DB access:',
 				error,
 			);
 
@@ -571,12 +567,10 @@ export class ProjectDataService {
 
 		await this.deserializeProjectFiles(projectId, fileMetadata, fileContents);
 
-		// Handle documents if needed
 		if (data.documents.length > 0) {
 			console.log(
 				`[ProjectDataService] Importing ${data.documents.length} documents for project ${projectId}`,
 			);
-			// Documents are handled separately by the existing document deserialization
 		}
 	}
 }

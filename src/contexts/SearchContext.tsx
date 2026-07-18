@@ -73,7 +73,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({
 				searchResults.reduce((sum, r) => sum + (r.matchCount || 0), 0),
 			);
 		} catch (error) {
-			console.error('Search error:', error);
+			console.error('[SearchContext] Search error:', error);
 			setResults([]);
 			setTotalMatches(0);
 		} finally {
@@ -112,7 +112,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({
 
 				return success;
 			} catch (error) {
-				console.error('Replace error:', error);
+				console.error('[SearchContext] Replace error:', error);
 				return false;
 			} finally {
 				setIsReplacing(false);
@@ -148,7 +148,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			return count;
 		} catch (error) {
-			console.error('Replace all error:', error);
+			console.error('[SearchContext] Replace all error:', error);
 			return 0;
 		} finally {
 			setIsReplacing(false);

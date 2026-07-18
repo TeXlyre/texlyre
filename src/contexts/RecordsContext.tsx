@@ -89,7 +89,10 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 		try {
 			localStorage.setItem(getStorageKey(), JSON.stringify(recordsRef.current));
 		} catch (error) {
-			console.error('Error saving records to localStorage:', error);
+			console.error(
+				'[RecordsContext] Error saving records to localStorage:',
+				error,
+			);
 		}
 	}, [getStorageKey]);
 
@@ -98,7 +101,10 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 			const stored = localStorage.getItem(getStorageKey());
 			recordsRef.current = stored ? JSON.parse(stored) : {};
 		} catch (error) {
-			console.error('Error parsing records from localStorage:', error);
+			console.error(
+				'[RecordsContext] Error parsing records from localStorage:',
+				error,
+			);
 			recordsRef.current = {};
 		} finally {
 			isLoaded.current = true;

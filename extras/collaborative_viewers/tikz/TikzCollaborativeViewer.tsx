@@ -270,7 +270,10 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					setError(null);
 				}
 			} catch (error) {
-				console.error('Error decoding TikZ content:', error);
+				console.error(
+					'[TikzCollaborativeViewer] Error decoding TikZ content:',
+					error,
+				);
 				setError(
 					t('Failed to decode file content: {error}', {
 						error: error instanceof Error ? error.message : String(error),
@@ -328,7 +331,10 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				setHasChanges(false);
 				flashSavedIndicator();
 			} catch (error) {
-				console.error('Error saving TikZ file:', error);
+				console.error(
+					'[TikzCollaborativeViewer] Error saving TikZ file:',
+					error,
+				);
 				setError(
 					t('Failed to save file: {error}', {
 						error: error instanceof Error ? error.message : t('Unknown error'),
@@ -513,7 +519,10 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					}
 				}
 			} catch (error) {
-				console.error('Error handling message from TikZ editor:', error);
+				console.error(
+					'[TikzCollaborativeViewer] Error handling message from TikZ editor:',
+					error,
+				);
 			}
 		},
 		[
@@ -576,7 +585,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			await fileStorageService.storeFile(makeSvgFile(fileName, svgContent));
 			flashSavedIndicator();
 		} catch (error) {
-			console.error('Error saving SVG:', error);
+			console.error('[TikzCollaborativeViewer] Error saving SVG:', error);
 			setError(error instanceof Error ? error.message : String(error));
 		}
 	}, [requestExport, fileName, flashSavedIndicator]);

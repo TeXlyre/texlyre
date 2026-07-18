@@ -153,7 +153,7 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 			}
 		} catch (error) {
 			console.error(
-				'Error parsing properties from localStorage on initial load:',
+				'[PropertiesContext] Error parsing properties from localStorage on initial load:',
 				error,
 			);
 			localStorage.removeItem(userStorageKey);
@@ -196,7 +196,10 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 			localStorage.setItem(storageKey, JSON.stringify({ ...toSave, _version }));
 			localStoragePropertiesRef.current = toSave;
 		} catch (error) {
-			console.error('Error saving properties to localStorage:', error);
+			console.error(
+				'[PropertiesContext] Error saving properties to localStorage:',
+				error,
+			);
 		}
 	}, [properties, getStorageKey, isReady]);
 
@@ -222,7 +225,10 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 					return changed ? next : prev;
 				});
 			} catch (error) {
-				console.error('Error applying synced properties:', error);
+				console.error(
+					'[PropertiesContext] Error applying synced properties:',
+					error,
+				);
 			}
 		};
 
@@ -306,7 +312,10 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 					}),
 				);
 			} catch (error) {
-				console.error('Error saving property to localStorage:', error);
+				console.error(
+					'[PropertiesContext] Error saving property to localStorage:',
+					error,
+				);
 			}
 		},
 		[getPropertyId, getStorageKey],
@@ -375,7 +384,10 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 					}),
 				);
 			} catch (error) {
-				console.error('Error removing property from localStorage:', error);
+				console.error(
+					'[PropertiesContext] Error removing property from localStorage:',
+					error,
+				);
 			}
 		},
 		[getPropertyId, getStorageKey],

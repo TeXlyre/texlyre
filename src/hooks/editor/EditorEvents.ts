@@ -88,7 +88,7 @@ export const registerEditorEventHandlers = (
 
 			const openTagEnd =
 				openTagCoreEnd < currentContent.length &&
-				currentContent[openTagCoreEnd] === '`'
+					currentContent[openTagCoreEnd] === '`'
 					? openTagCoreEnd + 1
 					: openTagCoreEnd;
 
@@ -111,7 +111,7 @@ export const registerEditorEventHandlers = (
 
 			const closeTagEnd =
 				closeTagCoreEnd < currentContent.length &&
-				currentContent[closeTagCoreEnd] === '`'
+					currentContent[closeTagCoreEnd] === '`'
 					? closeTagCoreEnd + 1
 					: closeTagCoreEnd;
 
@@ -124,7 +124,7 @@ export const registerEditorEventHandlers = (
 					currentContent.length,
 				)
 			) {
-				console.warn('Invalid comment response range, skipping');
+				console.warn('[EditorEvents] Invalid comment response range, skipping');
 				return;
 			}
 
@@ -145,7 +145,7 @@ export const registerEditorEventHandlers = (
 
 			refreshCommentsSoon(10);
 		} catch (error) {
-			console.error('Error processing comment response:', error);
+			console.error('[EditorEvents] Error processing comment response:', error);
 		}
 	};
 
@@ -175,7 +175,7 @@ export const registerEditorEventHandlers = (
 					currentContent.length,
 				)
 			) {
-				console.warn('Invalid comment deletion range, skipping');
+				console.warn('[EditorEvents] Invalid comment deletion range, skipping');
 				return;
 			}
 
@@ -196,7 +196,7 @@ export const registerEditorEventHandlers = (
 
 			refreshCommentsSoon();
 		} catch (error) {
-			console.error('Error processing comment deletion:', error);
+			console.error('[EditorEvents] Error processing comment deletion:', error);
 		}
 	};
 
@@ -232,7 +232,7 @@ export const registerEditorEventHandlers = (
 					currentContent.length,
 				)
 			) {
-				console.warn('Invalid comment update range, skipping');
+				console.warn('[EditorEvents] Invalid comment update range, skipping');
 				return;
 			}
 
@@ -253,7 +253,7 @@ export const registerEditorEventHandlers = (
 
 			refreshCommentsSoon();
 		} catch (error) {
-			console.error('Error processing comment update:', error);
+			console.error('[EditorEvents] Error processing comment update:', error);
 		}
 	};
 
@@ -315,7 +315,7 @@ export const registerEditorEventHandlers = (
 				view.focus();
 			}
 		} catch (error) {
-			console.error('Error in Codemirror line navigation:', error);
+			console.error('[EditorEvents] Error in Codemirror line navigation:', error);
 		}
 	};
 
@@ -365,7 +365,7 @@ export const registerEditorEventHandlers = (
 				view.focus();
 			}
 		} catch (error) {
-			console.error('Error in Codemirror character navigation:', error);
+			console.error('[EditorEvents] Error in Codemirror character navigation:', error);
 		}
 	};
 

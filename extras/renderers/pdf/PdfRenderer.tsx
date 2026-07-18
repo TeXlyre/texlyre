@@ -228,7 +228,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 					setIsLoading(false);
 				});
 		} catch (error) {
-			console.error('Error creating PDF data:', error);
+			console.error('[PdfRenderer] Error creating PDF data:', error);
 			setError(
 				t('Failed to process PDF content: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),
@@ -482,7 +482,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			document.body.removeChild(link);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('Export error:', error);
+			console.error('[PdfRenderer] Export error:', error);
 			setError(t('Failed to export PDF'));
 		}
 	}, [fileName, onDownload]);

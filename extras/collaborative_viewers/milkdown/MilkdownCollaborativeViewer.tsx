@@ -240,7 +240,10 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		};
 
 		connect().catch((err) => {
-			console.error('Error opening collaborative Markdown document:', err);
+			console.error(
+				'[MilkdownCollaborativeViewer] Error opening collaborative Markdown document:',
+				err,
+			);
 			setError(
 				t('Failed to open collaborative document: {error}', {
 					error: err instanceof Error ? err.message : t('Unknown error'),
@@ -370,7 +373,10 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			const bytes = new TextEncoder().encode(currentContent()).buffer;
 			await fileStorageService.updateFileContent(fileId, bytes);
 		} catch (err) {
-			console.error('Error saving Markdown file:', err);
+			console.error(
+				'[MilkdownCollaborativeViewer] Error saving Markdown file:',
+				err,
+			);
 			setError(
 				t('Failed to save file: {error}', {
 					error: err instanceof Error ? err.message : t('Unknown error'),

@@ -214,7 +214,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
 			return localFiles;
 		} catch (error) {
-			console.error('Error updating local file map:', error);
+			console.error('[FileSyncContext] Error updating local file map:', error);
 			addNotification({
 				type: 'sync_error',
 				message: `Failed to update file map: ${
@@ -430,7 +430,10 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 					}, 1000);
 				});
 			} catch (error) {
-				console.error('Error checking and requesting files:', error);
+				console.error(
+					'[FileSyncContext] Error checking and requesting files:',
+					error,
+				);
 				addNotification({
 					type: 'sync_error',
 					message: `Error during file check: ${
@@ -492,7 +495,10 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 					data: { requestId: request.id, fileCount: request.files.length },
 				});
 			} catch (error) {
-				console.error('Error handling incoming sync request:', error);
+				console.error(
+					'[FileSyncContext] Error handling incoming sync request:',
+					error,
+				);
 
 				fileSyncService.showErrorNotification(
 					`Failed to prepare files: ${
@@ -605,7 +611,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				await refreshFileTree();
 				await updateLocalFileMap();
 			} catch (error) {
-				console.error('Error downloading files:', error);
+				console.error('[FileSyncContext] Error downloading files:', error);
 
 				const message =
 					error instanceof Error ? error.message : 'unknown error';
@@ -878,7 +884,10 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 			awarenessCleanupRef.current = () =>
 				awareness?.off('change', handleAwarenessChange);
 		} catch (error) {
-			console.error('Error initializing YJS doc for file sync:', error);
+			console.error(
+				'[FileSyncContext] Error initializing YJS doc for file sync:',
+				error,
+			);
 			fileSyncService.showErrorNotification(
 				t('Failed to initialize file sync'),
 				{

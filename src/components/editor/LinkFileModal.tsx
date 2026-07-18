@@ -92,7 +92,7 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 				// User cancelled due to conflict
 				return;
 			}
-			console.error('Error creating linked file:', error);
+			console.error('[LinkFileModal] Error creating linked file:', error);
 		} finally {
 			setIsCreating(false);
 		}

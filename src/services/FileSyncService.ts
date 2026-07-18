@@ -191,7 +191,7 @@ class FileSyncService {
 
 			return syncInfo;
 		} catch (error) {
-			console.error('Error getting local file sync info:', error);
+			console.error('[FileSyncService] Error getting local file sync info:', error);
 			return [];
 		}
 	}
@@ -362,7 +362,7 @@ class FileSyncService {
 
 			for (const file of filesFromDb) {
 				if (!file) {
-					console.warn('File data not found for one of the IDs');
+					console.warn('[FileSyncService] File data not found for one of the IDs');
 					continue;
 				}
 
@@ -410,7 +410,7 @@ class FileSyncService {
 
 			return { link: shareableLinks.short };
 		} catch (error) {
-			console.error('Error uploading files:', error);
+			console.error('[FileSyncService] Error uploading files:', error);
 			throw error;
 		}
 	}
@@ -508,7 +508,7 @@ class FileSyncService {
 			return newFile;
 		} catch (error) {
 			console.error(
-				`Error preparing file ${downloadedFile.fileName} for storage:`,
+				`[FileSyncService] Error preparing file ${downloadedFile.fileName} for storage:`,
 				error,
 			);
 			return null;
@@ -540,7 +540,7 @@ class FileSyncService {
 					try {
 						downloader.cancelDownload?.();
 					} catch (error) {
-						console.warn('Error during downloader cleanup:', error);
+						console.warn('[FileSyncService] Error during downloader cleanup:', error);
 					}
 					this.activeDownloaders.delete(link);
 				}
@@ -766,7 +766,13 @@ class FileSyncService {
 				.then((connected) => {
 					if (!connected) {
 						clearTimeout(timeout);
-						rejectOnce(new Error(t('Failed to connect to FilePizza link')));
+						rejectOnce(
+							new Error(
+								t('Failed to connect to {provider}', {
+									provider: t('FilePizza'),
+								}),
+							),
+						);
 					}
 					console.log(
 						'[FileSyncService] Connected successfully, waiting for file info...',
@@ -790,7 +796,7 @@ class FileSyncService {
 		try {
 			uploader.stop?.();
 		} catch (error) {
-			console.error('Error stopping uploader:', error);
+			console.error('[FileSyncService] Error stopping uploader:', error);
 		}
 		this.activeUploaders.delete(requestId);
 	}
@@ -802,7 +808,7 @@ class FileSyncService {
 			try {
 				uploader.stop?.();
 			} catch (error) {
-				console.error('Error stopping uploader:', error);
+				console.error('[FileSyncService] Error stopping uploader:', error);
 			}
 		});
 
@@ -810,7 +816,7 @@ class FileSyncService {
 			try {
 				downloader.cancelDownload?.();
 			} catch (error) {
-				console.error('Error canceling downloader:', error);
+				console.error('[FileSyncService] Error canceling downloader:', error);
 			}
 		});
 

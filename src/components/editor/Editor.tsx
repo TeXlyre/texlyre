@@ -407,7 +407,7 @@ const EditorContent: React.FC<{
 				});
 				updateComments(view.state.doc.toString());
 			} catch (error) {
-				console.error('Error adding comment:', error);
+				console.error('[Editor] Error adding comment:', error);
 			}
 		};
 
@@ -476,7 +476,7 @@ const EditorContent: React.FC<{
 				await copyCleanTextToClipboard(content);
 			}
 		} catch (error) {
-			console.error('Error copying linked file:', error);
+			console.error('[Editor] Error copying linked file:', error);
 		}
 	}, [linkedFileInfo?.fileId]);
 
@@ -502,7 +502,7 @@ const EditorContent: React.FC<{
 				URL.revokeObjectURL(url);
 			}
 		} catch (error) {
-			console.error('Error downloading linked file:', error);
+			console.error('[Editor] Error downloading linked file:', error);
 		}
 	}, [linkedFileInfo?.fileId, linkedFileInfo?.fileName]);
 
@@ -863,7 +863,7 @@ const EditorContent: React.FC<{
 						onDeleteDocument={(docId) => {
 							if (!changeDoc) {
 								console.error(
-									'Cannot delete document: changeData not available',
+									'[Editor] Cannot delete document: changeData not available',
 								);
 								return;
 							}
@@ -1043,7 +1043,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 						}
 					}
 				} catch (error) {
-					console.error('Error loading file path:', error);
+					console.error('[Editor] Error loading file path:', error);
 				}
 			}
 		};
@@ -1102,7 +1102,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('Error exporting file:', error);
+			console.error('[Editor] Error exporting file:', error);
 		}
 	};
 

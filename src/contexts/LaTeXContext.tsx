@@ -255,7 +255,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			await latexService.clearCacheDirectories();
 			await refreshFileTree();
 		} catch (error) {
-			console.error('Failed to clear cache:', error);
+			console.error('[LaTeXContext] Failed to clear cache:', error);
 			setCompileError('Failed to clear cache');
 		}
 	};

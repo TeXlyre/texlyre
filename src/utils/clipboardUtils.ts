@@ -26,7 +26,7 @@ export async function readClipboardBlob(): Promise<Blob | null> {
 			if (type) return await item.getType(type);
 		}
 	} catch (error) {
-		console.error('Failed to read clipboard:', error);
+		console.error('[clipboardUtils] Failed to read clipboard:', error);
 	}
 
 	return null;
@@ -82,7 +82,7 @@ export async function uploadPastedFile(
 
 		return uploadPath;
 	} catch (error) {
-		console.error('Error uploading pasted file:', error);
+		console.error('[clipboardUtils] Error uploading pasted file:', error);
 		throw error;
 	}
 }
@@ -92,7 +92,7 @@ export async function copyCleanTextToClipboard(text: string): Promise<void> {
 		const cleanedText = processTextSelection(text);
 		await navigator.clipboard.writeText(cleanedText);
 	} catch (error) {
-		console.error('Failed to copy to clipboard:', error);
+		console.error('[clipboardUtils] Failed to copy to clipboard:', error);
 
 		// Fallback for older browsers
 		const textArea = document.createElement('textarea');
@@ -103,7 +103,7 @@ export async function copyCleanTextToClipboard(text: string): Promise<void> {
 		try {
 			document.execCommand('copy');
 		} catch (fallbackError) {
-			console.error('Fallback copy failed:', fallbackError);
+			console.error('[clipboardUtils] Fallback copy failed:', fallbackError);
 		}
 
 		document.body.removeChild(textArea);
@@ -127,7 +127,7 @@ export function dataUrlToBlob(dataUrl: string): Blob | null {
 		}
 		return new Blob([decodeURIComponent(data)], { type: mimeType });
 	} catch (error) {
-		console.error('Failed to decode data URL:', error);
+		console.error('[clipboardUtils] Failed to decode data URL:', error);
 		return null;
 	}
 }
@@ -155,13 +155,13 @@ export function extractUploadableBlob(event: ClipboardEvent): Blob | null {
 	}
 
 	const uriList = clipboardData.getData('text/uri-list');
-	console.log('[paste] uri-list raw:', JSON.stringify(uriList)); // <-- temporary
+	console.log('[clipboardUtils] Paste URI-list raw:', JSON.stringify(uriList)); // <-- temporary
 	if (uriList) {
 		const uri = uriList
 			.split('\n')
 			.map((line) => line.trim())
 			.find((line) => line && !line.startsWith('#'));
-		console.log('[paste] uri-list first:', JSON.stringify(uri)); // <-- temporary
+		console.log('[clipboardUtils] Paste URI-list first:', JSON.stringify(uri)); // <-- temporary
 		if (uri?.startsWith('data:')) return dataUrlToBlob(uri);
 	}
 

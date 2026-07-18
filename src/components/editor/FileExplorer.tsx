@@ -200,7 +200,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			try {
 				await extractZipFile(pendingZipFile, zipTargetPath);
 			} catch (error) {
-				console.error('Error extracting ZIP:', error);
+				console.error('[FileExplorer] Error extracting ZIP:', error);
 			}
 		}
 		handleZipModalClose();
@@ -211,7 +211,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			try {
 				await storeZipFile(pendingZipFile, zipTargetPath);
 			} catch (error) {
-				console.error('Error storing ZIP:', error);
+				console.error('[FileExplorer] Error storing ZIP:', error);
 			}
 		}
 		handleZipModalClose();
@@ -359,7 +359,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				}
 			}
 		} catch (error) {
-			console.error(`Error creating ${creatingNewItem.type}:`, error);
+			console.error(
+				`[FileExplorer] Error creating ${creatingNewItem.type}:`,
+				error,
+			);
 		}
 
 		setCreatingNewItem(null);
@@ -437,7 +440,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				) {
 					return;
 				} else {
-					console.error('Error renaming file:', error);
+					console.error('[FileExplorer] Error renaming file:', error);
 				}
 			}
 		}
@@ -484,7 +487,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				setShowMoveDialog(false);
 				setFileToMove(null);
 			} catch (error) {
-				console.error('Error moving file:', error);
+				console.error('[FileExplorer] Error moving file:', error);
 			}
 		}
 	};
@@ -555,7 +558,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				);
 				downloadZipFile(zipBlob, node.name);
 			} catch (error) {
-				console.error('Error exporting folder:', error);
+				console.error('[FileExplorer] Error exporting folder:', error);
 			}
 		}
 		setActiveMenu(null);
@@ -694,7 +697,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
 		if (!rawDragData || rawDragData.trim() === '') {
 			console.warn(
-				'handleDropOnDirectory: No drag data available for internal move',
+				'[FileExplorer] handleDropOnDirectory: No drag data available for internal move',
 			);
 			setDragOverTarget(null);
 			return;
@@ -743,7 +746,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				await renameFile(nodeId, newFullPath);
 			});
 		} catch (error) {
-			console.error('Error during internal drag-drop operation:', error);
+			console.error(
+				'[FileExplorer] Error during internal drag-drop operation:',
+				error,
+			);
 		} finally {
 			setDragOverTarget(null);
 			setIsDragging(false);
@@ -868,7 +874,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				await renameFile(nodeId, newFullPath);
 			});
 		} catch (error) {
-			console.error('Error during root drop operation:', error);
+			console.error('[FileExplorer] Error during root drop operation:', error);
 		} finally {
 			setDragOverTarget(null);
 			setIsDragging(false);
@@ -880,7 +886,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			try {
 				await pendingDragDropOperation();
 			} catch (error) {
-				console.error('Error executing drag drop operation:', error);
+				console.error(
+					'[FileExplorer] Error executing drag drop operation:',
+					error,
+				);
 			}
 		}
 		setShowDragDropDialog(false);

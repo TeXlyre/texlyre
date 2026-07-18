@@ -106,7 +106,7 @@ export function computeReplacementChange(
 	while (
 		suffixLen < maxSuffixLen &&
 		normalizedOriginal[normalizedOriginal.length - 1 - suffixLen] ===
-			normalizedFormatted[normalizedFormatted.length - 1 - suffixLen]
+		normalizedFormatted[normalizedFormatted.length - 1 - suffixLen]
 	) {
 		suffixLen++;
 	}
@@ -121,7 +121,7 @@ export function computeReplacementChange(
 
 	// Sanity check: make sure we're not creating an invalid change
 	if (from > to || from < 0 || to > normalizedOriginal.length) {
-		console.error('[TextDiffUtils] Invalid change detected:', {
+		console.error('[textDiffUtils] Invalid change detected:', {
 			from,
 			to,
 			originalLength: normalizedOriginal.length,
@@ -136,7 +136,7 @@ export function computeReplacementChange(
 		normalizedOriginal.substring(to);
 	if (resultAfterChange !== normalizedFormatted) {
 		console.error(
-			'[TextDiffUtils] Change validation failed - would not produce expected result',
+			'[textDiffUtils] Change validation failed - would not produce expected result',
 		);
 		console.error(
 			'Expected:',

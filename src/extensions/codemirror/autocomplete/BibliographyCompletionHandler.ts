@@ -30,14 +30,14 @@ export class BibliographyCompletionHandler {
 		await this.updateCache();
 	}
 
-	destroy() {}
+	destroy() { }
 
 	async updateCache() {
 		try {
 			const localEntries = await this.getLocalBibliographyEntries();
 			this.bibliographyCache = localEntries;
 		} catch (error) {
-			console.error('Error updating bibliography cache:', error);
+			console.error('[BibliographyCompletionHandler] Error updating bibliography cache:', error);
 		}
 	}
 
@@ -87,7 +87,7 @@ export class BibliographyCompletionHandler {
 
 			return allEntries;
 		} catch (error) {
-			console.error('Error getting local bibliography entries:', error);
+			console.error('[BibliographyCompletionHandler] Error getting local bibliography entries:', error);
 			return [];
 		}
 	}

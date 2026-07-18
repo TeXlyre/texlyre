@@ -284,7 +284,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		if (!useSharedSettings || !projectEngine) return;
 		if (projectEngine === latexService.getCurrentEngineType()) return;
 		latexService.setEngine(projectEngine as LaTeXEngine).catch((err) => {
-			console.error('Failed to sync shared engine:', err);
+			console.error('[LaTeXCompileButton] Failed to sync shared engine:', err);
 		});
 	}, [projectEngine, useSharedSettings]);
 
@@ -375,7 +375,10 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 					await latexService.setEngine(requestedEngine);
 				}
 			} catch (error) {
-				console.error('Failed to initialize requested compiler:', error);
+				console.error(
+					'[LaTeXCompileButton] Failed to initialize requested compiler:',
+					error,
+				);
 				return;
 			} finally {
 				isInitializingRef.current = false;
@@ -506,7 +509,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		try {
 			await clearCache();
 		} catch (error) {
-			console.error('Failed to clear cache:', error);
+			console.error('[LaTeXCompileButton] Failed to clear cache:', error);
 		}
 	};
 
@@ -539,7 +542,10 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		try {
 			await compileWithClearCache(effectiveMainFile);
 		} catch (error) {
-			console.error('Failed to compile with cache clear:', error);
+			console.error(
+				'[LaTeXCompileButton] Failed to compile with cache clear:',
+				error,
+			);
 		}
 	}, [
 		effectiveMainFile,
@@ -578,7 +584,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 				setProperty('latex-engine', engine, { scope: 'project', projectId });
 			}
 		} catch (error) {
-			console.error('Failed to change engine:', error);
+			console.error('[LaTeXCompileButton] Failed to change engine:', error);
 		} finally {
 			setIsChangingEngine(false);
 		}
@@ -672,7 +678,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 			await latexService.deleteBusyTeXBundle(bundleId);
 			setBundleCacheStatus((prev) => ({ ...prev, [bundleId]: false }));
 		} catch (error) {
-			console.error('Failed to delete bundle:', error);
+			console.error('[LaTeXCompileButton] Failed to delete bundle:', error);
 		} finally {
 			setIsDeletingBundle(null);
 		}

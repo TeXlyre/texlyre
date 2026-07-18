@@ -37,7 +37,7 @@ class WebrtcProviderRegistry {
 			return provider;
 		} catch (error) {
 			console.error(
-				`Error creating WebRTC provider for room ${roomName}:`,
+				`[CollabWebrtc] Error creating WebRTC provider for room ${roomName}:`,
 				error,
 			);
 			throw error;
@@ -47,7 +47,7 @@ class WebrtcProviderRegistry {
 	releaseProvider(roomName: string): boolean {
 		if (!this.providers.has(roomName)) {
 			console.warn(
-				`Attempted to release nonexistent provider for room: ${roomName}`,
+				`[CollabWebrtc] Attempted to release nonexistent provider for room: ${roomName}`,
 			);
 			return false;
 		}
@@ -64,7 +64,7 @@ class WebrtcProviderRegistry {
 				entry.provider.destroy();
 			} catch (error) {
 				console.error(
-					`Error destroying WebRTC provider for room ${roomName}:`,
+					`[CollabWebrtc] Error destroying WebRTC provider for room ${roomName}:`,
 					error,
 				);
 			}

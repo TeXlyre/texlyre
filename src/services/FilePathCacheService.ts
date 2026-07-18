@@ -536,7 +536,7 @@ class FilePathCacheService {
 				this.labelContentCache.set(file.id, entry);
 			} catch (error) {
 				console.warn(
-					`Failed to read content for label extraction: ${file.path}`,
+					`[FilePathCacheService] Failed to read content for label extraction: ${file.path}`,
 					error,
 				);
 			}
@@ -564,7 +564,7 @@ class FilePathCacheService {
 					false,
 				);
 			} catch (error) {
-				console.error('Error fetching files for path cache:', error);
+				console.error('[FilePathCacheService] Error fetching files for path cache:', error);
 				this.cachedFiles = [];
 			}
 		}

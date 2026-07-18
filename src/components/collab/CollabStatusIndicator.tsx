@@ -89,7 +89,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 			const projectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
 			await collabService.syncAllDocuments(projectId, (_current, _total) => {});
 		} catch (error) {
-			console.error('Error syncing documents:', error);
+			console.error('[CollabStatusIndicator] Error syncing documents:', error);
 		} finally {
 			setIsSyncing(false);
 		}

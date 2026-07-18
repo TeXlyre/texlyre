@@ -29,12 +29,12 @@ export const createPasteExtension = (
 				const fileType = detectFileType(fileName, view.state.doc.toString());
 				const didRun = runToolbarCommand(view, `${fileType}-figure`);
 				if (!didRun) {
-					console.warn('Figure command not found in toolbar');
+					console.warn('[PasteExtension] Figure command not found in toolbar');
 					pendingImagePath = null;
 				}
 			})
 			.catch((error) => {
-				console.error('Error handling pasted file:', error);
+				console.error('[PasteExtension] Error handling pasted file:', error);
 			});
 	};
 

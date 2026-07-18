@@ -99,7 +99,10 @@ const getDocumentContent = async (
 
 		return textContent;
 	} catch (error) {
-		console.error('Error getting document content:', error);
+		console.error(
+			'[FileDocumentController] Error getting document content:',
+			error,
+		);
 		return '';
 	}
 };
@@ -419,10 +422,16 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					lastOpenedDocId: nextDocId,
 					lastOpenedFilePath: nextFilePath,
 				}).catch((error) => {
-					console.warn('Failed to update project last opened state:', error);
+					console.warn(
+						'[FileDocumentController] Failed to update project last opened state:',
+						error,
+					);
 				});
 			} catch (error) {
-				console.warn('Error updating project last opened state:', error);
+				console.warn(
+					'[FileDocumentController] Error updating project last opened state:',
+					error,
+				);
 			}
 		},
 		[getProjectById, updateProject],
@@ -453,7 +462,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 				setShowCurrentProjectExportModal(true);
 			}
 		} catch (error) {
-			console.error('Error loading project for export:', error);
+			console.error(
+				'[FileDocumentController] Error loading project for export:',
+				error,
+			);
 		}
 	};
 
@@ -478,7 +490,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 				}
 			}
 		} catch (error) {
-			console.error('Error refreshing file content for outline:', error);
+			console.error(
+				'[FileDocumentController] Error refreshing file content for outline:',
+				error,
+			);
 		}
 	};
 

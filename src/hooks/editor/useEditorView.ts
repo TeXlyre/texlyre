@@ -254,7 +254,7 @@ export const useEditorView = (
 					);
 				}
 			} catch (error) {
-				console.error('Error saving document to linked file:', error);
+				console.error('[useEditorView] Error saving document to linked file:', error);
 			}
 		},
 		[documentId, isEditingFile],
@@ -536,7 +536,7 @@ export const useEditorView = (
 						);
 						return true;
 					} catch (error) {
-						console.error('Error in commentKeymap:', error);
+						console.error('[useEditorView] Error in commentKeymap:', error);
 						return false;
 					}
 				},
@@ -764,7 +764,7 @@ export const useEditorView = (
 				updateLinkNavigationFileName(view, fileName);
 			}
 		} catch (error) {
-			console.error('Error creating editor view:', error);
+			console.error('[useEditorView] Error creating editor view:', error);
 		}
 
 		return () => {
@@ -820,11 +820,11 @@ export const useEditorView = (
 		const toolbarExt: Extension[] =
 			(info.isLatex || info.isTypst) && toolbarVisible
 				? [
-						(controller = createToolbarController(
-							info.fileType as 'latex' | 'typst',
-							undoManagerRef.current || undefined,
-						)).extension,
-					]
+					(controller = createToolbarController(
+						info.fileType as 'latex' | 'typst',
+						undoManagerRef.current || undefined,
+					)).extension,
+				]
 				: [];
 
 		view.dispatch({
@@ -887,7 +887,7 @@ export const useEditorView = (
 						else if (!isEditingFile && documentId)
 							await saveDocumentToLinkedFile(content);
 					},
-					onError: (error) => console.error('Auto-save failed:', error),
+					onError: (error) => console.error('[useEditorView] Auto-save failed:', error),
 				},
 			);
 		};

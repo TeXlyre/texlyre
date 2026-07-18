@@ -147,7 +147,7 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
 				exportOptions.background = backgroundColor;
 			}
 
-			console.log('PNG Export options:', exportOptions);
+			console.log('[DrawioPngExportButton] PNG Export options:', exportOptions);
 
 			const data = await onExport(exportOptions);
 
@@ -184,7 +184,7 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
 
 			await fileStorageService.storeFile(newFile);
 		} catch (error) {
-			console.error('Error saving PNG:', error);
+			console.error('[DrawioPngExportButton] Error saving PNG:', error);
 		} finally {
 			setIsExporting(false);
 		}
@@ -243,7 +243,7 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('Error downloading PNG:', error);
+			console.error('[DrawioPngExportButton] Error downloading PNG:', error);
 		} finally {
 			setIsExporting(false);
 			setIsDropdownOpen(false);

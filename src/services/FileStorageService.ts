@@ -92,7 +92,7 @@ class FileStorageService {
 				`[FileStorageService] Initialized for project: ${this.projectId}`,
 			);
 		} catch (error) {
-			console.error('Failed to initialize file storage:', error);
+			console.error('[FileStorageService] Failed to initialize file storage:', error);
 			throw error;
 		}
 	}
@@ -153,7 +153,7 @@ class FileStorageService {
 			return { removed: removedCount, kept: keptCount };
 		} catch (error) {
 			tx.abort();
-			console.error('Error during auto-sanitization:', error);
+			console.error('[FileStorageService] Error during auto-sanitization:', error);
 			throw error;
 		}
 	}
@@ -665,7 +665,7 @@ class FileStorageService {
 				);
 			}
 		} catch (error) {
-			console.error(`Error cleaning up ${path}:`, error);
+			console.error(`[FileStorageService] Error cleaning up ${path}:`, error);
 		}
 	}
 
@@ -689,7 +689,7 @@ class FileStorageService {
 					movedIds.push(movedId);
 				}
 			} catch (error) {
-				console.error(`Failed to move file ${operation.fileId}:`, error);
+				console.error(`[FileStorageService] Failed to move file ${operation.fileId}:`, error);
 			}
 		}
 
@@ -702,7 +702,7 @@ class FileStorageService {
 	): Promise<string | null> {
 		const sourceFile = await this.getFile(operation.fileId);
 		if (!sourceFile) {
-			console.error(`Source file not found: ${operation.fileId}`);
+			console.error(`[FileStorageService] Source file not found: ${operation.fileId}`);
 			return null;
 		}
 
@@ -845,7 +845,7 @@ class FileStorageService {
 			return newFileId;
 		} catch (error) {
 			console.error(
-				`Transaction failed for moving ${sourceFile.path} to ${newFullPath}:`,
+				`[FileStorageService] Transaction failed for moving ${sourceFile.path} to ${newFullPath}:`,
 				error,
 			);
 			tx.abort();

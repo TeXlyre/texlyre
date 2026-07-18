@@ -178,7 +178,10 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
 							setDisplayBranch(storedBranch);
 						}
 					} catch (error) {
-						console.log('Could not load stored credentials.', error);
+						console.error(
+							'[GitHubBackupModal] Could not load stored credentials.',
+							error,
+						);
 					}
 				}
 			};
@@ -225,7 +228,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
 		try {
 			await operation();
 		} catch (error) {
-			console.error('Operation failed:', error);
+			console.error('[GitHubBackupModal] Operation failed:', error);
 			setError(
 				t('Operation failed: {error}', {
 					error: error instanceof Error ? error.message : String(error),
@@ -386,7 +389,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
 					setSelectedBranch(defaultBranch.name);
 				}
 			} catch (error) {
-				console.error('Failed to load branches:', error);
+				console.error('[GitHubBackupModal] Failed to load branches:', error);
 			}
 		}
 	};

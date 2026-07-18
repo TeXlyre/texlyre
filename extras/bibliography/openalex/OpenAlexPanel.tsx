@@ -125,7 +125,9 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 
 			{connectionStatus === 'error' && (
 				<div className='openalex-error'>
-					<p className='error-message'>{t('Failed to connect to OpenAlex.')}</p>
+					<p className='error-message'>
+						{t('Failed to connect to {provider}', { provider: 'OpenAlex' })}
+					</p>
 					<div className='backup-toolbar'>
 						<div className='primary-actions'>
 							<button

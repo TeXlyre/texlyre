@@ -73,7 +73,10 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					setFileTree(tree);
 					setIsLoading(false);
 				} catch (error) {
-					console.error('Failed to initialize file storage:', error);
+					console.error(
+						'[FileTreeContext] Failed to initialize file storage:',
+						error,
+					);
 					setIsLoading(false);
 				}
 			};
@@ -87,7 +90,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			setFileTree(tree);
 			return tree;
 		} catch (error) {
-			console.error('Error refreshing file tree:', error);
+			console.error('[FileTreeContext] Error refreshing file tree:', error);
 			return [];
 		}
 	}, []);
@@ -149,7 +152,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				await refreshFileTree();
 			} catch (error) {
-				console.error('Error uploading files:', error);
+				console.error('[FileTreeContext] Error uploading files:', error);
 			} finally {
 				setIsLoading(false);
 			}
@@ -234,7 +237,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					error instanceof Error &&
 					error.message !== t('File operation cancelled by user')
 				) {
-					console.error('Failed to store ZIP file:', error);
+					console.error('[FileTreeContext] Failed to store ZIP file:', error);
 					throw error;
 				}
 			}
@@ -373,7 +376,10 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				) {
 					return;
 				}
-				console.error('Error linking file to document:', error);
+				console.error(
+					'[FileTreeContext] Error linking file to document:',
+					error,
+				);
 			}
 		},
 		[
@@ -422,7 +428,10 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				) {
 					return;
 				}
-				console.error('Error unlinking file from document:', error);
+				console.error(
+					'[FileTreeContext] Error unlinking file from document:',
+					error,
+				);
 			}
 		},
 		[changeDoc, doc, refreshFileTree],
@@ -447,7 +456,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					error instanceof Error &&
 					error.message !== t('File operation cancelled by user')
 				) {
-					console.error('Error creating directory:', error);
+					console.error('[FileTreeContext] Error creating directory:', error);
 				}
 			}
 		},
@@ -507,7 +516,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				await refreshFileTree();
 			} catch (error) {
-				console.error('Error in batch delete:', error);
+				console.error('[FileTreeContext] Error in batch delete:', error);
 				if (error instanceof Error) {
 					const operationId = `batch-delete-${Date.now()}`;
 					fileOperationNotificationService.showError(
@@ -559,7 +568,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					error instanceof Error &&
 					error.message !== t('File operation cancelled by user')
 				) {
-					console.error('Error in batch move:', error);
+					console.error('[FileTreeContext] Error in batch move:', error);
 				}
 				throw error;
 			}
@@ -624,7 +633,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					error instanceof Error &&
 					error.message !== t('Unlink operation cancelled by user')
 				) {
-					console.error('Error in batch unlink:', error);
+					console.error('[FileTreeContext] Error in batch unlink:', error);
 				}
 				throw error;
 			}
@@ -644,7 +653,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			const file = await fileStorageService.getFile(fileId);
 			return file?.content;
 		} catch (error) {
-			console.error('Error getting file content:', error);
+			console.error('[FileTreeContext] Error getting file content:', error);
 			return undefined;
 		}
 	}, []);
@@ -653,7 +662,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 		try {
 			return await fileStorageService.getFile(fileId);
 		} catch (error) {
-			console.error('Error getting file:', error);
+			console.error('[FileTreeContext] Error getting file:', error);
 			return undefined;
 		}
 	}, []);
@@ -663,7 +672,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			try {
 				const sourceFile = await fileStorageService.getFile(sourceId);
 				if (!sourceFile) {
-					console.error('Source file not found');
+					console.error('[FileTreeContext] Source file not found');
 					return;
 				}
 
@@ -683,12 +692,15 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				console.log('[FileTreeContext] Move completed, new IDs:', movedIds);
 				await refreshFileTree();
 			} catch (error) {
-				console.error('Error in moveFileOrDirectory:', error);
+				console.error('[FileTreeContext] Error in moveFileOrDirectory:', error);
 				if (
 					error instanceof Error &&
 					error.message !== t('File operation cancelled by user')
 				) {
-					console.error('Error moving file or directory:', error);
+					console.error(
+						'[FileTreeContext] Error moving file or directory:',
+						error,
+					);
 				}
 			}
 		},
@@ -741,14 +753,14 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				await refreshFileTree();
 				return newFileId;
 			} catch (error) {
-				console.error('Error in renameFile:', error);
+				console.error('[FileTreeContext] Error in renameFile:', error);
 				if (
 					error instanceof Error &&
 					error.message === t('File operation cancelled by user')
 				) {
 					throw error;
 				}
-				console.error('Error renaming/moving file:', error);
+				console.error('[FileTreeContext] Error renaming/moving file:', error);
 				throw error;
 			}
 		},
@@ -762,7 +774,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				await fileStorageService.updateFileContent(fileId, contentBuffer);
 				await refreshFileTree();
 			} catch (error) {
-				console.error('Error updating file content:', error);
+				console.error('[FileTreeContext] Error updating file content:', error);
 			}
 		},
 		[refreshFileTree],

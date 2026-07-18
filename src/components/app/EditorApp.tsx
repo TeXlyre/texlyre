@@ -428,7 +428,10 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 								);
 							}
 						} catch (error) {
-							console.error('Failed to sync project metadata:', error);
+							console.error(
+								'[EditorApp] Failed to sync project metadata:',
+								error,
+							);
 						}
 					};
 					syncProjectMetadata();
@@ -478,7 +481,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						setLinkedFileInfo(null);
 					}
 				} catch (error) {
-					console.error('Error checking for linked file:', error);
+					console.error('[EditorApp] Error checking for linked file:', error);
 					setLinkedFileInfo(null);
 				}
 			} else {

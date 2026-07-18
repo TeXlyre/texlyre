@@ -146,7 +146,7 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
 				exportOptions.background = backgroundColor;
 			}
 
-			console.log('SVG Export options:', exportOptions);
+			console.log('[DrawioSvgExportButton] SVG Export options:', exportOptions);
 
 			const data = await onExport(exportOptions);
 
@@ -182,7 +182,7 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
 
 			await fileStorageService.storeFile(newFile);
 		} catch (error) {
-			console.error('Error saving SVG:', error);
+			console.error('[DrawioSvgExportButton] Error saving SVG:', error);
 		} finally {
 			setIsExporting(false);
 		}
@@ -212,7 +212,7 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
 				exportOptions.background = backgroundColor;
 			}
 
-			console.log('SVG Export options:', exportOptions);
+			console.log('[DrawioSvgExportButton] SVG Export options:', exportOptions);
 
 			const data = await onExport(exportOptions);
 
@@ -238,7 +238,7 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('Error downloading SVG:', error);
+			console.error('[DrawioSvgExportButton] Error downloading SVG:', error);
 		} finally {
 			setIsExporting(false);
 			setIsDropdownOpen(false);

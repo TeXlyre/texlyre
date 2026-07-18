@@ -110,7 +110,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 				setIsLoading(false);
 			} catch (error) {
 				if (!cancelled) {
-					console.error('Error loading PDF:', error);
+					console.error('[PdfViewer] Error loading PDF:', error);
 					setError(t('Failed to load PDF document'));
 					setIsLoading(false);
 				}
@@ -197,7 +197,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 				!error.message.includes('Rendering cancelled') &&
 				!error.message.includes('Worker was destroyed')
 			) {
-				console.error('Error rendering PDF page:', error);
+				console.error('[PdfViewer] Error rendering PDF page:', error);
 				setError(t('Failed to render page {page}', { page: currentPage }));
 			}
 		}

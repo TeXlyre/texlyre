@@ -36,7 +36,7 @@ const CopyField: React.FC<CopyFieldProps> = ({
 			setStatus('copied');
 			setTimeout(() => setStatus('idle'), 2000);
 		} catch (error) {
-			console.error('Failed to copy to clipboard:', error);
+			console.error('[CopyField] Failed to copy to clipboard:', error);
 			setStatus('error');
 			setTimeout(() => setStatus('idle'), 2000);
 		}

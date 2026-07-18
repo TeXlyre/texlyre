@@ -179,7 +179,10 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 							setDisplayBranch(storedBranch);
 						}
 					} catch (error) {
-						console.log('Could not load stored credentials.', error);
+						console.error(
+							'[ForgejoBackupModal] Could not load stored credentials.',
+							error,
+						);
 					}
 				}
 			};
@@ -225,7 +228,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 		try {
 			await operation();
 		} catch (error) {
-			console.error('Operation failed:', error);
+			console.error('[ForgejoBackupModal] Operation failed:', error);
 			setError(
 				t('Operation failed: {error}', {
 					error: error instanceof Error ? error.message : String(error),
@@ -384,7 +387,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 					setSelectedBranch(defaultBranch.name);
 				}
 			} catch (error) {
-				console.error('Failed to load branches:', error);
+				console.error('[ForgejoBackupModal] Failed to load branches:', error);
 			}
 		}
 	};

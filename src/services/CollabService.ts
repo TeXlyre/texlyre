@@ -370,7 +370,7 @@ class CollabService {
 
 			return (docData?.projectMetadata as any) ?? null;
 		} catch (error) {
-			console.error('Error checking document metadata:', error);
+			console.error('[CollabService] Error checking document metadata:', error);
 			return null;
 		} finally {
 			persistence.destroy();

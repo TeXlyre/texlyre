@@ -261,7 +261,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 				const { authService } = await import('../services/AuthService');
 				return await authService.verifyPassword(user.id, password);
 			} catch (error) {
-				console.error('Error verifying password:', error);
+				console.error('[SecretsContext] Error verifying password:', error);
 				return false;
 			}
 		},
@@ -308,7 +308,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 				setSecretsCache(newCache);
 			} catch (error) {
-				console.error('Error loading stored secrets:', error);
+				console.error('[SecretsContext] Error loading stored secrets:', error);
 				setSecretsCache(new Map());
 			}
 		},
@@ -450,7 +450,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 				localStorage.setItem(storageKey, JSON.stringify(secrets));
 			} catch (error) {
-				console.error('Error storing secret:', error);
+				console.error('[SecretsContext] Error storing secret:', error);
 				throw new Error('Failed to store secret');
 			}
 		},
@@ -517,11 +517,14 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 					return secretValue;
 				} catch (decryptError) {
-					console.error('Failed to decrypt secret:', decryptError);
+					console.error(
+						'[SecretsContext] Failed to decrypt secret:',
+						decryptError,
+					);
 					throw new Error('Invalid password or corrupted secret data');
 				}
 			} catch (error) {
-				console.error('Error retrieving secret:', error);
+				console.error('[SecretsContext] Error retrieving secret:', error);
 				return null;
 			}
 		},
@@ -578,7 +581,10 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 					localStorage.setItem(storageKey, JSON.stringify(filteredSecrets));
 				}
 			} catch (error) {
-				console.error('Error removing secret from storage:', error);
+				console.error(
+					'[SecretsContext] Error removing secret from storage:',
+					error,
+				);
 			}
 		},
 		[user, getSecretId, getStorageKey],
@@ -612,7 +618,10 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 						s.projectId === options?.projectId,
 				);
 			} catch (error) {
-				console.error('Error checking secret existence:', error);
+				console.error(
+					'[SecretsContext] Error checking secret existence:',
+					error,
+				);
 				return false;
 			}
 		},
@@ -649,7 +658,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 				return entry?.metadata || null;
 			} catch (error) {
-				console.error('Error getting secret metadata:', error);
+				console.error('[SecretsContext] Error getting secret metadata:', error);
 				return null;
 			}
 		},
@@ -687,7 +696,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 					setSecretsCache(new Map());
 				}
 			} catch (error) {
-				console.error('Error clearing secrets:', error);
+				console.error('[SecretsContext] Error clearing secrets:', error);
 			}
 		},
 		[user, getStorageKey],
@@ -695,6 +704,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 	useEffect(() => {
 		if (!user) {
+			console.error('[SecretsContext] User not found, clearing password.');
 			clearPassword();
 		}
 	}, [user, clearPassword]);

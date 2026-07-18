@@ -338,7 +338,7 @@ class GenericLSPService {
 						transport,
 					);
 				}
-			} catch {}
+			} catch { }
 
 			if (downstreamHandler) downstreamHandler(message);
 		});
@@ -367,7 +367,7 @@ class GenericLSPService {
 					if (parsed.method === 'initialized') {
 						return;
 					}
-				} catch {}
+				} catch { }
 
 				if (handshakeComplete) {
 					transport.send(message);
@@ -535,7 +535,7 @@ class GenericLSPService {
 					`[GenericLSPService] Disconnecting from LSP server: ${configId}`,
 				);
 			} catch (error) {
-				console.error(`Error disconnecting LSP client ${configId}:`, error);
+				console.error(`[GenericLSPService] Error disconnecting LSP client ${configId}:`, error);
 			}
 			this.clients.delete(configId);
 		}
@@ -580,11 +580,11 @@ class GenericLSPService {
 		const transportChanged =
 			updates.transportConfig !== undefined &&
 			JSON.stringify(updates.transportConfig) !==
-				JSON.stringify(config.transportConfig);
+			JSON.stringify(config.transportConfig);
 		const clientConfigChanged =
 			updates.clientConfig !== undefined &&
 			JSON.stringify(updates.clientConfig) !==
-				JSON.stringify(config.clientConfig);
+			JSON.stringify(config.clientConfig);
 		const hasConnectionChanges = transportChanged || clientConfigChanged;
 
 		if (!updated.enabled) {

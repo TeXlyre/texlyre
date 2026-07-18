@@ -219,7 +219,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 			const bytes = new TextEncoder().encode(getCurrentContent()).buffer;
 			await fileStorageService.updateFileContent(fileId, bytes);
 		} catch (err) {
-			console.error('Error saving Markdown file:', err);
+			console.error('[MilkdownViewer] Error saving Markdown file:', err);
 
 			setError(
 				t('Failed to save file: {error}', {
@@ -278,7 +278,8 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 					const bytes = new TextEncoder().encode(content).buffer;
 					await fileStorageService.updateFileContent(saveFileId, bytes);
 				},
-				onError: (error) => console.error('Auto-save failed:', error),
+				onError: (error) =>
+					console.error('[MilkdownViewer] Auto-save failed:', error),
 			},
 		);
 

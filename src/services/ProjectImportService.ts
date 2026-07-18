@@ -91,7 +91,7 @@ class ProjectImportService {
 				}
 			}
 		} catch (error) {
-			console.error('Error scanning backup directory:', error);
+			console.error('[ProjectImportService] Error scanning backup directory:', error);
 		}
 
 		return importableProjects;
@@ -128,7 +128,7 @@ class ProjectImportService {
 				});
 			}
 		} catch (error) {
-			console.error('Error scanning zip file:', error);
+			console.error('[ProjectImportService] Error scanning zip file:', error);
 		}
 
 		return importableProjects;
@@ -147,7 +147,7 @@ class ProjectImportService {
 
 			await this.processImport(data, projectIds, options, result);
 		} catch (error) {
-			console.error('Error importing from backup:', error);
+			console.error('[ProjectImportService] Error importing from backup:', error);
 			projectIds.forEach((id) => {
 				result.errors.push({
 					projectId: id,
@@ -174,7 +174,7 @@ class ProjectImportService {
 
 			await this.processImport(data, projectIds, options, result);
 		} catch (error) {
-			console.error('Error importing from zip:', error);
+			console.error('[ProjectImportService] Error importing from zip:', error);
 			projectIds.forEach((id) => {
 				result.errors.push({
 					projectId: id,
@@ -339,24 +339,6 @@ class ProjectImportService {
 		};
 
 		await authDb.put('projects', newProject);
-	}
-
-	private async updateProjectCollaborators(
-		projectId: string,
-		collaboratorIds: string[],
-	): Promise<void> {
-		try {
-			const project = await authService.getProjectById(projectId);
-			if (project) {
-				const updatedProject = {
-					...project,
-					collaboratorIds,
-				} as Project & { collaboratorIds: string[] };
-				await authService.updateProject(updatedProject);
-			}
-		} catch (error) {
-			console.error('Error updating project collaborators:', error);
-		}
 	}
 }
 

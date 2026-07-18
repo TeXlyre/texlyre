@@ -372,7 +372,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			processedViewRef.current?.state?.doc?.toString() || processedContent;
 
 		if (!currentEditorContent.trim()) {
-			console.warn('BibtexViewer: Attempted to save empty content');
+			console.warn('[BibtexViewer] Attempted to save empty content');
 			return;
 		}
 
@@ -392,7 +392,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			setHasChanges(false);
 			setCurrentView('original');
 		} catch (error) {
-			console.error('Error saving BibTeX file:', error);
+			console.error('[BibtexViewer] Error saving BibTeX file:', error);
 			setError(
 				t('Failed to save file: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),
@@ -423,7 +423,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				}
 			} catch (error) {
 				console.error(
-					'BibtexViewer: Error decoding ArrayBuffer content:',
+					'[BibtexViewer] Error decoding ArrayBuffer content:',
 					error,
 				);
 				setBibtexContent('');
@@ -455,7 +455,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				}
 			} catch (error) {
 				console.error(
-					'BibtexViewer: Error decoding Uint8Array content:',
+					'[BibtexViewer] Error decoding Uint8Array content:',
 					error,
 				);
 				setBibtexContent('');
@@ -618,7 +618,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('Error exporting file:', error);
+			console.error('[BibtexViewer] Error exporting file:', error);
 			setError(
 				t('Failed to export file: {error}', {
 					error: error instanceof Error ? error.message : t('Unknown error'),

@@ -49,7 +49,7 @@ class DuplicateKeyDetectionService {
 				}
 			}
 		} catch (error) {
-			console.error('Error checking for duplicates:', error);
+			console.error('[DuplicateKeyDetectionService] Error checking for duplicates:', error);
 		}
 	}
 
@@ -71,11 +71,11 @@ class DuplicateKeyDetectionService {
 				const message =
 					result.removed === 1
 						? t('Fixed {count} duplicate file automatically', {
-								count: result.removed,
-							})
+							count: result.removed,
+						})
 						: t('Fixed {count} duplicate files automatically', {
-								count: result.removed,
-							});
+							count: result.removed,
+						});
 
 				notificationService.showSuccess(message, {
 					operationId,
@@ -87,7 +87,7 @@ class DuplicateKeyDetectionService {
 				notificationService.dismiss(operationId);
 			}
 		} catch (error) {
-			console.error('Error auto-sanitizing duplicates:', error);
+			console.error('[DuplicateKeyDetectionService] Error auto-sanitizing duplicates:', error);
 			notificationService.showError(
 				t('Failed to fix duplicate files automatically'),
 				{ operationId },

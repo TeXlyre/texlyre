@@ -179,7 +179,7 @@ class LaTeXService {
 				},
 			);
 		} catch (error) {
-			console.error('Error clearing cache directories:', error);
+			console.error('[LaTeXService] Error clearing cache directories:', error);
 			this.showErrorNotification(
 				t('Failed to clear {typesetter} cache', { typesetter: t('LaTeX') }),
 				{
@@ -259,7 +259,7 @@ class LaTeXService {
 		try {
 			await swiftLaTeXService.reinitialize();
 		} catch (error) {
-			console.error('Failed to reinitialize engine:', error);
+			console.error('[LaTeXService] Failed to reinitialize engine:', error);
 			throw error;
 		}
 	}
@@ -546,7 +546,7 @@ class LaTeXService {
 			try {
 				const raw = await fileStorageService.getFile(node.id);
 				if (raw?.content) result.push({ ...node, content: raw.content });
-			} catch {}
+			} catch { }
 		}
 		return result;
 	}

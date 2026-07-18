@@ -306,7 +306,7 @@ export class BibliographyImportService {
 			try {
 				callback(result);
 			} catch (error) {
-				console.error('Error in import notification callback:', error);
+				console.error('[BibliographyImportService] Error in import notification callback:', error);
 			}
 		});
 	}

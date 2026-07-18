@@ -334,7 +334,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 			await latexService.deleteBusyTeXBundle(bundleId);
 			setBundleCacheStatus((prev) => ({ ...prev, [bundleId]: false }));
 		} catch (error) {
-			console.error('Failed to delete bundle:', error);
+			console.error('[LaTeXExportButton] Failed to delete bundle:', error);
 		} finally {
 			setIsDeletingBundle(null);
 		}

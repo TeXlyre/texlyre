@@ -26,12 +26,12 @@ function insertUploadedImage(
 		.then((uploadedPath) => {
 			setPendingMilkdownImagePath(uploadedPath);
 			if (!runMilkdownCommand(view, 'image')) {
-				console.warn('Milkdown image command not found');
+				console.warn('[pasteUpload] Milkdown image command not found');
 				setPendingMilkdownImagePath(null);
 			}
 		})
 		.catch((error) => {
-			console.error('Error handling pasted file:', error);
+			console.error('[pasteUpload] Error handling pasted file in Milkdown:', error);
 		});
 }
 

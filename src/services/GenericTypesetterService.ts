@@ -1,6 +1,7 @@
 // src/services/GenericTypesetterService.ts
 import { nanoid } from 'nanoid';
 
+import { t } from '@/i18n';
 import type {
 	CompileArtifact,
 	CompilerInputFile,
@@ -237,7 +238,7 @@ class GenericTypesetterService {
 		}
 
 		const url = config.transportConfig.url;
-		if (!url) throw new Error('Typesetter transport URL is missing');
+		if (!url) throw new Error(t('Typesetter transport URL is missing'));
 
 		this.setConnectionStatus(config.id, 'connecting');
 		const socket = new WebSocket(url);
@@ -264,7 +265,11 @@ class GenericTypesetterService {
 				resolve();
 			});
 			socket.addEventListener('error', () =>
-				reject(new Error('Failed to connect to typesetter')),
+				reject(
+					new Error(
+						t('Failed to connect to {provider}', { provider: t('typesetter') }),
+					),
+				),
 			);
 		});
 

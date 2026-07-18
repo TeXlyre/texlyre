@@ -286,7 +286,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 					reorderTabs(sourceIndex, dropIndex);
 				}
 			} catch (error) {
-				console.error('Error handling tab drop:', error);
+				console.error('[EditorTabs] Error handling tab drop:', error);
 			} finally {
 				setIsDragging(false);
 				setDragOverIndex(-1);

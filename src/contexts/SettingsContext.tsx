@@ -206,7 +206,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 			}
 		} catch (error) {
 			console.error(
-				'Error parsing settings from localStorage on initial load:',
+				'[SettingsContext] Error parsing settings from localStorage on initial load:',
 				error,
 			);
 			localStorage.removeItem(userStorageKey);
@@ -242,7 +242,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 			localStorage.setItem(storageKey, JSON.stringify({ ...toSave, _version }));
 			localStorageSettingsRef.current = toSave;
 		} catch (error) {
-			console.error('Error saving settings to localStorage:', error);
+			console.error(
+				'[SettingsContext] Error saving settings to localStorage:',
+				error,
+			);
 		}
 	}, [settings, getStorageKey]);
 
@@ -285,7 +288,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 					return changed ? next : prev;
 				});
 			} catch (error) {
-				console.error('Error applying synced settings:', error);
+				console.error(
+					'[SettingsContext] Error applying synced settings:',
+					error,
+				);
 			}
 		};
 
@@ -346,7 +352,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				}
 
 				if (s.validate && !s.validate(validatedValue)) {
-					console.warn(`Invalid value for ${id}:`, validatedValue);
+					console.warn(
+						`[SettingsContext] Invalid value for ${id}:`,
+						validatedValue,
+					);
 					return s;
 				}
 

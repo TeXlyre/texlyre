@@ -178,7 +178,10 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
 							setDisplayBranch(storedBranch);
 						}
 					} catch (error) {
-						console.log('Could not load stored credentials.', error);
+						console.error(
+							'[GiteaBackupModal] Could not load stored credentials.',
+							error,
+						);
 					}
 				}
 			};
@@ -224,7 +227,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
 		try {
 			await operation();
 		} catch (error) {
-			console.error('Operation failed:', error);
+			console.error('[GiteaBackupModal] Operation failed:', error);
 			setError(
 				t('Operation failed: {error}', {
 					error: error instanceof Error ? error.message : String(error),
@@ -379,7 +382,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
 					setSelectedBranch(defaultBranch.name);
 				}
 			} catch (error) {
-				console.error('Failed to load branches:', error);
+				console.error('[GiteaBackupModal] Failed to load branches:', error);
 			}
 		}
 	};

@@ -73,9 +73,9 @@ class LinkNavigationService {
 				}
 			}
 
-			console.warn(`Bibliography entry not found: ${key}`);
+			console.warn(`[LinkNavigationService] Bibliography entry not found: ${key}`);
 		} catch (error) {
-			console.error('Error navigating to bib entry:', error);
+			console.error('[LinkNavigationService] Error navigating to bib entry:', error);
 		}
 	}
 
@@ -131,10 +131,10 @@ class LinkNavigationService {
 					}),
 				);
 			} else {
-				console.warn(`File not found: ${this.stripFileFragment(filePath)}`);
+				console.warn(`[LinkNavigationService] File not found: ${this.stripFileFragment(filePath)}`);
 			}
 		} catch (error) {
-			console.error('Error navigating to file:', error);
+			console.error('[LinkNavigationService] Error navigating to file:', error);
 		}
 	}
 

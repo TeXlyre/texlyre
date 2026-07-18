@@ -44,7 +44,7 @@ const setupGuestCleanup = () => {
 			const { authService } = await import('./services/AuthService');
 			await authService.cleanupExpiredGuests();
 		} catch (error) {
-			console.warn('Guest cleanup failed:', error);
+			console.warn('[main] Guest cleanup failed:', error);
 		}
 	};
 
@@ -71,12 +71,12 @@ async function clearExistingServiceWorkers() {
 	if ('serviceWorker' in navigator) {
 		const registrations = await navigator.serviceWorker.getRegistrations();
 		console.log(
-			'[ServiceWroker] Found existing service workers:',
+			'[main] Found existing service workers:',
 			registrations.length,
 		);
 		for (const registration of registrations) {
 			console.log(
-				'[ServiceWroker] Unregistering existing service worker:',
+				'[main] Unregistering existing service worker:',
 				registration.scope,
 			);
 			await registration.unregister();
@@ -100,27 +100,27 @@ if (
 ) {
 	(async () => {
 		if (clearServiceWorkerOnLoad) {
-			console.log('[ServiceWorker] Clearing existing service workers...');
+			console.log('[main] Clearing existing service workers...');
 			await clearExistingServiceWorkers();
 		} else {
-			console.log('[ServiceWorker] Skipping clearing existing service workers');
+			console.log('[main] Skipping clearing existing service workers');
 		}
 
 		const swPath = `${BASE_PATH}/sw.js`;
 		const scope = `${BASE_PATH}/`;
 
-		console.log('[ServiceWorker] Service Worker Registration ===');
+		console.log('[main] Service Worker Registration ===');
 		console.log('Service Worker Path:', swPath);
 		console.log('Scope:', scope);
 		console.log('Full Service Worker URL:', window.location.origin + swPath);
 
 		try {
-			console.log('[ServiceWorker] Attempting service worker registration...');
+			console.log('[main] Attempting service worker registration...');
 			const registration = await navigator.serviceWorker.register(swPath, {
 				scope,
 			});
 			console.log(
-				'[ServiceWorker] Service worker registered successfully:',
+				'[main] Service worker registered successfully:',
 				registration.scope,
 			);
 
@@ -131,7 +131,7 @@ if (
 				});
 			}
 		} catch (error) {
-			console.error('Service worker registration failed:', error);
+			console.error('[main] Service worker registration failed:', error);
 		}
 	})();
 }
@@ -169,7 +169,7 @@ async function initUserData(): Promise<void> {
 			};
 			localStorage.setItem(settingsKey, JSON.stringify(mergedSettings));
 			console.log(
-				`Settings updated from version ${existingSettingsVersion || 'none'} to ${newVersion}`,
+				`[main]Settings updated from version ${existingSettingsVersion || 'none'} to ${newVersion}`,
 			);
 		} else if (!existingSettings) {
 			localStorage.setItem(
@@ -186,7 +186,7 @@ async function initUserData(): Promise<void> {
 			};
 			localStorage.setItem(propertiesKey, JSON.stringify(mergedProperties));
 			console.log(
-				`Properties updated from version ${existingPropertiesVersion || 'none'} to ${newVersion}`,
+				`[main]Properties updated from version ${existingPropertiesVersion || 'none'} to ${newVersion}`,
 			);
 		} else if (!existingProperties) {
 			localStorage.setItem(
@@ -195,7 +195,7 @@ async function initUserData(): Promise<void> {
 			);
 		}
 	} catch (error) {
-		console.warn('Failed to load default user data:', error);
+		console.warn('[main] Failed to load default user data:', error);
 	}
 }
 
@@ -222,7 +222,7 @@ async function initDatabases() {
 			},
 		});
 	} catch (error) {
-		console.error('Failed to initialize databases:', error);
+		console.error('[main] Failed to initialize databases:', error);
 	}
 }
 
@@ -244,7 +244,7 @@ function setupDirection() {
 				direction = directionSetting;
 			}
 		} catch (error) {
-			console.warn('Failed to parse settings for direction:', error);
+			console.warn('[main] Failed to parse settings for direction:', error);
 		}
 	}
 
@@ -259,7 +259,7 @@ async function startApp() {
 			initUserData(),
 		]);
 	} catch (error) {
-		console.error('Error during initialization:', error);
+		console.error('[main] Error during initialization:', error);
 	}
 
 	ReactDOM.createRoot(document.getElementById('root')!).render(

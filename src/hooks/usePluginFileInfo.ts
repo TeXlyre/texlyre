@@ -31,7 +31,7 @@ export const usePluginFileInfo = (fileId?: string, fileName?: string) => {
 						});
 					}
 				} catch (error) {
-					console.error('Error loading file info:', error);
+					console.error('[usePluginFileInfo] Error loading file info:', error);
 				}
 			} else if (fileName) {
 				setFileInfo({

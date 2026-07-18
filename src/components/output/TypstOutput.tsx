@@ -275,7 +275,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 			if (!file || !isTypstFile(file.path)) return;
 			gotoEditor({ kind: 'file', fileId: selectedFileId }, { line });
 		} catch (error) {
-			console.error('Error handling line click:', error);
+			console.error('[TypstOutput] Error handling line click:', error);
 		}
 	};
 

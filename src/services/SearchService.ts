@@ -269,7 +269,7 @@ class SearchService {
 				}
 			}
 		} catch (error) {
-			console.error(`Error searching file ${file.path}:`, error);
+			console.error(`[SearchService] Error searching file ${file.path}:`, error);
 		}
 
 		return result;
@@ -338,7 +338,7 @@ class SearchService {
 
 			return false;
 		} catch (error) {
-			console.error(`Error replacing in file ${fileId}:`, error);
+			console.error(`[SearchService] Error replacing in file ${fileId}:`, error);
 			return false;
 		}
 	}
@@ -424,7 +424,7 @@ class SearchService {
 
 			return false;
 		} catch (error) {
-			console.error(`Error replacing in document ${documentId}:`, error);
+			console.error(`[SearchService] Error replacing in document ${documentId}:`, error);
 			return false;
 		}
 	}

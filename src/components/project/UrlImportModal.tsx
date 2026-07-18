@@ -5,12 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { t } from '@/i18n';
 import { useSettings } from '../../hooks/useSettings';
 import { usePageMetadata } from '../../hooks/useUrlMetadata';
-import {
-	GlobeIcon,
-	ImportIcon,
-	FolderIcon,
-	SettingsIcon,
-} from '../common/Icons';
+import { UrlIcon, ImportIcon, FolderIcon, SettingsIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 import SettingsModal from '../settings/SettingsModal';
 import TypesetterInfo from '../common/TypesetterInfo';
@@ -158,7 +153,7 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 				isOpen={isOpen}
 				onClose={handleClose}
 				title={t('Import from URL')}
-				icon={GlobeIcon}
+				icon={UrlIcon}
 				size='large'
 				headerActions={
 					<button
@@ -206,7 +201,7 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 									onClick={handleUrlSubmit}
 									disabled={!url.trim()}
 								>
-									<GlobeIcon />
+									<UrlIcon />
 									{t('Fetch Metadata')}
 								</button>
 							</div>

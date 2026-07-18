@@ -127,7 +127,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 				) || [];
 			setAllTemplates(allTemplatesFlat);
 		} catch (error) {
-			console.error('Error loading templates:', error);
+			console.error('[TemplateImportModal] Error loading templates:', error);
 			setError(
 				error instanceof Error ? error.message : t('Failed to load templates'),
 			);
@@ -187,7 +187,9 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 				setLoadedImages((prev) => new Set(prev).add(templateId));
 			};
 			img.onerror = () => {
-				console.warn(`Failed to load image for template ${templateId}`);
+				console.warn(
+					`[TemplateImportModal] Failed to load image for template ${templateId}`,
+				);
 			};
 			img.src = imageUrl;
 		},

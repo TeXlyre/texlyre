@@ -69,7 +69,7 @@ class AuthService {
 						localStorage.removeItem('texlyre-current-user');
 					}
 				} catch (error) {
-					console.error('Error restoring user session:', error);
+					console.error('[AuthService] Error restoring user session:', error);
 					localStorage.removeItem('texlyre-current-user');
 				}
 			}
@@ -77,7 +77,7 @@ class AuthService {
 			// Run cleanup on initialization
 			this.cleanupExpiredGuests();
 		} catch (error) {
-			console.error('Failed to initialize database:', error);
+			console.error('[AuthService] Failed to initialize database:', error);
 			throw error;
 		}
 	}
@@ -146,7 +146,7 @@ class AuthService {
 			);
 			return guestUser;
 		} catch (error) {
-			console.error('Failed to create guest account:', error);
+			console.error('[AuthService] Failed to create guest account:', error);
 			throw new Error(
 				t(
 					'Failed to create guest session. Please refresh the page and try again',
@@ -240,7 +240,7 @@ class AuthService {
 				`[AuthService] Transferred ${guestProjects.length} projects from guest ${oldUserId} to user ${newUserId}`,
 			);
 		} catch (error) {
-			console.error('Error transferring guest projects:', error);
+			console.error('[AuthService] Error transferring guest projects:', error);
 		}
 	}
 
@@ -267,7 +267,7 @@ class AuthService {
 				`[AuthService] Cleaned up ${expiredGuests.length} expired guest accounts`,
 			);
 		} catch (error) {
-			console.error('Error during guest cleanup:', error);
+			console.error('[AuthService] Error during guest cleanup:', error);
 		}
 	}
 
@@ -287,7 +287,7 @@ class AuthService {
 					await cleanupProjectDatabases(project);
 				} catch (error) {
 					console.warn(
-						`Failed to cleanup project database for ${project.id}:`,
+						`[AuthService] Failed to cleanup project database for ${project.id}:`,
 						error,
 					);
 				}
@@ -300,7 +300,7 @@ class AuthService {
 					try {
 						await projectTx.objectStore('projects').delete(project.id);
 					} catch (error) {
-						console.warn(`Failed to delete project ${project.id}:`, error);
+						console.warn(`[AuthService] Failed to delete project ${project.id}:`, error);
 					}
 				}
 			}
@@ -313,7 +313,7 @@ class AuthService {
 				`[AuthService] Successfully cleaned up guest: ${guestUser.id}`,
 			);
 		} catch (error) {
-			console.error(`Error cleaning up guest ${guestUser.id}:`, error);
+			console.error(`[AuthService] Error cleaning up guest ${guestUser.id}:`, error);
 		}
 	}
 
@@ -532,7 +532,7 @@ class AuthService {
 
 			return `yjs:${projectId}`;
 		} catch (error) {
-			console.error('Error creating new document:', error);
+			console.error('[AuthService] Error creating new document:', error);
 			throw new Error(t('Failed to create document for project'));
 		}
 	}
