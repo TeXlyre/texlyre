@@ -59,6 +59,11 @@ export interface CompilerUIFieldOption {
 	value: string;
 }
 
+export interface CompilerUIFieldCondition {
+	field: string;
+	in: string[];
+}
+
 export interface CompilerUIField {
 	key: string;
 	label: TranslatableText;
@@ -67,6 +72,8 @@ export interface CompilerUIField {
 	options?: CompilerUIFieldOption[];
 	help?: TranslatableText;
 	sendAs?: 'option' | 'format';
+	group?: string;
+	showWhen?: CompilerUIFieldCondition;
 }
 
 export interface CompilerUISection {

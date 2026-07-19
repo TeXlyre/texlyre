@@ -11,8 +11,14 @@ import { fileStorageService } from '../../services/FileStorageService';
 import type {
 	CompilerProvider,
 	CompilerUIField,
+	TranslatableText,
 } from '../../types/compilation';
-import { ChevronDownIcon, ExportIcon, GlobeIcon } from '../common/Icons';
+import {
+	ChevronDownIcon,
+	ExportIcon,
+	GlobeIcon,
+	OptionsIcon,
+} from '../common/Icons';
 import { getFilenameFromPath } from '../../utils/fileUtils';
 import {
 	collectValues,
@@ -41,6 +47,7 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 	const { selectedFileId, getFile, fileTree } = useFileTree();
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+	const [isGroupOpen, setIsGroupOpen] = useState(false);
 	const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const propertiesRegistered = useRef(false);
@@ -149,6 +156,30 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 	const exportLabel = resolveLabel(section?.label) || t('Export');
 	const isDisabled = isCompiling || isExporting || !effectiveMainFile;
 
+	const isFieldVisible = useCallback(
+		(field: CompilerUIField): boolean => {
+			if (!field.showWhen) return true;
+			const dep = fields.find((f) => f.key === field.showWhen?.field);
+			if (!dep) return true;
+			const stored = readValue(dep.key);
+			const current = String(
+				stored === undefined ? fieldDefault(dep) : stored,
+			);
+			return field.showWhen.in.includes(current);
+		},
+		[fields, readValue],
+	);
+
+	const visibleFields = fields.filter(isFieldVisible);
+	const ungroupedFields = visibleFields.filter((f) => !f.group);
+	const groupKey = visibleFields.find((f) => f.group)?.group;
+	const groupedFields = groupKey
+		? visibleFields.filter((f) => f.group === groupKey)
+		: [];
+	const groupLabel: TranslatableText = groupKey
+		? `${groupKey.toUpperCase()} Options`
+		: 'Options';
+
 	const renderField = (field: CompilerUIField) => {
 		const stored = readValue(field.key);
 		const value = stored === undefined ? fieldDefault(field) : stored;
@@ -247,8 +278,34 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 					</div>
 				</div>
 
-				{fields.length > 0 && (
-					<div className='dropdown-section'>{fields.map(renderField)}</div>
+				{(ungroupedFields.length > 0 || groupedFields.length > 0) && (
+					<div className='dropdown-section'>
+						{ungroupedFields.map(renderField)}
+						{groupedFields.length > 0 && (
+							<div className='format-selector-header'>
+								<div className='dropdown-title'>
+									{resolveLabel(groupLabel)}
+								</div>
+								<button
+									className={`pdf-options-toggle ${isGroupOpen ? 'active' : ''}`}
+									onClick={() => setIsGroupOpen(!isGroupOpen)}
+									title={t('Options')}
+									disabled={isExporting}
+								>
+									<OptionsIcon />
+								</button>
+							</div>
+						)}
+						{groupedFields.length > 0 && isGroupOpen && (
+							<div className='pdf-options-section'>
+								{groupedFields.map((field) => (
+									<div className='pdf-option' key={field.key}>
+										{renderField(field)}
+									</div>
+								))}
+							</div>
+						)}
+					</div>
 				)}
 
 				<div className='dropdown-section'>
