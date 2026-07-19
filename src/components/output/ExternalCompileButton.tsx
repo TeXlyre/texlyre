@@ -236,10 +236,11 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 			const dep = fields.find((f) => f.key === field.showWhen?.field);
 			if (!dep) return true;
 			const stored = readValue(dep.key);
-			const current = String(
-				stored === undefined ? fieldDefault(dep) : stored,
-			);
-			return field.showWhen.in.includes(current);
+			const resolved =
+				stored === undefined || stored === null || stored === ''
+					? fieldDefault(dep)
+					: stored;
+			return field.showWhen.in.includes(String(resolved));
 		},
 		[fields, readValue],
 	);
