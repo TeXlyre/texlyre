@@ -183,6 +183,19 @@ function normalizeUIField(value: unknown): CompilerUIField | null {
 	const help = normalizeTranslatableText(value.help);
 	const sendAs = value.sendAs === 'format' ? 'format' : 'option';
 
+	const group = typeof value.group === 'string' ? value.group : undefined;
+	const showWhen =
+		isRecord(value.showWhen) &&
+		typeof value.showWhen.field === 'string' &&
+		Array.isArray(value.showWhen.in)
+			? {
+					field: value.showWhen.field,
+					in: value.showWhen.in.filter(
+						(entry): entry is string => typeof entry === 'string',
+					),
+				}
+			: undefined;
+
 	return {
 		key,
 		label,
@@ -195,6 +208,8 @@ function normalizeUIField(value: unknown): CompilerUIField | null {
 			: {}),
 		...(options ? { options } : {}),
 		...(help !== null ? { help } : {}),
+		...(group ? { group } : {}),
+		...(showWhen ? { showWhen } : {}),
 	};
 }
 
