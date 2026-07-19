@@ -4668,6 +4668,13 @@ fast-uri@^4.0.0:
   resolved "https://registry.npmjs.org/fast-uri/-/fast-uri-4.0.0.tgz"
   integrity sha512-l90y339r2DkZs/ldcWQXcwTjkbp/NbuJDGYoQ3awBgaT3GXOFkm3OkVpz6Z86TywYcya0eVP2r1kTV90f3krGQ==
 
+fault@^2.0.0:
+  version "2.0.1"
+  resolved "https://registry.npmjs.org/fault/-/fault-2.0.1.tgz"
+  integrity sha512-WtySTkS4OKev5JtpHXnib4Gxiurzh5NCGvWrFaZ34m6JehfTUhKZvn9njTfw48t6JumVQOmrKqpmGcdwxnhqBQ==
+  dependencies:
+    format "^0.2.0"
+
 fb-watchman@^2.0.2:
   version "2.0.2"
   resolved "https://registry.npmjs.org/fb-watchman/-/fb-watchman-2.0.2.tgz"
@@ -4759,6 +4766,11 @@ for-each@^0.3.3, for-each@^0.3.5:
   integrity sha512-dKx12eRCVIzqCxFGplyFKJMPvLEWgmNtUrpTiJIR5u97zEhRG8ySrtboPHZXx7daLxQVrl643cTzbab2tkQjxg==
   dependencies:
     is-callable "^1.2.7"
+
+format@^0.2.0:
+  version "0.2.2"
+  resolved "https://registry.npmjs.org/format/-/format-0.2.2.tgz"
+  integrity sha512-wzsgA6WOq+09wrU1tsJ09udeR/YZRaeArL9e1wPbFg3GG2yDnC2ldKpxs4xunpFF9DgqCqOIra3bc1HWrJ37Ww==
 
 fs-extra@^11.1.1:
   version "11.3.2"
@@ -6162,6 +6174,18 @@ mdast-util-from-markdown@^2.0.0:
     micromark-util-types "^2.0.0"
     unist-util-stringify-position "^4.0.0"
 
+mdast-util-frontmatter@^2.0.0:
+  version "2.0.1"
+  resolved "https://registry.npmjs.org/mdast-util-frontmatter/-/mdast-util-frontmatter-2.0.1.tgz"
+  integrity sha512-LRqI9+wdgC25P0URIJY9vwocIzCcksduHQ9OF2joxQoyTNVduwLAFUzjoopuRJbJAReaKrNQKAZKL3uCMugWJA==
+  dependencies:
+    "@types/mdast" "^4.0.0"
+    devlop "^1.0.0"
+    escape-string-regexp "^5.0.0"
+    mdast-util-from-markdown "^2.0.0"
+    mdast-util-to-markdown "^2.0.0"
+    micromark-extension-frontmatter "^2.0.0"
+
 mdast-util-gfm-autolink-literal@^2.0.0:
   version "2.0.1"
   resolved "https://registry.npmjs.org/mdast-util-gfm-autolink-literal/-/mdast-util-gfm-autolink-literal-2.0.1.tgz"
@@ -6294,6 +6318,16 @@ micromark-core-commonmark@^2.0.0:
     micromark-util-normalize-identifier "^2.0.0"
     micromark-util-resolve-all "^2.0.0"
     micromark-util-subtokenize "^2.0.0"
+    micromark-util-symbol "^2.0.0"
+    micromark-util-types "^2.0.0"
+
+micromark-extension-frontmatter@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.npmjs.org/micromark-extension-frontmatter/-/micromark-extension-frontmatter-2.0.0.tgz"
+  integrity sha512-C4AkuM3dA58cgZha7zVnuVxBhDsbttIMiytjgsM2XbHAB2faRVaHRle40558FBN+DJcrLNCoqG5mlrpdU4cRtg==
+  dependencies:
+    fault "^2.0.0"
+    micromark-util-character "^2.0.0"
     micromark-util-symbol "^2.0.0"
     micromark-util-types "^2.0.0"
 
@@ -7332,6 +7366,16 @@ regjsparser@^0.13.0:
   integrity sha512-NZQZdC5wOE/H3UT28fVGL+ikOZcEzfMGk/c3iN9UGxzWHMa1op7274oyiUVrAG4B2EuFhus8SvkaYnhvW92p9Q==
   dependencies:
     jsesc "~3.1.0"
+
+remark-frontmatter@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.npmjs.org/remark-frontmatter/-/remark-frontmatter-5.0.0.tgz"
+  integrity sha512-XTFYvNASMe5iPN0719nPrdItC9aU0ssC4v14mH1BCi1u0n1gAocqcujWUrByftZTbLhRtiKRyjYTSIOcr69UVQ==
+  dependencies:
+    "@types/mdast" "^4.0.0"
+    mdast-util-frontmatter "^2.0.0"
+    micromark-extension-frontmatter "^2.0.0"
+    unified "^11.0.0"
 
 remark-gfm@^4.0.1:
   version "4.0.1"

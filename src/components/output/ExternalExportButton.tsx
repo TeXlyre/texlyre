@@ -284,9 +284,7 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 						{ungroupedFields.map(renderField)}
 						{groupedFields.length > 0 && (
 							<div className='format-selector-header'>
-								<div className='dropdown-title'>
-									{resolveLabel(groupLabel)}
-								</div>
+								<div className='dropdown-title'>{resolveLabel(groupLabel)}</div>
 								<button
 									className={`pdf-options-toggle ${isGroupOpen ? 'active' : ''}`}
 									onClick={() => setIsGroupOpen(!isGroupOpen)}

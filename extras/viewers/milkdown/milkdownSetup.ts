@@ -7,6 +7,7 @@ import {
 	editorViewOptionsCtx,
 	serializerCtx,
 	parserCtx,
+	remarkStringifyOptionsCtx,
 } from '@milkdown/kit/core';
 import { commonmark } from '@milkdown/kit/preset/commonmark';
 import { gfm } from '@milkdown/kit/preset/gfm';
@@ -49,6 +50,10 @@ import {
 	mathInlineView,
 	remarkMathPlugin,
 } from './plugins/math';
+import {
+	frontmatterSchema,
+	remarkFrontmatterPlugin,
+} from './plugins/frontmatter';
 
 export const MILKDOWN_THEME_CLASS = 'texlyre-milkdown';
 
@@ -108,6 +113,16 @@ export function configureMilkdownEditor(
 			ctx.set(rootCtx, root);
 			ctx.set(defaultValueCtx, defaultValue);
 
+			ctx.set(remarkStringifyOptionsCtx, {
+				bullet: '-',
+				rule: '-',
+				ruleRepetition: 3,
+				ruleSpaces: false,
+				setext: false,
+				listItemIndent: 'one',
+				tightDefinitions: true,
+			});
+
 			ctx.update(editorViewOptionsCtx, (prev) => ({
 				...prev,
 				attributes: {
@@ -145,6 +160,8 @@ export function configureMilkdownEditor(
 			});
 		})
 		.use(commonmark)
+		.use(remarkFrontmatterPlugin)
+		.use(frontmatterSchema)
 		.use(history)
 		.use(listener)
 		.use(listItemBlockComponent);

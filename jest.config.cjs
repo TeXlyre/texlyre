@@ -32,6 +32,7 @@ module.exports = {
 		'^@milkdown/(.*)$': '<rootDir>/tests/mocks/milkdown.js',
 		'^katex$': '<rootDir>/tests/mocks/katex.js',
 		'^remark-math$': '<rootDir>/tests/mocks/remark-math.js',
+		'^remark-frontmatter$': '<rootDir>/tests/mocks/remark-frontmatter.js',
 		'^detypify-service$': '<rootDir>/tests/mocks/detypify-service.js',
 		'^onnxruntime-web/wasm$': '<rootDir>/tests/mocks/detypify-service.js',
 		'^texlyre-busytex$': '<rootDir>/tests/mocks/texlyre-busytex.js',
