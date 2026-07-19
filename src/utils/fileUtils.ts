@@ -183,7 +183,8 @@ export function getMimeType(fileName: string): string {
 	return mime.getType(fileName) || 'application/octet-stream';
 }
 
-export function getFileExtension(mimeType: string): string {
+export function getFileExtension(mimeType: string | undefined): string {
+	if (!mimeType) return 'bin';
 	const typeMap: Record<string, string> = {
 		// Images
 		'image/jpeg': 'jpg',
@@ -256,7 +257,9 @@ export function getFileExtension(mimeType: string): string {
 		'application/x-7z-compressed': '7z',
 		'application/x-tar': 'tar',
 		'application/x-bzip2': 'bz2',
-		'application/x-xz': 'xz',
+		'application/x-xz': 'xz',	
+		'application/epub+zip': 'epub',
+		'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx'
 	};
 
 	return typeMap[mimeType] || mimeType.split('/')[1]?.split('+')[0] || 'png';

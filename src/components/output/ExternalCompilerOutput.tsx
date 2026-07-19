@@ -20,7 +20,7 @@ import type { SourceMapClickMode } from '../../types/sourceMap';
 import { toArrayBuffer } from '../../utils/fileUtils';
 import ExternalCompileButton from './ExternalCompileButton';
 import SourceMapFloatingButton from './SourceMapFloatingButton';
-import { findInputFiles, resolveLabel } from '../../utils/compilerUtils';
+import { findInputFiles, outputExtension, resolveLabel } from '../../utils/compilerUtils';
 
 interface ExternalCompilerOutputProps {
 	provider: CompilerProvider;
@@ -256,7 +256,7 @@ const ExternalCompilerOutput: React.FC<ExternalCompilerOutputProps> = ({
 										createElement(renderer.renderOutput, {
 											content: sharedContent ?? new ArrayBuffer(0),
 											mimeType: outputMimeType ?? format?.mimeType,
-											fileName: `output.${tab.format}`,
+											fileName: `output.${outputExtension(outputMimeType ?? format?.mimeType, tab.format)}`,
 											onLocationClick: handleLocationClick,
 											controllerRef: (
 												controller: RendererController | null,

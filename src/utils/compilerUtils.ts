@@ -6,6 +6,7 @@ import type {
 	TranslatableText,
 } from '../types/compilation';
 import type { FileNode } from '../types/files';
+import { getFileExtension } from './fileUtils';
 
 export function resolveLabel(value?: TranslatableText): string {
 	if (!value) return '';
@@ -78,4 +79,30 @@ export function findCompileArtifact(
 		const name = artifact.name.toLowerCase();
 		return normalizedExtensions.some((extension) => name.endsWith(extension));
 	});
+}
+
+const FORMAT_EXTENSIONS = new Set([
+	'pdf',
+	'svg',
+	'png',
+	'html',
+	'zip',
+	'epub',
+	'pptx',
+	'tex',
+	'txt',
+	'md',
+]);
+
+export function outputExtension(
+	mimeType: string | undefined,
+	format?: string,
+): string {
+	if (mimeType && mimeType !== 'application/octet-stream') {
+		return getFileExtension(mimeType);
+	}
+	if (format && FORMAT_EXTENSIONS.has(format)) {
+		return format;
+	}
+	return getFileExtension(mimeType);
 }

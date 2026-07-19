@@ -16,7 +16,7 @@ import {
 } from '../services/GenericTypesetterService';
 import type { FileNode } from '../types/files';
 import { type DownloadableFile, downloadFiles } from '../utils/zipUtils';
-import { findCompileArtifact } from '../utils/compilerUtils';
+import { findCompileArtifact, outputExtension } from '../utils/compilerUtils';
 import { getProjectName } from '../utils/urlUtils';
 import { toBytes } from '../utils/fileUtils';
 
@@ -252,7 +252,7 @@ export const ExternalCompilerProvider: React.FC<
 				const downloads: DownloadableFile[] = [
 					{
 						content: result.output,
-						name: `${baseName}.${result.format || format}`,
+						name: `${baseName}.${outputExtension(result.mimeType, result.format || format)}`,
 						mimeType,
 					},
 				];
