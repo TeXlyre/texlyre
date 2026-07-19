@@ -20,7 +20,11 @@ import type { SourceMapClickMode } from '../../types/sourceMap';
 import { toArrayBuffer } from '../../utils/fileUtils';
 import ExternalCompileButton from './ExternalCompileButton';
 import SourceMapFloatingButton from './SourceMapFloatingButton';
-import { findInputFiles, outputExtension, resolveLabel } from '../../utils/compilerUtils';
+import {
+	findInputFiles,
+	outputExtension,
+	resolveLabel,
+} from '../../utils/compilerUtils';
 
 interface ExternalCompilerOutputProps {
 	provider: CompilerProvider;

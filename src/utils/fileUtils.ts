@@ -257,9 +257,10 @@ export function getFileExtension(mimeType: string | undefined): string {
 		'application/x-7z-compressed': '7z',
 		'application/x-tar': 'tar',
 		'application/x-bzip2': 'bz2',
-		'application/x-xz': 'xz',	
+		'application/x-xz': 'xz',
 		'application/epub+zip': 'epub',
-		'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx'
+		'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+			'pptx',
 	};
 
 	return typeMap[mimeType] || mimeType.split('/')[1]?.split('+')[0] || 'png';
