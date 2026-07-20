@@ -1,5 +1,9 @@
 // src/services/ChelysService.ts
-import { deriveIdentity, type DerivedIdentity } from '@chelys/protocol';
+import {
+	deriveIdentity,
+	fromHex,
+	type DerivedIdentity,
+} from '@chelys/protocol';
 
 import { t } from '@/i18n';
 import type { User } from '../types/auth';
@@ -59,6 +63,39 @@ class ChelysService {
 		password: string,
 	): Promise<void> {
 		const prfOutput = await retrievePrfOutput();
+		const user = await authService.register(username, password);
+		await this.finalize(user, password, prfOutput);
+	}
+
+	async chelysLoginWithPrf(
+		username: string,
+		password: string,
+		prfHex: string,
+	): Promise<void> {
+		const prfOutput = fromHex(prfHex.trim().toLowerCase());
+
+		let user: User;
+		try {
+			user = await authService.login(username, password);
+		} catch (error) {
+			if (error instanceof Error && error.message === t('User not found')) {
+				const invalid =
+					validateUsername(username) || validatePassword(password);
+				if (invalid) throw new Error(invalid);
+				throw new ChelysAccountNotFoundError();
+			}
+			throw error;
+		}
+
+		await this.finalize(user, password, prfOutput);
+	}
+
+	async confirmChelysRegisterWithPrf(
+		username: string,
+		password: string,
+		prfHex: string,
+	): Promise<void> {
+		const prfOutput = fromHex(prfHex.trim().toLowerCase());
 		const user = await authService.register(username, password);
 		await this.finalize(user, password, prfOutput);
 	}

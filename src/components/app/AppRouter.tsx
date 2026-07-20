@@ -24,6 +24,7 @@ import {
 	replaceHash,
 } from '../../utils/urlUtils';
 import { batchExtractZip } from '../../utils/zipUtils';
+import { extractTempPrf } from '../../utils/chelysWebauthn';
 import AuthApp from './AuthApp';
 import EditorApp from './EditorApp';
 import LoadingScreen from './LoadingScreen';
@@ -250,6 +251,11 @@ const AppRouter: React.FC = () => {
 
 	useEffect(() => {
 		const hashUrl = window.location.hash.substring(1);
+
+		if (extractTempPrf(hashUrl)) {
+			replaceHash('');
+			return;
+		}
 
 		const urlProjectParams = parseUrlProjectParams(hashUrl);
 		if (urlProjectParams && isAuthenticated && !isInitializing) {

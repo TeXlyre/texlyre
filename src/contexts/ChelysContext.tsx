@@ -13,6 +13,16 @@ interface ChelysContextType {
 	chelysRegister: (username: string, password: string) => Promise<string>;
 	chelysLogin: (username: string, password: string) => Promise<void>;
 	confirmChelysRegister: (username: string, password: string) => Promise<void>;
+	chelysLoginWithPrf: (
+		username: string,
+		password: string,
+		prfHex: string,
+	) => Promise<void>;
+	confirmChelysRegisterWithPrf: (
+		username: string,
+		password: string,
+		prfHex: string,
+	) => Promise<void>;
 	enrollCurrent: (password: string) => Promise<string>;
 	renameEnrollment: (newUsername: string) => Promise<void>;
 	reauthenticate: (password: string, username?: string) => Promise<void>;
@@ -32,6 +42,12 @@ export const ChelysContext = createContext<ChelysContextType>({
 		throw new Error('Not implemented');
 	},
 	confirmChelysRegister: async () => {
+		throw new Error('Not implemented');
+	},
+	chelysLoginWithPrf: async () => {
+		throw new Error('Not implemented');
+	},
+	confirmChelysRegisterWithPrf: async () => {
 		throw new Error('Not implemented');
 	},
 	enrollCurrent: async () => {
@@ -104,6 +120,28 @@ export const ChelysProvider: React.FC<ChelysProviderProps> = ({ children }) => {
 		setIsLoggedIn(true);
 	};
 
+	const chelysLoginWithPrf = async (
+		username: string,
+		password: string,
+		prfHex: string,
+	): Promise<void> => {
+		await chelysService.chelysLoginWithPrf(username, password, prfHex);
+		setIsLoggedIn(true);
+	};
+
+	const confirmChelysRegisterWithPrf = async (
+		username: string,
+		password: string,
+		prfHex: string,
+	): Promise<void> => {
+		await chelysService.confirmChelysRegisterWithPrf(
+			username,
+			password,
+			prfHex,
+		);
+		setIsLoggedIn(true);
+	};
+
 	const enrollCurrent = async (password: string): Promise<string> => {
 		if (!user) throw new Error('No user');
 		const prfHex = await chelysService.enrollCurrent(user, password);
@@ -150,6 +188,8 @@ export const ChelysProvider: React.FC<ChelysProviderProps> = ({ children }) => {
 				chelysRegister,
 				chelysLogin,
 				confirmChelysRegister,
+				chelysLoginWithPrf,
+				confirmChelysRegisterWithPrf,
 				enrollCurrent,
 				renameEnrollment,
 				reauthenticate,

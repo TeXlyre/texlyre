@@ -5,7 +5,11 @@ import { useState } from 'react';
 import { t } from '@/i18n';
 import { useAuth } from '../../hooks/useAuth';
 import { useChelys } from '../../hooks/useChelys';
-import { ChelysAccountNotFoundError } from '../../utils/chelysWebauthn';
+import {
+	ChelysAccountNotFoundError,
+	getTempPrf,
+	clearTempPrf,
+} from '../../utils/chelysWebauthn';
 import GuestConsentModal from './GuestConsentModal';
 import PrivacyModal from '../common/PrivacyModal';
 import { PasskeyIcon } from '../common/Icons';
@@ -25,7 +29,13 @@ const Login: React.FC<LoginProps> = ({
 	onSwitchToImport,
 }) => {
 	const { login, createGuestAccount } = useAuth();
-	const { chelysLogin, confirmChelysRegister, logoutChelys } = useChelys();
+	const {
+		chelysLogin,
+		confirmChelysRegister,
+		chelysLoginWithPrf,
+		confirmChelysRegisterWithPrf,
+		logoutChelys,
+	} = useChelys();
 
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
@@ -72,7 +82,13 @@ const Login: React.FC<LoginProps> = ({
 		setIsLoading(true);
 
 		try {
-			await chelysLogin(username, password);
+			const tempPrf = getTempPrf();
+			if (tempPrf) {
+				await chelysLoginWithPrf(username, password, tempPrf);
+			} else {
+				await chelysLogin(username, password);
+			}
+			clearTempPrf();
 			onLoginSuccess();
 			window.location.reload();
 		} catch (error) {
@@ -95,7 +111,13 @@ const Login: React.FC<LoginProps> = ({
 		setIsLoading(true);
 
 		try {
-			await confirmChelysRegister(username, password);
+			const tempPrf = getTempPrf();
+			if (tempPrf) {
+				await confirmChelysRegisterWithPrf(username, password, tempPrf);
+			} else {
+				await confirmChelysRegister(username, password);
+			}
+			clearTempPrf();
 			onLoginSuccess();
 			window.location.reload();
 		} catch (error) {
@@ -179,6 +201,7 @@ const Login: React.FC<LoginProps> = ({
 						type='submit'
 						className={`auth-button ${isLoading ? 'loading' : ''}`}
 						disabled={isLoading}
+						hidden={getTempPrf() !== null}
 					>
 						{isLoading ? t('Logging in...') : t('Log in')}
 					</button>
@@ -192,8 +215,14 @@ const Login: React.FC<LoginProps> = ({
 						>
 							<span>{t('Log in to Chelys')}</span>
 							<span className='passkey-badge'>
-								<PasskeyIcon size={24} />
-								{t('Passkey')}
+								{getTempPrf() ? (
+									<>{t('Temporary')} </>
+								) : (
+									<>
+										<PasskeyIcon size={24} />
+										{t('Passkey')}
+									</>
+								)}
 							</span>
 						</button>
 					) : (
@@ -225,39 +254,42 @@ const Login: React.FC<LoginProps> = ({
 						</div>
 					)}
 				</form>
+				{!getTempPrf() && (
+					<>
+						<div className='guest-section'>
+							<div className='guest-divider'>
+								<span>{t('or')}</span>
+							</div>
+							<button
+								type='button'
+								className='auth-button guest-button'
+								onClick={() => setShowGuestModal(true)}
+								disabled={isLoading}
+							>
+								{t('Try as Guest')}
+							</button>
+						</div>
 
-				<div className='guest-section'>
-					<div className='guest-divider'>
-						<span>{t('or')}</span>
-					</div>
-					<button
-						type='button'
-						className='auth-button guest-button'
-						onClick={() => setShowGuestModal(true)}
-						disabled={isLoading}
-					>
-						{t('Try as Guest')}
-					</button>
-				</div>
-
-				<div className='auth-alt-action'>
-					<span>{t("Don't have an account?")}</span>
-					<button
-						className='text-button'
-						onClick={onSwitchToRegister}
-						disabled={isLoading}
-					>
-						{t('Sign up')}
-					</button>
-					<span className='auth-separator'>{t('or')}</span>
-					<button
-						className='text-button'
-						onClick={onSwitchToImport}
-						disabled={isLoading}
-					>
-						{t('Import Account')}
-					</button>
-				</div>
+						<div className='auth-alt-action'>
+							<span>{t("Don't have an account?")}</span>
+							<button
+								className='text-button'
+								onClick={onSwitchToRegister}
+								disabled={isLoading}
+							>
+								{t('Sign up')}
+							</button>
+							<span className='auth-separator'>{t('or')}</span>
+							<button
+								className='text-button'
+								onClick={onSwitchToImport}
+								disabled={isLoading}
+							>
+								{t('Import Account')}
+							</button>
+						</div>
+					</>
+				)}
 			</div>
 
 			<GuestConsentModal

@@ -3,6 +3,28 @@ import { WEBAUTHN_PRF_SALT, WEBAUTHN_RP_NAME, toHex } from '@chelys/protocol';
 
 import { toArrayBuffer } from './fileUtils';
 
+const TEMP_PRF_PREFIX = 'tempPrf:';
+
+let tempPrfHex: string | null = null;
+
+export function extractTempPrf(hashUrl: string): boolean {
+	for (const part of hashUrl.split('&')) {
+		if (part.startsWith(TEMP_PRF_PREFIX)) {
+			tempPrfHex = part.slice(TEMP_PRF_PREFIX.length).trim().toLowerCase();
+			return true;
+		}
+	}
+	return false;
+}
+
+export function getTempPrf(): string | null {
+	return tempPrfHex;
+}
+
+export function clearTempPrf(): void {
+	tempPrfHex = null;
+}
+
 async function userHandle(username: string): Promise<ArrayBuffer> {
 	return crypto.subtle.digest(
 		'SHA-256',
