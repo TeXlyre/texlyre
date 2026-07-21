@@ -18,7 +18,7 @@
 // src/App.tsx
 import '@picocss/pico/css/pico.min.css';
 import i18next from 'i18next';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import './styles/global.css';
 import './styles/components/editor.css';
@@ -73,10 +73,12 @@ import { FileSystemBackupProvider } from './contexts/FileSystemBackupContext';
 import { OfflineProvider } from './contexts/OfflineContext';
 import { PropertiesProvider } from './contexts/PropertiesContext';
 import { RecordsProvider } from './contexts/RecordsContext';
-import { SecretsContext, SecretsProvider } from './contexts/SecretsContext';
+import { SecretsProvider } from './contexts/SecretsContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { useSecrets } from './hooks/useSecrets';
+import { useChelys } from './hooks/useChelys';
 import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('App');
@@ -171,7 +173,14 @@ function AppContent() {
 		passwordModalMessage,
 		hidePasswordModal,
 		submitPassword,
-	} = useContext(SecretsContext);
+	} = useSecrets();
+	const {
+		isPrfPromptOpen,
+		prfPasswordModalMessage,
+		prfPasswordModalTitle,
+		submitPrfPassword,
+		cancelPrfPrompt,
+	} = useChelys();
 
 	return (
 		<>
@@ -183,6 +192,13 @@ function AppContent() {
 				onClose={hidePasswordModal}
 				onPasswordSubmit={submitPassword}
 				message={passwordModalMessage}
+			/>
+			<PasswordModal
+				isOpen={isPrfPromptOpen}
+				onClose={cancelPrfPrompt}
+				onPasswordSubmit={submitPrfPassword}
+				title={prfPasswordModalTitle}
+				message={prfPasswordModalMessage}
 			/>
 		</>
 	);

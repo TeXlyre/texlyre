@@ -2,9 +2,11 @@
 import type React from 'react';
 import { type ReactNode, createContext, useEffect, useState } from 'react';
 
+import { t } from '@/i18n';
 import { chelysAccountSyncService } from '../services/ChelysAccountSyncService';
 import { chelysService } from '../services/ChelysService';
 import { useAuth } from '../hooks/useAuth';
+import { getTempPrf, clearTempPrf } from '../utils/chelysWebauthn';
 
 interface ChelysContextType {
 	isEnrolled: boolean;
@@ -27,6 +29,11 @@ interface ChelysContextType {
 	renameEnrollment: (newUsername: string) => Promise<void>;
 	reauthenticate: (password: string, username?: string) => Promise<void>;
 	getPrfHex: () => Promise<string>;
+	isPrfPromptOpen: boolean;
+	prfPasswordModalMessage: string;
+	prfPasswordModalTitle: string;
+	submitPrfPassword: (password: string) => Promise<boolean>;
+	cancelPrfPrompt: () => void;
 	logoutChelys: () => void;
 	disconnect: () => Promise<void>;
 }
@@ -35,6 +42,9 @@ export const ChelysContext = createContext<ChelysContextType>({
 	isEnrolled: false,
 	isLoggedIn: false,
 	isOnline: false,
+	isPrfPromptOpen: false,
+	prfPasswordModalMessage: '',
+	prfPasswordModalTitle: '',
 	chelysRegister: async () => {
 		throw new Error('Not implemented');
 	},
@@ -62,6 +72,8 @@ export const ChelysContext = createContext<ChelysContextType>({
 	getPrfHex: async () => {
 		throw new Error('Not implemented');
 	},
+	submitPrfPassword: async () => false,
+	cancelPrfPrompt: () => {},
 	logoutChelys: () => {},
 	disconnect: async () => {
 		throw new Error('Not implemented');
@@ -75,6 +87,12 @@ interface ChelysProviderProps {
 export const ChelysProvider: React.FC<ChelysProviderProps> = ({ children }) => {
 	const { user, isGuestUser } = useAuth();
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+	const [isPrfPromptOpen, setIsPrfPromptOpen] = useState(false);
+	const prfPasswordModalMessage = t(
+		'Enter your TeXlyre password to finish connecting Chelys:',
+	);
+	const prfPasswordModalTitle = t('Connect Chelys');
 
 	const isEnrolled = !isGuestUser(user) && chelysService.isEnrolled(user);
 
@@ -93,6 +111,7 @@ export const ChelysProvider: React.FC<ChelysProviderProps> = ({ children }) => {
 				user.username,
 			);
 		}
+		if (getTempPrf()) setIsPrfPromptOpen(true);
 	}, [user, isGuestUser]);
 
 	const chelysRegister = async (
@@ -143,14 +162,14 @@ export const ChelysProvider: React.FC<ChelysProviderProps> = ({ children }) => {
 	};
 
 	const enrollCurrent = async (password: string): Promise<string> => {
-		if (!user) throw new Error('No user');
+		if (!user) throw new Error(t('No user'));
 		const prfHex = await chelysService.enrollCurrent(user, password);
 		setIsLoggedIn(true);
 		return prfHex;
 	};
 
 	const renameEnrollment = async (newUsername: string): Promise<void> => {
-		if (!user) throw new Error('No user');
+		if (!user) throw new Error(t('No user'));
 		await chelysService.renameEnrollment(user, newUsername);
 	};
 
@@ -158,13 +177,31 @@ export const ChelysProvider: React.FC<ChelysProviderProps> = ({ children }) => {
 		password: string,
 		username?: string,
 	): Promise<void> => {
-		if (!user) throw new Error('No user');
+		if (!user) throw new Error(t('No user'));
 		await chelysService.reauthenticate(user, password, username);
 		setIsLoggedIn(true);
 	};
 
 	const getPrfHex = async (): Promise<string> => {
 		return chelysService.getPrfHex();
+	};
+
+	const submitPrfPassword = async (password: string): Promise<boolean> => {
+		const prfHex = getTempPrf();
+		if (!user || !prfHex) return false;
+		try {
+			await chelysLoginWithPrf(user.username, password, prfHex);
+		} catch {
+			return false;
+		}
+		clearTempPrf();
+		setIsPrfPromptOpen(false);
+		return true;
+	};
+
+	const cancelPrfPrompt = (): void => {
+		clearTempPrf();
+		setIsPrfPromptOpen(false);
 	};
 
 	const logoutChelys = (): void => {
@@ -174,7 +211,7 @@ export const ChelysProvider: React.FC<ChelysProviderProps> = ({ children }) => {
 	};
 
 	const disconnect = async (): Promise<void> => {
-		if (!user) throw new Error('No user');
+		if (!user) throw new Error(t('No user'));
 		await chelysService.disconnect(user);
 		setIsLoggedIn(false);
 	};
@@ -194,6 +231,11 @@ export const ChelysProvider: React.FC<ChelysProviderProps> = ({ children }) => {
 				renameEnrollment,
 				reauthenticate,
 				getPrfHex,
+				isPrfPromptOpen,
+				prfPasswordModalMessage,
+				prfPasswordModalTitle,
+				submitPrfPassword,
+				cancelPrfPrompt,
 				logoutChelys,
 				disconnect,
 			}}

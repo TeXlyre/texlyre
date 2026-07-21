@@ -1,6 +1,6 @@
 // src/components/settings/SettingsCodeMirror.tsx
 import type React from 'react';
-import { useCallback, useContext, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { EditorView, lineNumbers } from '@codemirror/view';
 import { EditorState, Compartment } from '@codemirror/state';
 import { basicSetup } from 'codemirror';
@@ -12,7 +12,7 @@ import { html } from '@codemirror/lang-html';
 import { oneDark } from '@codemirror/theme-one-dark';
 
 import type { Setting } from '../../contexts/SettingsContext';
-import { ThemeContext } from '../../contexts/ThemeContext';
+import { useTheme } from '../../hooks/useTheme';
 
 interface SettingsCodeMirrorProps {
 	setting: Setting;
@@ -61,7 +61,7 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
 	onChange,
 }) => {
 	const options = { ...DEFAULT_OPTIONS, ...setting.codeMirrorOptions };
-	const { currentVariant } = useContext(ThemeContext);
+	const { currentVariant } = useTheme();
 	const editorViewRef = useRef<EditorView | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const onChangeRef = useRef(onChange);
