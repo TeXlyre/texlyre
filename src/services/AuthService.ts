@@ -2,6 +2,7 @@
 import { type IDBPDatabase, openDB } from 'idb';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
+import { argon2id, argon2Verify } from "hash-wasm";
 
 import { t } from '@/i18n';
 import type { User } from '../types/auth';
@@ -83,13 +84,6 @@ class AuthService {
 			moduleLog.error('Failed to initialize database:', error);
 			throw error;
 		}
-	}
-
-	async hashPassword(password: string): Promise<string> {
-		const msgBuffer = new TextEncoder().encode(password);
-		const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-		const hashArray = Array.from(new Uint8Array(hashBuffer));
-		return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 	}
 
 	generateSessionId(): string {
@@ -374,8 +368,7 @@ class AuthService {
 			throw new Error(t('User not found'));
 		}
 
-		const passwordHash = await this.hashPassword(password);
-		if (user.passwordHash !== passwordHash) {
+		if (!this.verifyPasswordHash(user.passwordHash, password)) {
 			throw new Error(t('Invalid password'));
 		}
 
@@ -467,14 +460,50 @@ class AuthService {
 		return !!this.currentUser;
 	}
 
+	private async hashPasswordOld(password: string): Promise<string> {
+		const msgBuffer = new TextEncoder().encode(password);
+		const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+		const hashArray = Array.from(new Uint8Array(hashBuffer));
+		return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+	}
+
+	private async verifyPasswordHashOld(passwordHash: string, password: string): Promise<boolean> {
+		return passwordHash === await this.hashPasswordOld(password);
+	}
+
+	async hashPassword(password: string): Promise<string> {
+		const salt = new Uint8Array(16);
+		window.crypto.getRandomValues(salt);
+		return argon2id({
+			password,
+			salt,
+			iterations: 3,
+			memorySize: 64 * 1024,
+			parallelism: 1,
+			hashLength: 32,
+			outputType: "encoded",
+		});
+	}
+
+	private async verifyPasswordHash(passwordHash: string, password: string): Promise<boolean> {
+		return argon2Verify({ password, hash: passwordHash });
+	}
+
 	async verifyPassword(userId: string, password: string): Promise<boolean> {
 		if (!this.db) await this.initialize();
 
-		const user = await this.getUserById(userId);
+		let user = await this.getUserById(userId);
 		if (!user) return false;
 
-		const passwordHash = await this.hashPassword(password);
-		return user.passwordHash === passwordHash;
+		// update user.passwordHash if old hashing method is used
+		if (!user.passwordHash.startsWith("$argon2")) {
+			const isValid = await this.verifyPasswordHashOld(user.passwordHash, password);
+			if (isValid) {
+				user = await this.updatePassword(user.id, password);
+			}
+		}
+
+		return this.verifyPasswordHash(user.passwordHash, password);
 	}
 
 	async updatePassword(userId: string, newPassword: string): Promise<User> {
