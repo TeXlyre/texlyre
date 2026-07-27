@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.10.1",
+	"version": "0.10.2",
 	"description": "A local-first LaTeX & Typst collaborative web editor ",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -115,7 +115,7 @@
 		"mime": "^4.0.1",
 		"nanoid": "^5.0.5",
 		"nanotar": "^0.3.0",
-		"next": "^16.2.6",
+		"next": "^16.2.12",
 		"node-diff3": "^3.2.0",
 		"onnxruntime-web": "^1.24.3",
 		"pako": "^2.1.0",
@@ -161,6 +161,9 @@
 		"protobufjs@<=7.6.2": ">=7.6.3",
 		"js-yaml@<=4.1.1": ">=4.2.0",
 		"@babel/core@<=7.29.0": ">=8.0.0",
+		"next": {
+			"sharp": "^0.35.3"
+		},
 		"protobufjs@<=7.6.0": ">=7.6.1",
 		"dompurify@<3.4.9": ">=3.4.11"
 	},
@@ -188,12 +191,23 @@
 			"protobufjs@<=7.6.2": ">=7.6.3",
 			"js-yaml@<=4.1.1": ">=4.2.0",
 			"@babel/core@<=7.29.0": ">=8.0.0",
+			"sharp": "^0.35.3",
 			"protobufjs@<=7.6.0": ">=7.6.1",
 			"dompurify@<3.4.9": ">=3.4.11",
 			"brace-expansion@>=3.0.0 <5.0.7": ">=5.0.7",
 			"js-yaml@>=4.0.0 <4.3.0": ">=4.3.0",
 			"protobufjs@>=8.2.0 <=8.6.4": ">=8.6.5",
-			"protobufjs@>=8.0.0 <=8.6.5": ">=8.6.6"
+			"protobufjs@>=8.0.0 <=8.6.5": ">=8.6.6",
+			"immutable@>=5.0.0-beta.1 <5.1.8": ">=5.1.8",
+			"dompurify@<=3.4.11": ">=3.4.12",
+			"fast-uri@>=4.0.0 <=4.1.0": ">=4.1.1",
+			"fast-uri@>=4.0.0 <4.0.1": ">=4.0.1",
+			"postcss@<=8.5.11": ">=8.5.12",
+			"js-yaml@>=5.0.0 <=5.2.1": ">=5.2.2",
+			"postcss@<=8.5.17": ">=8.5.18",
+			"brace-expansion@<=5.0.7": ">=5.0.8",
+			"sharp@<0.35.0": ">=0.35.0",
+			"next@>=16.0.0 <16.2.11": ">=16.2.11"
 		},
 		"peerDependencyRules": {
 			"allowedVersions": {
@@ -252,7 +266,7 @@
 	},
 	"allowScripts": {
 		"protobufjs@7.6.4": true,
-		"sharp@0.34.5": true,
+		"sharp@0.35.3": true,
 		"esbuild@0.28.1": true,
 		"unrs-resolver@1.12.2": true
 	}
