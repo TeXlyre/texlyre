@@ -1,4 +1,4 @@
-// src/services/FileSyncService.ts
+// src/services/PeerFileSyncService.ts
 import {
 	type CompletedFile,
 	type FileInfo,
@@ -8,6 +8,7 @@ import {
 import { nanoid } from 'nanoid';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import type { FileSyncInfo, FileSyncNotification } from '../types/fileSync';
 import type { FileNode } from '../types/files';
 import {
@@ -15,15 +16,14 @@ import {
 	isTemporaryFile,
 	toArrayBuffer,
 } from '../utils/fileUtils';
-import { fileStorageService } from './FileStorageService';
+import { fileStoreService } from './FileStoreService';
 import { notificationService } from './NotificationService';
-import { createNamedLogger } from '@/logging';
 
-const moduleLog = createNamedLogger('FileSyncService');
+const moduleLog = createNamedLogger('PeerFileSyncService');
 
 export type ConflictResolution = 'prefer-latest' | 'prefer-local' | 'notify';
 
-class FileSyncService {
+class PeerFileSyncService {
 	private activeUploaders = new Map<string, FilePizzaUploader>();
 	private activeDownloaders = new Map<string, FilePizzaDownloader>();
 	private listeners: Array<(notification: FileSyncNotification) => void> = [];
@@ -125,10 +125,10 @@ class FileSyncService {
 	): Promise<FileSyncInfo[]> {
 		try {
 			if (docUrl) {
-				await fileStorageService.initialize(docUrl);
+				await fileStoreService.initialize(docUrl);
 			}
 
-			const allFiles = await fileStorageService.getAllFiles(true, true, false);
+			const allFiles = await fileStoreService.getAllFiles(true, true, false);
 			const relevantFiles = allFiles.filter(
 				(file) => file.type === 'file' && !isTemporaryFile(file.path),
 			);
@@ -155,7 +155,7 @@ class FileSyncService {
 						content = new ArrayBuffer(0);
 					} else {
 						try {
-							const storedFile = await fileStorageService.getFile(file.id);
+							const storedFile = await fileStoreService.getFile(file.id);
 							content = storedFile?.content
 								? storedFile.content instanceof ArrayBuffer
 									? storedFile.content
@@ -352,7 +352,7 @@ class FileSyncService {
 	): Promise<{ link: string }> {
 		try {
 			if (docUrl) {
-				await fileStorageService.initialize(docUrl);
+				await fileStoreService.initialize(docUrl);
 			}
 			moduleLog.info(
 				`Uploading ${fileIds.length} files for request ${requestId}`,
@@ -366,7 +366,7 @@ class FileSyncService {
 			await uploader.initialize();
 
 			const filesToUpload: File[] = [];
-			const filesFromDb = await fileStorageService.getFilesByIds(fileIds);
+			const filesFromDb = await fileStoreService.getFilesByIds(fileIds);
 
 			for (const file of filesFromDb) {
 				if (!file) {
@@ -431,7 +431,7 @@ class FileSyncService {
 		docUrl?: string,
 	): Promise<void> {
 		if (docUrl) {
-			await fileStorageService.initialize(docUrl);
+			await fileStoreService.initialize(docUrl);
 		}
 
 		await this.downloadFromLink(
@@ -452,7 +452,7 @@ class FileSyncService {
 		remoteDocumentId?: string,
 	): Promise<FileNode | null> {
 		try {
-			await fileStorageService.createDirectoryPath(expectedPath);
+			await fileStoreService.createDirectoryPath(expectedPath);
 
 			const fileContent = downloadedFile.content || downloadedFile.data;
 			let processedContent: ArrayBuffer;
@@ -488,7 +488,7 @@ class FileSyncService {
 				processedContent = fileContent;
 			}
 
-			const existingFile = await fileStorageService.getFileByPath(
+			const existingFile = await fileStoreService.getFileByPath(
 				expectedPath,
 				true,
 			);
@@ -600,7 +600,7 @@ class FileSyncService {
 									false;
 
 								if (docUrl) {
-									await fileStorageService.initialize(docUrl);
+									await fileStoreService.initialize(docUrl);
 								}
 
 								if (isDeleted) {
@@ -623,7 +623,7 @@ class FileSyncService {
 						}
 
 						if (filesToStore.length > 0) {
-							await fileStorageService.batchStoreFiles(filesToStore, {
+							await fileStoreService.batchStoreFiles(filesToStore, {
 								preserveTimestamp: true,
 								showConflictDialog: false,
 								preserveDeletionStatus: false,
@@ -633,7 +633,7 @@ class FileSyncService {
 						if (filesToDelete.length > 0) {
 							for (const filePath of filesToDelete) {
 								try {
-									await fileStorageService.deleteFileByPath(filePath, {
+									await fileStoreService.deleteFileByPath(filePath, {
 										showDeleteDialog: false,
 										hardDelete: false,
 										allowLinkedFileDelete: true,
@@ -840,4 +840,4 @@ class FileSyncService {
 	}
 }
 
-export const fileSyncService = new FileSyncService();
+export const peerFileSyncService = new PeerFileSyncService();

@@ -1,4 +1,4 @@
-// src/components/common/StorageBanner.tsx
+// src/components/common/QuotaBanner.tsx
 import type React from 'react';
 
 import { t } from '@/i18n';
@@ -6,7 +6,7 @@ import { useStorageQuota } from '../../hooks/useStorageQuota';
 import { formatFileSize } from '../../utils/fileUtils';
 import { AlertCircleIcon } from './Icons';
 
-const StorageBanner: React.FC = () => {
+const QuotaBanner: React.FC = () => {
 	const { isLow, hideBanner, availableBytes } = useStorageQuota();
 
 	if (!isLow || hideBanner) return null;
@@ -32,4 +32,4 @@ const StorageBanner: React.FC = () => {
 	);
 };
 
-export default StorageBanner;
+export default QuotaBanner;

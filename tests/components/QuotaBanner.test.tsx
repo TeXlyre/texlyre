@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import StorageBanner from '@src/components/common/StorageBanner';
+import QuotaBanner from '@src/components/common/QuotaBanner';
 import { useStorageQuota } from '@src/hooks/useStorageQuota';
 
 jest.mock('@src/hooks/useStorageQuota', () => ({
@@ -10,7 +10,7 @@ const mockedUseStorageQuota = useStorageQuota as jest.MockedFunction<
     typeof useStorageQuota
 >;
 
-describe('StorageBanner Component', () => {
+describe('QuotaBanner Component', () => {
     const buildState = (overrides: Record<string, unknown> = {}) =>
         ({
             isSupported: true,
@@ -35,7 +35,7 @@ describe('StorageBanner Component', () => {
     it('should warn when storage is low', () => {
         mockedUseStorageQuota.mockReturnValue(buildState());
 
-        render(<StorageBanner />);
+        render(<QuotaBanner />);
 
         expect(screen.getByText('Browser storage is almost full')).toBeInTheDocument();
         expect(screen.getByText(/100.0 MB left/)).toBeInTheDocument();
@@ -44,7 +44,7 @@ describe('StorageBanner Component', () => {
     it('should render nothing when storage is not low', () => {
         mockedUseStorageQuota.mockReturnValue(buildState({ isLow: false }));
 
-        const { container } = render(<StorageBanner />);
+        const { container } = render(<QuotaBanner />);
 
         expect(container).toBeEmptyDOMElement();
     });
@@ -52,7 +52,7 @@ describe('StorageBanner Component', () => {
     it('should render nothing when the banner is hidden by settings', () => {
         mockedUseStorageQuota.mockReturnValue(buildState({ hideBanner: true }));
 
-        const { container } = render(<StorageBanner />);
+        const { container } = render(<QuotaBanner />);
 
         expect(container).toBeEmptyDOMElement();
     });
@@ -60,7 +60,7 @@ describe('StorageBanner Component', () => {
     it('should report an exhausted quota without a size', () => {
         mockedUseStorageQuota.mockReturnValue(buildState({ availableBytes: 0 }));
 
-        render(<StorageBanner />);
+        render(<QuotaBanner />);
 
         expect(
             screen.getByText('No space left. Saving files and compiling will fail.'),
