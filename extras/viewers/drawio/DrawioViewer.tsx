@@ -253,8 +253,16 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			if (event.origin !== drawioOrigin) return;
 			if (typeof event.data !== 'string') return;
 
+			const rawMessage = event.data.trim();
+			if (
+				!rawMessage ||
+				(!rawMessage.startsWith('{') && !rawMessage.startsWith('['))
+			) {
+				return;
+			}
+
 			try {
-				const message = JSON.parse(event.data);
+				const message = JSON.parse(rawMessage);
 
 				if (message.error) {
 					moduleLog.warn('Draw.io embed error:', message.error, message);

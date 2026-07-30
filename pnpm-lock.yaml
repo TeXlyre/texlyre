@@ -7,7 +7,7 @@ settings:
 overrides:
   rimraf: ^6.1.3
   minimatch: ^10.2.2
-  postcss: ^8.5.10
+  postcss: ^8.5.25
   uri-js: npm:uri-js-replace@1.0.1
   serialize-javascript: ^7.0.5
   tr46: ^6.0.0
@@ -15,34 +15,19 @@ overrides:
   tough-cookie: ^6.0.1
   glob: ^13.0.6
   inflight: npm:inflight-lru@^1.0.0
-  protobufjs: ^7.5.8
-  fast-uri: ^4.0.0
+  protobufjs: ^8.7.1
+  fast-uri: ^4.1.1
   '@babel/plugin-transform-modules-systemjs@>=7.12.0 <=7.29.3': ^7.29.4
   '@protobufjs/utf8@<=1.1.0': ^1.1.1
-  js-yaml: ^5.1.0
-  brace-expansion@>=5.0.0 <5.0.6: '>=5.0.6'
+  js-yaml: ^5.2.2
+  brace-expansion: '>=5.0.8'
   ws: ^8.21.0
   esbuild@>=0.17.0 <0.28.1: '>=0.28.1'
   esbuild@>=0.27.3 <0.28.1: '>=0.28.1'
-  protobufjs@<=7.6.2: '>=7.6.3'
-  js-yaml@<=4.1.1: '>=4.2.0'
   '@babel/core@<=7.29.0': '>=8.0.0'
   sharp: ^0.35.3
-  protobufjs@<=7.6.0: '>=7.6.1'
-  dompurify@<3.4.9: '>=3.4.11'
-  brace-expansion@>=3.0.0 <5.0.7: '>=5.0.7'
-  js-yaml@>=4.0.0 <4.3.0: '>=4.3.0'
-  protobufjs@>=8.2.0 <=8.6.4: '>=8.6.5'
-  protobufjs@>=8.0.0 <=8.6.5: '>=8.6.6'
+  dompurify: '>=3.4.12'
   immutable@>=5.0.0-beta.1 <5.1.8: '>=5.1.8'
-  dompurify@<=3.4.11: '>=3.4.12'
-  fast-uri@>=4.0.0 <=4.1.0: '>=4.1.1'
-  fast-uri@>=4.0.0 <4.0.1: '>=4.0.1'
-  postcss@<=8.5.11: '>=8.5.12'
-  js-yaml@>=5.0.0 <=5.2.1: '>=5.2.2'
-  postcss@<=8.5.17: '>=8.5.18'
-  brace-expansion@<=5.0.7: '>=5.0.8'
-  sharp@<0.35.0: '>=0.35.0'
   next@>=16.0.0 <16.2.11: '>=16.2.11'
 
 importers:
@@ -200,8 +185,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       mathlive:
-        specifier: ^0.108.2
-        version: 0.108.3
+        specifier: ^0.110.0
+        version: 0.110.0
       mime:
         specifier: ^4.0.1
         version: 4.1.0
@@ -364,7 +349,7 @@ importers:
         version: 30.4.1
       postcss-rtlcss:
         specifier: ^6.0.0
-        version: 6.0.0(postcss@8.5.23)
+        version: 6.0.0(postcss@8.5.25)
       ts-jest:
         specifier: ^29.4.9
         version: 29.4.9(@babel/core@8.0.1)(@jest/transform@30.4.1)(@jest/types@30.4.1)(babel-jest@30.4.1(@babel/core@8.0.1))(esbuild@0.28.1)(jest-util@30.4.1)(jest@30.4.2(@types/node@25.6.0)(ts-node@10.9.2(@types/node@25.6.0)(typescript@6.0.2)))(typescript@6.0.2)
@@ -406,6 +391,9 @@ packages:
     engines: {node: '>=10'}
     peerDependencies:
       ajv: '>=8'
+
+  '@arnog/colors@0.5.0':
+    resolution: {integrity: sha512-NB7yqrO7qvInsqJdqz6C6mDU+2oiKmbBbk3czMS0E7KkGxLRy538tEHCsB5TKqmaxxXpi6/U120TnGl8NsDePg==}
 
   '@asamuzakjp/css-color@3.2.0':
     resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
@@ -1239,8 +1227,8 @@ packages:
   '@codemirror/view@6.41.0':
     resolution: {integrity: sha512-6H/qadXsVuDY219Yljhohglve8xf4B8xJkVOEWfA5uiYKiTFppjqsvsfR5iPA0RbvRBoOyTZpbLIxe9+0UR8xA==}
 
-  '@cortex-js/compute-engine@0.30.2':
-    resolution: {integrity: sha512-Zx+iisk9WWdbxjm8EYsneIBszvjfUs7BHNwf1jBtSINIgfWGpHrTTq9vW0J59iGCFt6bOFxbmWyxNMRSmksHMA==}
+  '@cortex-js/compute-engine@0.58.0':
+    resolution: {integrity: sha512-N0+vXjVZfKwJS7ZIGvq41mojI55m5TrdDXveAXzNjzjZ9iNiNrdEzXL2EmrcP+9GCWCwTonrEeZWAIG78f3INg==}
     engines: {node: '>=21.7.3', npm: '>=10.5.0'}
 
   '@cspotcode/source-map-support@0.8.1':
@@ -3626,8 +3614,8 @@ packages:
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
 
-  fast-uri@4.0.0:
-    resolution: {integrity: sha512-l90y339r2DkZs/ldcWQXcwTjkbp/NbuJDGYoQ3awBgaT3GXOFkm3OkVpz6Z86TywYcya0eVP2r1kTV90f3krGQ==}
+  fast-uri@4.1.1:
+    resolution: {integrity: sha512-YPOs1zD5TG2+EZt+r88LwF6mclA7TPkpwMP7ZN3TO2HiHS8TXvq7QA/17iJsV9dubcLo/f8eEYqMBruyQV21hQ==}
 
   fault@2.0.1:
     resolution: {integrity: sha512-WtySTkS4OKev5JtpHXnib4Gxiurzh5NCGvWrFaZ34m6JehfTUhKZvn9njTfw48t6JumVQOmrKqpmGcdwxnhqBQ==}
@@ -4232,12 +4220,8 @@ packages:
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
-  js-yaml@4.2.0:
-    resolution: {integrity: sha512-ePWsvanv0DWuDRsW8dnt+R4jQ31SCRCQ7hhNcPXZPsoBZiemuZNYGf7adZdqX2D86j6rvKp3RpCxVTSb8WQlOw==}
-    hasBin: true
-
-  js-yaml@5.2.1:
-    resolution: {integrity: sha512-zfLtNfQqxVqq3uaTqSkh4x4hZw3KHobGUA0fJUj4wawW8bsQLTVqpHdXSIzidh7o+4lEW36tANuAGdaFx6Zgnw==}
+  js-yaml@5.2.2:
+    resolution: {integrity: sha512-dayzUzKkJ1MkuUtZglSebU43utNXH0OWQByK9rKOOuYIO8M5TV1y+n8ALMdG0rdzBnfNkOmZEqrURepb0ejqBw==}
     hasBin: true
 
   jsdom@26.1.0:
@@ -4456,8 +4440,8 @@ packages:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
 
-  mathlive@0.108.3:
-    resolution: {integrity: sha512-VaGtSn95MogS2im/t6repac9W7GJG1J4bJ94ozdKYer8m+fQ8ClYy9wXoypZiuywueNxudWw4us6W6xhRoRdww==}
+  mathlive@0.110.0:
+    resolution: {integrity: sha512-UOpJsQ6h1eeN0xZULGTl1MwUB/lZLCDuzKeHvKEh7Zra8U/rtgDNrssj5PZdJtBTIV48AfEhtv6rv47AeMOxJA==}
 
   mdast-util-definitions@6.0.0:
     resolution: {integrity: sha512-scTllyX6pnYNZH/AIp/0ePz6s4cZtARxImwoPJ7kS42n+MnVsI4XbnG6d4ibehRIldYMWM2LD7ImQblVhUejVQ==}
@@ -4835,10 +4819,10 @@ packages:
     resolution: {integrity: sha512-iJMOT4vM6EOnvNUm+uZycpqqTeHCTMGPsyxIHloVUioECgKIrvtWtPIczc5NMc14x5ZJGadwUs0L1o6iZDCldg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      postcss: '>=8.5.18'
+      postcss: ^8.5.25
 
-  postcss@8.5.23:
-    resolution: {integrity: sha512-g50586zr4bZmwFiTlflMu8E0bDTb5I5gertgwAKmsdUlTQIhZtunzUlD1WSzwcVWPoAVpsrA6vlfCD7oXvRwgg==}
+  postcss@8.5.25:
+    resolution: {integrity: sha512-DTPx3RWSSnWyzLxQnlH0rJP+EW5ekl16ZU4/psbIhA0e53kJfdgaN5vKM+xP7yJtXVu+nfdVFmlgFDEKAe4Pyw==}
     engines: {node: ^10 || ^12 || >=14}
 
   prelude-ls@1.2.1:
@@ -4923,8 +4907,8 @@ packages:
       prosemirror-view:
         optional: true
 
-  protobufjs@8.6.3:
-    resolution: {integrity: sha512-alQyzT0j401LGBtwsqu6uprjR6pfNH1UJf9N6GBFMjIcd+HzTe0/HrjAbFCqun+zvnfLarrxAtMM2xvZ+kFZ5A==}
+  protobufjs@8.7.1:
+    resolution: {integrity: sha512-agdGHrXNTv0IrYscJPDou/PlEJk1c/hBZ9o/B5NH2i/nSPtPqacNxzgwf1CebXxFMjMrZH5sqv9uQuw96aGt/A==}
     engines: {node: '>=12.0.0'}
 
   punycode@2.3.1:
@@ -6062,6 +6046,8 @@ snapshots:
       ajv: 8.18.0
       jsonpointer: 5.0.1
       leven: 3.1.0
+
+  '@arnog/colors@0.5.0': {}
 
   '@asamuzakjp/css-color@3.2.0':
     dependencies:
@@ -7208,8 +7194,9 @@ snapshots:
       style-mod: 4.1.3
       w3c-keyname: 2.2.8
 
-  '@cortex-js/compute-engine@0.30.2':
+  '@cortex-js/compute-engine@0.58.0':
     dependencies:
+      '@arnog/colors': 0.5.0
       complex-esm: 2.1.1-esm1
       decimal.js: 10.6.0
 
@@ -7367,7 +7354,7 @@ snapshots:
       globals: 14.0.0
       ignore: 5.3.2
       import-fresh: 3.3.1
-      js-yaml: 5.2.1
+      js-yaml: 5.2.2
       minimatch: 10.2.5
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
@@ -7518,7 +7505,7 @@ snapshots:
       camelcase: 5.3.1
       find-up: 4.1.0
       get-package-type: 0.1.0
-      js-yaml: 4.2.0
+      js-yaml: 5.2.2
       resolve-from: 5.0.0
 
   '@istanbuljs/schema@0.1.6': {}
@@ -9186,7 +9173,7 @@ snapshots:
       '@vue/shared': 3.5.35
       estree-walker: 2.0.2
       magic-string: 0.30.21
-      postcss: 8.5.23
+      postcss: 8.5.25
       source-map-js: 1.2.1
 
   '@vue/compiler-ssr@3.5.35':
@@ -9240,7 +9227,7 @@ snapshots:
   ajv@8.18.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 4.0.0
+      fast-uri: 4.1.1
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -9941,7 +9928,7 @@ snapshots:
 
   fast-levenshtein@2.0.6: {}
 
-  fast-uri@4.0.0: {}
+  fast-uri@4.1.1: {}
 
   fault@2.0.1:
     dependencies:
@@ -10704,11 +10691,7 @@ snapshots:
 
   js-tokens@4.0.0: {}
 
-  js-yaml@4.2.0:
-    dependencies:
-      argparse: 2.0.1
-
-  js-yaml@5.2.1:
+  js-yaml@5.2.2:
     dependencies:
       argparse: 2.0.1
 
@@ -10899,9 +10882,9 @@ snapshots:
 
   math-intrinsics@1.1.0: {}
 
-  mathlive@0.108.3:
+  mathlive@0.110.0:
     dependencies:
-      '@cortex-js/compute-engine': 0.30.2
+      '@cortex-js/compute-engine': 0.58.0
 
   mdast-util-definitions@6.0.0:
     dependencies:
@@ -11278,7 +11261,7 @@ snapshots:
       '@swc/helpers': 0.5.15
       baseline-browser-mapping: 2.10.17
       caniuse-lite: 1.0.30001787
-      postcss: 8.5.23
+      postcss: 8.5.25
       react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
       styled-jsx: 5.1.6(@babel/core@8.0.1)(react@19.2.5)
@@ -11345,7 +11328,7 @@ snapshots:
       long: 5.3.2
       onnxruntime-common: 1.23.2
       platform: 1.3.6
-      protobufjs: 8.6.3
+      protobufjs: 8.7.1
 
   onnxruntime-web@1.24.3:
     dependencies:
@@ -11354,7 +11337,7 @@ snapshots:
       long: 5.3.2
       onnxruntime-common: 1.24.3
       platform: 1.3.6
-      protobufjs: 8.6.3
+      protobufjs: 8.7.1
 
   optionator@0.9.4:
     dependencies:
@@ -11454,12 +11437,12 @@ snapshots:
 
   possible-typed-array-names@1.1.0: {}
 
-  postcss-rtlcss@6.0.0(postcss@8.5.23):
+  postcss-rtlcss@6.0.0(postcss@8.5.25):
     dependencies:
-      postcss: 8.5.23
+      postcss: 8.5.25
       rtlcss: 4.3.0
 
-  postcss@8.5.23:
+  postcss@8.5.25:
     dependencies:
       nanoid: 3.3.16
       picocolors: 1.1.1
@@ -11578,7 +11561,7 @@ snapshots:
       prosemirror-state: 1.4.4
       prosemirror-view: 1.41.8
 
-  protobufjs@8.6.3:
+  protobufjs@8.7.1:
     dependencies:
       long: 5.3.2
 
@@ -11834,7 +11817,7 @@ snapshots:
     dependencies:
       escalade: 3.2.0
       picocolors: 1.1.1
-      postcss: 8.5.23
+      postcss: 8.5.25
       strip-json-comments: 3.1.1
 
   rxjs@7.8.2:
@@ -12563,7 +12546,7 @@ snapshots:
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.4
-      postcss: 8.5.23
+      postcss: 8.5.25
       rolldown: 1.0.3
       tinyglobby: 0.2.17
     optionalDependencies:

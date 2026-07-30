@@ -76,8 +76,16 @@ export class DrawioYjsAdapter {
 		if (event.origin !== this.drawioOrigin) return;
 		if (typeof event.data !== 'string') return;
 
+		const rawMessage = event.data.trim();
+		if (
+			!rawMessage ||
+			(!rawMessage.startsWith('{') && !rawMessage.startsWith('['))
+		) {
+			return;
+		}
+
 		try {
-			const message = JSON.parse(event.data);
+			const message = JSON.parse(rawMessage);
 
 			if (message.event === 'init') {
 				this.loadInitialContent();
@@ -308,9 +316,18 @@ export class DrawioYjsAdapter {
 
 			const exportHandler = (event: MessageEvent) => {
 				if (event.origin !== this.drawioOrigin) return;
+				if (typeof event.data !== 'string') return;
+
+				const rawMessage = event.data.trim();
+				if (
+					!rawMessage ||
+					(!rawMessage.startsWith('{') && !rawMessage.startsWith('['))
+				) {
+					return;
+				}
 
 				try {
-					const message = JSON.parse(event.data);
+					const message = JSON.parse(rawMessage);
 					if (message.event === 'export') {
 						clearTimeout(timeout);
 						window.removeEventListener('message', exportHandler);
