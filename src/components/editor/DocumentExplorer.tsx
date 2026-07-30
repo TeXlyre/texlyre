@@ -3,6 +3,7 @@ import type React from 'react';
 import { useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { filePathCacheService } from '../../services/FilePathCacheService';
 import { useCollab } from '../../hooks/useCollab';
@@ -22,7 +23,6 @@ import {
 import Modal from '../common/Modal';
 import DropdownMenu from '../common/DropdownMenu';
 import { formatDate } from '../../utils/dateUtils';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('DocumentExplorer');
 

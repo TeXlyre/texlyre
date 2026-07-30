@@ -12,7 +12,7 @@ import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import { useTheme } from '@/hooks/useTheme';
 import type { ViewerProps } from '@/plugins/PluginInterface';
-import { fileStorageService } from '@/services/FileStorageService';
+import { fileStoreService } from '@/services/FileStoreService';
 import { formatFileSize } from '@/utils/fileUtils';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './DrawioViewerPlugin';
@@ -227,7 +227,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				const encoder = new TextEncoder();
 				const dataToSave = encoder.encode(content);
 
-				await fileStorageService.updateFileContent(fileId, dataToSave.buffer);
+				await fileStoreService.updateFileContent(fileId, dataToSave.buffer);
 
 				originalContentRef.current = content;
 				setHasChanges(false);

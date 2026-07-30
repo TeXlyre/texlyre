@@ -9,7 +9,8 @@ import {
 	useState,
 } from 'react';
 
-import { fileStorageService } from '../services/FileStorageService';
+import { createNamedLogger } from '@/logging';
+import { fileStoreService } from '../services/FileStoreService';
 import { latexSourceMapService } from '../services/LaTeXSourceMapService';
 import { typstSourceMapService } from '../services/TypstSourceMapService';
 import type {
@@ -23,7 +24,6 @@ import { useTypst } from '../hooks/useTypst';
 import { useSettings } from '../hooks/useSettings';
 import { useProperties } from '../hooks/useProperties';
 import { gotoEditor, type EditorTarget } from '../utils/editorNavigator';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('SourceMapContext');
 
@@ -247,7 +247,7 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({
 			if (!result) return;
 
 			try {
-				const allFiles = await fileStorageService.getAllFiles(
+				const allFiles = await fileStoreService.getAllFiles(
 					false,
 					false,
 					false,

@@ -4,7 +4,7 @@ import { type ReactNode, createContext, useCallback, useState } from 'react';
 
 import { useFileTree } from '../hooks/useFileTree';
 import { typesetterRegistryService } from '../services/TypesetterRegistryService';
-import { fileStorageService } from '../services/FileStorageService';
+import { fileStoreService } from '../services/FileStoreService';
 import { latexSourceMapService } from '../services/LaTeXSourceMapService';
 import {
 	type PopoutContentKind,
@@ -100,7 +100,7 @@ export const ExternalTypesetterProvider: React.FC<
 			let content = node.content;
 			if (content === undefined) {
 				try {
-					const raw = await fileStorageService.getFile(node.id);
+					const raw = await fileStoreService.getFile(node.id);
 					content = raw?.content;
 				} catch {
 					content = undefined;

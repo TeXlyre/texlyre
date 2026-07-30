@@ -1,6 +1,7 @@
 // src/extensions/codemirror/PasteExtension.ts
 import { EditorView } from '@codemirror/view';
 
+import { createNamedLogger } from '@/logging';
 import { detectFileType } from '../../utils/fileUtils';
 import {
 	extractUploadableBlob,
@@ -8,7 +9,6 @@ import {
 	uploadPastedFile,
 } from '../../utils/clipboardUtils';
 import { runToolbarCommand } from './ToolbarExtension';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('PasteExtension');
 

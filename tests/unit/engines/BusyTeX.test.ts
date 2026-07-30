@@ -1,11 +1,11 @@
 import { BusyTeXEngine } from '@src/extensions/texlyre-busytex/BusyTeXEngine';
 import { busyTexService, BUSYTEX_BUNDLE_URLS } from '@src/extensions/texlyre-busytex/BusyTeXService';
 import { latexSourceMapService } from '@src/services/LaTeXSourceMapService';
-import { fileStorageService } from '@src/services/FileStorageService';
+import { fileStoreService } from '@src/services/FileStoreService';
 import type { FileNode } from '@src/types/files';
 
 jest.mock('texlyre-busytex');
-jest.mock('@src/services/FileStorageService');
+jest.mock('@src/services/FileStoreService');
 jest.mock('@src/services/LaTeXSourceMapService');
 
 const { BusyTexRunner, isPackageCached, deletePackageCache } = require('texlyre-busytex');
@@ -33,10 +33,10 @@ beforeEach(() => {
     jest.clearAllMocks();
     busyTexService.terminate();
 
-    (fileStorageService.getFileByPath as jest.Mock).mockResolvedValue(null);
-    (fileStorageService.getFilesByPath as jest.Mock).mockResolvedValue([]);
-    (fileStorageService.getAllFiles as jest.Mock).mockResolvedValue([]);
-    (fileStorageService.batchStoreFiles as jest.Mock).mockResolvedValue(undefined);
+    (fileStoreService.getFileByPath as jest.Mock).mockResolvedValue(null);
+    (fileStoreService.getFilesByPath as jest.Mock).mockResolvedValue([]);
+    (fileStoreService.getAllFiles as jest.Mock).mockResolvedValue([]);
+    (fileStoreService.batchStoreFiles as jest.Mock).mockResolvedValue(undefined);
     (latexSourceMapService.loadFromBytes as jest.Mock) = jest.fn();
     (latexSourceMapService.clear as jest.Mock) = jest.fn();
 });
@@ -261,7 +261,7 @@ describe('BusyTeXService', () => {
 
         it('loads cached misses and passes them to the engine', async () => {
             const missesContent = JSON.stringify(['missing.sty']);
-            (fileStorageService.getFileByPath as jest.Mock).mockResolvedValueOnce({
+            (fileStoreService.getFileByPath as jest.Mock).mockResolvedValueOnce({
                 content: missesContent,
             });
 

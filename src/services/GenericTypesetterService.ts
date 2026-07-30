@@ -1,7 +1,7 @@
 // src/services/GenericTypesetterService.ts
 import { nanoid } from 'nanoid';
-import type { ClientTransport, TransportConfig } from '@chelys/types/transport';
 
+import type { ClientTransport, TransportConfig } from '@chelys/types/transport';
 import { toArrayBuffer } from '../utils/fileUtils';
 import type {
 	CompileArtifact,

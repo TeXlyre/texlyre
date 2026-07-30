@@ -8,8 +8,8 @@ import PositionedDropdown from '@/components/common/PositionedDropdown';
 import { NumberInput } from '@/components/common/NumberInput';
 import { ChevronDownIcon, LoaderIcon } from '@/components/common/Icons';
 import { useProperties } from '@/hooks/useProperties';
-import { FileOperationCancelledError } from '@/services/FileConflictService';
-import { fileStorageService } from '@/services/FileStorageService';
+import { FileOperationCancelledError } from '@/services/FileConflictPromptService';
+import { fileStoreService } from '@/services/FileStoreService';
 import type { FileNode } from '@/types/files';
 import { createNamedLogger } from '@/logging';
 const moduleLog = createNamedLogger('DrawioSvgExportButton');
@@ -183,7 +183,7 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
 				isDeleted: false,
 			};
 
-			await fileStorageService.storeFile(newFile);
+			await fileStoreService.storeFile(newFile);
 		} catch (error) {
 			if (!(error instanceof FileOperationCancelledError)) {
 				moduleLog.error('Error saving SVG:', error);

@@ -1,4 +1,5 @@
 // src/plugins/PluginRegistry.ts
+import { createNamedLogger } from '@/logging';
 import plugins from './index';
 import type { Setting } from '../contexts/SettingsContext';
 import type {
@@ -13,7 +14,6 @@ import type {
 	ThemePlugin,
 	ViewerPlugin,
 } from './PluginInterface';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('PluginRegistry');
 

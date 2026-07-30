@@ -3,7 +3,7 @@ import type React from 'react';
 import { createElement, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { t } from '@/i18n';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileStoreService } from '../../services/FileStoreService';
 import { useExternalTypesetter } from '../../hooks/useExternalTypesetter';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { useFileTree } from '../../hooks/useFileTree';
@@ -57,7 +57,7 @@ const ExternalTypesetterOutput: React.FC<ExternalTypesetterOutputProps> = ({
 		compileDocument,
 	} = useExternalTypesetter();
 
-	const projectId = fileStorageService.getCurrentProjectId() || undefined;
+	const projectId = fileStoreService.getCurrentProjectId() || undefined;
 	const { fileTree, selectedFileId, getFile } = useFileTree();
 	const { getProperty, setProperty } = useProperties();
 	const {

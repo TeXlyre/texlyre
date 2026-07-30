@@ -1,4 +1,5 @@
 // src/services/FilePathCacheService.ts
+import { createNamedLogger } from '@/logging';
 import type { FileNode, FilePathCache } from '../types/files';
 import {
 	isLatexFile,
@@ -7,8 +8,7 @@ import {
 	isMarkdownFile,
 	isTemporaryFile,
 } from '../utils/fileUtils';
-import { fileStorageEventEmitter } from './FileStorageService';
-import { createNamedLogger } from '@/logging';
+import { fileStorageEventEmitter } from './FileStoreService';
 
 const moduleLog = createNamedLogger('FilePathCacheService');
 
@@ -481,7 +481,7 @@ class FilePathCacheService {
 	}
 
 	private async updateLabelsCache() {
-		const { fileStorageService } = await import('./FileStorageService');
+		const { fileStoreService } = await import('./FileStoreService');
 		const labelsByFormat: Required<LabelsByFormat> = {
 			tex: new Map(),
 			typst: new Map(),
@@ -516,7 +516,7 @@ class FilePathCacheService {
 
 				if ((file.size ?? 0) > this.MAX_LABEL_FILE_SIZE) continue;
 
-				const storedFile = await fileStorageService.getFile(file.id);
+				const storedFile = await fileStoreService.getFile(file.id);
 				if (!storedFile?.content) continue;
 
 				const content =
@@ -562,9 +562,9 @@ class FilePathCacheService {
 		if (files) {
 			this.cachedFiles = files;
 		} else {
-			const { fileStorageService } = await import('./FileStorageService');
+			const { fileStoreService } = await import('./FileStoreService');
 			try {
-				this.cachedFiles = await fileStorageService.getAllFiles(
+				this.cachedFiles = await fileStoreService.getAllFiles(
 					false,
 					false,
 					false,

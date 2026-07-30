@@ -3,6 +3,7 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import PositionedDropdown from '../common/PositionedDropdown';
 import { useCollab } from '../../hooks/useCollab';
 import { useFileTree } from '../../hooks/useFileTree';
@@ -17,7 +18,7 @@ import {
 	isLatexMainFile,
 	isTemporaryFile,
 } from '../../utils/fileUtils';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileStoreService } from '../../services/FileStoreService';
 import { latexService } from '../../services/LaTeXService';
 import { BUSYTEX_BUNDLE_LABELS } from '../../extensions/texlyre-busytex/BusyTeXService';
 import {
@@ -26,7 +27,6 @@ import {
 	TrashIcon,
 	OptionsIcon,
 } from '../common/Icons';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('LaTeXExportButton');
 
@@ -83,7 +83,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const propertiesRegistered = useRef(false);
 
-	const projectId = fileStorageService.getCurrentProjectId() || undefined;
+	const projectId = fileStoreService.getCurrentProjectId() || undefined;
 
 	const settingEngine =
 		(getSetting('latex-engine')?.value as LaTeXEngine) ??

@@ -9,11 +9,12 @@ import {
 	useState,
 } from 'react';
 
+import { createNamedLogger } from '@/logging';
 import { pluginRegistry } from '../plugins/PluginRegistry';
 import type { BibliographyPlugin } from '../plugins/PluginInterface';
 import { useSettings } from '../hooks/useSettings';
 import { useProperties } from '../hooks/useProperties';
-import { fileStorageService } from '../services/FileStorageService';
+import { fileStoreService } from '../services/FileStoreService';
 import { genericLSPService } from '../services/GenericLSPService';
 import { bibliographyImportService } from '../services/BibliographyImportService';
 import { filePathCacheService } from '../services/FilePathCacheService';
@@ -21,7 +22,6 @@ import { parseUrlFragments } from '../utils/urlUtils';
 import { isBibFile } from '../utils/fileUtils';
 import type { FileNode } from '../types/files';
 import type { BibEntry, BibliographyFile } from '../types/bibliography';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('BibliographyContext');
 
@@ -354,11 +354,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 
 	const refreshAvailableFiles = useCallback(async () => {
 		try {
-			const allFiles = await fileStorageService.getAllFiles(
-				false,
-				false,
-				false,
-			);
+			const allFiles = await fileStoreService.getAllFiles(false, false, false);
 			const bibFiles = allFiles.filter(
 				(file) => isBibFile(file.name) && !file.isDeleted,
 			);
@@ -379,7 +375,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 		async (fileName: string = 'bibliography.bib'): Promise<string | null> => {
 			try {
 				const filePath = `/${fileName}`;
-				const existingFile = await fileStorageService.getFileByPath(filePath);
+				const existingFile = await fileStoreService.getFileByPath(filePath);
 				if (existingFile && !existingFile.isDeleted) return filePath;
 
 				const fileNode = {
@@ -394,7 +390,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 					isBinary: false,
 					isDeleted: false,
 				};
-				await fileStorageService.storeFile(fileNode, {
+				await fileStoreService.storeFile(fileNode, {
 					showConflictDialog: false,
 				});
 				await refreshAvailableFiles();
@@ -409,7 +405,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 
 	const getLocalEntriesAsync = useCallback(async (): Promise<BibEntry[]> => {
 		try {
-			const allFiles = await fileStorageService.getAllFiles();
+			const allFiles = await fileStoreService.getAllFiles();
 			const bibFiles = allFiles.filter(
 				(file) => isBibFile(file.name) && !file.isDeleted && file.content,
 			);

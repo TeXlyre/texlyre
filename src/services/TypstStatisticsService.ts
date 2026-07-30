@@ -1,14 +1,14 @@
 // src/services/TypstStatisticsService.ts
+import { createNamedLogger } from '@/logging';
 import type { FileNode } from '../types/files';
-import { fileStorageService } from './FileStorageService';
+import { fileStoreService } from './FileStoreService';
 import { isTemporaryFile, isTypstFile } from '../utils/fileUtils';
-import { cleanContent } from '../utils/fileCommentUtils';
+import { stripAnnotations } from '../utils/fileCommentUtils';
 import type {
 	DocumentStatistics,
 	StatisticsOptions,
 } from '../types/statistics';
 import { TypstCompilerEngine } from '../extensions/typst.ts/TypstCompilerEngine';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('TypstStatisticsService');
 
@@ -64,7 +64,7 @@ class TypstStatisticsService {
 			throw new Error(`Main file not found: ${mainFilePath}`);
 		}
 
-		const storedFile = await fileStorageService.getFile(mainFile.id);
+		const storedFile = await fileStoreService.getFile(mainFile.id);
 		if (!storedFile?.content) {
 			throw new Error('Main file content not found');
 		}
@@ -393,7 +393,7 @@ class TypstStatisticsService {
 				);
 				if (!file) continue;
 
-				const storedFile = await fileStorageService.getFile(file.id);
+				const storedFile = await fileStoreService.getFile(file.id);
 				if (!storedFile?.content) continue;
 
 				const cleaned = this.decodeAndClean(storedFile.content);
@@ -421,7 +421,7 @@ class TypstStatisticsService {
 	private decodeAndClean(content: ArrayBuffer | string): string {
 		const text =
 			typeof content === 'string' ? content : new TextDecoder().decode(content);
-		const cleaned = cleanContent(text);
+		const cleaned = stripAnnotations(text);
 		return typeof cleaned === 'string'
 			? cleaned
 			: new TextDecoder().decode(cleaned);
@@ -431,7 +431,7 @@ class TypstStatisticsService {
 		file: FileNode,
 	): Promise<ArrayBuffer | string | null> {
 		try {
-			const storedFile = await fileStorageService.getFile(file.id);
+			const storedFile = await fileStoreService.getFile(file.id);
 			return storedFile?.content || null;
 		} catch (error) {
 			moduleLog.warn(`Failed to retrieve content for ${file.path}:`, error);

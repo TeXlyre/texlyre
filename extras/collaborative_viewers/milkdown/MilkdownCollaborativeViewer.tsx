@@ -21,7 +21,7 @@ import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import { useProperties } from '@/hooks/useProperties';
 import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
-import { fileStorageService } from '@/services/FileStorageService';
+import { fileStoreService } from '@/services/FileStoreService';
 import { collabService } from '@/services/CollabService';
 import { formatFileSize } from '@/utils/fileUtils';
 import { copyCleanTextToClipboard } from '@/utils/clipboardUtils';
@@ -368,7 +368,7 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
 		try {
 			const bytes = new TextEncoder().encode(currentContent()).buffer;
-			await fileStorageService.updateFileContent(fileId, bytes);
+			await fileStoreService.updateFileContent(fileId, bytes);
 		} catch (err) {
 			moduleLog.error('Error saving Markdown file:', err);
 			setError(

@@ -7,8 +7,8 @@ import { nanoid } from 'nanoid';
 import PositionedDropdown from '@/components/common/PositionedDropdown';
 import { ChevronDownIcon, LoaderIcon } from '@/components/common/Icons';
 import { useProperties } from '@/hooks/useProperties';
-import { FileOperationCancelledError } from '@/services/FileConflictService';
-import { fileStorageService } from '@/services/FileStorageService';
+import { FileOperationCancelledError } from '@/services/FileConflictPromptService';
+import { fileStoreService } from '@/services/FileStoreService';
 import type { FileNode } from '@/types/files';
 import { NumberInput } from '@/components/common/NumberInput';
 import { createNamedLogger } from '@/logging';
@@ -185,7 +185,7 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
 				isDeleted: false,
 			};
 
-			await fileStorageService.storeFile(newFile);
+			await fileStoreService.storeFile(newFile);
 		} catch (error) {
 			if (!(error instanceof FileOperationCancelledError)) {
 				moduleLog.error('Error saving PNG:', error);

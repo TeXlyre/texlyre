@@ -1,9 +1,9 @@
 // src/services/PeerDocumentTrackingService.ts
 import type { Awareness } from 'y-protocols/awareness';
 
+import { createNamedLogger } from '@/logging';
 import { collabService } from './CollabService';
 import type { CollabConnectOptions } from '../types/collab';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('PeerDocumentTracking');
 

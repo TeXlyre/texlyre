@@ -26,7 +26,7 @@ import LSPToggleButton from '@/components/bibliography/LSPToggleButton';
 import BibliographyPanel from '@/components/bibliography/BibliographyPanel';
 import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
 import { pluginRegistry } from '@/plugins/PluginRegistry';
-import { fileStorageService } from '@/services/FileStorageService';
+import { fileStoreService } from '@/services/FileStoreService';
 import { bibliographyImportService } from '@/services/BibliographyImportService';
 import { formatFileSize } from '@/utils/fileUtils';
 import { detectFileType } from '@/utils/fileUtils';
@@ -329,7 +329,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		setError(null);
 
 		try {
-			await fileStorageService.updateFileContent(fileId, contentToSave);
+			await fileStoreService.updateFileContent(fileId, contentToSave);
 
 			const changes = computeReplacementChange(bibtexContent, contentToSave);
 

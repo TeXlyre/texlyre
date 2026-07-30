@@ -14,7 +14,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
-import { fileStorageService } from '@/services/FileStorageService';
+import { fileStoreService } from '@/services/FileStoreService';
 import { formatFileSize } from '@/utils/fileUtils';
 import { collabService } from '@/services/CollabService';
 import '../../viewers/drawio/styles.css';
@@ -211,7 +211,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				const isTrulyEmptyFile = (fileInfo.fileSize ?? 0) === 0;
 
 				if (!text.trim() && !isTrulyEmptyFile && fileId) {
-					const file = await fileStorageService.getFile(fileId);
+					const file = await fileStoreService.getFile(fileId);
 					if (cancelled) return;
 
 					const stored = file?.content;
@@ -293,7 +293,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				const encoder = new TextEncoder();
 				const dataToSave = encoder.encode(contentToSave);
 
-				await fileStorageService.updateFileContent(fileId, dataToSave.buffer);
+				await fileStoreService.updateFileContent(fileId, dataToSave.buffer);
 
 				setHasChanges(false);
 				flashSavedIndicator();

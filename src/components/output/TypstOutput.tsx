@@ -3,7 +3,8 @@ import React from 'react';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 
 import { t } from '@/i18n';
-import { fileStorageService } from '../../services/FileStorageService';
+import { createNamedLogger } from '@/logging';
+import { fileStoreService } from '../../services/FileStoreService';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useTypst } from '../../hooks/useTypst';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
@@ -24,7 +25,6 @@ import {
 	toArrayBuffer,
 } from '../../utils/fileUtils';
 import { gotoEditor } from '../../utils/editorNavigator';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('TypstOutput');
 
@@ -61,7 +61,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 		compileDocument,
 	} = useTypst();
 
-	const projectId = fileStorageService.getCurrentProjectId() || undefined;
+	const projectId = fileStoreService.getCurrentProjectId() || undefined;
 	const { selectedFileId, getFile, fileTree } = useFileTree();
 	const { getSetting } = useSettings();
 	const { getProperty, setProperty, registerProperty } = useProperties();

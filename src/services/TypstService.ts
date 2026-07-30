@@ -2,6 +2,7 @@
 import { nanoid } from 'nanoid';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import type {
 	TypstCompileResult,
 	TypstOutputFormat,
@@ -9,13 +10,13 @@ import type {
 	TypstPageInfo,
 } from '../types/typst';
 import type { FileNode } from '../types/files';
-import { fileStorageService } from './FileStorageService';
+import { fileStoreService } from './FileStoreService';
 import {
 	notificationService,
 	type NotificationOptions,
 } from './NotificationService';
 import { typstSourceMapService } from './TypstSourceMapService';
-import { cleanContent } from '../utils/fileCommentUtils';
+import { stripAnnotations } from '../utils/fileCommentUtils';
 import { TypstCompilerEngine } from '../extensions/typst.ts/TypstCompilerEngine';
 import {
 	isTypstFile,
@@ -23,7 +24,6 @@ import {
 	toArrayBuffer,
 } from '../utils/fileUtils';
 import { downloadFiles } from '../utils/zipUtils';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('TypstService');
 
@@ -347,11 +347,7 @@ class TypstService {
 
 	private async clearOutputDirectories(): Promise<void> {
 		try {
-			const allFiles = await fileStorageService.getAllFiles(
-				false,
-				false,
-				false,
-			);
+			const allFiles = await fileStoreService.getAllFiles(false, false, false);
 			const filesToDelete = allFiles.filter(
 				(f) =>
 					f.type === 'file' &&
@@ -359,7 +355,7 @@ class TypstService {
 						f.path.startsWith('/.texlyre_src/__work/')),
 			);
 			if (filesToDelete.length > 0) {
-				await fileStorageService.batchDeleteFiles(
+				await fileStoreService.batchDeleteFiles(
 					filesToDelete.map((f) => f.id),
 					{ showDeleteDialog: false, hardDelete: true },
 				);
@@ -551,7 +547,7 @@ class TypstService {
 				const content = await this.getFileContent(fileNode);
 				if (!content) continue;
 
-				const cleaned = cleanContent(content);
+				const cleaned = stripAnnotations(content);
 				const normalizedPath = this.normalizePath(fileNode.path);
 
 				if (this.isMainFile(fileNode, mainFileName)) {
@@ -622,7 +618,7 @@ class TypstService {
 	): Promise<ArrayBuffer | string | null> {
 		if (file.content !== undefined) return file.content;
 		try {
-			const stored = await fileStorageService.getFile(file.id);
+			const stored = await fileStoreService.getFile(file.id);
 			return stored?.content || null;
 		} catch (error) {
 			moduleLog.warn(`Failed to retrieve content for ${file.path}:`, error);
@@ -657,7 +653,7 @@ class TypstService {
 			const outputFiles = this.createOutputFiles(mainFile, result);
 			if (outputFiles.length === 0) return;
 			await this.ensureOutputDirectoriesExist();
-			await fileStorageService.batchStoreFiles(outputFiles, {
+			await fileStoreService.batchStoreFiles(outputFiles, {
 				showConflictDialog: false,
 			});
 		} catch (error) {
@@ -740,7 +736,7 @@ class TypstService {
 		try {
 			await this.ensureOutputDirectoriesExist();
 			const logFile = this.createLogFile(this.getBaseName(mainFile), log);
-			await fileStorageService.batchStoreFiles([logFile], {
+			await fileStoreService.batchStoreFiles([logFile], {
 				showConflictDialog: false,
 			});
 		} catch (error) {
@@ -749,7 +745,7 @@ class TypstService {
 	}
 
 	private async ensureOutputDirectoriesExist(): Promise<void> {
-		const existingFiles = await fileStorageService.getAllFiles();
+		const existingFiles = await fileStoreService.getAllFiles();
 		const existingPaths = new Set(existingFiles.map((f) => f.path));
 		const missing = OUTPUT_DIRS.filter((dir) => !existingPaths.has(dir)).map(
 			(dir) => ({
@@ -762,7 +758,7 @@ class TypstService {
 		);
 
 		if (missing.length > 0) {
-			await fileStorageService.batchStoreFiles(missing, {
+			await fileStoreService.batchStoreFiles(missing, {
 				showConflictDialog: false,
 			});
 		}

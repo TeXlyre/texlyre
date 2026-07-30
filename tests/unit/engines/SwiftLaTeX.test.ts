@@ -1,8 +1,8 @@
 import { swiftLaTeXService } from '@src/extensions/swiftlatex/SwiftLaTeXService';
-import { fileStorageService } from '@src/services/FileStorageService';
+import { fileStoreService } from '@src/services/FileStoreService';
 import type { FileNode } from '@src/types/files';
 
-jest.mock('@src/services/FileStorageService');
+jest.mock('@src/services/FileStoreService');
 
 const { setupSwiftLaTeXMocks } = require('../../mocks/swiftlatex-engines');
 
@@ -33,7 +33,7 @@ function makeFileNode(overrides: Partial<FileNode> = {}): FileNode {
 }
 
 function storedPaths(): string[] {
-    return (fileStorageService.batchStoreFiles as jest.Mock).mock.calls
+    return (fileStoreService.batchStoreFiles as jest.Mock).mock.calls
         .flatMap(([files]: [FileNode[]]) => files)
         .map((f: FileNode) => f?.path)
         .filter(Boolean);
@@ -53,12 +53,12 @@ async function resetService(engineType: 'pdftex' | 'xetex' = 'pdftex') {
 beforeEach(async () => {
     jest.clearAllMocks();
 
-    (fileStorageService.getFileByPath as jest.Mock).mockResolvedValue(null);
-    (fileStorageService.getFilesByPath as jest.Mock).mockResolvedValue([]);
-    (fileStorageService.getAllFiles as jest.Mock).mockResolvedValue([]);
-    (fileStorageService.batchStoreFiles as jest.Mock).mockResolvedValue(undefined);
-    (fileStorageService.batchDeleteFiles as jest.Mock).mockResolvedValue(undefined);
-    (fileStorageService.getFile as jest.Mock).mockResolvedValue(null);
+    (fileStoreService.getFileByPath as jest.Mock).mockResolvedValue(null);
+    (fileStoreService.getFilesByPath as jest.Mock).mockResolvedValue([]);
+    (fileStoreService.getAllFiles as jest.Mock).mockResolvedValue([]);
+    (fileStoreService.batchStoreFiles as jest.Mock).mockResolvedValue(undefined);
+    (fileStoreService.batchDeleteFiles as jest.Mock).mockResolvedValue(undefined);
+    (fileStoreService.getFile as jest.Mock).mockResolvedValue(null);
 });
 
 // ---------------------------------------------------------------------------
@@ -194,28 +194,28 @@ describe('SwiftLaTeXService', () => {
 
     describe('clearCache', () => {
         it('deletes only files under temporary cache paths', async () => {
-            (fileStorageService.getAllFiles as jest.Mock).mockResolvedValue([
+            (fileStoreService.getAllFiles as jest.Mock).mockResolvedValue([
                 makeFileNode({ id: 'cache-1', path: '/.texlyre_cache/__tex/main.aux' }),
                 makeFileNode({ id: 'src-1', path: '/main.tex' }),
             ]);
 
             await swiftLaTeXService.clearCache();
 
-            expect(fileStorageService.batchDeleteFiles).toHaveBeenCalledWith(
+            expect(fileStoreService.batchDeleteFiles).toHaveBeenCalledWith(
                 ['cache-1'],
                 expect.objectContaining({ hardDelete: true }),
             );
         });
 
         it('does not delete non-cache files', async () => {
-            (fileStorageService.getAllFiles as jest.Mock).mockResolvedValue([
+            (fileStoreService.getAllFiles as jest.Mock).mockResolvedValue([
                 makeFileNode({ id: 'src-1', path: '/main.tex' }),
                 makeFileNode({ id: 'src-2', path: '/figures/fig.png' }),
             ]);
 
             await swiftLaTeXService.clearCache();
 
-            expect(fileStorageService.batchDeleteFiles).not.toHaveBeenCalled();
+            expect(fileStoreService.batchDeleteFiles).not.toHaveBeenCalled();
         });
     });
 

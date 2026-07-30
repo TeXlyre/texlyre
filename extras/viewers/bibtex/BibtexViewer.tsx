@@ -24,7 +24,7 @@ import LSPToggleButton from '@/components/bibliography/LSPToggleButton';
 import BibliographyPanel from '@/components/bibliography/BibliographyPanel';
 import type { ViewerProps } from '@/plugins/PluginInterface';
 import { pluginRegistry } from '@/plugins/PluginRegistry';
-import { fileStorageService } from '@/services/FileStorageService';
+import { fileStoreService } from '@/services/FileStoreService';
 import { bibliographyImportService } from '@/services/BibliographyImportService';
 import { formatFileSize } from '@/utils/fileUtils';
 import { detectFileType } from '@/utils/fileUtils';
@@ -389,7 +389,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			const encoder = new TextEncoder();
 			const dataToSave = encoder.encode(currentEditorContent);
 
-			await fileStorageService.updateFileContent(fileId, dataToSave.buffer);
+			await fileStoreService.updateFileContent(fileId, dataToSave.buffer);
 
 			setBibtexContent(currentEditorContent);
 			setProcessedContent('');

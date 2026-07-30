@@ -3,14 +3,14 @@ import type React from 'react';
 import { useState } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { useFileTree } from '../../hooks/useFileTree';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileStoreService } from '../../services/FileStoreService';
 import type { FileNode } from '../../types/files';
 import type { ProjectType } from '../../types/projects';
 import { isTemporaryFile } from '../../utils/fileUtils';
 import { FolderIcon } from '../common/Icons';
 import Modal from '../common/Modal';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('LinkFileModal');
 
@@ -69,7 +69,7 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 					? `/${fileName.trim()}`
 					: `${selectedDirectory}/${fileName.trim()}`;
 
-			await fileStorageService.createDirectoryPath(filePath);
+			await fileStoreService.createDirectoryPath(filePath);
 
 			const fileNode: FileNode = {
 				id: crypto.randomUUID(),
@@ -84,7 +84,7 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 				documentId: documentId,
 			};
 
-			await fileStorageService.storeFile(fileNode);
+			await fileStoreService.storeFile(fileNode);
 			await refreshFileTree();
 			onLinked();
 		} catch (error) {

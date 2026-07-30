@@ -8,11 +8,11 @@ import {
 	useRef,
 } from 'react';
 
+import { createNamedLogger } from '@/logging';
 import {
 	notifyUserDataChanged,
 	type UserDataMutation,
 } from '../utils/userDataUtils';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('RecordsContext');
 

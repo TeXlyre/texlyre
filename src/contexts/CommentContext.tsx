@@ -9,16 +9,16 @@ import {
 	useState,
 } from 'react';
 
+import { createNamedLogger } from '@/logging';
 import { useAuth } from '../hooks/useAuth';
 import { useProperties } from '../hooks/useProperties';
 import { commentService } from '../services/CommentService';
-import { fileStorageService } from '../services/FileStorageService';
+import { fileStoreService } from '../services/FileStoreService';
 import type {
 	Comment,
 	CommentContextType,
 	CommentRaw,
 } from '../types/comments';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('CommentContext');
 
@@ -62,7 +62,7 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 	useEffect(() => {
 		if (!arePropertiesReady || propertiesLoaded) return;
 
-		const projectId = fileStorageService.getCurrentProjectId();
+		const projectId = fileStoreService.getCurrentProjectId();
 		if (projectId) {
 			setShowComments(
 				getProperty('comment-panel-visible', {
@@ -78,7 +78,7 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 	useEffect(() => {
 		if (!propertiesLoaded) return;
 
-		const projectId = fileStorageService.getCurrentProjectId();
+		const projectId = fileStoreService.getCurrentProjectId();
 		if (!projectId) return;
 
 		setProperty('comment-panel-visible', showComments, {

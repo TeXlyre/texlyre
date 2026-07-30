@@ -2,6 +2,7 @@
 import { Detypify, inferSyms, ortEnv, type Strokes } from 'detypify-service';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import {
 	searchSymbols,
 	symbolInfoToCandidate,
@@ -9,7 +10,6 @@ import {
 	type SymbolCandidate,
 } from './SymbolData';
 import type { FileType } from './patterns';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('SymbolSearchPanel');
 

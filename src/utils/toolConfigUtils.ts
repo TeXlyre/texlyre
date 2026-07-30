@@ -1,6 +1,5 @@
 // src/utils/toolConfigUtils.ts
 import type { TransportConfig } from '@chelys/types/transport';
-
 import type { TypesetterServerConfig } from '../services/GenericTypesetterService';
 import type {
 	TypesetterInputFile,

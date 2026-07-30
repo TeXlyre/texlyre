@@ -3,7 +3,7 @@ import type React from 'react';
 import { useState } from 'react';
 
 import { t } from '@/i18n';
-import { useFileSync } from '../../hooks/useFileSync';
+import { usePeerFileSync } from '../../hooks/usePeerFileSync';
 import { formatDate } from '../../utils/dateUtils';
 import {
 	DisconnectIcon,
@@ -31,7 +31,7 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
 		requestSync,
 		clearNotification,
 		clearAllNotifications,
-	} = useFileSync();
+	} = usePeerFileSync();
 
 	const [showSettings, setShowSettings] = useState(false);
 

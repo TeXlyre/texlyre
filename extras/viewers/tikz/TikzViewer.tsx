@@ -13,8 +13,8 @@ import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import { useTheme } from '@/hooks/useTheme';
 import type { ViewerProps } from '@/plugins/PluginInterface';
-import { FileOperationCancelledError } from '@/services/FileConflictService';
-import { fileStorageService } from '@/services/FileStorageService';
+import { FileOperationCancelledError } from '@/services/FileConflictPromptService';
+import { fileStoreService } from '@/services/FileStoreService';
 import type { FileNode } from '@/types/files';
 import { formatFileSize } from '@/utils/fileUtils';
 import './styles.css';
@@ -250,7 +250,7 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			setError(null);
 			try {
 				const dataToSave = new TextEncoder().encode(source);
-				await fileStorageService.updateFileContent(fileId, dataToSave.buffer);
+				await fileStoreService.updateFileContent(fileId, dataToSave.buffer);
 				sourceRef.current = source;
 				setTikzSource(source);
 				setHasChanges(false);
@@ -440,7 +440,7 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		try {
 			const exported = await requestExport('svg');
 			const svgContent = decodeSvgExport(exported);
-			await fileStorageService.storeFile(makeSvgFile(fileName, svgContent));
+			await fileStoreService.storeFile(makeSvgFile(fileName, svgContent));
 			flashSavedIndicator();
 		} catch (error) {
 			if (error instanceof FileOperationCancelledError) return;

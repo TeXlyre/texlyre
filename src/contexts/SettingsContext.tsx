@@ -9,9 +9,9 @@ import {
 	useState,
 } from 'react';
 
+import { createNamedLogger } from '@/logging';
 import { notifyUserDataChanged } from '../utils/userDataUtils';
 import { pluginRegistry } from '../plugins/PluginRegistry';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('SettingsContext');
 

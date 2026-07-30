@@ -1,11 +1,11 @@
 // src/utils/clipboardUtils.ts
 import { nanoid } from 'nanoid';
 
+import { createNamedLogger } from '@/logging';
 import type { FileNode } from '../types/files';
-import { fileStorageService } from '../services/FileStorageService';
+import { fileStoreService } from '../services/FileStoreService';
 import { isLatexFile, getFileExtension, getRelativePath } from './fileUtils';
 import { processTextSelection } from './fileCommentUtils';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('clipboardUtils');
 
@@ -45,7 +45,7 @@ export async function uploadPastedFile(
 	const uploadPath = `/images/${filename}`;
 
 	try {
-		await fileStorageService.createDirectoryPath('/images/placeholder.txt');
+		await fileStoreService.createDirectoryPath('/images/placeholder.txt');
 
 		const fileNode: FileNode = {
 			id: nanoid(),
@@ -59,11 +59,11 @@ export async function uploadPastedFile(
 			isBinary: true,
 		};
 
-		await fileStorageService.storeFile(fileNode, { showConflictDialog: false });
+		await fileStoreService.storeFile(fileNode, { showConflictDialog: false });
 		document.dispatchEvent(new CustomEvent('refresh-file-tree'));
 
 		if (currentFileId) {
-			const currentFile = await fileStorageService.getFile(currentFileId);
+			const currentFile = await fileStoreService.getFile(currentFileId);
 
 			if (currentFile) {
 				const relativePath = getRelativePath(currentFile.path, uploadPath);

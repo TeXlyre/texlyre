@@ -3,6 +3,7 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import PopoutViewerToggleButton from './PopoutViewerToggleButton';
 import PositionedDropdown from '../common/PositionedDropdown';
 import { usePersistentState } from '../../hooks/usePersistentState';
@@ -27,7 +28,7 @@ import {
 	isTemporaryFile,
 	getFilenameFromPath,
 } from '../../utils/fileUtils';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileStoreService } from '../../services/FileStoreService';
 import {
 	OptionsIcon,
 	ChevronDownIcon,
@@ -37,7 +38,6 @@ import {
 	TrashIcon,
 	ResetIcon,
 } from '../common/Icons';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('TypstCompileButton');
 
@@ -95,7 +95,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 	);
 	const propertiesRegistered = useRef(false);
 
-	const projectId = fileStorageService.getCurrentProjectId() || undefined;
+	const projectId = fileStoreService.getCurrentProjectId() || undefined;
 
 	const settingFormat =
 		(getSetting('typst-default-format')?.value as TypstOutputFormat) ?? 'pdf';

@@ -8,7 +8,8 @@ import React, {
 } from 'react';
 
 import { t } from '@/i18n';
-import { fileStorageService } from '../../services/FileStorageService';
+import { createNamedLogger } from '@/logging';
+import { fileStoreService } from '../../services/FileStoreService';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useLaTeX } from '../../hooks/useLaTeX';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
@@ -30,7 +31,6 @@ import {
 	toArrayBuffer,
 } from '../../utils/fileUtils';
 import { gotoEditor } from '../../utils/editorNavigator';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('LaTeXOutput');
 
@@ -81,7 +81,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 	const propertiesRegistered = useRef(false);
 	const outputTabsRef = useWheelScroll<HTMLDivElement>();
 
-	const projectId = fileStorageService.getCurrentProjectId() || undefined;
+	const projectId = fileStoreService.getCurrentProjectId() || undefined;
 
 	const [visualizerHeight, setVisualizerHeight] = useState(300);
 	const [visualizerCollapsed, setVisualizerCollapsed] = useState(false);

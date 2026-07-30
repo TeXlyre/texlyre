@@ -4,14 +4,14 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import type { User } from '../types/auth';
 import type { Project, ProjectType, ProjectGroup } from '../types/projects';
 import { generateRandomColor } from '../utils/colorUtils';
 import { cleanupProjectDatabases } from '../utils/dbDeleteUtils';
 import { generateYjsProjectId } from '../utils/urlUtils';
 import { getUserDataKey } from '../utils/userDataUtils';
-import { fileSystemBackupService } from './FileSystemBackupService';
-import { createNamedLogger } from '@/logging';
+import { diskBackupService } from './DiskBackupService';
 
 const moduleLog = createNamedLogger('AuthService');
 
@@ -594,7 +594,7 @@ class AuthService {
 		await this.db?.put(this.PROJECT_STORE, newProject);
 
 		if (shouldAutoSync()) {
-			fileSystemBackupService.synchronize(newProject.id).catch(console.error);
+			diskBackupService.synchronize(newProject.id).catch(console.error);
 		}
 
 		return newProject;
@@ -620,7 +620,7 @@ class AuthService {
 		await this.db?.put(this.PROJECT_STORE, updatedProject);
 
 		if (shouldAutoSync() && !this.isGuestUser(this.currentUser)) {
-			fileSystemBackupService.synchronize(project.id).catch(console.error);
+			diskBackupService.synchronize(project.id).catch(console.error);
 		}
 
 		return updatedProject;
@@ -665,7 +665,7 @@ class AuthService {
 		await cleanupProjectDatabases(project);
 
 		if (shouldAutoSync() && !this.isGuestUser(this.currentUser)) {
-			fileSystemBackupService.synchronize().catch(console.error);
+			diskBackupService.synchronize().catch(console.error);
 		}
 	}
 

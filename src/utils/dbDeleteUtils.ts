@@ -2,11 +2,11 @@
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
-import { fileStorageService } from '../services/FileStorageService';
-import { collabService } from '../services/CollabService';
-import { storageQuotaService } from '../services/StorageQuotaService';
-import type { Project } from '../types/projects';
 import { createNamedLogger } from '@/logging';
+import { fileStoreService } from '../services/FileStoreService';
+import { collabService } from '../services/CollabService';
+import { quotaService } from '../services/QuotaService';
+import type { Project } from '../types/projects';
 import {
 	isTypesetterCacheDatabase,
 	isTypstPackageRequest,
@@ -89,10 +89,10 @@ function withExistingDatabase<T>(
 }
 
 async function listCurrentProjectTypesetterCacheIds(): Promise<string[]> {
-	if (!fileStorageService.getCurrentProjectId()) return [];
+	if (!fileStoreService.getCurrentProjectId()) return [];
 
 	try {
-		return (await fileStorageService.getAllFiles(true, false, false))
+		return (await fileStoreService.getAllFiles(true, false, false))
 			.filter((file) => file.path.startsWith(TYPESETTER_CACHE_PATH_PREFIX))
 			.map((file) => file.id);
 	} catch (error) {
@@ -136,7 +136,7 @@ async function deleteProjectTypesetterCacheKeys(
 
 		return new Promise<number>((resolve) => {
 			tx.oncomplete = () => {
-				storageQuotaService.markStale();
+				quotaService.markStale();
 				resolve(keys.length);
 			};
 			tx.onerror = tx.onabort = () => resolve(0);
@@ -151,7 +151,7 @@ async function listStoredProjectDatabases(
 	if (!existing) return [];
 
 	const existingSet = new Set(existing);
-	const currentId = fileStorageService.getCurrentProjectId();
+	const currentId = fileStoreService.getCurrentProjectId();
 	const currentBase = currentId ? projectBaseName(currentId) : '';
 
 	return [
@@ -189,7 +189,7 @@ export async function deleteCurrentProjectTypesetterCache(): Promise<number> {
 	const ids = await listCurrentProjectTypesetterCacheIds();
 	if (ids.length === 0) return 0;
 
-	await fileStorageService.batchDeleteFiles(ids, {
+	await fileStoreService.batchDeleteFiles(ids, {
 		showDeleteDialog: false,
 		hardDelete: true,
 	});
@@ -237,7 +237,7 @@ export async function deleteTypstPackageCache(): Promise<number> {
 		}
 	}
 
-	if (deleted > 0) storageQuotaService.markStale();
+	if (deleted > 0) quotaService.markStale();
 	return deleted;
 }
 
@@ -247,7 +247,7 @@ export function deleteDatabase(dbName: string): Promise<void> {
 
 		request.onsuccess = () => {
 			moduleLog.info(`Successfully deleted database: ${dbName}`);
-			storageQuotaService.markStale();
+			quotaService.markStale();
 			resolve();
 		};
 		request.onerror = () => {
@@ -264,19 +264,19 @@ export function deleteDatabase(dbName: string): Promise<void> {
 export async function closeActiveConnections(projectId: string): Promise<void> {
 	try {
 		const isCurrentProject =
-			fileStorageService.getCurrentProjectId() === projectId;
+			fileStoreService.getCurrentProjectId() === projectId;
 
-		if (fileStorageService.isConnectedToProject(projectId)) {
-			fileStorageService.cleanup();
+		if (fileStoreService.isConnectedToProject(projectId)) {
+			fileStoreService.cleanup();
 			moduleLog.info(
-				`Closed FileStorageService connection for project: ${projectId}`,
+				`Closed FileStoreService connection for project: ${projectId}`,
 			);
 		}
 
-		if (isCurrentProject) fileStorageService.setProjectId('');
+		if (isCurrentProject) fileStoreService.setProjectId('');
 		collabService.disconnectAll(projectId);
 	} catch (error) {
-		moduleLog.warn('Error closing FileStorageService connection:', error);
+		moduleLog.warn('Error closing FileStoreService connection:', error);
 	}
 }
 

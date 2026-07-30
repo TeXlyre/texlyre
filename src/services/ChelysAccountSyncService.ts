@@ -3,6 +3,7 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import { Awareness } from 'y-protocols/awareness';
 import { WebrtcProvider } from 'y-webrtc';
 import * as Y from 'yjs';
+
 import { setAccountControlRoomProvider } from '@chelys/peer/AccountControlRoom';
 import {
 	getNativeScopeControl,
@@ -16,7 +17,6 @@ import type {
 } from '@chelys/peer/SessionContract';
 import { waitForProviderPeerId } from '@chelys/peer/TransportChannel';
 import { readSignalingServers } from '@chelys/peer/TransportResolution';
-
 import {
 	USER_DATA_CHANGED,
 	type UserDataChangedDetail,

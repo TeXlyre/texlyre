@@ -39,6 +39,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as Y from 'yjs';
 import { UndoManager } from 'yjs';
 
+import { createNamedLogger } from '@/logging';
 import { createLanguageExtension } from '../../extensions/codemirror/LanguageExtension';
 import { resolveHighlightTheme } from '../../extensions/codemirror/HighlightThemeExtension';
 import { annotationSystemExtension } from '../../extensions/codemirror/AnnotationExtension';
@@ -84,7 +85,7 @@ import type { EditorSettings } from '../../types/editor';
 import { autoSaveService } from '../../services/AutoSaveService';
 import { detectFileType, isBibFile } from '../../utils/fileUtils';
 import { collabService } from '../../services/CollabService';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileStoreService } from '../../services/FileStoreService';
 import { filePathCacheService } from '../../services/FilePathCacheService';
 import type { CollabProvider } from '../../types/collab';
 import { registerEditorClipboard } from './editorClipboard';
@@ -95,7 +96,6 @@ import {
 	createYjsEditorBindingExtensions,
 	type YjsEditorBindingResult,
 } from './yjsBinding';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('useEditorView');
 
@@ -220,16 +220,13 @@ export const useEditorView = (
 			try {
 				const encoder = new TextEncoder();
 				const contentBuffer = encoder.encode(content).buffer;
-				await fileStorageService.updateFileContent(
-					currentFileId,
-					contentBuffer,
-				);
+				await fileStoreService.updateFileContent(currentFileId, contentBuffer);
 
 				if (fileName && isBibFile(fileName) && viewRef.current) {
 					refreshBibliographyCache(viewRef.current);
 				}
 
-				const file = await fileStorageService.getFile(currentFileId);
+				const file = await fileStoreService.getFile(currentFileId);
 
 				setShowSaveIndicator(true);
 				setTimeout(() => setShowSaveIndicator(false), 1500);
@@ -254,7 +251,7 @@ export const useEditorView = (
 		async (content: string) => {
 			if (!documentId || isEditingFile) return;
 			try {
-				const allFiles = await fileStorageService.getAllFiles(
+				const allFiles = await fileStoreService.getAllFiles(
 					false,
 					false,
 					false,
@@ -263,7 +260,7 @@ export const useEditorView = (
 					(file) => file.documentId === documentId,
 				);
 				if (linkedFile) {
-					await fileStorageService.updateFileContent(linkedFile.id, content);
+					await fileStoreService.updateFileContent(linkedFile.id, content);
 
 					if (isBibFile(linkedFile.name) && viewRef.current) {
 						refreshBibliographyCache(viewRef.current);
@@ -471,7 +468,7 @@ export const useEditorView = (
 
 		if (isEditingFile && currentFileId) {
 			setTimeout(async () => {
-				const file = await fileStorageService.getFile(currentFileId);
+				const file = await fileStoreService.getFile(currentFileId);
 				if (file && viewRef.current) {
 					setCurrentFilePath(viewRef.current, file.path);
 					filePathCacheService.updateCurrentFilePath(file.path);
@@ -485,7 +482,7 @@ export const useEditorView = (
 				filePathCacheService.updateCurrentFilePath('', documentId);
 				updateLinkNavigationFileName(viewRef.current, fileName || '');
 
-				const allFiles = await fileStorageService.getAllFiles(
+				const allFiles = await fileStoreService.getAllFiles(
 					false,
 					false,
 					false,
@@ -1070,7 +1067,7 @@ export const useEditorView = (
 		const handleFileReloaded = async (e: Event) => {
 			const { fileId } = (e as CustomEvent).detail;
 			if (fileId !== currentFileId || !viewRef.current) return;
-			const file = await fileStorageService.getFile(fileId);
+			const file = await fileStoreService.getFile(fileId);
 			if (!file?.content) return;
 			const content =
 				typeof file.content === 'string'

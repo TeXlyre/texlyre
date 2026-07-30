@@ -2,10 +2,10 @@
 import { BusyTexRunner } from 'texlyre-busytex';
 import type { FileInput, TexliveRemoteFile } from 'texlyre-busytex';
 
+import { createNamedLogger } from '@/logging';
 import type { CompileResult } from '../../types/compilation';
 import type { FileNode } from '../../types/files';
 import { isTemporaryFile, toArrayBuffer } from '../../utils/fileUtils';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('BusyTeXEngine');
 

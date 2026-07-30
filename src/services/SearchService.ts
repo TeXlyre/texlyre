@@ -1,8 +1,8 @@
 // src/services/SearchService.ts
-import { fileStorageService } from './FileStorageService';
+import { createNamedLogger } from '@/logging';
+import { fileStoreService } from './FileStoreService';
 import type { FileNode } from '../types/files';
 import { isTemporaryFile, isBinaryFile } from '../utils/fileUtils';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('SearchService');
 
@@ -54,7 +54,7 @@ class SearchService {
 		} = options;
 
 		const results: SearchResult[] = [];
-		const allFiles = await fileStorageService.getAllFiles(false, false, false);
+		const allFiles = await fileStoreService.getAllFiles(false, false, false);
 
 		const searchableFiles = allFiles.filter(
 			(file) =>
@@ -239,7 +239,7 @@ class SearchService {
 		if (signal.aborted) return result;
 
 		try {
-			const fileData = await fileStorageService.getFile(file.id);
+			const fileData = await fileStoreService.getFile(file.id);
 			if (!fileData?.content) return result;
 
 			let content: string;
@@ -314,7 +314,7 @@ class SearchService {
 		} = options;
 
 		try {
-			const fileData = await fileStorageService.getFile(fileId);
+			const fileData = await fileStoreService.getFile(fileId);
 			if (!fileData?.content) return false;
 
 			let content: string;
@@ -335,7 +335,7 @@ class SearchService {
 			const newContent = content.replace(searchRegex, replaceText);
 
 			if (newContent !== content) {
-				await fileStorageService.updateFileContent(fileId, newContent);
+				await fileStoreService.updateFileContent(fileId, newContent);
 				return true;
 			}
 
