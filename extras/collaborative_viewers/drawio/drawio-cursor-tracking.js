@@ -1,5 +1,8 @@
-import { createNamedLogger } from '@/utils/namedLogger';
-const moduleLog = createNamedLogger('Drawio Cursor');
+const moduleLog = {
+	warn: (...args) => console.warn('[Drawio Cursor]', ...args),
+	error: (...args) => console.error('[Drawio Cursor]', ...args),
+	info: (...args) => console.info('[Drawio Cursor]', ...args),
+};
 
 (() => {
 	const container = document.querySelector('.geDiagramContainer');
@@ -101,12 +104,24 @@ const moduleLog = createNamedLogger('Drawio Cursor');
 	});
 
 	window.addEventListener('message', (e) => {
+		if (typeof e.data !== 'string') return;
+
+		const rawMessage = e.data.trim();
+		if (
+			!rawMessage ||
+			(!rawMessage.startsWith('{') && !rawMessage.startsWith('['))
+		) {
+			return;
+		}
+
 		try {
-			const msg = JSON.parse(e.data);
+			const msg = JSON.parse(rawMessage);
 			if (msg.action === 'updateRemoteCursors') {
 				updateRemoteCursors(msg.cursors);
 			}
-		} catch (error) {}
+		} catch (error) {
+			moduleLog.warn('Invalid message received:', error);
+		}
 	});
 
 	function createCursorElement(user) {

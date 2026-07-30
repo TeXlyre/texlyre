@@ -33,6 +33,8 @@
             "application/json",
             "text/markdown",
             "text/html",
+            "application/xml",
+            "text/xml",
             "text/css",
             "text/javascript",
             "application/javascript",
@@ -46,6 +48,7 @@
             ".json",
             ".md",
             ".html",
+            ".xml",
             ".css",
             ".js",
             ".ts",
@@ -66,6 +69,7 @@
             "image/x-icon",
             "application/pdf",
             "application/vnd.jgraph.mxfile",
+            "text/x-tikz",
             ".png",
             ".jpg",
             ".jpeg",
@@ -76,8 +80,7 @@
             ".ico",
             ".pdf",
             ".drawio",
-            ".tikz",
-            "text/x-tikz"
+            ".tikz"
           ]
         }
       ]
