@@ -3,8 +3,8 @@ import type React from 'react';
 import { useState } from 'react';
 
 import { t } from '@/i18n';
-import { CopyUrlIcon } from './Icons';
 import { createNamedLogger } from '@/logging';
+import { CopyUrlIcon } from './Icons';
 
 const moduleLog = createNamedLogger('CopyField');
 
