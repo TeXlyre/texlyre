@@ -35,8 +35,14 @@
 	border: 1px solid var(--accent-border, #444);
 }
 
-.page-input-group input {
-	width: 3em;
+.page-input-group span {
+	color: var(--text-color);
+	font-size: 0.85rem;
+	white-space: nowrap;
+}
+
+.page-input-group .page-input {
+	min-width: min-content;
 	text-align: center;
 	padding-left: 0;
 	padding-right: 0;
@@ -46,13 +52,7 @@
 	background-color: var(--pico-background);
 	color: var(--text-color);
 	font-size: 0.85rem;
-	height: 24px;
-}
-
-.page-input-group span {
-	color: var(--text-color);
-	font-size: 0.85rem;
-	white-space: nowrap;
+	height: 32px;
 }
 
 .zoom-dropdown {

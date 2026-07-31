@@ -311,6 +311,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 					value={currentPage}
 					onChange={handlePageChange}
 					disabled={isLoading}
+					className='page-input'
 				/>
 				<span>/ {numPages}</span>
 			</PluginControlGroup>
