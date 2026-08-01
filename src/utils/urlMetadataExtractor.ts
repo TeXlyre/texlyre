@@ -45,9 +45,11 @@ function applyProxyToZipUrl(zipUrl: string, proxyUrl: string | null): string {
 	if (!proxyUrl || !proxyUrl.trim()) return zipUrl;
 
 	const trimmedProxy = proxyUrl.trim();
-	// const normalizedProxy = trimmedProxy.endsWith('/') ? trimmedProxy.slice(0, -1) : trimmedProxy;
+	if (zipUrl.startsWith(trimmedProxy)) return zipUrl;
 
-	return `${trimmedProxy}${zipUrl}`;
+	const isQueryProxy = /[?&][^=&]+=$/.test(trimmedProxy);
+
+	return `${trimmedProxy}${isQueryProxy ? encodeURIComponent(zipUrl) : zipUrl}`;
 }
 
 async function fetchGitHubMetadata(
@@ -88,6 +90,7 @@ async function fetchGitHubMetadata(
 }
 
 async function fetchGitLabMetadata(
+	hostname: string,
 	owner: string,
 	repo: string,
 	proxyUrl: string | null,
@@ -95,21 +98,21 @@ async function fetchGitLabMetadata(
 	try {
 		const projectPath = encodeURIComponent(`${owner}/${repo}`);
 		const response = await fetch(
-			`https://gitlab.com/api/v4/projects/${projectPath}`,
+			`https://${hostname}/api/v4/projects/${projectPath}`,
 		);
 		if (!response.ok) return null;
 
 		const data = await response.json();
 
 		const languagesResponse = await fetch(
-			`https://gitlab.com/api/v4/projects/${projectPath}/languages`,
+			`https://${hostname}/api/v4/projects/${projectPath}/languages`,
 		);
 		const languages = languagesResponse.ok
 			? await languagesResponse.json()
 			: {};
 
 		const detectedType = detectTypeFromLanguages(languages);
-		const zipUrl = `https://gitlab.com/${owner}/${repo}/-/archive/${data.default_branch}/${repo}-${data.default_branch}.zip`;
+		const zipUrl = `https://${hostname}/${owner}/${repo}/-/archive/${data.default_branch}/${repo}-${data.default_branch}.zip`;
 
 		return {
 			title: data.name,
@@ -184,13 +187,12 @@ export async function fetchPageMetadata(
 
 		if (hostname === 'github.com') {
 			metadata = await fetchGitHubMetadata(owner, repo, proxyUrl);
-		} else if (hostname === 'gitlab.com') {
-			metadata = await fetchGitLabMetadata(owner, repo, proxyUrl);
-		} else if (hostname === 'codeberg.org') {
+		} else if (hostname === 'codeberg.org' || hostname === 'gitea.com') {
 			metadata = await fetchGiteaMetadata(hostname, owner, repo, proxyUrl);
 		} else {
-			const isGitea = await detectGiteaInstance(hostname);
-			if (isGitea) {
+			metadata = await fetchGitLabMetadata(hostname, owner, repo, proxyUrl);
+
+			if (!metadata && (await detectGiteaInstance(hostname))) {
 				metadata = await fetchGiteaMetadata(hostname, owner, repo, proxyUrl);
 			}
 		}
@@ -204,6 +206,6 @@ export async function fetchPageMetadata(
 		image: null,
 		tags: [],
 		type: null,
-		zipUrl: url,
+		zipUrl: applyProxyToZipUrl(url, proxyUrl),
 	};
 }
