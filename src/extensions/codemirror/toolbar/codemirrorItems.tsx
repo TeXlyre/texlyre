@@ -2,6 +2,7 @@
 import type { EditorView } from '@codemirror/view';
 import { renderToString } from 'react-dom/server';
 import { undo, redo } from '@codemirror/commands';
+import { foldAll, unfoldAll } from '@codemirror/language';
 import type { UndoManager } from 'yjs';
 
 import { t } from '@/i18n';
@@ -11,6 +12,8 @@ import {
 	MinimizeIcon,
 	UndoIcon,
 	RedoIcon,
+	ChevronUpIcon,
+	ChevronDownIcon,
 } from '../../../components/common/Icons';
 
 export const createUndo = (undoManager?: UndoManager): ToolbarItem => ({
@@ -52,4 +55,18 @@ export const createFullScreen = (isFullScreen: boolean): ToolbarItem => ({
 		}
 		return true;
 	},
+});
+
+export const createFoldAll = (): ToolbarItem => ({
+	label: t('Fold All'),
+	key: 'foldAll',
+	icon: renderToString(<ChevronUpIcon />),
+	command: (view: EditorView) => foldAll(view),
+});
+
+export const createUnfoldAll = (): ToolbarItem => ({
+	label: t('Unfold All'),
+	key: 'unfoldAll',
+	icon: renderToString(<ChevronDownIcon />),
+	command: (view: EditorView) => unfoldAll(view),
 });

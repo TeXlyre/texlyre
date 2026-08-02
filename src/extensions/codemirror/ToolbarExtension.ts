@@ -7,13 +7,41 @@ import type { ToolbarEntry } from '@/components/common/PluginToolbar';
 import * as CodeMirrorItems from './toolbar/codemirrorItems';
 import * as LaTeXItems from './toolbar/latexItems';
 import * as TypstItems from './toolbar/typstItems';
+import * as MarkdownItems from './toolbar/markdownItems';
+import * as RstItems from './toolbar/rstItems';
+import * as JsonItems from './toolbar/jsonItems';
+import * as YamlItems from './toolbar/yamlItems';
+import * as TomlItems from './toolbar/tomlItems';
 import * as TableScopeItems from './toolbar/tableScopeItems';
 import { detectTableScope } from './toolbar/tableScope';
 import * as ColorScopeItems from './toolbar/colorScopeItems';
 import { detectColorScope } from './toolbar/colorScope';
 import { buildToolbarEntries } from './toolbar/toolbarItems';
 
-export type FileType = 'latex' | 'typst';
+export type FileType =
+	| 'latex'
+	| 'typst'
+	| 'markdown'
+	| 'rst'
+	| 'json'
+	| 'yaml'
+	| 'toml';
+
+export type ToolbarFileType = FileType;
+
+const TOOLBAR_FILE_TYPES: readonly string[] = [
+	'latex',
+	'typst',
+	'markdown',
+	'rst',
+	'json',
+	'yaml',
+	'toml',
+];
+
+export function hasToolbarSupport(fileType: string): boolean {
+	return TOOLBAR_FILE_TYPES.includes(fileType);
+}
 
 const commandsByView = new WeakMap<
 	EditorView,
@@ -58,6 +86,11 @@ export const createToolbarController = (
 		CodeMirrorItems,
 		LaTeXItems,
 		TypstItems,
+		MarkdownItems,
+		RstItems,
+		JsonItems,
+		YamlItems,
+		TomlItems,
 		TableScopeItems,
 		ColorScopeItems,
 		undoManager,
@@ -95,6 +128,7 @@ export const createToolbarController = (
 
 			update() {
 				if (!view) return;
+				if (fileType !== 'latex' && fileType !== 'typst') return;
 				const inTable = detectTableScope(view, fileType) !== null;
 				const inColor = detectColorScope(view, fileType) !== null;
 				if (inTable !== scopeState.inTable || inColor !== scopeState.inColor) {

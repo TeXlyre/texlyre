@@ -4,7 +4,7 @@ import type { EditorView } from '@codemirror/view';
 import { TableGridSelector } from '../../../utils/popover/TableGridSelector';
 import { insertText } from './helpers';
 
-export type TableType = 'latex' | 'typst';
+export type TableType = 'latex' | 'typst' | 'markdown' | 'rst';
 
 const gridSelectors = new WeakMap<EditorView, TableGridSelector>();
 
@@ -52,17 +52,51 @@ ${dataRows}
 )`;
 };
 
+const generateMarkdownTable = (rows: number, cols: number): string => {
+	const headerRow = new Array(cols)
+		.fill(null)
+		.map((_, i) => `Header ${i + 1}`)
+		.join(' | ');
+	const separator = new Array(cols).fill('---').join(' | ');
+	const dataRows = new Array(rows - 1)
+		.fill(null)
+		.map(() => `| ${new Array(cols).fill('').join(' | ')} |`)
+		.join('\n');
+
+	return `| ${headerRow} |\n| ${separator} |\n${dataRows}`;
+};
+
+const generateRstTable = (rows: number, cols: number): string => {
+	const row = (cells: string[]) =>
+		cells.map((cell, i) => `\t${i === 0 ? '*' : ' '} - ${cell}`).join('\n');
+	const headerRow = row(
+		new Array(cols).fill(null).map((_, i) => `Header ${i + 1}`),
+	);
+	const dataRows = new Array(rows - 1)
+		.fill(null)
+		.map(() => row(new Array(cols).fill('')))
+		.join('\n');
+
+	return `.. list-table::\n\t:header-rows: 1\n\n${headerRow}\n${dataRows}`;
+};
+
+const tableGenerators: Record<
+	TableType,
+	(rows: number, cols: number) => string
+> = {
+	latex: generateLatexTable,
+	typst: generateTypstTable,
+	markdown: generateMarkdownTable,
+	rst: generateRstTable,
+};
+
 const handleTableSelect = (
 	view: EditorView,
 	rows: number,
 	cols: number,
 	type: TableType,
 ): void => {
-	const text =
-		type === 'latex'
-			? generateLatexTable(rows, cols)
-			: generateTypstTable(rows, cols);
-	insertText(view, text, 0);
+	insertText(view, tableGenerators[type](rows, cols), 0);
 };
 
 export const createTableCommand = (type: TableType) => {

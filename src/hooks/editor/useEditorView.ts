@@ -13,11 +13,6 @@ import {
 	historyField,
 	indentWithTab,
 } from '@codemirror/commands';
-import { languages } from '@codemirror/language-data';
-import { html } from '@codemirror/lang-html';
-import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { json } from '@codemirror/lang-json';
-import { yaml } from '@codemirror/lang-yaml';
 import {
 	bracketMatching,
 	foldGutter,
@@ -37,13 +32,13 @@ import { EditorView } from 'codemirror';
 import { vim } from '@replit/codemirror-vim';
 import { emacs } from '@replit/codemirror-emacs';
 import { helix } from 'codemirror-helix';
-import { bibtex, bibtexCompletionSource } from 'codemirror-lang-bib';
-import { latex, latexCompletionSource } from 'codemirror-lang-latex';
+import { bibtexCompletionSource } from 'codemirror-lang-bib';
+import { latexCompletionSource } from 'codemirror-lang-latex';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as Y from 'yjs';
 import { UndoManager } from 'yjs';
 
-import { safeTypst as typst } from '../../extensions/codemirror/SafeTypstPatch';
+import { createLanguageExtension } from '../../extensions/codemirror/LanguageExtension';
 import { resolveHighlightTheme } from '../../extensions/codemirror/HighlightThemeExtension';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
 import { latexTypstBidiIsolates } from '../../extensions/codemirror/BidiExtension';
@@ -60,7 +55,9 @@ import {
 import { createCodeActionsExtension } from '../../extensions/codemirror/CodeActionsLSPExtension';
 import {
 	createToolbarController,
+	hasToolbarSupport,
 	type ToolbarController,
+	type ToolbarFileType,
 } from '../../extensions/codemirror/ToolbarExtension';
 import { createMathLiveExtension } from '../../extensions/codemirror/MathLiveExtension';
 import { createPasteExtension } from '../../extensions/codemirror/PasteExtension';
@@ -99,6 +96,8 @@ type FileTypeInfo = {
 	isMarkdown: boolean;
 	hasFormatter: boolean;
 	isStructured: boolean;
+	hasToolbar: boolean;
+	detectedByContent: boolean;
 };
 
 const classifyFileType = (
@@ -118,6 +117,8 @@ const classifyFileType = (
 		isMarkdown,
 		hasFormatter: isLatex || isTypst || isBib,
 		isStructured: isLatex || isTypst || isBib || isMarkdown,
+		hasToolbar: hasToolbarSupport(fileType),
+		detectedByContent: detectFileType(fileName) === 'unknown',
 	};
 };
 
@@ -363,38 +364,10 @@ export const useEditorView = (
 	const buildLanguageExtension = (info: FileTypeInfo): Extension[] => {
 		if (!getSyntaxHighlightingEnabled()) return [];
 
-		switch (info.fileType) {
-			case 'latex':
-				return [
-					latex({
-						autoCloseBrackets: false,
-						enableAutocomplete: false,
-						fileName,
-					}),
-				];
-			case 'typst':
-				return [typst()];
-			case 'bib':
-				return [
-					bibtex({ autoCloseBrackets: false, enableAutocomplete: false }),
-				];
-			case 'markdown':
-				return [
-					markdown({
-						base: markdownLanguage,
-						codeLanguages: languages,
-						htmlTagLanguage: html(),
-					}),
-				];
-			case 'json':
-				return [json()];
-			case 'yaml':
-				return [yaml()];
-			case 'html':
-				return [html()];
-			default:
-				return [];
-		}
+		return createLanguageExtension(info.fileType, {
+			fileName,
+			detectedByContent: info.detectedByContent,
+		});
 	};
 
 	const buildLanguageSpecificExtensions = (
@@ -680,9 +653,9 @@ export const useEditorView = (
 		);
 
 		let toolbarCtl: ToolbarController | null = null;
-		if ((info.isLatex || info.isTypst) && toolbarVisible) {
+		if (info.hasToolbar && toolbarVisible) {
 			toolbarCtl = createToolbarController(
-				info.fileType as 'latex' | 'typst',
+				info.fileType as ToolbarFileType,
 				undoManagerRef.current || undefined,
 			);
 		}
@@ -821,10 +794,10 @@ export const useEditorView = (
 
 		let controller: ToolbarController | null = null;
 		const toolbarExt: Extension[] =
-			(info.isLatex || info.isTypst) && toolbarVisible
+			info.hasToolbar && toolbarVisible
 				? [
 						(controller = createToolbarController(
-							info.fileType as 'latex' | 'typst',
+							info.fileType as ToolbarFileType,
 							undoManagerRef.current || undefined,
 						)).extension,
 					]

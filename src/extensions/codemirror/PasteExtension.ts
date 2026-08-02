@@ -30,7 +30,9 @@ export const createPasteExtension = (
 				pendingImagePath = uploadedPath;
 
 				const fileType = detectFileType(fileName, view.state.doc.toString());
-				const didRun = runToolbarCommand(view, `${fileType}-figure`);
+				const didRun =
+					runToolbarCommand(view, `${fileType}-figure`) ||
+					runToolbarCommand(view, `${fileType}-image`);
 				if (!didRun) {
 					moduleLog.warn('Figure command not found in toolbar');
 					pendingImagePath = null;

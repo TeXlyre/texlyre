@@ -818,6 +818,18 @@ export function isHtmlFile(pathOrName: string): boolean {
 	return lower.endsWith('.html');
 }
 
+export function isRstFile(pathOrName: string): boolean {
+	if (!pathOrName) return false;
+	const lower = pathOrName.toLowerCase();
+	return lower.endsWith('.rst');
+}
+
+export function isTomlFile(pathOrName: string): boolean {
+	if (!pathOrName) return false;
+	const lower = pathOrName.toLowerCase();
+	return lower.endsWith('.toml');
+}
+
 export function isLatexContent(content: string): boolean {
 	return /\\(?:documentclass|usepackage|begin|end|section|chapter|part|maketitle)/i.test(
 		content,
@@ -842,8 +854,10 @@ export const detectFileType = (
 	| 'typst'
 	| 'bib'
 	| 'markdown'
+	| 'rst'
 	| 'yaml'
 	| 'json'
+	| 'toml'
 	| 'html'
 	| 'unknown' => {
 	if (fileName) {
@@ -851,8 +865,10 @@ export const detectFileType = (
 		if (isTypstFile(fileName)) return 'typst';
 		if (isBibFile(fileName)) return 'bib';
 		if (isMarkdownFile(fileName)) return 'markdown';
+		if (isRstFile(fileName)) return 'rst';
 		if (isYamlFile(fileName)) return 'yaml';
 		if (isJsonFile(fileName)) return 'json';
+		if (isTomlFile(fileName)) return 'toml';
 		if (isHtmlFile(fileName)) return 'html';
 	}
 	if (content) {
