@@ -518,6 +518,7 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 						onChange={handleTextChange}
 						fileName={fileName}
 						isEditingFile={false}
+						showToolbar={showToolbar}
 						parseComments={parseComments}
 						addComment={addComment}
 						updateComments={updateComments}

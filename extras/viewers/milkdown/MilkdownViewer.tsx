@@ -412,6 +412,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 						fileName={fileName}
 						fileId={fileId}
 						isEditingFile={true}
+						showToolbar={showToolbar}
 						registerView={(getContent) => {
 							getTextContentRef.current = getContent;
 						}}

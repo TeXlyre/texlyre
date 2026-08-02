@@ -15,6 +15,7 @@ import type { Awareness } from 'y-protocols/awareness';
 import { BibliographyProvider } from '../../contexts/BibliographyContext';
 import { CommentProvider } from '../../contexts/CommentContext';
 import { processComments } from '../../extensions/codemirror/CommentExtension';
+import { hasToolbarSupport } from '../../extensions/codemirror/ToolbarExtension';
 import { useEditorView } from '../../hooks/editor/useEditorView';
 import { useCollab } from '../../hooks/useCollab';
 import { useComments } from '../../hooks/useComments';
@@ -568,7 +569,7 @@ const EditorContent: React.FC<{
 	const headerControls =
 		isEditingFile && fileName ? (
 			<>
-				{(isLatexFile(filePath) || isTypstFile(filePath)) && !isViewOnly && (
+				{hasToolbarSupport(fileType) && !isViewOnly && (
 					<PluginControlGroup>
 						<button
 							onClick={() => onToolbarToggle?.(!toolbarVisible)}
@@ -578,17 +579,21 @@ const EditorContent: React.FC<{
 							<ToolbarShowIcon />
 						</button>
 
-						{isSourceMapAvailable && (
-							<SourceMapButton onForwardSync={handleForwardSync} />
-						)}
+						{(isLatexFile(filePath) || isTypstFile(filePath)) && (
+							<>
+								{isSourceMapAvailable && (
+									<SourceMapButton onForwardSync={handleForwardSync} />
+								)}
 
-						<ContentFormatterButton
-							getCurrentContent={() =>
-								viewRef.current?.state.doc.toString() || ''
-							}
-							contentType={fileType}
-							onFormat={handleFormattedContent}
-						/>
+								<ContentFormatterButton
+									getCurrentContent={() =>
+										viewRef.current?.state.doc.toString() || ''
+									}
+									contentType={fileType}
+									onFormat={handleFormattedContent}
+								/>
+							</>
+						)}
 					</PluginControlGroup>
 				)}
 
@@ -653,8 +658,7 @@ const EditorContent: React.FC<{
 			</>
 		) : !isEditingFile && linkedFileInfo && !showUnlinkedNotice ? (
 			<>
-				{(isLatexFile(linkedFileInfo.filePath) ||
-					isTypstFile(linkedFileInfo.filePath)) &&
+				{hasToolbarSupport(detectFileType(linkedFileInfo.filePath)) &&
 					!isViewOnly && (
 						<PluginControlGroup>
 							<button
@@ -665,17 +669,22 @@ const EditorContent: React.FC<{
 								<ToolbarShowIcon />
 							</button>
 
-							{isSourceMapAvailable && (
-								<SourceMapButton onForwardSync={handleForwardSync} />
-							)}
+							{(isLatexFile(linkedFileInfo.filePath) ||
+								isTypstFile(linkedFileInfo.filePath)) && (
+								<>
+									{isSourceMapAvailable && (
+										<SourceMapButton onForwardSync={handleForwardSync} />
+									)}
 
-							<ContentFormatterButton
-								getCurrentContent={() =>
-									viewRef.current?.state.doc.toString() || ''
-								}
-								contentType={detectFileType(linkedFileInfo.filePath)}
-								onFormat={handleFormattedContent}
-							/>
+									<ContentFormatterButton
+										getCurrentContent={() =>
+											viewRef.current?.state.doc.toString() || ''
+										}
+										contentType={detectFileType(linkedFileInfo.filePath)}
+										onFormat={handleFormattedContent}
+									/>
+								</>
+							)}
 						</PluginControlGroup>
 					)}
 				<PluginControlGroup>

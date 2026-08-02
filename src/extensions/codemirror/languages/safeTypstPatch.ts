@@ -1,4 +1,4 @@
-// src/extensions/codemirror/SafeTypstPatch.ts
+// src/extensions/codemirror/languages/safeTypstPatch.ts
 // codemirror-lang-typst@0.4.0's incremental WASM edit() panics (Rust unwrap) on
 // document changes and the trap is not catchable from JS. We force every change
 // through a full reparse: edit() never enters WASM (always returns full_update),
@@ -9,8 +9,11 @@
 // Language's extraExtensions, hardcoding colors that ignore the app theme. We
 // rebuild the Language with only the parser's update listener so Typst renders
 // through the host's resolveHighlightTheme like LaTeX does.
+// Finally, the WASM parser never attaches languageDataProp to its top node, so
+// Language's own languageData provider always resolves to nothing and comment
+// commands find no tokens. We supply the language data directly instead.
 import { Language, LanguageSupport } from '@codemirror/language';
-import type { Extension } from '@codemirror/state';
+import { EditorState, type Extension } from '@codemirror/state';
 import { typst } from 'codemirror-lang-typst';
 
 type WasmParser = { edit: (...a: unknown[]) => unknown } | null;
@@ -22,6 +25,10 @@ type TypstParser = {
 };
 
 const FULL_REPARSE = { full_update: true, edits: [] };
+
+const TYPST_LANGUAGE_DATA = {
+	commentTokens: { line: '//', block: { open: '/*', close: '*/' } },
+};
 
 export function safeTypst(): LanguageSupport {
 	const support = typst();
@@ -57,5 +64,7 @@ export function safeTypst(): LanguageSupport {
 		original.name,
 	);
 
-	return new LanguageSupport(themedLanguage);
+	return new LanguageSupport(themedLanguage, [
+		EditorState.languageData.of(() => [TYPST_LANGUAGE_DATA]),
+	]);
 }

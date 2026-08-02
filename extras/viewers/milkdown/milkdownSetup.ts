@@ -37,7 +37,7 @@ import { languages as allLanguages } from '@codemirror/language-data';
 import { latex } from 'codemirror-lang-latex';
 import { bibtex } from 'codemirror-lang-bib';
 
-import { safeTypst as typst } from '@/extensions/codemirror/SafeTypstPatch';
+import { safeTypst as typst } from '@/extensions/codemirror/languages/safeTypstPatch';
 import { resolveHighlightTheme } from '@/extensions/codemirror/HighlightThemeExtension';
 import type { HighlightTheme } from '@/types/editor';
 import { createLinkClickHandler } from './linkClick';

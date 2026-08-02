@@ -1,9 +1,14 @@
 // extras/viewers/milkdown/MilkdownTextPane.tsx
 import type React from 'react';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
 import type { EditorView } from '@codemirror/view';
 
+import PluginToolbar, {
+	type ToolbarEntry,
+} from '@/components/common/PluginToolbar';
 import { useEditorView } from '@/hooks/editor/useEditorView';
+
+const EMPTY_TOOLBAR_ITEMS: ToolbarEntry[] = [];
 
 const noopParse = () => [];
 const noopAdd = () => ({ openTag: '', closeTag: '', commentId: '' });
@@ -22,6 +27,7 @@ interface MilkdownTextPaneProps {
 	addComment?: (content: string) => unknown;
 	updateComments?: (content: string) => void;
 	registerView?: (getContent: () => string) => void;
+	showToolbar?: boolean;
 }
 
 const MilkdownTextPane: React.FC<MilkdownTextPaneProps> = ({
@@ -37,10 +43,11 @@ const MilkdownTextPane: React.FC<MilkdownTextPaneProps> = ({
 	addComment,
 	updateComments,
 	registerView,
+	showToolbar = true,
 }) => {
 	const editorRef = useRef<HTMLDivElement>(null);
 
-	const { viewRef, showSaveIndicator } = useEditorView(
+	const { viewRef, showSaveIndicator, toolbarController } = useEditorView(
 		editorRef,
 		docUrl,
 		documentId,
@@ -54,6 +61,16 @@ const MilkdownTextPane: React.FC<MilkdownTextPaneProps> = ({
 		false,
 		fileName,
 		fileId,
+		false,
+		showToolbar,
+	);
+
+	const toolbarItems = useSyncExternalStore(
+		useCallback(
+			(cb) => toolbarController?.subscribe(cb) ?? (() => {}),
+			[toolbarController],
+		),
+		() => toolbarController?.getItems() ?? EMPTY_TOOLBAR_ITEMS,
 	);
 
 	useEffect(() => {
@@ -64,14 +81,22 @@ const MilkdownTextPane: React.FC<MilkdownTextPaneProps> = ({
 	}, [registerView, viewRef]);
 
 	return (
-		<>
+		<div className='editor-wrapper' style={{ flex: 1, position: 'relative' }}>
+			{showToolbar && toolbarController && (
+				<PluginToolbar
+					items={toolbarItems}
+					onRun={(key) => toolbarController.run(key)}
+				/>
+			)}
+
 			<div ref={editorRef} className='codemirror-editor-container' />
+
 			{showSaveIndicator && (
 				<div className='save-indicator'>
 					<span>Saved</span>
 				</div>
 			)}
-		</>
+		</div>
 	);
 };
 
