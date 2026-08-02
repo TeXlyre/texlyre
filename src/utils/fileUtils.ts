@@ -815,7 +815,23 @@ export function isJsonFile(pathOrName: string): boolean {
 export function isHtmlFile(pathOrName: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
-	return lower.endsWith('.html');
+	return (
+		lower.endsWith('.html') ||
+		lower.endsWith('.htm') ||
+		lower.endsWith('.xhtml')
+	);
+}
+
+export function isCssFile(pathOrName: string): boolean {
+	if (!pathOrName) return false;
+	const lower = pathOrName.toLowerCase();
+	return lower.endsWith('.css');
+}
+
+export function isXmlFile(pathOrName: string): boolean {
+	if (!pathOrName) return false;
+	const lower = pathOrName.toLowerCase();
+	return lower.endsWith('.xml') || lower.endsWith('.xsl');
 }
 
 export function isRstFile(pathOrName: string): boolean {
@@ -859,6 +875,8 @@ export const detectFileType = (
 	| 'json'
 	| 'toml'
 	| 'html'
+	| 'css'
+	| 'xml'
 	| 'unknown' => {
 	if (fileName) {
 		if (isLatexFile(fileName)) return 'latex';
@@ -870,6 +888,8 @@ export const detectFileType = (
 		if (isJsonFile(fileName)) return 'json';
 		if (isTomlFile(fileName)) return 'toml';
 		if (isHtmlFile(fileName)) return 'html';
+		if (isCssFile(fileName)) return 'css';
+		if (isXmlFile(fileName)) return 'xml';
 	}
 	if (content) {
 		if (isBibContent(content)) return 'bib';

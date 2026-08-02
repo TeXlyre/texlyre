@@ -1,5 +1,5 @@
 // These constants are automatically generated. Do not edit directly.
-// Generated on: 2026-08-02T16:24:48.682Z
+// Generated on: 2026-08-02T16:43:13.750Z
 const CACHE_NAME = `texlyre-v0.10.6`;
 const BASE_PATH = '/texlyre/';
 const FONTS_CACHE_NAME = 'fonts-cache-v1';

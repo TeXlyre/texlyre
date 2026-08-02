@@ -1436,7 +1436,7 @@
     "@lezer/highlight" "^1.0.0"
     "@lezer/lr" "^1.0.0"
 
-"@codemirror/lang-xml@^6.0.0":
+"@codemirror/lang-xml@^6.0.0", "@codemirror/lang-xml@^6.1.0":
   version "6.1.0"
   resolved "https://registry.npmjs.org/@codemirror/lang-xml/-/lang-xml-6.1.0.tgz"
   integrity sha512-3z0blhicHLfwi2UgkZYRPioSgVTo9PV5GP5ducFH6FaHy0IAJRg+ixj5gTR1gnT/glAIC8xv4w2VL1LoZfs+Jg==

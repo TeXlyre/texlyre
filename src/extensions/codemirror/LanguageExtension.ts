@@ -1,7 +1,9 @@
 // src/extensions/codemirror/LanguageExtension.ts
+import { css } from '@codemirror/lang-css';
 import { html } from '@codemirror/lang-html';
 import { json } from '@codemirror/lang-json';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { xml } from '@codemirror/lang-xml';
 import { yaml } from '@codemirror/lang-yaml';
 import { StreamLanguage } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
@@ -70,6 +72,10 @@ export const createLanguageExtension = (
 			return [tomlLanguage];
 		case 'html':
 			return [html()];
+		case 'css':
+			return [css()];
+		case 'xml':
+			return [xml()];
 		default:
 			return [];
 	}
