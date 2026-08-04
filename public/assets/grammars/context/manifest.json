@@ -1,0 +1,13 @@
+{
+	"id": "context",
+	"scopeName": "text.tex.context",
+	"extensions": [".mkiv", ".mkvi", ".mkxl", ".mklx"],
+	"grammars": [
+		{ "scopeName": "text.tex.context", "file": "ConTeXt.tmLanguage" },
+		{ "scopeName": "source.metafun", "file": "MetaFun.tmLanguage" }
+	],
+	"languageData": {
+		"commentTokens": { "line": "%" },
+		"closeBrackets": { "brackets": ["{", "[", "("] }
+	}
+}

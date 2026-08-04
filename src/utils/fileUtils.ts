@@ -607,6 +607,10 @@ export function isBinaryFile(fileName: string): boolean {
 		'mdown',
 		'mdx',
 		'mkdn',
+		'mkiv',
+		'mkvi',
+		'mkxl',
+		'mklx',
 		'ms',
 		'nw',
 		'noweb',
@@ -847,13 +851,18 @@ export function isTomlFile(pathOrName: string): boolean {
 }
 
 export function isLatexContent(content: string): boolean {
-	return /\\(?:documentclass|usepackage|begin|end|section|chapter|part|maketitle)/i.test(
+	return /\\(?:documentclass|usepackage|newcommand|renewcommand|providecommand|maketitle|tableofcontents|bibliographystyle|addbibresource)\b/.test(
 		content,
 	);
 }
 
 export function isTypstContent(content: string): boolean {
-	return /(?:#import|#include|#let|#set|^=+\s|\*\*|\/\/)/m.test(content);
+	return (
+		/^\s*#(?:import|include|let|set|show)\b/m.test(content) ||
+		/#(?:figure|heading|table|grid|block|text|par|link|cite|ref)\s*\(/.test(
+			content,
+		)
+	);
 }
 
 export function isBibContent(content: string): boolean {

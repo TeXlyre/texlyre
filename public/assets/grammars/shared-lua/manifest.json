@@ -1,0 +1,4 @@
+{
+	"id": "shared-lua",
+	"grammars": [{ "scopeName": "source.lua", "file": "lua.tmLanguage.json" }]
+}

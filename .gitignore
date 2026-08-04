@@ -17,6 +17,13 @@ public/core/drawio-embed/*
 public/core/tikz-editor/*
 public/core/texfmt/*
 public/core/busytex/*
+public/core/oniguruma/*
+
+public/assets/grammars/**
+!public/assets/grammars/**/
+!public/assets/grammars/**/manifest.json
+!public/assets/grammars/**/*-embedded.tmLanguage.json
+!public/assets/grammars/lilypond/README.md
 
 src/plugins/
 !src/plugins/PluginRegistry.ts

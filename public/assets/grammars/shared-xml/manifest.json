@@ -1,0 +1,4 @@
+{
+	"id": "shared-xml",
+	"grammars": [{ "scopeName": "text.xml", "file": "xml.tmLanguage.json" }]
+}

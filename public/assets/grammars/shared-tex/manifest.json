@@ -1,0 +1,4 @@
+{
+	"id": "shared-tex",
+	"grammars": [{ "scopeName": "text.tex", "file": "TeX.tmLanguage.json" }]
+}
