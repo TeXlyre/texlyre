@@ -63,7 +63,7 @@ xx: {
 }
 ```
 
-3. Add configuration to `translations/languages.config.json`:
+3. Add configuration to `translations/locales.config.json`:
 
 ```json
 {
@@ -131,7 +131,7 @@ The source of truth is `en.json`, but Crowdin uses the auto-generated `base-en.j
 
 Some languages require a few or all of the pluralization forms. It is not necessary to include all variations for languages that don't require them.
 
-### Translation Dos & Don’ts
+### Translation Requirements
 
 #### Do
 

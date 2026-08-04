@@ -1,0 +1,15 @@
+{
+	"id": "lilypond",
+	"scopeName": "source.lilypond",
+	"extensions": [".ly", ".ily"],
+	"grammars": [
+		{ "scopeName": "source.lilypond", "file": "lilypond.tmLanguage.json" }
+	],
+	"languageData": {
+		"commentTokens": {
+			"line": "%",
+			"block": { "open": "%{", "close": "%}" }
+		},
+		"closeBrackets": { "brackets": ["{", "[", "(", "<", "\"", "'"] }
+	}
+}

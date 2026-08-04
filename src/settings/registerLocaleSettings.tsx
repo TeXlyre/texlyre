@@ -3,9 +3,9 @@ import { useEffect, useRef } from 'react';
 
 import { t } from '@/i18n';
 import { useSettings } from '../hooks/useSettings';
-import languagesConfig from '../../translations/languages.config.json';
+import languagesConfig from '../../translations/locales.config.json';
 
-interface Language {
+interface Locale {
 	code: string;
 	name: string;
 	nativeName: string;
@@ -19,7 +19,7 @@ interface Language {
 export function useRegisterLanguageSettings() {
 	const { registerSetting, getSetting } = useSettings();
 	const settingsRegistered = useRef(false);
-	const availableLanguages = (languagesConfig.languages as Language[]) || [];
+	const availableLanguages = (languagesConfig.languages as Locale[]) || [];
 
 	useEffect(() => {
 		if (settingsRegistered.current) return;

@@ -1,0 +1,4 @@
+{
+	"id": "shared-dot",
+	"grammars": [{ "scopeName": "source.dot", "file": "dot.tmLanguage" }]
+}

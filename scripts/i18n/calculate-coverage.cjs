@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const translationsDir = path.join(__dirname, '../../translations');
-const configFile = path.join(translationsDir, 'languages.config.json');
+const configFile = path.join(translationsDir, 'locales.config.json');
 
 function loadExistingConfig() {
 	if (fs.existsSync(configFile)) {

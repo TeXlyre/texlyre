@@ -1,0 +1,4 @@
+{
+	"id": "shared-julia",
+	"grammars": [{ "scopeName": "source.julia", "file": "julia.tmLanguage.json" }]
+}

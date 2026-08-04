@@ -155,6 +155,7 @@
 
 [data-layout="texlyre-mobile"] .external-outline-header,
 [data-layout="texlyre-mobile"] .latex-outline-header,
+[data-layout="texlyre-mobile"] .textmate-outline-header,
 [data-layout="texlyre-mobile"] .typst-outline-header {
 	padding: var(--mobile-spacing-md);
 	font-size: var(--mobile-font-sm);

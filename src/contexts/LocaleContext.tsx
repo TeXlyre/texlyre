@@ -1,4 +1,4 @@
-// src/contexts/LanguageContext.tsx
+// src/contexts/LocaleContext.tsx
 import i18next from 'i18next';
 import type React from 'react';
 import {
@@ -12,9 +12,9 @@ import {
 } from 'react';
 
 import { useSettings } from '../hooks/useSettings';
-import languagesConfig from '../../translations/languages.config.json';
+import languagesConfig from '../../translations/locales.config.json';
 
-interface Language {
+interface Locale {
 	code: string;
 	name: string;
 	nativeName: string;
@@ -25,32 +25,32 @@ interface Language {
 	filePath: string;
 }
 
-interface LanguageContextType {
-	currentLanguage: Language | null;
-	availableLanguages: Language[];
+interface LocaleContextType {
+	currentLanguage: Locale | null;
+	availableLanguages: Locale[];
 	changeLanguage: (languageCode: string) => Promise<void>;
 	isRTL: boolean;
 }
 
-export const LanguageContext = createContext<LanguageContextType>({
+export const LocaleContext = createContext<LocaleContextType>({
 	currentLanguage: null,
 	availableLanguages: [],
 	changeLanguage: async () => {},
 	isRTL: false,
 });
 
-interface LanguageProviderProps {
+interface LocaleProviderProps {
 	children: ReactNode;
 }
 
-export const LanguageProvider: React.FC<LanguageProviderProps> = ({
+export const LanguageProvider: React.FC<LocaleProviderProps> = ({
 	children,
 }) => {
 	const { getSetting } = useSettings();
-	const [currentLanguage, setCurrentLanguage] = useState<Language | null>(null);
+	const [currentLanguage, setCurrentLanguage] = useState<Locale | null>(null);
 	const [isRTL, setIsRTL] = useState(false);
 	const availableLanguages = useMemo(
-		() => (languagesConfig.languages as Language[]) || [],
+		() => (languagesConfig.languages as Locale[]) || [],
 		[],
 	);
 	const lastAppliedLanguageRef = useRef<string | null>(null);
@@ -117,10 +117,10 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
 	}, [currentLanguage, directionValue, applyDirection]);
 
 	return (
-		<LanguageContext.Provider
+		<LocaleContext.Provider
 			value={{ currentLanguage, availableLanguages, changeLanguage, isRTL }}
 		>
 			{children}
-		</LanguageContext.Provider>
+		</LocaleContext.Provider>
 	);
 };

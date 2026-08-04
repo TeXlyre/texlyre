@@ -1,0 +1,96 @@
+{
+	"scopeName": "source.sile.embedded",
+	"injectionSelector": "L:source.sile",
+	"patterns": [
+		{
+			"match": "(\\\\(?:part|chapter|section|subsection|subsubsection))(\\[[^\\]]*\\])?(\\{)([^}]*)(\\})",
+			"captures": {
+				"1": {
+					"name": "support.function.section.sile"
+				},
+				"3": {
+					"name": "punctuation.definition.section.sile"
+				},
+				"4": {
+					"name": "entity.name.section.sile"
+				},
+				"5": {
+					"name": "punctuation.definition.section.sile"
+				}
+			}
+		},
+		{
+			"begin": "(\\\\begin)(\\[[^\\]]*\\])?({)(script|lua)(})",
+			"end": "(\\\\end)({)(script|lua)(})",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.environment.begin.sile"
+				},
+				"4": {
+					"name": "entity.name.tag.environment.sile"
+				}
+			},
+			"endCaptures": {
+				"1": {
+					"name": "keyword.control.environment.end.sile"
+				},
+				"3": {
+					"name": "entity.name.tag.environment.sile"
+				}
+			},
+			"contentName": "meta.embedded.block.lua",
+			"patterns": [
+				{
+					"include": "source.lua"
+				}
+			]
+		},
+		{
+			"begin": "(\\\\begin)(\\[[^\\]]*\\])?({)(xml)(})",
+			"end": "(\\\\end)({)(xml)(})",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.environment.begin.sile"
+				},
+				"4": {
+					"name": "entity.name.tag.environment.sile"
+				}
+			},
+			"endCaptures": {
+				"1": {
+					"name": "keyword.control.environment.end.sile"
+				},
+				"3": {
+					"name": "entity.name.tag.environment.sile"
+				}
+			},
+			"contentName": "meta.embedded.block.xml",
+			"patterns": [
+				{
+					"include": "text.xml"
+				}
+			]
+		},
+		{
+			"begin": "(\\\\begin)(\\[[^\\]]*\\])?({)(raw)(})",
+			"end": "(\\\\end)({)(raw)(})",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.environment.begin.sile"
+				},
+				"4": {
+					"name": "entity.name.tag.environment.sile"
+				}
+			},
+			"endCaptures": {
+				"1": {
+					"name": "keyword.control.environment.end.sile"
+				},
+				"3": {
+					"name": "entity.name.tag.environment.sile"
+				}
+			},
+			"contentName": "meta.embedded.block.raw"
+		}
+	]
+}

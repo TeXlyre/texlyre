@@ -1,0 +1,4 @@
+{
+	"id": "shared-mermaid",
+	"grammars": [{ "scopeName": "source.mmd", "file": "mermaid.tmLanguage.json" }]
+}

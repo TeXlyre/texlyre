@@ -1,0 +1,4 @@
+{
+	"id": "shared-shell",
+	"grammars": [{ "scopeName": "source.shell", "file": "shell-unix-bash.tmLanguage.json" }]
+}

@@ -1,7 +1,7 @@
 // src/components/app/AppSettingBootstrap.tsx
 import type React from 'react';
 
-import { useRegisterLanguageSettings } from '../../settings/registerLanguageSettings';
+import { useRegisterLanguageSettings } from '../../settings/registerLocaleSettings';
 import { useRegisterThemeSettings } from '../../settings/registerThemeSettings';
 import { useRegisterEditorSettings } from '../../settings/registerEditorSettings';
 import { useRegisterCollabSettings } from '../../settings/registerCollabSettings';

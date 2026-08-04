@@ -1,0 +1,10 @@
+{
+	"id": "pretext",
+	"scopeName": "text.xml.ptx",
+	"extensions": [".ptx"],
+	"grammars": [{ "scopeName": "text.xml.ptx", "file": "ptx.tmLanguage.json" }],
+	"languageData": {
+		"commentTokens": { "block": { "open": "<!--", "close": "-->" } },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\"", "'"] }
+	}
+}

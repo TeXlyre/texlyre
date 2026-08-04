@@ -1,0 +1,17 @@
+{
+	"id": "sile",
+	"scopeName": "source.sile",
+	"extensions": [".sil"],
+	"grammars": [
+		{ "scopeName": "source.sile", "file": "sile.tmLanguage.json" },
+		{
+			"scopeName": "source.sile.embedded",
+			"file": "sile-embedded.tmLanguage.json",
+			"injectTo": ["source.sile"]
+		}
+	],
+	"languageData": {
+		"commentTokens": { "line": "%" },
+		"closeBrackets": { "brackets": ["{", "[", "\""] }
+	}
+}

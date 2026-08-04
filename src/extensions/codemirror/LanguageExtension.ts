@@ -15,6 +15,7 @@ import { latex } from 'codemirror-lang-latex';
 
 import { safeTypst as typst } from './languages/safeTypstPatch';
 import { rst } from './languages/rstMode';
+import { createTextMateLanguageForFile } from './languages/textmateMode';
 import type { detectFileType } from '../../utils/fileUtils';
 
 export type LanguageFileType = ReturnType<typeof detectFileType>;
@@ -77,6 +78,6 @@ export const createLanguageExtension = (
 		case 'xml':
 			return [xml()];
 		default:
-			return [];
+			return createTextMateLanguageForFile(options.fileName);
 	}
 };
