@@ -43,6 +43,16 @@
       "totalKeys": 2212,
       "translatedKeys": 2009,
       "filePath": "locales/de.json"
+    },
+    {
+      "code": "it",
+      "name": "Italian",
+      "nativeName": "Italiano",
+      "direction": "ltr",
+      "coverage": 86,
+      "totalKeys": 2212,
+      "translatedKeys": 1912,
+      "filePath": "locales/it.json"
     }
   ]
 }
