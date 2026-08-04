@@ -1,5 +1,6 @@
 .external-outline,
 .latex-outline,
+.textmate-outline,
 .typst-outline {
 	border-top: 1px solid var(--accent-border);
 	background-color: var(--pico-secondary-background);
@@ -14,6 +15,7 @@
 
 .external-outline-header,
 .latex-outline-header,
+.textmate-outline-header,
 .typst-outline-header {
 	display: flex;
 	position: sticky;

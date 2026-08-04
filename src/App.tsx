@@ -27,7 +27,7 @@ import './styles/components/codemirror.css';
 import './styles/components/conflicts.css';
 import './styles/components/file-explorer.css';
 import './styles/components/search.css';
-import './styles/components/latex-typst-outline.css';
+import './styles/components/outline.css';
 import './styles/components/backup-collab.css';
 import './styles/components/resizable-panel.css';
 import './styles/components/toast.css';

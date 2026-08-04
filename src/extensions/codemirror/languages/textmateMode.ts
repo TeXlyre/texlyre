@@ -226,6 +226,19 @@ function withSnippets(
 	};
 }
 
+export async function getTextMateGrammar(
+	fileName: string | undefined,
+): Promise<IGrammar | null> {
+	await whenGrammarsReady();
+
+	for (const grammar of getTextMateGrammars()) {
+		registerTextMateGrammar(grammar);
+	}
+
+	const language = getTextMateLanguageForFile(fileName);
+	return language ? loadGrammar(language.scopeName) : null;
+}
+
 export function createTextMateLanguageForFile(
 	fileName: string | undefined,
 ): Extension[] {

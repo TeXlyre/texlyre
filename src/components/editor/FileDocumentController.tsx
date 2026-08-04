@@ -18,6 +18,7 @@ import { popoutViewerService } from '../../services/PopoutViewerService';
 import type { Document } from '../../types/documents';
 import type { FileNode } from '../../types/files';
 import type { Project, ProjectType } from '../../types/projects';
+import { getTextMateLanguageForFile } from '../../extensions/codemirror/languages/textmateRegistry';
 import {
 	isLatexFile,
 	isTypstFile,
@@ -34,6 +35,7 @@ import { SearchProvider } from '../../contexts/SearchContext';
 import ResizablePanel from '../common/ResizablePanel';
 import EditorTabs from './EditorTabs';
 import LaTeXOutline from './LaTeXOutline';
+import TextMateOutline from './TextMateOutline';
 import TypstOutline from './TypstOutline';
 import LaTeXOutput from '../output/LaTeXOutput';
 import TypstOutput from '../output/TypstOutput';
@@ -1069,6 +1071,11 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			!linkedFileInfo?.fileName &&
 			content &&
 			isTypstContent(content);
+		const hasTextMateOutline = Boolean(
+			getTextMateLanguageForFile(
+				isEditingFile ? fileName : linkedFileInfo?.fileName,
+			),
+		);
 
 		setShowOutline(
 			Boolean(
@@ -1077,7 +1084,8 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					isDocumentLinkedToTex ||
 					isDocumentLinkedToTyp ||
 					hasLatexContent ||
-					hasTypstContent,
+					hasTypstContent ||
+					hasTextMateOutline,
 			),
 		);
 	}, [isEditingFile, fileName, linkedFileInfo?.fileName, content]);
@@ -1261,6 +1269,22 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 									linkedFileInfo={linkedFileInfo}
 									currentFilePath={currentFilePath}
 									isEditingFile={isEditingFile}
+								/>
+							);
+						}
+
+						const textMateFileName = isEditingFile
+							? fileName
+							: linkedFileInfo?.fileName;
+
+						if (getTextMateLanguageForFile(textMateFileName)) {
+							return (
+								<TextMateOutline
+									content={currentEditorContent}
+									fileName={textMateFileName ?? ''}
+									currentLine={currentLine}
+									onSectionClick={handleOutlineSectionClick}
+									onRefresh={handleOutlineRefresh}
 								/>
 							);
 						}
