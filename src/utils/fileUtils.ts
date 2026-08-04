@@ -588,7 +588,9 @@ export function isBinaryFile(fileName: string): boolean {
 		'xcconfig',
 
 		// Plain text / docs / markup
+		'ad',
 		'adoc',
+		'asc',
 		'asciidoc',
 		'context',
 		'creole',

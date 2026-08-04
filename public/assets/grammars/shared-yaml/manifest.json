@@ -1,0 +1,4 @@
+{
+	"id": "shared-yaml",
+	"grammars": [{ "scopeName": "source.yaml", "file": "yaml.tmLanguage.json" }]
+}

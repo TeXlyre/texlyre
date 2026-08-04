@@ -1,0 +1,4 @@
+{
+	"id": "shared-r",
+	"grammars": [{ "scopeName": "source.r", "file": "r.tmLanguage.json" }]
+}

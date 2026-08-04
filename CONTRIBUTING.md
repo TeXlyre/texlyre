@@ -63,7 +63,7 @@ xx: {
 }
 ```
 
-3. Add configuration to `translations/languages.config.json`:
+3. Add configuration to `translations/locales.config.json`:
 
 ```json
 {

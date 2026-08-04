@@ -1,0 +1,12 @@
+{
+	"id": "quarto",
+	"scopeName": "text.html.quarto",
+	"extensions": [".qmd"],
+	"grammars": [
+		{ "scopeName": "text.html.quarto", "file": "quarto.tmLanguage" }
+	],
+	"languageData": {
+		"commentTokens": { "block": { "open": "<!--", "close": "-->" } },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\"", "'"] }
+	}
+}

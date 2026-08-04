@@ -75,8 +75,17 @@ function replaceTransforms(content) {
 	return result;
 }
 
+function replaceVariableDefaults(content) {
+	let field = nextFieldNumber(content);
+
+	return content.replace(
+		/\$\{(?:TM_|CURRENT_|WORKSPACE_|CLIPBOARD|RANDOM|UUID)[A-Z_]*:([^}]*)\}/g,
+		(_, fallback) => `\${${field++}:${fallback}}`,
+	);
+}
+
 function normalizeTemplate(content) {
-	return replaceTransforms(content)
+	return replaceVariableDefaults(replaceTransforms(content))
 		.replace(
 			/\$\{(\d+)\|([^|]*)\|\}/g,
 			(_, seq, choices) => `\${${seq}:${choices.split(',')[0].trim()}}`,
@@ -141,7 +150,9 @@ function readSnippets(folderPath) {
 
 			try {
 				if (file.endsWith('.tmSnippet')) return readTextMateSnippet(filePath);
-				if (file.endsWith('.json')) return readVscodeSnippets(filePath);
+				if (file.endsWith('.json') || file.endsWith('.code-snippets')) {
+					return readVscodeSnippets(filePath);
+				}
 			} catch (error) {
 				console.warn(`  skipping ${file}: ${error.message}`);
 			}

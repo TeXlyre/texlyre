@@ -48,7 +48,7 @@
 		"test:services": "node scripts/pm.cjs jest tests/services",
 		"test:ci": "node scripts/pm.cjs jest --ci --coverage --maxWorkers=2",
 		"i18n:validate": "node scripts/i18n/validate-json.cjs",
-		"i18n:validate:config": "node scripts/i18n/validate-json.cjs translations/languages.config.json",
+		"i18n:validate:config": "node scripts/i18n/validate-json.cjs translations/locales.config.json",
 		"i18n:validate:file": "node scripts/i18n/validate-json.cjs",
 		"i18n:coverage": "node scripts/i18n/calculate-coverage.cjs",
 		"i18n:detect": "node scripts/translate-pages.cjs detect ./src ./translations/dynamic-patterns.json",

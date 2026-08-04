@@ -1,0 +1,15 @@
+{
+	"id": "asciidoc",
+	"scopeName": "text.asciidoc",
+	"extensions": [".adoc", ".ad", ".asciidoc", ".asc"],
+	"grammars": [
+		{ "scopeName": "text.asciidoc", "file": "asciidoc.tmLanguage.json" }
+	],
+	"languageData": {
+		"commentTokens": {
+			"line": "//",
+			"block": { "open": "////", "close": "////" }
+		},
+		"closeBrackets": { "brackets": ["{", "[", "(", "<"] }
+	}
+}

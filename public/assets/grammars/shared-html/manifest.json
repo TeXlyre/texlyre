@@ -1,0 +1,4 @@
+{
+	"id": "shared-html",
+	"grammars": [{ "scopeName": "text.html.basic", "file": "html.tmLanguage.json" }]
+}

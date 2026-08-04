@@ -76,7 +76,7 @@ import { RecordsProvider } from './contexts/RecordsContext';
 import { SecretsProvider } from './contexts/SecretsContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { LanguageProvider } from './contexts/LanguageContext';
+import { LanguageProvider } from './contexts/LocaleContext';
 import { useSecrets } from './hooks/useSecrets';
 import { useChelys } from './hooks/useChelys';
 import { createNamedLogger } from '@/logging';

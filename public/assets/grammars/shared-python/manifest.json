@@ -1,0 +1,4 @@
+{
+	"id": "shared-python",
+	"grammars": [{ "scopeName": "source.python", "file": "MagicPython.tmLanguage.json" }]
+}

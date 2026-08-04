@@ -1,0 +1,4 @@
+{
+	"id": "shared-java",
+	"grammars": [{ "scopeName": "source.java", "file": "java.tmLanguage.json" }]
+}

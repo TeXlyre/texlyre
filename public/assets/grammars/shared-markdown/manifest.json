@@ -1,0 +1,4 @@
+{
+	"id": "shared-markdown",
+	"grammars": [{ "scopeName": "text.html.markdown", "file": "markdown.tmLanguage.json" }]
+}

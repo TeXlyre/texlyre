@@ -12,6 +12,38 @@ const grammarsDir = path.resolve(__dirname, '../public/assets/grammars');
 const VSCODE = 'https://raw.githubusercontent.com/microsoft/vscode/main';
 const PRETEXT =
 	'https://raw.githubusercontent.com/PreTeXtBook/pretext-tools/main/packages/vscode-extension';
+const ASCIIDOC =
+	'https://raw.githubusercontent.com/asciidoctor/asciidoctor-vscode/main';
+
+const QUARTO =
+	'https://raw.githubusercontent.com/quarto-dev/quarto/main/apps/vscode';
+
+const VSCODE_SHARED = [
+	{ folder: 'shared-julia', path: 'julia/syntaxes/julia.tmLanguage.json' },
+	{
+		folder: 'shared-markdown',
+		path: 'markdown-basics/syntaxes/markdown.tmLanguage.json',
+	},
+	{ folder: 'shared-r', path: 'r/syntaxes/r.tmLanguage.json' },
+	{ folder: 'shared-css', path: 'css/syntaxes/css.tmLanguage.json' },
+	{ folder: 'shared-html', path: 'html/syntaxes/html.tmLanguage.json' },
+	{ folder: 'shared-java', path: 'java/syntaxes/java.tmLanguage.json' },
+	{
+		folder: 'shared-js',
+		path: 'javascript/syntaxes/JavaScript.tmLanguage.json',
+	},
+	{ folder: 'shared-json', path: 'json/syntaxes/JSON.tmLanguage.json' },
+	{
+		folder: 'shared-python',
+		path: 'python/syntaxes/MagicPython.tmLanguage.json',
+	},
+	{
+		folder: 'shared-shell',
+		path: 'shellscript/syntaxes/shell-unix-bash.tmLanguage.json',
+	},
+	{ folder: 'shared-sql', path: 'sql/syntaxes/sql.tmLanguage.json' },
+	{ folder: 'shared-yaml', path: 'yaml/syntaxes/yaml.tmLanguage.json' },
+];
 
 const SOURCES = [
 	{
@@ -64,6 +96,62 @@ const SOURCES = [
 		},
 	},
 	{
+		name: 'asciidoc',
+		folder: 'asciidoc',
+		license: 'MIT',
+		files: [
+			{
+				url: `${ASCIIDOC}/syntaxes/asciidoc.tmLanguage.json`,
+				dest: 'asciidoc.tmLanguage.json',
+			},
+			{
+				url: `${ASCIIDOC}/snippets/snippets.json`,
+				dest: 'snippets/snippets.json',
+			},
+			{ url: `${ASCIIDOC}/LICENSE`, dest: 'LICENSE' },
+		],
+	},
+	{
+		name: 'quarto',
+		folder: 'quarto',
+		license: 'MIT',
+		files: [
+			{
+				url: `${QUARTO}/syntaxes/quarto.tmLanguage`,
+				dest: 'quarto.tmLanguage',
+			},
+			{
+				url: `${QUARTO}/snippets/quarto.code-snippets`,
+				dest: 'snippets/quarto.code-snippets',
+			},
+			{ url: `${QUARTO}/LICENSE`, dest: 'LICENSE' },
+		],
+	},
+	{
+		name: 'shared-dot',
+		folder: 'shared-dot',
+		license: 'MIT',
+		files: [
+			{
+				url: `${QUARTO}/languages/dot/syntaxes/dot.tmLanguage`,
+				dest: 'dot.tmLanguage',
+			},
+			{ url: `${QUARTO}/LICENSE`, dest: 'LICENSE' },
+		],
+	},
+	{
+		name: 'shared-mermaid',
+		folder: 'shared-mermaid',
+		license: 'MIT',
+		files: [
+			{
+				url: `${QUARTO}/languages/mermaid/mermaid.tmLanguage.json`,
+				dest: 'mermaid.tmLanguage.json',
+			},
+			{ url: `${QUARTO}/LICENSE`, dest: 'LICENSE' },
+		],
+	},
+	{
 		name: 'shared-xml',
 		folder: 'shared-xml',
 		license: 'MIT',
@@ -87,6 +175,18 @@ const SOURCES = [
 			{ url: `${VSCODE}/LICENSE.txt`, dest: 'LICENSE.txt' },
 		],
 	},
+	...VSCODE_SHARED.map((entry) => ({
+		name: entry.folder,
+		folder: entry.folder,
+		license: 'MIT',
+		files: [
+			{
+				url: `${VSCODE}/extensions/${entry.path}`,
+				dest: entry.path.split('/').pop(),
+			},
+			{ url: `${VSCODE}/LICENSE.txt`, dest: 'LICENSE.txt' },
+		],
+	})),
 	{
 		name: 'shared-tex',
 		folder: 'shared-tex',

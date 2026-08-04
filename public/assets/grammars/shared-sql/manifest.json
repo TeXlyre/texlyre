@@ -1,0 +1,4 @@
+{
+	"id": "shared-sql",
+	"grammars": [{ "scopeName": "source.sql", "file": "sql.tmLanguage.json" }]
+}

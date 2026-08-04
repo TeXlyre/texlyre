@@ -76,10 +76,10 @@ function validateJsonFile(filePath) {
 
 function validateAllLocales() {
 	const translationsDir = path.join(__dirname, '../../translations');
-	const configFile = path.join(translationsDir, 'languages.config.json');
+	const configFile = path.join(translationsDir, 'locales.config.json');
 
 	if (!fs.existsSync(configFile)) {
-		console.error('❌ languages.config.json not found');
+		console.error('❌ locales.config.json not found');
 		return;
 	}
 
