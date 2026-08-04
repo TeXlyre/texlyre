@@ -9,6 +9,7 @@ import {
 	useState,
 } from 'react';
 
+import { notifyUserDataChanged } from '../utils/userDataUtils';
 import { pluginRegistry } from '../plugins/PluginRegistry';
 import { createNamedLogger } from '@/logging';
 
@@ -21,7 +22,8 @@ export type SettingType =
 	| 'codemirror'
 	| 'number'
 	| 'color'
-	| 'language-select';
+	| 'language-select'
+	| 'custom';
 
 export const DEFERRED_UPDATE_TYPES: SettingType[] = ['number', 'text'];
 
@@ -41,6 +43,13 @@ export interface SettingCodeMirrorOptions {
 	theme?: 'auto' | 'dark' | 'light';
 	readOnly?: boolean;
 	wordWrap?: boolean;
+}
+
+export interface SettingRenderProps {
+	setting: Setting;
+	value: unknown;
+	disabled: boolean;
+	onChange: (value: unknown) => void;
 }
 
 export interface SettingDependency {
@@ -73,6 +82,8 @@ export interface Setting {
 	dependsOn?: SettingDependency;
 	disabledReason?: React.ReactNode;
 	disabled?: boolean;
+	hidden?: boolean;
+	render?: (props: SettingRenderProps) => React.ReactNode;
 }
 
 export interface SettingsContextType {
@@ -117,6 +128,8 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 	const [needsRefresh, setNeedsRefresh] = useState(false);
 	const localStorageSettingsRef = useRef<Record<string, unknown> | null>(null);
+	const pendingMutationsRef = useRef(new Map<string, unknown>());
+	const isApplyingRemoteRef = useRef(false);
 	const isLocalStorageLoaded = useRef(false);
 
 	const getCurrentUserId = useCallback((): string | null => {
@@ -225,6 +238,11 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 
 	useEffect(() => {
 		if (settings.length === 0 || !isLocalStorageLoaded.current) return;
+		if (isApplyingRemoteRef.current) {
+			isApplyingRemoteRef.current = false;
+			pendingMutationsRef.current.clear();
+			return;
+		}
 
 		const registeredSettings = settings.reduce(
 			(acc, s) => {
@@ -244,10 +262,17 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 			const toSave = { ...currentEntries, ...registeredSettings };
 			localStorage.setItem(storageKey, JSON.stringify({ ...toSave, _version }));
 			localStorageSettingsRef.current = toSave;
+			const userId = getCurrentUserId();
+			if (userId) {
+				for (const [key, value] of pendingMutationsRef.current) {
+					notifyUserDataChanged(userId, 'settings', { key, value });
+				}
+			}
+			pendingMutationsRef.current.clear();
 		} catch (error) {
 			moduleLog.error('Error saving settings to localStorage:', error);
 		}
-	}, [settings, getStorageKey]);
+	}, [settings, getStorageKey, getCurrentUserId]);
 
 	useEffect(() => {
 		const handleLanguageChange = () => {
@@ -276,15 +301,22 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 
 				setSettings((prev) => {
 					let changed = false;
-					const next = prev.map((s) => {
-						if (s.strictDefaultValue) return s;
-						const incoming = entries[s.id];
-						if (incoming === undefined || isEqual(incoming, s.value)) return s;
-						if (s.validate && !s.validate(incoming)) return s;
-						if (s.onChange) setTimeout(() => s.onChange?.(incoming), 0);
+					const next = prev.map((setting) => {
+						if (setting.strictDefaultValue) return setting;
+						const incoming = entries[setting.id];
+						if (incoming === undefined || isEqual(incoming, setting.value)) {
+							return setting;
+						}
+						if (setting.validate && !setting.validate(incoming)) {
+							return setting;
+						}
+						if (setting.onChange) {
+							setTimeout(() => setting.onChange?.(incoming), 0);
+						}
 						changed = true;
-						return { ...s, value: incoming };
+						return { ...setting, value: incoming };
 					});
+					if (changed) isApplyingRemoteRef.current = true;
 					return changed ? next : prev;
 				});
 			} catch (error) {
@@ -299,6 +331,8 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				handleStoreChanged,
 			);
 	}, [getStorageKey]);
+
+	const visibleSettings = settings.filter((s) => !s.hidden);
 
 	const getSettings = () => settings;
 
@@ -354,6 +388,9 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				}
 
 				const updated = { ...s, value: validatedValue };
+				if (!isEqual(s.value, validatedValue)) {
+					pendingMutationsRef.current.set(id, validatedValue);
+				}
 
 				const needsLiveUpdate =
 					s.liveUpdate !== undefined
@@ -380,14 +417,14 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 	};
 
 	const getSettingsByCategory = (category: string, subcategory?: string) =>
-		settings.filter(
+		visibleSettings.filter(
 			(s) =>
 				s.category === category &&
 				(subcategory === undefined || s.subcategory === subcategory),
 		);
 
 	const getCategories = () => {
-		const map = settings.reduce(
+		const map = visibleSettings.reduce(
 			(acc, s) => {
 				if (!acc[s.category]) acc[s.category] = new Set<string>();
 				if (s.subcategory) acc[s.category].add(s.subcategory);
@@ -403,10 +440,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 
 	const searchSettings = (query: string) => {
 		if (!query.trim())
-			return { categories: getCategories(), allSettings: settings };
+			return { categories: getCategories(), allSettings: visibleSettings };
 
 		const lowerQuery = query.toLowerCase();
-		const matchingSettings = settings.filter(
+		const matchingSettings = visibleSettings.filter(
 			(s) =>
 				s.category.toLowerCase().includes(lowerQuery) ||
 				s.subcategory?.toLowerCase().includes(lowerQuery) ||

@@ -8,6 +8,7 @@ import {
 	useState,
 } from 'react';
 
+import { notifyUserDataChanged } from '../utils/userDataUtils';
 import { t } from '@/i18n';
 import { useAuth } from '../hooks/useAuth';
 import { createNamedLogger } from '@/logging';
@@ -452,6 +453,10 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 				}
 
 				localStorage.setItem(storageKey, JSON.stringify(secrets));
+				notifyUserDataChanged(user.id, 'secrets', {
+					key: secretId,
+					value: newEntry,
+				});
 			} catch (error) {
 				moduleLog.error('Error storing secret:', error);
 				throw new Error('Failed to store secret');
@@ -579,6 +584,10 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 							),
 					);
 					localStorage.setItem(storageKey, JSON.stringify(filteredSecrets));
+					notifyUserDataChanged(user.id, 'secrets', {
+						key: secretId,
+						deleted: true,
+					});
 				}
 			} catch (error) {
 				moduleLog.error('Error removing secret from storage:', error);
@@ -670,10 +679,24 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 					const existingData = localStorage.getItem(storageKey);
 					if (existingData) {
 						const secrets: SecretEntry[] = JSON.parse(existingData);
+						const removedSecrets = secrets.filter(
+							(secret) => secret.pluginId === pluginId,
+						);
 						const filteredSecrets = secrets.filter(
-							(s) => s.pluginId !== pluginId,
+							(secret) => secret.pluginId !== pluginId,
 						);
 						localStorage.setItem(storageKey, JSON.stringify(filteredSecrets));
+						for (const secret of removedSecrets) {
+							notifyUserDataChanged(user.id, 'secrets', {
+								key: getSecretId(
+									secret.pluginId,
+									secret.secretKey,
+									secret.scope,
+									secret.projectId,
+								),
+								deleted: true,
+							});
+						}
 					}
 
 					setSecretsCache((prev) => {
@@ -686,14 +709,29 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 						return newCache;
 					});
 				} else {
+					const existingData = localStorage.getItem(storageKey);
+					const existingSecrets: SecretEntry[] = existingData
+						? JSON.parse(existingData)
+						: [];
 					localStorage.removeItem(storageKey);
+					for (const secret of existingSecrets) {
+						notifyUserDataChanged(user.id, 'secrets', {
+							key: getSecretId(
+								secret.pluginId,
+								secret.secretKey,
+								secret.scope,
+								secret.projectId,
+							),
+							deleted: true,
+						});
+					}
 					setSecretsCache(new Map());
 				}
 			} catch (error) {
 				moduleLog.error('Error clearing secrets:', error);
 			}
 		},
-		[user, getStorageKey],
+		[user, getStorageKey, getSecretId],
 	);
 
 	useEffect(() => {

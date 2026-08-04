@@ -9,6 +9,7 @@ import {
 	useState,
 } from 'react';
 
+import { notifyUserDataChanged } from '../utils/userDataUtils';
 import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('PropertiesContext');
@@ -97,6 +98,7 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		null,
 	);
 	const hasInitializedSaveRef = useRef(false);
+	const isApplyingRemoteRef = useRef(false);
 
 	const getCurrentUserId = useCallback((): string | null => {
 		return localStorage.getItem('texlyre-current-user');
@@ -179,6 +181,10 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 
 	useEffect(() => {
 		if (!isReady) return;
+		if (isApplyingRemoteRef.current) {
+			isApplyingRemoteRef.current = false;
+			return;
+		}
 		if (!hasInitializedSaveRef.current) {
 			hasInitializedSaveRef.current = true;
 			return;
@@ -217,12 +223,15 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 
 				setProperties((prev) => {
 					let changed = false;
-					const next = prev.map((p) => {
-						const incoming = entries[p.id];
-						if (incoming === undefined || isEqual(incoming, p.value)) return p;
+					const next = prev.map((property) => {
+						const incoming = entries[property.id];
+						if (incoming === undefined || isEqual(incoming, property.value)) {
+							return property;
+						}
 						changed = true;
-						return { ...p, value: incoming };
+						return { ...property, value: incoming };
 					});
+					if (changed) isApplyingRemoteRef.current = true;
 					return changed ? next : prev;
 				});
 			} catch (error) {
@@ -309,11 +318,21 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 						_version: currentVersion,
 					}),
 				);
+				const userId = getCurrentUserId();
+				if (userId) {
+					notifyUserDataChanged(
+						userId,
+						'properties',
+						value === undefined
+							? { key: propertyId, deleted: true }
+							: { key: propertyId, value },
+					);
+				}
 			} catch (error) {
 				moduleLog.error('Error saving property to localStorage:', error);
 			}
 		},
-		[getPropertyId, getStorageKey],
+		[getPropertyId, getStorageKey, getCurrentUserId],
 	);
 
 	const registerProperty = useCallback(
@@ -378,11 +397,18 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 						_version: currentVersion,
 					}),
 				);
+				const userId = getCurrentUserId();
+				if (userId) {
+					notifyUserDataChanged(userId, 'properties', {
+						key: propertyId,
+						deleted: true,
+					});
+				}
 			} catch (error) {
 				moduleLog.error('Error removing property from localStorage:', error);
 			}
 		},
-		[getPropertyId, getStorageKey],
+		[getPropertyId, getStorageKey, getCurrentUserId],
 	);
 
 	const getPropertiesByCategory = useCallback(
@@ -442,15 +468,41 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		[properties, getPropertyId],
 	);
 
-	const clearAllProperties = useCallback((pluginId?: string): void => {
-		if (pluginId) {
-			setProperties((prev) =>
-				prev.filter((p) => !p.id.startsWith(`${pluginId}-`)),
+	const clearAllProperties = useCallback(
+		(pluginId?: string): void => {
+			const current = localStoragePropertiesRef.current ?? {};
+			const removedKeys = Object.keys(current).filter((key) =>
+				pluginId ? key.startsWith(`${pluginId}-`) : true,
 			);
-		} else {
-			setProperties([]);
-		}
-	}, []);
+			if (removedKeys.length === 0) return;
+			const next = { ...current };
+			for (const key of removedKeys) delete next[key];
+			localStoragePropertiesRef.current = next;
+			setProperties((prev) =>
+				pluginId ? prev.filter((p) => !p.id.startsWith(`${pluginId}-`)) : [],
+			);
+			try {
+				const storageKey = getStorageKey();
+				const currentStored = localStorage.getItem(storageKey);
+				const currentVersion = currentStored
+					? JSON.parse(currentStored)._version
+					: undefined;
+				localStorage.setItem(
+					storageKey,
+					JSON.stringify({ ...next, _version: currentVersion }),
+				);
+				const userId = getCurrentUserId();
+				if (userId) {
+					for (const key of removedKeys) {
+						notifyUserDataChanged(userId, 'properties', { key, deleted: true });
+					}
+				}
+			} catch (error) {
+				moduleLog.error('Error clearing properties from localStorage:', error);
+			}
+		},
+		[getStorageKey, getCurrentUserId],
+	);
 
 	return (
 		<PropertiesContext.Provider
