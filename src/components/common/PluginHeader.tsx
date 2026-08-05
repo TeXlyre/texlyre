@@ -2,10 +2,10 @@
 import type React from 'react';
 import type { Awareness } from 'y-protocols/awareness';
 
-import { pluginRegistry } from '../../plugins/PluginRegistry';
+import { useHeaderVisibility } from '../../hooks/useHeaderVisibility';
 import CollaboratorAvatars from './CollaboratorAvatars';
 import InfoTooltip from './InfoTooltip';
-import { FileIcon, LinkIcon } from './Icons';
+import { LinkIcon } from './Icons';
 
 interface PluginHeaderProps {
 	fileName: string;
@@ -63,24 +63,17 @@ export const PluginHeader: React.FC<PluginHeaderProps> = ({
 	linkedFileInfo,
 	awareness,
 }) => {
+	const { headerVisible } = useHeaderVisibility();
 	const formattedTooltip = tooltipInfo
 		? formatTooltipInfo(tooltipInfo, pluginName, pluginVersion)
 		: '';
-	const ViewerIcon =
-		pluginRegistry.getViewerForFile(fileName)?.icon ?? FileIcon;
-	const isCollaborativeHeader =
-		!!linkedFileInfo || pluginName?.toLowerCase().includes('collaborative');
+
+	if (!headerVisible) return null;
 
 	return (
 		<div className='plugin-header'>
 			<div className='file-info'>
 				<div className='filepath-info'>
-					<span className='file-icon'>
-						<ViewerIcon />
-						{isCollaborativeHeader && (
-							<span className='file-linked-indicator'>•</span>
-						)}
-					</span>
 					<span
 						className={linkedFileInfo ? 'linked-filepath' : ''}
 						onClick={

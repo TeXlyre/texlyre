@@ -261,6 +261,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 				title: document.name,
 				type: 'document',
 				documentId,
+				filePath: docToFileMapRef.current.get(documentId)?.filePath,
 			});
 		},
 		[openTab],
@@ -717,6 +718,13 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			category: 'UI',
 			subcategory: 'Layout',
 			defaultValue: explorerHeight,
+		});
+
+		registerProperty({
+			id: 'header-visible',
+			category: 'UI',
+			subcategory: 'Editor',
+			defaultValue: true,
 		});
 
 		registerProperty({
