@@ -4,16 +4,30 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 
 import { t } from '@/i18n';
 import { useEditorTabs } from '../../hooks/useEditorTabs';
+import { useHeaderVisibility } from '../../hooks/useHeaderVisibility';
+import { pluginRegistry } from '../../plugins/PluginRegistry';
+import type { EditorTab } from '../../types/editorTabs';
 import {
 	CloseIcon,
 	FileTextIcon,
 	FileIcon,
 	ChevronLeftIcon,
 	ChevronRightIcon,
+	HeaderShowIcon,
 } from '../common/Icons';
 import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('EditorTabs');
+
+const getTabIcon = (tab: EditorTab) => {
+	const ViewerIcon = pluginRegistry.getViewerForFile(
+		tab.filePath || tab.title,
+	)?.icon;
+	const Icon =
+		ViewerIcon ?? (tab.type === 'document' ? FileTextIcon : FileIcon);
+
+	return <Icon />;
+};
 
 interface EditorTabsProps {
 	onTabSwitch?: (tabId: string) => void;
@@ -38,6 +52,8 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 		closeTabsToLeft,
 		closeTabsToRight,
 	} = useEditorTabs();
+
+	const { headerVisible, setHeaderVisible } = useHeaderVisibility();
 
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragOverIndex, setDragOverIndex] = useState<number>(-1);
@@ -93,12 +109,16 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 		tabs.addEventListener('scroll', handleScroll, { passive: true });
 		window.addEventListener('resize', handleResize);
 
+		const resizeObserver = new ResizeObserver(handleResize);
+		resizeObserver.observe(tabs);
+
 		// Initial check
 		updateScrollState();
 
 		return () => {
 			tabs.removeEventListener('scroll', handleScroll);
 			window.removeEventListener('resize', handleResize);
+			resizeObserver.disconnect();
 		};
 	}, [updateScrollState]);
 
@@ -424,7 +444,10 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 							}}
 						>
 							<span className='tab-icon'>
-								{tab.type === 'document' ? <FileTextIcon /> : <FileIcon />}
+								{getTabIcon(tab)}
+								{tab.type === 'document' && (
+									<span className='file-linked-indicator'>•</span>
+								)}
 							</span>
 							<span className='tab-title'>
 								{tab.title}
@@ -452,6 +475,14 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 					title={t('Scroll tabs right')}
 				>
 					<ChevronRightIcon />
+				</button>
+
+				<button
+					className={`tabs-header-toggle ${headerVisible ? 'active' : ''}`}
+					onClick={() => setHeaderVisible(!headerVisible)}
+					title={headerVisible ? t('Hide Header') : t('Show Header')}
+				>
+					<HeaderShowIcon />
 				</button>
 			</div>
 

@@ -92,6 +92,7 @@ interface EditorComponentProps {
 		fileId?: string;
 		filePath?: string;
 	};
+	headerVisible?: boolean;
 	toolbarVisible?: boolean;
 	onToolbarToggle?: (visible: boolean) => void;
 }
@@ -175,6 +176,7 @@ const EditorContent: React.FC<{
 	documents?: Array<{ id: string; name: string }>;
 	onSaveDocument?: () => void;
 	onSelectDocument?: (docId: string) => void;
+	headerVisible?: boolean;
 	toolbarVisible?: boolean;
 	onToolbarToggle?: (visible: boolean) => void;
 }> = ({
@@ -198,6 +200,7 @@ const EditorContent: React.FC<{
 	documents,
 	onSaveDocument,
 	onSelectDocument,
+	headerVisible = true,
 	toolbarVisible = true,
 	onToolbarToggle,
 }) => {
@@ -817,32 +820,34 @@ const EditorContent: React.FC<{
 
 	return (
 		<>
-			{((isEditingFile && fileName) ||
-				(!isEditingFile && documentId && documents)) && (
-				<PluginHeader
-					fileName={
-						isEditingFile
-							? fileInfo.fileName
-							: documents?.find((d) => d.id === documentId)?.name || 'Document'
-					}
-					filePath={
-						isEditingFile
-							? filePath || fileInfo.filePath
-							: linkedFileInfo?.filePath
-					}
-					pluginName={isEditingFile ? 'Text Editor' : 'Document Editor'}
-					pluginVersion='1.0.0'
-					tooltipInfo={tooltipInfo}
-					controls={headerControls}
-					onNavigateToLinkedFile={
-						!isEditingFile && linkedFileInfo
-							? onNavigateToLinkedFile
-							: undefined
-					}
-					linkedFileInfo={!isEditingFile ? linkedFileInfo : null}
-					awareness={awareness}
-				/>
-			)}
+			{headerVisible &&
+				((isEditingFile && fileName) ||
+					(!isEditingFile && documentId && documents)) && (
+					<PluginHeader
+						fileName={
+							isEditingFile
+								? fileInfo.fileName
+								: documents?.find((d) => d.id === documentId)?.name ||
+									'Document'
+						}
+						filePath={
+							isEditingFile
+								? filePath || fileInfo.filePath
+								: linkedFileInfo?.filePath
+						}
+						pluginName={isEditingFile ? 'Text Editor' : 'Document Editor'}
+						pluginVersion='1.0.0'
+						tooltipInfo={tooltipInfo}
+						controls={headerControls}
+						onNavigateToLinkedFile={
+							!isEditingFile && linkedFileInfo
+								? onNavigateToLinkedFile
+								: undefined
+						}
+						linkedFileInfo={!isEditingFile ? linkedFileInfo : null}
+						awareness={awareness}
+					/>
+				)}
 
 			<div className='editor-toolbar'>
 				{isViewOnly && linkedDocumentId && (
@@ -972,6 +977,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 	linkedDocumentId,
 	documents,
 	linkedFileInfo,
+	headerVisible = true,
 	toolbarVisible = true,
 	onToolbarToggle,
 }) => {
@@ -1311,6 +1317,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 						onNavigateToLinkedFile={handleNavigateToLinkedFile}
 						documents={documents}
 						onSelectDocument={onSelectDocument}
+						headerVisible={headerVisible}
 						toolbarVisible={toolbarVisible && !isViewOnly}
 						onToolbarToggle={onToolbarToggle}
 					/>

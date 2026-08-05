@@ -19,6 +19,7 @@
 	max-height: 36px;
 	scroll-behavior: smooth;
 	flex: 1;
+	min-width: 0;
 }
 
 .editor-tabs::-webkit-scrollbar {
@@ -102,7 +103,7 @@
 }
 
 .editor-tabs-container::after {
-	right: 24px;
+	right: 52px;
 	background: linear-gradient(
 		to left,
 		var(--pico-secondary-background) 0%,
@@ -253,6 +254,54 @@
 	align-items: center;
 	flex-shrink: 0;
 	color: var(--pico-secondary);
+	position: relative;
+}
+
+.tab-icon .file-linked-indicator {
+	position: absolute;
+	top: -0.2rem;
+	right: -0.25rem;
+	width: 0.35rem;
+	height: 0.35rem;
+	margin: 0;
+	border-radius: 999px;
+	background-color: var(--pico-primary);
+	box-shadow: 0 0 0 1px var(--pico-background);
+	color: transparent;
+	font-size: 0;
+	line-height: 0;
+	pointer-events: none;
+}
+
+.tabs-header-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 32px;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: none;
+	cursor: pointer;
+	color: var(--pico-secondary);
+	transition: all var(--transition-normal);
+	flex-shrink: 0;
+	z-index: 3;
+}
+
+.tabs-header-toggle:hover {
+	background: var(--pico-primary-focus);
+	color: var(--text-color);
+}
+
+.tabs-header-toggle.active {
+	color: var(--pico-primary);
+}
+
+.tabs-header-toggle svg {
+	width: 14px;
+	height: 14px;
 }
 
 .editor-tab.active .tab-icon {
