@@ -29,6 +29,7 @@
 	justify-content: center;
 	flex: 1;
 	max-width: 600px;
+	gap: 0;
 }
 
 [data-layout="texlyre-wide"] .project-title-header {
