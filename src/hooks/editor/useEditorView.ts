@@ -34,13 +34,19 @@ import { emacs } from '@replit/codemirror-emacs';
 import { helix } from 'codemirror-helix';
 import { bibtexCompletionSource } from 'codemirror-lang-bib';
 import { latexCompletionSource } from 'codemirror-lang-latex';
+import { typstCompletionSource } from 'codemirror-lang-typst/lezer';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as Y from 'yjs';
 import { UndoManager } from 'yjs';
 
 import { createLanguageExtension } from '../../extensions/codemirror/LanguageExtension';
 import { resolveHighlightTheme } from '../../extensions/codemirror/HighlightThemeExtension';
+import { annotationSystemExtension } from '../../extensions/codemirror/AnnotationExtension';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
+import {
+	reviewSystemExtension,
+	setTrackChanges,
+} from '../../extensions/codemirror/ReviewExtension';
 import { latexTypstBidiIsolates } from '../../extensions/codemirror/BidiExtension';
 import { searchHighlightExtension } from '../../extensions/codemirror/SearchHighlightExtension';
 import {
@@ -131,8 +137,6 @@ export const useEditorView = (
 	isDocumentSelected: boolean,
 	textContent: string,
 	onUpdateContent: (content: string) => void,
-	_parseComments: (text: string) => unknown[],
-	_addComment: (content: string) => unknown,
 	updateComments: (content: string) => void,
 	isEditingFile = false,
 	isViewOnly = false,
@@ -140,6 +144,7 @@ export const useEditorView = (
 	currentFileId?: string,
 	enableComments = false,
 	toolbarVisible = true,
+	enableReviews = false,
 ) => {
 	const {
 		getAutoSaveEnabled,
@@ -276,8 +281,9 @@ export const useEditorView = (
 		let cursorUpdateTimeout: NodeJS.Timeout | null = null;
 
 		return EditorView.updateListener.of((update: ViewUpdate) => {
-			if (update.docChanged && autoSaveRef.current) {
-				autoSaveRef.current();
+			if (update.docChanged) {
+				if (enableComments) updateComments(update.state.doc.toString());
+				if (autoSaveRef.current) autoSaveRef.current();
 			}
 
 			if (update.selectionSet) {
@@ -404,6 +410,8 @@ export const useEditorView = (
 
 			if (info.isLatex) {
 				completionSources.push(latexCompletionSource(true));
+			} else if (info.isTypst) {
+				completionSources.push(typstCompletionSource);
 			}
 		} else if (info.isBib) {
 			const [stateExtensions, filePathPlugin, enhancedCompletionSource] =
@@ -494,6 +502,11 @@ export const useEditorView = (
 		return [formatBinding, saveBinding];
 	};
 
+	const buildAnnotationExtensions = (): Extension[] =>
+		!isViewOnly && (enableComments || enableReviews)
+			? [annotationSystemExtension]
+			: [];
+
 	const buildCommentExtensions = (): Extension[] => {
 		if (!enableComments || isViewOnly) return [];
 
@@ -520,6 +533,12 @@ export const useEditorView = (
 		]);
 
 		return [commentBinding, commentSystemExtension];
+	};
+
+	const buildReviewExtensions = (): Extension[] => {
+		if (!enableReviews || isViewOnly) return [];
+
+		return [reviewSystemExtension];
 	};
 
 	// --- Yjs / collaboration connection ---
@@ -692,7 +711,9 @@ export const useEditorView = (
 			extensions.push(keymap.of(historyKeymap));
 		}
 
+		extensions.push(...buildAnnotationExtensions());
 		extensions.push(...buildCommentExtensions());
+		extensions.push(...buildReviewExtensions());
 		extensions.push(...buildKeymapExtensions(info));
 
 		const cachedUndoHistory =
@@ -725,6 +746,15 @@ export const useEditorView = (
 		try {
 			const view = new EditorView({ state, parent: editorRef.current });
 			viewRef.current = view;
+
+			if (enableComments) {
+				updateComments(view.state.doc.toString());
+			}
+
+			if (enableReviews) {
+				document.dispatchEvent(new CustomEvent('request-track-changes'));
+			}
+
 			disposeClipboard = registerEditorClipboard(editorRef.current, viewRef);
 			setToolbarController(toolbarControllerRef.current);
 
@@ -780,6 +810,7 @@ export const useEditorView = (
 		currentFileId,
 		documentId,
 		enableComments,
+		enableReviews,
 		textContent,
 	]);
 
@@ -891,9 +922,7 @@ export const useEditorView = (
 		if (!ytextRef.current || !isDocumentSelected || isEditingFile) return;
 
 		return registerYjsBinding(ytextRef.current, {
-			enableComments,
 			onUpdateContent,
-			updateComments,
 			autoSaveRef,
 			isUpdatingRef,
 			viewRef,
@@ -905,12 +934,32 @@ export const useEditorView = (
 	}, [
 		isDocumentSelected,
 		isEditingFile,
-		enableComments,
 		onUpdateContent,
-		updateComments,
 		currentFileId,
 		documentId,
 	]);
+
+	useEffect(() => {
+		const handleSetTrackChanges = (event: Event) => {
+			const view = viewRef.current;
+			if (!view || !enableReviews) return;
+
+			const { tracking, author } = (event as CustomEvent).detail;
+			setTrackChanges(view, { tracking, author });
+		};
+
+		document.addEventListener('set-track-changes', handleSetTrackChanges);
+
+		return () =>
+			document.removeEventListener('set-track-changes', handleSetTrackChanges);
+	}, [enableReviews]);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: the document identity drives re-requesting the tracking state for the newly opened document. */
+	useEffect(() => {
+		if (!enableReviews || !viewRef.current || !isDocumentSelected) return;
+
+		document.dispatchEvent(new CustomEvent('request-track-changes'));
+	}, [enableReviews, isDocumentSelected, currentFileId, documentId]);
 
 	useEffect(() => {
 		if (!viewRef.current) return;
@@ -926,7 +975,7 @@ export const useEditorView = (
 			currentFileId,
 			documentId,
 			enableComments,
-			updateComments,
+			enableReviews,
 			saveFileToStorage,
 			saveDocumentToLinkedFile,
 			setShowSaveIndicator,
@@ -938,7 +987,7 @@ export const useEditorView = (
 		currentFileId,
 		documentId,
 		enableComments,
-		updateComments,
+		enableReviews,
 		saveFileToStorage,
 		saveDocumentToLinkedFile,
 	]);

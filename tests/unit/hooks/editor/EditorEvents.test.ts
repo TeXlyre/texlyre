@@ -15,7 +15,6 @@ const wrap = (id: string, text: string) =>
 let view: EditorView | null = null;
 let viewRef: { current: EditorView | null };
 let cleanup: (() => void) | null = null;
-let updateComments: jest.Mock;
 
 const setup = (
     doc: string,
@@ -26,7 +25,6 @@ const setup = (
         parent: document.body,
     });
     viewRef = { current: view };
-    updateComments = jest.fn();
 
     cleanup = registerEditorEventHandlers(viewRef as never, {
         isViewOnly: false,
@@ -34,7 +32,6 @@ const setup = (
         currentFileId: 'file-1',
         documentId: undefined,
         enableComments: true,
-        updateComments,
         saveFileToStorage: jest.fn(),
         saveDocumentToLinkedFile: jest.fn(),
         setShowSaveIndicator: jest.fn(),

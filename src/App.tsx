@@ -35,6 +35,7 @@ import './styles/components/tooltip.css';
 import './styles/components/tags.css';
 import './styles/components/copy-field.css';
 import './styles/components/comments.css';
+import './styles/components/review.css';
 import './styles/components/auth.css';
 import './styles/components/project.css';
 import './styles/components/share-project.css';

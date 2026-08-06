@@ -9,9 +9,7 @@ import { Awareness } from 'y-protocols/awareness';
 import { yCollab, yUndoManagerKeymap } from 'y-codemirror.next';
 
 interface YjsBindingOptions {
-	enableComments: boolean;
 	onUpdateContent: (content: string) => void;
-	updateComments: (content: string) => void;
 	autoSaveRef: RefObject<(() => void) | null>;
 	isUpdatingRef: RefObject<boolean>;
 	viewRef: RefObject<EditorView | null>;
@@ -103,9 +101,7 @@ export const createYjsEditorBindingExtensions = (
 
 export const registerYjsBinding = (yText: Y.Text, opts: YjsBindingOptions) => {
 	const {
-		enableComments,
 		onUpdateContent,
-		updateComments,
 		autoSaveRef,
 		isUpdatingRef,
 		viewRef,
@@ -131,9 +127,6 @@ export const registerYjsBinding = (yText: Y.Text, opts: YjsBindingOptions) => {
 		isUpdatingRef.current = true;
 		try {
 			onUpdateContent(content);
-			if (enableComments) {
-				updateComments(content);
-			}
 
 			if (!hasEmittedReadyRef.current && content && viewRef.current) {
 				hasEmittedReadyRef.current = true;

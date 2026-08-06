@@ -4,6 +4,13 @@ import type { EditorView as CompatEditorView } from 'codemirror';
 import { EditorView as CMEditorView } from '@codemirror/view';
 
 import { createNamedLogger } from '@/logging';
+import {
+	acceptReviewById,
+	rejectReviewById,
+	replaceReviewTags,
+	resolveAllReviews,
+} from '../../extensions/codemirror/ReviewExtension';
+import { locateAnnotationTags } from '../../utils/annotationTagUtils';
 
 const moduleLog = createNamedLogger('EditorEvents');
 
@@ -13,7 +20,7 @@ interface EditorEventHandlerOptions {
 	currentFileId?: string;
 	documentId?: string;
 	enableComments: boolean;
-	updateComments: (content: string) => void;
+	enableReviews?: boolean;
 	saveFileToStorage: (content: string) => void | Promise<void>;
 	saveDocumentToLinkedFile: (content: string) => void | Promise<void>;
 	setShowSaveIndicator: (value: boolean) => void;
@@ -29,60 +36,14 @@ export const registerEditorEventHandlers = (
 		currentFileId,
 		documentId,
 		enableComments,
-		updateComments,
+		enableReviews,
 		saveFileToStorage,
 		saveDocumentToLinkedFile,
 		setShowSaveIndicator,
 	} = opts;
 
-	const refreshCommentsSoon = (delay = 50) => {
-		setTimeout(() => {
-			if (!viewRef.current) return;
-			updateComments(viewRef.current.state.doc.toString());
-		}, delay);
-	};
-
-	const locateCommentTags = (content: string, commentId: string) => {
-		const openTagRegex = new RegExp(
-			`<###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${commentId}`,
-			'g',
-		);
-
-		const openMatch = openTagRegex.exec(content);
-		if (!openMatch) return null;
-
-		const openTagStart =
-			openMatch.index > 0 && content[openMatch.index - 1] === '`'
-				? openMatch.index - 1
-				: openMatch.index;
-
-		const openTagCoreEnd = content.indexOf('###>', openMatch.index) + 4;
-		if (openTagCoreEnd < 4) return null;
-
-		const openTagEnd =
-			content[openTagCoreEnd] === '`' ? openTagCoreEnd + 1 : openTagCoreEnd;
-
-		const closeTagRegex = new RegExp(
-			`<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${commentId}(?:\\s|%)*###>`,
-			'g',
-		);
-		closeTagRegex.lastIndex = openTagEnd;
-
-		const closeMatch = closeTagRegex.exec(content);
-		if (!closeMatch) return null;
-
-		const closeTagStart =
-			content[closeMatch.index - 1] === '`'
-				? closeMatch.index - 1
-				: closeMatch.index;
-
-		const closeTagCoreEnd = closeMatch.index + closeMatch[0].length;
-
-		const closeTagEnd =
-			content[closeTagCoreEnd] === '`' ? closeTagCoreEnd + 1 : closeTagCoreEnd;
-
-		return { openTagStart, openTagEnd, closeTagStart, closeTagEnd };
-	};
+	const locateCommentTags = (content: string, commentId: string) =>
+		locateAnnotationTags(content, 'comment', commentId);
 
 	const handleCommentResponseAdded = (event: Event) => {
 		const customEvent = event as CustomEvent<{
@@ -116,8 +77,6 @@ export const registerEditorEventHandlers = (
 					},
 				],
 			});
-
-			refreshCommentsSoon(10);
 		} catch (error) {
 			moduleLog.error('Error processing comment response:', error);
 		}
@@ -146,8 +105,6 @@ export const registerEditorEventHandlers = (
 					{ from: tags.closeTagStart, to: tags.closeTagEnd, insert: '' },
 				],
 			});
-
-			refreshCommentsSoon();
 		} catch (error) {
 			moduleLog.error('Error processing comment deletion:', error);
 		}
@@ -185,10 +142,55 @@ export const registerEditorEventHandlers = (
 					},
 				],
 			});
-
-			refreshCommentsSoon();
 		} catch (error) {
 			moduleLog.error('Error processing comment update:', error);
+		}
+	};
+
+	const handleReviewAccept = (event: Event) => {
+		const { reviewId } = (event as CustomEvent<{ reviewId: string }>).detail;
+
+		if (!viewRef.current || isViewOnly || !enableReviews) return;
+
+		if (!acceptReviewById(viewRef.current as CMEditorView, reviewId)) {
+			moduleLog.warn('Review not found, skipping accept');
+		}
+	};
+
+	const handleReviewReject = (event: Event) => {
+		const { reviewId } = (event as CustomEvent<{ reviewId: string }>).detail;
+
+		if (!viewRef.current || isViewOnly || !enableReviews) return;
+
+		if (!rejectReviewById(viewRef.current as CMEditorView, reviewId)) {
+			moduleLog.warn('Review not found, skipping reject');
+		}
+	};
+
+	const handleReviewAcceptAll = () => {
+		if (!viewRef.current || isViewOnly || !enableReviews) return;
+		resolveAllReviews(viewRef.current as CMEditorView, true);
+	};
+
+	const handleReviewRejectAll = () => {
+		if (!viewRef.current || isViewOnly || !enableReviews) return;
+		resolveAllReviews(viewRef.current as CMEditorView, false);
+	};
+
+	const handleReviewUpdate = (event: Event) => {
+		const { reviewId, rawReview } = (
+			event as CustomEvent<{
+				reviewId: string;
+				rawReview: { openTag: string; closeTag: string };
+			}>
+		).detail;
+
+		if (!viewRef.current || isViewOnly || !enableReviews) return;
+
+		if (
+			!replaceReviewTags(viewRef.current as CMEditorView, reviewId, rawReview)
+		) {
+			moduleLog.warn('Review not found, skipping update');
 		}
 	};
 
@@ -343,6 +345,11 @@ export const registerEditorEventHandlers = (
 	);
 	document.addEventListener('comment-delete', handleCommentDelete);
 	document.addEventListener('comment-update', handleCommentUpdate);
+	document.addEventListener('review-accept', handleReviewAccept);
+	document.addEventListener('review-reject', handleReviewReject);
+	document.addEventListener('review-accept-all', handleReviewAcceptAll);
+	document.addEventListener('review-reject-all', handleReviewRejectAll);
+	document.addEventListener('review-update', handleReviewUpdate);
 	document.addEventListener('codemirror-goto-line', handleGotoLine);
 	document.addEventListener('codemirror-goto-char', handleGotoChar);
 	document.addEventListener('file-saved', handleFileSaved);
@@ -355,6 +362,11 @@ export const registerEditorEventHandlers = (
 		);
 		document.removeEventListener('comment-delete', handleCommentDelete);
 		document.removeEventListener('comment-update', handleCommentUpdate);
+		document.removeEventListener('review-accept', handleReviewAccept);
+		document.removeEventListener('review-reject', handleReviewReject);
+		document.removeEventListener('review-accept-all', handleReviewAcceptAll);
+		document.removeEventListener('review-reject-all', handleReviewRejectAll);
+		document.removeEventListener('review-update', handleReviewUpdate);
 		document.removeEventListener('codemirror-goto-line', handleGotoLine);
 		document.removeEventListener('codemirror-goto-char', handleGotoChar);
 		document.removeEventListener('file-saved', handleFileSaved);

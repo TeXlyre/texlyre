@@ -29,5 +29,6 @@ export interface DocumentList {
 		latexAutoCompileOnSave?: boolean;
 		typstAutoCompileOnSave?: boolean;
 		typstPdfOptions?: TypstPdfOptions;
+		trackedFiles?: string[];
 	};
 }

@@ -14,14 +14,12 @@ import type { Awareness } from 'y-protocols/awareness';
 
 import { BibliographyProvider } from '../../contexts/BibliographyContext';
 import { CommentProvider } from '../../contexts/CommentContext';
-import {
-	clearComments,
-	processComments,
-} from '../../extensions/codemirror/CommentExtension';
+import { ReviewProvider } from '../../contexts/ReviewContext';
 import { hasToolbarSupport } from '../../extensions/codemirror/ToolbarExtension';
 import { useEditorView } from '../../hooks/editor/useEditorView';
 import { useCollab } from '../../hooks/useCollab';
 import { useComments } from '../../hooks/useComments';
+import { useReview } from '../../hooks/useReview';
 import { usePluginFileInfo } from '../../hooks/usePluginFileInfo';
 import { useSourceMap } from '../../hooks/useSourceMap';
 import { useSettings } from '../../hooks/useSettings';
@@ -53,6 +51,10 @@ import {
 import { computeReplacementChange } from '../../utils/textDiffUtils';
 import CommentPanel from '../comments/CommentPanel';
 import CommentToggleButton from '../comments/CommentToggleButton';
+import ReviewPanel from '../review/ReviewPanel';
+import ReviewToggleButton, {
+	TrackChangesButton,
+} from '../review/ReviewToggleButton';
 import LSPToggleButton from '../bibliography/LSPToggleButton';
 import BibliographyPanel from '../bibliography/BibliographyPanel';
 import CommentModal from '../comments/CommentModal';
@@ -228,8 +230,6 @@ const EditorContent: React.FC<{
 		isDocumentSelected,
 		textContent,
 		onUpdateContent,
-		parseComments,
-		addComment,
 		updateComments,
 		isEditingFile,
 		isViewOnly,
@@ -237,6 +237,7 @@ const EditorContent: React.FC<{
 		fileId,
 		true,
 		toolbarVisible,
+		true,
 	);
 
 	const toolbarItems = useSyncExternalStore(
@@ -348,33 +349,10 @@ const EditorContent: React.FC<{
 	}, [isSourceMapAvailable]);
 
 	useEffect(() => {
-		if (isDocumentSelected && textContent) updateComments(textContent);
+		if (!isDocumentSelected || !textContent) return;
+
+		updateComments(textContent);
 	}, [textContent, isDocumentSelected, updateComments]);
-
-	const handleContentChanged = useCallback(
-		(event: Event) => {
-			const customEvent = event as CustomEvent;
-			if (customEvent.detail && customEvent.detail.view === viewRef.current) {
-				const editorContent = customEvent.detail.content;
-				updateComments(editorContent);
-				const comments = parseComments(editorContent);
-				processComments(viewRef.current!, comments);
-			}
-		},
-		[parseComments, updateComments, viewRef],
-	);
-
-	useEffect(() => {
-		document.addEventListener(
-			'codemirror-content-changed',
-			handleContentChanged,
-		);
-		return () =>
-			document.removeEventListener(
-				'codemirror-content-changed',
-				handleContentChanged,
-			);
-	}, [handleContentChanged]);
 
 	useEffect(() => {
 		let timeoutId: NodeJS.Timeout;
@@ -415,7 +393,6 @@ const EditorContent: React.FC<{
 					],
 					selection: { anchor: cursorPos, head: cursorPos },
 				});
-				updateComments(view.state.doc.toString());
 			} catch (error) {
 				moduleLog.error('Error adding comment:', error);
 			}
@@ -430,7 +407,7 @@ const EditorContent: React.FC<{
 				'add-comment-to-editor',
 				handleAddCommentToEditor,
 			);
-	}, [viewRef, isViewOnly, addComment, updateComments]);
+	}, [viewRef, isViewOnly, addComment]);
 
 	useEffect(() => {
 		const handleTriggerFormat = async (event: Event) => {
@@ -470,10 +447,7 @@ const EditorContent: React.FC<{
 
 			const changes = computeReplacementChange(currentContent, formatted);
 			if (changes.length > 0) {
-				viewRef.current.dispatch({
-					changes,
-					effects: [clearComments.of(null)],
-				});
+				viewRef.current.dispatch({ changes });
 			}
 		},
 		[viewRef],
@@ -644,7 +618,11 @@ const EditorContent: React.FC<{
 
 				<PluginControlGroup>
 					{!isViewOnly && (
-						<CommentToggleButton className='header-comment-button' />
+						<>
+							<TrackChangesButton className='header-review-button' />
+							<ReviewToggleButton className='header-review-button' />
+							<CommentToggleButton className='header-comment-button' />
+						</>
 					)}
 				</PluginControlGroup>
 
@@ -730,7 +708,11 @@ const EditorContent: React.FC<{
 
 				<PluginControlGroup>
 					{!isViewOnly && (
-						<CommentToggleButton className='header-comment-button' />
+						<>
+							<TrackChangesButton className='header-review-button' />
+							<ReviewToggleButton className='header-review-button' />
+							<CommentToggleButton className='header-comment-button' />
+						</>
 					)}
 				</PluginControlGroup>
 				{linkedFileInfo?.fileName &&
@@ -784,7 +766,11 @@ const EditorContent: React.FC<{
 
 				<PluginControlGroup>
 					{!isViewOnly && (
-						<CommentToggleButton className='header-comment-button' />
+						<>
+							<TrackChangesButton className='header-review-button' />
+							<ReviewToggleButton className='header-review-button' />
+							<CommentToggleButton className='header-comment-button' />
+						</>
 					)}
 				</PluginControlGroup>
 
@@ -828,34 +814,32 @@ const EditorContent: React.FC<{
 
 	return (
 		<>
-			{headerVisible &&
-				((isEditingFile && fileName) ||
-					(!isEditingFile && documentId && documents)) && (
-					<PluginHeader
-						fileName={
-							isEditingFile
-								? fileInfo.fileName
-								: documents?.find((d) => d.id === documentId)?.name ||
-									'Document'
-						}
-						filePath={
-							isEditingFile
-								? filePath || fileInfo.filePath
-								: linkedFileInfo?.filePath
-						}
-						pluginName={isEditingFile ? 'Text Editor' : 'Document Editor'}
-						pluginVersion='1.0.0'
-						tooltipInfo={tooltipInfo}
-						controls={headerControls}
-						onNavigateToLinkedFile={
-							!isEditingFile && linkedFileInfo
-								? onNavigateToLinkedFile
-								: undefined
-						}
-						linkedFileInfo={!isEditingFile ? linkedFileInfo : null}
-						awareness={awareness}
-					/>
-				)}
+			{((isEditingFile && fileName) ||
+				(!isEditingFile && documentId && documents)) && (
+				<PluginHeader
+					fileName={
+						isEditingFile
+							? fileInfo.fileName
+							: documents?.find((d) => d.id === documentId)?.name || 'Document'
+					}
+					filePath={
+						isEditingFile
+							? filePath || fileInfo.filePath
+							: linkedFileInfo?.filePath
+					}
+					pluginName={isEditingFile ? 'Text Editor' : 'Document Editor'}
+					pluginVersion='1.0.0'
+					tooltipInfo={tooltipInfo}
+					controls={headerControls}
+					onNavigateToLinkedFile={
+						!isEditingFile && linkedFileInfo
+							? onNavigateToLinkedFile
+							: undefined
+					}
+					linkedFileInfo={!isEditingFile ? linkedFileInfo : null}
+					awareness={awareness}
+				/>
+			)}
 
 			<div className='editor-toolbar'>
 				{isViewOnly && linkedDocumentId && (
@@ -961,6 +945,7 @@ const EditorContent: React.FC<{
 					)}
 				</div>
 
+				{!isViewOnly && <ReviewPanel className='editor-review-panel' />}
 				{!isViewOnly && <CommentPanel className='editor-comment-panel' />}
 				{!isViewOnly && <BibliographyPanel className='editor-lsp-panel' />}
 			</div>
@@ -1194,24 +1179,29 @@ const Editor: React.FC<EditorComponentProps> = ({
 					editorContent={textContent}
 					onUpdateContent={onUpdateContent}
 				>
-					<div className='editor-container viewer-container collaborative-viewer'>
-						<CollaborativeViewerBridge
-							plugin={collaborativeViewerPlugin}
-							fileId={fileId}
-							content={content as ArrayBuffer}
-							mimeType={mimeType}
-							fileName={fileName}
-							docUrl={docUrl}
-							documentId={documentId}
-							isDocumentSelected={isDocumentSelected}
-							onUpdateContent={onUpdateContent}
+					<ReviewProvider
+						documentKey={fileId || documentId}
+						sharedKey={filePath || linkedFileInfo?.filePath || documentId}
+					>
+						<div className='editor-container viewer-container collaborative-viewer'>
+							<CollaborativeViewerBridge
+								plugin={collaborativeViewerPlugin}
+								fileId={fileId}
+								content={content as ArrayBuffer}
+								mimeType={mimeType}
+								fileName={fileName}
+								docUrl={docUrl}
+								documentId={documentId}
+								isDocumentSelected={isDocumentSelected}
+								onUpdateContent={onUpdateContent}
+							/>
+						</div>
+						<CommentModal
+							isOpen={showCommentModal}
+							onClose={handleCommentModalClose}
+							onCommentSubmit={handleCommentSubmit}
 						/>
-					</div>
-					<CommentModal
-						isOpen={showCommentModal}
-						onClose={handleCommentModalClose}
-						onCommentSubmit={handleCommentSubmit}
-					/>
+					</ReviewProvider>
 				</CommentProvider>
 			</BibliographyProvider>
 		);
@@ -1303,38 +1293,43 @@ const Editor: React.FC<EditorComponentProps> = ({
 				editorContent={textContent}
 				onUpdateContent={handleContentUpdate}
 			>
-				<div className='editor-container'>
-					<EditorContent
-						editorRef={editorRef}
-						textContent={textContent}
-						onUpdateContent={onUpdateContent}
-						documentId={documentId}
-						docUrl={docUrl}
-						isDocumentSelected={isDocumentSelected}
-						isEditingFile={isEditingFile}
-						isViewOnly={isViewOnly}
-						linkedDocumentId={linkedDocumentId}
-						onDocumentNavigation={handleDocumentNavigation}
-						fileName={fileName}
-						fileId={fileId}
-						filePath={filePath}
-						onSave={handleSave}
-						onExport={handleExport}
-						onSaveDocument={handleSaveDocument}
-						linkedFileInfo={linkedFileInfo}
-						onNavigateToLinkedFile={handleNavigateToLinkedFile}
-						documents={documents}
-						onSelectDocument={onSelectDocument}
-						headerVisible={headerVisible}
-						toolbarVisible={toolbarVisible && !isViewOnly}
-						onToolbarToggle={onToolbarToggle}
+				<ReviewProvider
+					documentKey={fileId || documentId}
+					sharedKey={filePath || linkedFileInfo?.filePath || documentId}
+				>
+					<div className='editor-container'>
+						<EditorContent
+							editorRef={editorRef}
+							textContent={textContent}
+							onUpdateContent={onUpdateContent}
+							documentId={documentId}
+							docUrl={docUrl}
+							isDocumentSelected={isDocumentSelected}
+							isEditingFile={isEditingFile}
+							isViewOnly={isViewOnly}
+							linkedDocumentId={linkedDocumentId}
+							onDocumentNavigation={handleDocumentNavigation}
+							fileName={fileName}
+							fileId={fileId}
+							filePath={filePath}
+							onSave={handleSave}
+							onExport={handleExport}
+							onSaveDocument={handleSaveDocument}
+							linkedFileInfo={linkedFileInfo}
+							onNavigateToLinkedFile={handleNavigateToLinkedFile}
+							documents={documents}
+							onSelectDocument={onSelectDocument}
+							headerVisible={headerVisible}
+							toolbarVisible={toolbarVisible && !isViewOnly}
+							onToolbarToggle={onToolbarToggle}
+						/>
+					</div>
+					<CommentModal
+						isOpen={showCommentModal}
+						onClose={handleCommentModalClose}
+						onCommentSubmit={handleCommentSubmit}
 					/>
-				</div>
-				<CommentModal
-					isOpen={showCommentModal}
-					onClose={handleCommentModalClose}
-					onCommentSubmit={handleCommentSubmit}
-				/>
+				</ReviewProvider>
 			</CommentProvider>
 		</BibliographyProvider>
 	);
