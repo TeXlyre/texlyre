@@ -18,7 +18,10 @@ import { popoutViewerService } from '../../services/PopoutViewerService';
 import type { Document } from '../../types/documents';
 import type { FileNode } from '../../types/files';
 import type { Project, ProjectType } from '../../types/projects';
-import { getTextMateLanguageForFile } from '../../extensions/codemirror/languages/textmateRegistry';
+import {
+	getTextMateLanguageForFile,
+	whenGrammarsReady,
+} from '../../extensions/codemirror/languages/textmateRegistry';
 import {
 	isLatexFile,
 	isTypstFile,
@@ -231,6 +234,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		useState(false);
 	const [currentProjectForExport, setCurrentProjectForExport] =
 		useState<Project | null>(null);
+	const [textMateRegistryReady, setTextMateRegistryReady] = useState(false);
 
 	const selectFileInExplorer = useCallback(
 		(file: FileNode | LinkedFileInfo) => {
@@ -1079,11 +1083,13 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			!linkedFileInfo?.fileName &&
 			content &&
 			isTypstContent(content);
-		const hasTextMateOutline = Boolean(
-			getTextMateLanguageForFile(
-				isEditingFile ? fileName : linkedFileInfo?.fileName,
-			),
-		);
+		const hasTextMateOutline =
+			textMateRegistryReady &&
+			Boolean(
+				getTextMateLanguageForFile(
+					isEditingFile ? fileName : linkedFileInfo?.fileName,
+				),
+			);
 
 		setShowOutline(
 			Boolean(
@@ -1096,7 +1102,25 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					hasTextMateOutline,
 			),
 		);
-	}, [isEditingFile, fileName, linkedFileInfo?.fileName, content]);
+	}, [
+		isEditingFile,
+		fileName,
+		linkedFileInfo?.fileName,
+		content,
+		textMateRegistryReady,
+	]);
+
+	useEffect(() => {
+		let cancelled = false;
+		void whenGrammarsReady().then(() => {
+			if (!cancelled) {
+				setTextMateRegistryReady(true);
+			}
+		});
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	const fileContentReady =
 		isEditingFile && loadedFile?.fileId === (selectedFileId || '');

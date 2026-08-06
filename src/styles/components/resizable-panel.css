@@ -57,6 +57,8 @@
 	border-radius: var(--space-sm);
 	width: 24px;
 	height: 24px;
+	padding: 0;
+	clip-path: inset(0);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -65,13 +67,20 @@
 	transition:
 		opacity var(--transition-normal),
 		width var(--transition-normal),
-		height var(--transition-normal);
+		height var(--transition-normal),
+		top var(--transition-normal),
+		right var(--transition-normal),
+		bottom var(--transition-normal),
+		left var(--transition-normal),
+		clip-path var(--transition-normal),
+		border-radius var(--transition-normal);
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .collapse-button:hover {
 	opacity: 1;
 	background-color: var(--pico-primary);
+	clip-path: inset(-8px);
 }
 
 .collapse-button:hover .collapse-icon {
@@ -79,81 +88,104 @@
 }
 
 .collapse-button.right {
-	right: -12px;
+	right: 0;
 	top: 50%;
+	width: 8px;
 	transform: translateY(-50%);
+}
+
+.collapse-button.right:hover {
+	width: 24px;
 }
 
 .collapse-button.left {
-	left: -12px;
+	left: 0;
 	top: 50%;
+	width: 8px;
 	transform: translateY(-50%);
 }
 
+.collapse-button.left:hover {
+	width: 24px;
+}
+
 .collapse-button.top {
-	top: -4px;
+	top: 0;
 	left: 50%;
+	height: 8px;
 	transform: translateX(-50%);
 }
 
+.collapse-button.top:hover {
+	height: 24px;
+}
+
 .collapse-button.bottom {
-	bottom: -4px;
+	bottom: 0;
 	left: 50%;
+	height: 8px;
 	transform: translateX(-50%);
+}
+
+.collapse-button.bottom:hover {
+	height: 24px;
 }
 
 .collapse-button.always-visible {
 	opacity: 1;
 	border-color: var(--pico-primary);
-	width: 36px;
+	border-radius: 0;
 }
 
 .collapse-button.always-visible.right {
-	padding-left: 4px;
+	right: -4px;
+	width: 8px;
+}
+
+.collapse-button.always-visible.right:hover {
 	right: -32px;
-	border-radius: 0;
-	transition:
-		opacity var(--transition-normal),
-		width var(--transition-normal),
-		height var(--transition-normal),
-		border-radius var(--transition-normal);
+	width: 36px;
+	border-radius: var(--space-sm);
 }
 
 .collapse-button.always-visible.left {
-	padding-left: 4px;
+	left: -4px;
+	width: 8px;
+}
+
+.collapse-button.always-visible.left:hover {
 	left: -32px;
-	border-radius: 0;
-	transition:
-		opacity var(--transition-normal),
-		width var(--transition-normal),
-		height var(--transition-normal),
-		border-radius var(--transition-normal);
+	width: 36px;
+	border-radius: var(--space-sm);
 }
 
 .collapse-button.always-visible.top {
+	top: -16px;
+	width: 36px;
+}
+
+.collapse-button.always-visible.top:hover {
 	top: -32px;
-	border-radius: 0;
-	transition:
-		opacity var(--transition-normal),
-		width var(--transition-normal),
-		height var(--transition-normal),
-		border-radius var(--transition-normal);
+	height: 24px;
+	border-radius: var(--space-sm);
 }
 
 .collapse-button.always-visible.bottom {
+	bottom: -16px;
+	width: 36px;
+}
+
+.collapse-button.always-visible.bottom:hover {
 	bottom: -32px;
-	border-radius: 0;
-	transition:
-		opacity var(--transition-normal),
-		width var(--transition-normal),
-		height var(--transition-normal),
-		border-radius var(--transition-normal);
+	height: 24px;
+	border-radius: var(--space-sm);
 }
 
 .collapse-icon {
 	font-weight: 900;
 	font-size: 18px;
 	line-height: 1;
+	flex-shrink: 0;
 	transition: color var(--transition-normal);
 	color: var(--pico-color);
 	font-family:
@@ -167,14 +199,6 @@
 
 .resizable-panel.collapsed:hover {
 	opacity: 1;
-}
-
-.resizable-panel.collapsed .collapse-button {
-	overflow: visible;
-}
-
-.collapse-button.always-visible:hover {
-	border-radius: var(--space-sm);
 }
 
 .panel-content {
