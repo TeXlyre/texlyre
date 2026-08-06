@@ -1,4 +1,10 @@
 {
 	"id": "shared-dot",
-	"grammars": [{ "scopeName": "source.dot", "file": "dot.tmLanguage" }]
+	"scopeName": "source.dot",
+	"extensions": [".dot", ".gv"],
+	"grammars": [{ "scopeName": "source.dot", "file": "dot.tmLanguage" }],
+	"languageData": {
+		"commentTokens": { "line": "//", "block": { "open": "/*", "close": "*/" } },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\""] }
+	}
 }

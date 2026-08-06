@@ -1,4 +1,10 @@
 {
 	"id": "shared-r",
-	"grammars": [{ "scopeName": "source.r", "file": "r.tmLanguage.json" }]
+	"scopeName": "source.r",
+	"extensions": [".r"],
+	"grammars": [{ "scopeName": "source.r", "file": "r.tmLanguage.json" }],
+	"languageData": {
+		"commentTokens": { "line": "#" },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\"", "'"] }
+	}
 }

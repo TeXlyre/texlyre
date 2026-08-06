@@ -1,4 +1,10 @@
 {
 	"id": "shared-sql",
-	"grammars": [{ "scopeName": "source.sql", "file": "sql.tmLanguage.json" }]
+	"scopeName": "source.sql",
+	"extensions": [".sql"],
+	"grammars": [{ "scopeName": "source.sql", "file": "sql.tmLanguage.json" }],
+	"languageData": {
+		"commentTokens": { "line": "--", "block": { "open": "/*", "close": "*/" } },
+		"closeBrackets": { "brackets": ["(", "[", "\"", "'"] }
+	}
 }

@@ -1,4 +1,15 @@
 {
 	"id": "shared-python",
-	"grammars": [{ "scopeName": "source.python", "file": "MagicPython.tmLanguage.json" }]
+	"scopeName": "source.python",
+	"extensions": [".py", ".pyi", ".pyw"],
+	"grammars": [
+		{
+			"scopeName": "source.python",
+			"file": "MagicPython.tmLanguage.json"
+		}
+	],
+	"languageData": {
+		"commentTokens": { "line": "#" },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\"", "'"] }
+	}
 }

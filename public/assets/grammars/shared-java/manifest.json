@@ -1,4 +1,10 @@
 {
 	"id": "shared-java",
-	"grammars": [{ "scopeName": "source.java", "file": "java.tmLanguage.json" }]
+	"scopeName": "source.java",
+	"extensions": [".java"],
+	"grammars": [{ "scopeName": "source.java", "file": "java.tmLanguage.json" }],
+	"languageData": {
+		"commentTokens": { "line": "//", "block": { "open": "/*", "close": "*/" } },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\"", "'"] }
+	}
 }

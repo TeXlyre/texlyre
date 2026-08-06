@@ -1,4 +1,10 @@
 {
 	"id": "shared-yaml",
-	"grammars": [{ "scopeName": "source.yaml", "file": "yaml.tmLanguage.json" }]
+	"scopeName": "source.yaml",
+	"extensions": [".yaml", ".yml"],
+	"grammars": [{ "scopeName": "source.yaml", "file": "yaml.tmLanguage.json" }],
+	"languageData": {
+		"commentTokens": { "line": "#" },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\"", "'"] }
+	}
 }

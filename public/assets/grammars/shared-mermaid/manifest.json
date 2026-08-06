@@ -1,4 +1,10 @@
 {
 	"id": "shared-mermaid",
-	"grammars": [{ "scopeName": "source.mmd", "file": "mermaid.tmLanguage.json" }]
+	"scopeName": "source.mmd",
+	"extensions": [".mmd", ".mermaid"],
+	"grammars": [{ "scopeName": "source.mmd", "file": "mermaid.tmLanguage.json" }],
+	"languageData": {
+		"commentTokens": { "line": "%%" },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\""] }
+	}
 }

@@ -1,4 +1,15 @@
 {
 	"id": "shared-markdown",
-	"grammars": [{ "scopeName": "text.html.markdown", "file": "markdown.tmLanguage.json" }]
+	"scopeName": "text.html.markdown",
+	"extensions": [".md", ".markdown"],
+	"grammars": [
+		{
+			"scopeName": "text.html.markdown",
+			"file": "markdown.tmLanguage.json"
+		}
+	],
+	"languageData": {
+		"commentTokens": { "block": { "open": "<!--", "close": "-->" } },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\"", "'"] }
+	}
 }

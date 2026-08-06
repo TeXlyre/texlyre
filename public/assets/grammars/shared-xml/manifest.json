@@ -1,4 +1,10 @@
 {
 	"id": "shared-xml",
-	"grammars": [{ "scopeName": "text.xml", "file": "xml.tmLanguage.json" }]
+	"scopeName": "text.xml",
+	"extensions": [".xml", ".xsd", ".xsl", ".xslt"],
+	"grammars": [{ "scopeName": "text.xml", "file": "xml.tmLanguage.json" }],
+	"languageData": {
+		"commentTokens": { "block": { "open": "<!--", "close": "-->" } },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\"", "'"] }
+	}
 }

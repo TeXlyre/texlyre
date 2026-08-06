@@ -1,4 +1,10 @@
 {
 	"id": "shared-html",
-	"grammars": [{ "scopeName": "text.html.basic", "file": "html.tmLanguage.json" }]
+	"scopeName": "text.html.basic",
+	"extensions": [".html", ".htm", ".xhtml"],
+	"grammars": [{ "scopeName": "text.html.basic", "file": "html.tmLanguage.json" }],
+	"languageData": {
+		"commentTokens": { "block": { "open": "<!--", "close": "-->" } },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\"", "'"] }
+	}
 }

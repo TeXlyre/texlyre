@@ -1,4 +1,10 @@
 {
 	"id": "shared-json",
-	"grammars": [{ "scopeName": "source.json", "file": "JSON.tmLanguage.json" }]
+	"scopeName": "source.json",
+	"extensions": [".json", ".jsonc"],
+	"grammars": [{ "scopeName": "source.json", "file": "JSON.tmLanguage.json" }],
+	"languageData": {
+		"commentTokens": { "line": "//" },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\""] }
+	}
 }
