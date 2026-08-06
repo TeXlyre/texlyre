@@ -4,25 +4,33 @@ import {
 	type CompletionContext,
 	snippetCompletion,
 } from '@codemirror/autocomplete';
-import { StreamLanguage, type StreamParser } from '@codemirror/language';
-import { Compartment, type Extension } from '@codemirror/state';
+import {
+	defineLanguageFacet,
+	Language,
+	LanguageDescription,
+	syntaxTree,
+} from '@codemirror/language';
+import { languages } from '@codemirror/language-data';
+import {
+	Compartment,
+	type EditorState,
+	type Extension,
+} from '@codemirror/state';
 import { type EditorView, ViewPlugin } from '@codemirror/view';
-import { type Tag, tags } from '@lezer/highlight';
+import type { Parser, SyntaxNode } from '@lezer/common';
 import {
 	createOnigScanner,
 	createOnigString,
 	loadWASM,
 } from 'vscode-oniguruma';
-import {
-	INITIAL,
-	type IGrammar,
-	type IToken,
-	parseRawGrammar,
-	Registry,
-	type StateStack,
-} from 'vscode-textmate';
+import { type IGrammar, parseRawGrammar, Registry } from 'vscode-textmate';
 
 import { createNamedLogger } from '@/logging';
+import {
+	completeTextMateSymbols,
+	createTextMateParser,
+	isEmbeddedNode,
+} from './textmateParser';
 import {
 	getTextMateGrammars,
 	getTextMateLanguageForFile,
@@ -32,46 +40,10 @@ import {
 
 const moduleLog = createNamedLogger('TextMateMode');
 
+const SNIPPET_BOOST = -20;
+
 const BASE_PATH = __BASE_PATH__;
 const ONIG_WASM_PATH = `${BASE_PATH}/core/oniguruma/onig.wasm`;
-
-interface TextMateState {
-	stack: StateStack;
-	tokens: IToken[];
-	index: number;
-}
-
-const SCOPE_TAGS: Array<[string, Tag]> = [
-	['comment', tags.comment],
-	['constant.character.escape', tags.escape],
-	['constant.numeric', tags.number],
-	['constant.language', tags.atom],
-	['constant', tags.constant(tags.name)],
-	['entity.name.class', tags.className],
-	['entity.name.function', tags.function(tags.variableName)],
-	['entity.name.tag', tags.tagName],
-	['entity.name.type', tags.typeName],
-	['entity.name', tags.name],
-	['entity.other.attribute-name', tags.attributeName],
-	['entity.other', tags.punctuation],
-	['invalid', tags.invalid],
-	['keyword.operator', tags.operator],
-	['keyword', tags.keyword],
-	['markup.bold', tags.strong],
-	['markup.italic', tags.emphasis],
-	['markup.heading', tags.heading],
-	['punctuation.definition.string', tags.string],
-	['punctuation', tags.punctuation],
-	['storage.type', tags.typeName],
-	['storage', tags.modifier],
-	['string', tags.string],
-	['support.function', tags.function(tags.variableName)],
-	['support', tags.standard(tags.variableName)],
-	['variable.parameter', tags.local(tags.variableName)],
-	['variable', tags.variableName],
-];
-
-const TOKEN_TABLE = Object.fromEntries(SCOPE_TAGS);
 
 const grammarSources = new Map<string, string>();
 const grammarCache = new Map<string, Promise<IGrammar | null>>();
@@ -139,53 +111,55 @@ function loadGrammar(scopeName: string): Promise<IGrammar | null> {
 	return pending;
 }
 
-function tokenNameForScopes(scopes: string[]): string | null {
-	for (let index = scopes.length - 1; index >= 0; index--) {
-		const scope = scopes[index];
-		for (const [prefix] of SCOPE_TAGS) {
-			if (scope === prefix || scope.startsWith(`${prefix}.`)) return prefix;
-		}
+export function isEmbeddedAt(state: EditorState, pos: number): boolean {
+	let node: SyntaxNode | null = syntaxTree(state).resolveInner(pos, -1);
+
+	for (; node; node = node.parent) {
+		if (isEmbeddedNode(node.name)) return true;
 	}
-	return null;
+	return false;
 }
 
-function createParser(
+function createLanguageExtension(
 	scopeName: string,
 	grammar: IGrammar,
-	languageData?: Record<string, unknown>,
-): StreamParser<TextMateState> {
-	return {
-		name: scopeName,
-		startState: () => ({ stack: INITIAL, tokens: [], index: 0 }),
-		copyState: (state) => ({ ...state }),
-		blankLine(state) {
-			const result = grammar.tokenizeLine('', state.stack);
-			state.stack = result.ruleStack;
-			state.tokens = [];
-			state.index = 0;
-		},
-		token(stream, state) {
-			if (stream.sol()) {
-				const result = grammar.tokenizeLine(stream.string, state.stack);
-				state.stack = result.ruleStack;
-				state.tokens = result.tokens;
-				state.index = 0;
-			}
+	languageData: Record<string, unknown>,
+	used: Set<string>,
+	reconfigure: () => void,
+): Extension[] {
+	const data = defineLanguageFacet(languageData);
 
-			const token = state.tokens[state.index];
-			if (!token) {
-				stream.skipToEnd();
-				return null;
-			}
+	const describe = (name: string) =>
+		LanguageDescription.matchLanguageName(languages, name, true);
 
-			state.index++;
-			stream.pos =
-				token.endIndex > stream.pos ? token.endIndex : stream.pos + 1;
-			return tokenNameForScopes(token.scopes);
-		},
-		tokenTable: TOKEN_TABLE,
-		languageData,
+	const innerParser = (name: string): Parser | null => {
+		const description = describe(name);
+		if (!description) return null;
+
+		if (!used.has(name)) {
+			used.add(name);
+			const ready = description.support
+				? Promise.resolve()
+				: description.load().then(() => undefined);
+			void ready.then(reconfigure, () => undefined);
+		}
+		return description.support?.language.parser ?? null;
 	};
+
+	const support = [...used]
+		.map((name) => describe(name)?.support?.support)
+		.filter((extension): extension is Extension => Boolean(extension));
+
+	return [
+		new Language(
+			data,
+			createTextMateParser(grammar, data, innerParser),
+			[],
+			scopeName,
+		),
+		data.of({ autocomplete: completeTextMateSymbols }),
+		support,
+	];
 }
 
 async function loadSnippets(url?: string): Promise<Completion[]> {
@@ -201,7 +175,8 @@ async function loadSnippets(url?: string): Promise<Completion[]> {
 			snippetCompletion(entry.template, {
 				label: entry.label,
 				detail: entry.detail,
-				type: 'keyword',
+				type: 'snippet',
+				boost: SNIPPET_BOOST,
 			}),
 		);
 	} catch {
@@ -218,6 +193,8 @@ function withSnippets(
 	return {
 		...languageData,
 		autocomplete: (context: CompletionContext) => {
+			if (isEmbeddedAt(context.state, context.pos)) return null;
+
 			const word = context.matchBefore(/[\\@<#\w:-]+$/);
 			if (!word || (word.from === word.to && !context.explicit)) return null;
 
@@ -266,20 +243,27 @@ export function createTextMateLanguageForFile(
 				.then((resolved) => {
 					if (!resolved || !view.dom.isConnected) return;
 
-					view.dispatch({
-						effects: compartment.reconfigure(
-							StreamLanguage.define(
-								createParser(
+					const used = new Set<string>();
+					const reconfigure = () => {
+						if (!view.dom.isConnected) return;
+
+						view.dispatch({
+							effects: compartment.reconfigure(
+								createLanguageExtension(
 									resolved.language.scopeName,
 									resolved.grammar,
 									withSnippets(
 										resolved.language.languageData,
 										resolved.snippets,
 									),
+									used,
+									reconfigure,
 								),
 							),
-						),
-					});
+						});
+					};
+
+					reconfigure();
 				});
 			return {};
 		}),

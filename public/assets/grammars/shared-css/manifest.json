@@ -1,4 +1,10 @@
 {
 	"id": "shared-css",
-	"grammars": [{ "scopeName": "source.css", "file": "css.tmLanguage.json" }]
+	"scopeName": "source.css",
+	"extensions": [".css"],
+	"grammars": [{ "scopeName": "source.css", "file": "css.tmLanguage.json" }],
+	"languageData": {
+		"commentTokens": { "block": { "open": "/*", "close": "*/" } },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\"", "'"] }
+	}
 }

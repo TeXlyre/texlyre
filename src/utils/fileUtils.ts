@@ -246,6 +246,7 @@ export function getFileExtension(mimeType: string | undefined): string {
 		// Web / scripts
 		'application/javascript': 'js',
 		'text/javascript': 'js',
+		'text/vnd.mermaid': 'mmd',
 		'application/typescript': 'ts',
 		'text/typescript': 'ts',
 		'application/wasm': 'wasm',
@@ -458,6 +459,7 @@ export function isBinaryFile(fileName: string): boolean {
 		'mll',
 		'mly',
 		'mm',
+		'mmd',
 		'nim',
 		'nimble',
 		'nix',

@@ -1,4 +1,10 @@
 {
 	"id": "shared-julia",
-	"grammars": [{ "scopeName": "source.julia", "file": "julia.tmLanguage.json" }]
+	"scopeName": "source.julia",
+	"extensions": [".jl"],
+	"grammars": [{ "scopeName": "source.julia", "file": "julia.tmLanguage.json" }],
+	"languageData": {
+		"commentTokens": { "line": "#", "block": { "open": "#=", "close": "=#" } },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\"", "'"] }
+	}
 }

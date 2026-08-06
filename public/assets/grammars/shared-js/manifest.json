@@ -1,4 +1,10 @@
 {
 	"id": "shared-js",
-	"grammars": [{ "scopeName": "source.js", "file": "JavaScript.tmLanguage.json" }]
+	"scopeName": "source.js",
+	"extensions": [".js", ".mjs", ".cjs", ".jsx"],
+	"grammars": [{ "scopeName": "source.js", "file": "JavaScript.tmLanguage.json" }],
+	"languageData": {
+		"commentTokens": { "line": "//", "block": { "open": "/*", "close": "*/" } },
+		"closeBrackets": { "brackets": ["{", "[", "(", "\"", "'", "`"] }
+	}
 }
