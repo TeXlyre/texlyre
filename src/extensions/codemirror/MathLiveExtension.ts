@@ -13,7 +13,7 @@ import { MathfieldElement } from 'mathlive';
 import { MathDetector, type MathRegion } from './mathlive/MathDetector';
 import { MathPreviewWidget, MathEditWidget } from './mathlive/MathWidget';
 import { setMathEditRegion } from './BidiExtension';
-import { isInsideCommentTag } from './commentMasking';
+import { isInsideCommentTag } from './comments/commentMasking';
 
 const BASE_PATH = __BASE_PATH__;
 

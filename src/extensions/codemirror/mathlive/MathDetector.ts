@@ -1,7 +1,7 @@
 // src/extensions/codemirror/mathlive/MathDetector.ts
 import type { EditorView } from '@codemirror/view';
 
-import { maskCommentText } from '../commentMasking';
+import { maskCommentText } from '../comments/commentMasking';
 import { getPatternsForFileType, type FileType } from './patterns';
 
 export interface MathRegion {

@@ -15,7 +15,7 @@ import {
 import type { LSPClient } from '@codemirror/lsp-client';
 
 import { genericLSPService } from '../../services/GenericLSPService';
-import { maskCommentText } from './commentMasking';
+import { maskCommentText } from './comments/commentMasking';
 
 function detectLanguageId(fileName: string, client?: LSPClient): string {
 	const ext = fileName.split('.').pop()?.toLowerCase() || '';

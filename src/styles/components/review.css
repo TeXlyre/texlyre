@@ -1,0 +1,230 @@
+/* CodeMirror review styles */
+.review-open-tag,
+.review-close-tag {
+	display: none !important;
+	width: 0 !important;
+	height: 0 !important;
+	overflow: hidden !important;
+	position: absolute !important;
+	visibility: hidden !important;
+}
+
+.cm-review-inserted {
+	background-color: rgba(46, 160, 67, 0.18);
+	text-decoration: underline;
+	text-decoration-color: rgba(46, 160, 67, 0.8);
+}
+
+.cm-review-deleted {
+	background-color: rgba(248, 81, 73, 0.15);
+	color: var(--pico-muted-color, #888);
+	text-decoration: line-through;
+	opacity: 0.8;
+}
+
+.highlight-review {
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.2) !important;
+	transition: background-color 0.3s ease;
+}
+
+/* Review panel styles */
+.review-panel {
+	order: 3;
+	width: var(--comment-panel-width);
+	display: flex;
+	flex-direction: column;
+	border-left: 1px solid var(--accent-border);
+	background-color: var(--pico-secondary-background);
+	height: 100%;
+	position: relative;
+	overflow: hidden;
+	flex-shrink: 0;
+}
+
+.editor-review-panel {
+	height: 100%;
+	box-shadow: var(--shadow-md);
+}
+
+.review-panel-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: var(--space-sm);
+	border-bottom: 1px solid var(--accent-border);
+}
+
+.review-panel-header h3 {
+	margin: 0 var(--space-xs) 0 0;
+	font-size: 0.8rem;
+}
+
+.review-panel-actions {
+	display: flex;
+	gap: var(--space-xs);
+}
+
+.review-panel-actions button {
+	font-size: 0.7rem;
+	padding: 2px var(--space-xs);
+	margin: 0;
+	width: auto;
+}
+
+.review-panel-content {
+	flex: 1;
+	overflow: hidden;
+	position: relative;
+}
+
+.review-panel-track {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	will-change: transform;
+}
+
+.no-reviews {
+	font-size: 0.8rem;
+	color: var(--pico-muted-color, #888);
+	text-align: center;
+	padding: var(--space-md) 0;
+}
+
+.review-item {
+	position: absolute;
+	left: var(--space-sm);
+	right: var(--space-sm);
+	background-color: var(--pico-background-color);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--border-radius, 4px);
+	padding: var(--space-sm);
+	font-size: 0.8rem;
+}
+
+.review-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: var(--space-xs);
+}
+
+.review-author {
+	font-weight: 600;
+}
+
+.review-time {
+	font-size: 0.7rem;
+	color: var(--pico-muted-color, #888);
+}
+
+.review-header-actions {
+	display: flex;
+	gap: var(--space-xs);
+}
+
+.review-header-actions button,
+.review-response-header .delete-button {
+	background: none;
+	border: none;
+	cursor: pointer;
+	padding: 0;
+	width: auto;
+	color: var(--text-color);
+}
+
+.review-header-actions .accept-button:hover {
+	color: rgb(46, 160, 67);
+}
+
+.review-header-actions .reject-button:hover {
+	color: rgb(248, 81, 73);
+}
+
+.review-diff {
+	background: none;
+	border: none;
+	padding: 0;
+	margin: 0;
+	width: 100%;
+	text-align: left;
+	cursor: pointer;
+	white-space: pre-wrap;
+	word-break: break-word;
+	font-family: var(--pico-font-family-monospace, monospace);
+	font-size: 0.75rem;
+	color: var(--text-color);
+}
+
+.review-segment-insert {
+	background-color: rgba(46, 160, 67, 0.18);
+	text-decoration: underline;
+}
+
+.review-segment-delete {
+	background-color: rgba(248, 81, 73, 0.15);
+	text-decoration: line-through;
+	opacity: 0.8;
+}
+
+.review-responses {
+	margin-top: var(--space-xs);
+	border-top: 1px solid var(--accent-border);
+	padding-top: var(--space-xs);
+}
+
+.review-response {
+	margin-bottom: var(--space-xs);
+}
+
+.review-response-header {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+}
+
+.review-response-content {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.review-response-form textarea {
+	width: 100%;
+	min-height: 60px;
+	resize: vertical;
+	font-family: inherit;
+	font-size: 0.8rem;
+}
+
+.review-response-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-xs);
+}
+
+.review-response-actions button,
+.review-reply-button {
+	font-size: 0.7rem;
+	padding: 2px var(--space-xs);
+	margin: 0;
+	width: auto;
+}
+
+.review-button-container {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+.review-count-badge {
+	position: absolute;
+	top: -6px;
+	right: -8px;
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+	border-radius: 8px;
+	font-size: 0.6rem;
+	padding: 0 4px;
+	line-height: 1.2;
+}

@@ -8,12 +8,18 @@ import {
     maskCommentText,
     getCommentMaskRanges,
     withCommentMasking,
-} from '@src/extensions/codemirror/commentMasking';
+} from '@src/extensions/codemirror/comments/commentMasking';
 
 const openTag = (id: string) =>
     `\`<### comment id: ${id}, user: t, time: 1, content: 'n', responses: [], resolved: false ###>\``;
 const closeTag = (id: string) => `\`</### comment id: ${id} ###>\``;
 const wrap = (id: string, text: string) => `${openTag(id)}${text}${closeTag(id)}`;
+
+const reviewOpenTag = (id: string) =>
+    `\`<### review id: ${id}, user: t, time: 1, original: 'b2xk', responses: [] ###>\``;
+const reviewCloseTag = (id: string) => `\`</### review id: ${id} ###>\``;
+const reviewWrap = (id: string, text: string) =>
+    `${reviewOpenTag(id)}${text}${reviewCloseTag(id)}`;
 
 const create = (doc: string) =>
     EditorState.create({
@@ -171,5 +177,32 @@ describe('commentMasking', () => {
 
     it('maskCommentTags is a no-op for empty ranges', () => {
         expect(maskCommentTags('abc', [])).toBe('abc');
+    });
+
+    it('masks review tags with same-length whitespace', () => {
+        const doc = `{"a": ${reviewWrap('bbb', '1')}}`;
+        const masked = maskCommentText(create(doc));
+
+        expect(masked.length).toBe(doc.length);
+        expect(masked).toBe(
+            `{"a": ${' '.repeat(reviewOpenTag('bbb').length)}1${' '.repeat(reviewCloseTag('bbb').length)}}`,
+        );
+    });
+
+    it('reports mask ranges for comments and reviews together', () => {
+        const doc = `{"a": ${wrap('aaa', '1')}, "b": ${reviewWrap('bbb', '2')}}`;
+        const ranges = getCommentMaskRanges(create(doc));
+
+        expect(ranges).toHaveLength(4);
+        expect(doc.slice(ranges[2].from, ranges[2].to)).toBe(reviewOpenTag('bbb'));
+        expect(doc.slice(ranges[3].from, ranges[3].to)).toBe(reviewCloseTag('bbb'));
+    });
+
+    it('parses a document containing a review tag', () => {
+        const doc = `{"a": ${reviewWrap('bbb', '1')}}`;
+        const state = create(doc);
+        ensureSyntaxTree(state, doc.length, 5000);
+
+        expect(syntaxTree(state).topNode.type.name).toBe('JsonText');
     });
 });

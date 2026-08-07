@@ -1,5 +1,6 @@
 // src/utils/fileCommentUtils.ts
 import type { FileNode } from '../types/files';
+import { hasAnnotationTags, stripAnnotationTags } from './annotationTagUtils';
 
 export interface ProcessorStats {
 	total: number;
@@ -12,130 +13,12 @@ export interface ProcessorOptions {
 	inPlace?: boolean;
 }
 
-const COMMENT_DETECTION_REGEX = /<###(?:\s|%)*comment(?:\s|%)*id:/;
-
-function hasBinaryComments(buffer: ArrayBuffer): boolean {
-	const view = new Uint8Array(buffer);
-	const backtick = 0x60;
-	const percent = 0x25;
-	const openMarker = new TextEncoder().encode('<###');
-	const commentMarker = new TextEncoder().encode('comment');
-	const idMarker = new TextEncoder().encode('id:');
-	const whitespaceChars = [0x20, 0x09, 0x0a, 0x0d];
-
-	const isSeparator = (byte: number) =>
-		whitespaceChars.includes(byte) || byte === percent;
-
-	const matchAt = (pos: number, marker: Uint8Array): boolean => {
-		if (pos + marker.length > view.length) return false;
-		for (let j = 0; j < marker.length; j++) {
-			if (view[pos + j] !== marker[j]) return false;
-		}
-		return true;
-	};
-
-	const skipSeparators = (pos: number): number => {
-		while (pos < view.length && isSeparator(view[pos])) pos++;
-		return pos;
-	};
-
-	for (let i = 0; i < view.length; i++) {
-		let pos = i;
-		if (view[pos] === backtick) pos++;
-
-		if (!matchAt(pos, openMarker)) continue;
-		pos += openMarker.length;
-
-		pos = skipSeparators(pos);
-		if (!matchAt(pos, commentMarker)) continue;
-		pos += commentMarker.length;
-
-		pos = skipSeparators(pos);
-		if (matchAt(pos, idMarker)) return true;
-	}
-
-	return false;
-}
-
 export function hasComments(content: string | ArrayBuffer): boolean {
-	if (typeof content !== 'string') {
-		return hasBinaryComments(content as ArrayBuffer);
-	}
-	return COMMENT_DETECTION_REGEX.test(content);
+	return hasAnnotationTags(content);
 }
 
 export function cleanText(text: string): string {
-	if (!hasComments(text)) {
-		return text;
-	}
-
-	const openTagRegex = /<###(?:\s|%)*comment(?:\s|%)*id:(?:\s|%)*([\w-]+)/g;
-
-	let cleanedText = text;
-	let searchStart = 0;
-
-	while (searchStart < cleanedText.length) {
-		openTagRegex.lastIndex = searchStart;
-		const openMatch = openTagRegex.exec(cleanedText);
-
-		if (!openMatch) break;
-
-		const openTagStart = openMatch.index;
-		const id = openMatch[1];
-
-		const openTagEnd = cleanedText.indexOf('###>', openTagStart);
-		if (openTagEnd === -1) {
-			searchStart = openTagStart + 1;
-			continue;
-		}
-
-		const closeTagRegex = new RegExp(
-			`<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${id}(?:\\s|%)*###>`,
-			'g',
-		);
-		closeTagRegex.lastIndex = openTagEnd + 4;
-		const closeMatch = closeTagRegex.exec(cleanedText);
-
-		if (!closeMatch) {
-			searchStart = openTagEnd + 4;
-			continue;
-		}
-
-		const backtickBefore =
-			openTagStart > 0 && cleanedText[openTagStart - 1] === '`';
-		const backtickAfter =
-			openTagEnd + 4 < cleanedText.length &&
-			cleanedText[openTagEnd + 4] === '`';
-
-		const closeTagStart = closeMatch.index;
-		const closeTagEnd = closeTagStart + closeMatch[0].length;
-
-		const commentedTextStart = openTagEnd + 4 + (backtickAfter ? 1 : 0);
-		const commentedTextEnd =
-			closeTagStart -
-			(backtickBefore && cleanedText[closeTagStart - 1] === '`' ? 1 : 0);
-		const commentedText = cleanedText.substring(
-			commentedTextStart,
-			commentedTextEnd,
-		);
-
-		const actualOpenTagStart = backtickBefore ? openTagStart - 1 : openTagStart;
-		const actualCloseTagEnd =
-			backtickAfter &&
-			closeTagEnd < cleanedText.length &&
-			cleanedText[closeTagEnd] === '`'
-				? closeTagEnd + 1
-				: closeTagEnd;
-
-		cleanedText =
-			cleanedText.substring(0, actualOpenTagStart) +
-			commentedText +
-			cleanedText.substring(actualCloseTagEnd);
-
-		searchStart = actualOpenTagStart;
-	}
-
-	return cleanedText;
+	return stripAnnotationTags(text);
 }
 
 export function cleanContent(

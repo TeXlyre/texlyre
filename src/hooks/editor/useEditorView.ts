@@ -41,6 +41,10 @@ import { UndoManager } from 'yjs';
 import { createLanguageExtension } from '../../extensions/codemirror/LanguageExtension';
 import { resolveHighlightTheme } from '../../extensions/codemirror/HighlightThemeExtension';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
+import {
+	reviewSystemExtension,
+	setTrackChanges,
+} from '../../extensions/codemirror/ReviewExtension';
 import { latexTypstBidiIsolates } from '../../extensions/codemirror/BidiExtension';
 import { searchHighlightExtension } from '../../extensions/codemirror/SearchHighlightExtension';
 import {
@@ -140,6 +144,7 @@ export const useEditorView = (
 	currentFileId?: string,
 	enableComments = false,
 	toolbarVisible = true,
+	enableReviews = false,
 ) => {
 	const {
 		getAutoSaveEnabled,
@@ -522,6 +527,12 @@ export const useEditorView = (
 		return [commentBinding, commentSystemExtension];
 	};
 
+	const buildReviewExtensions = (): Extension[] => {
+		if (!enableReviews || isViewOnly) return [];
+
+		return [reviewSystemExtension];
+	};
+
 	// --- Yjs / collaboration connection ---
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: getCollabOptions identity is unstable; reconnecting on settings-driven renders causes duplicate Yjs document opens. We intentionally read the latest options only when the document connection key changes. */
 	useEffect(() => {
@@ -693,6 +704,7 @@ export const useEditorView = (
 		}
 
 		extensions.push(...buildCommentExtensions());
+		extensions.push(...buildReviewExtensions());
 		extensions.push(...buildKeymapExtensions(info));
 
 		const cachedUndoHistory =
@@ -780,6 +792,7 @@ export const useEditorView = (
 		currentFileId,
 		documentId,
 		enableComments,
+		enableReviews,
 		textContent,
 	]);
 
@@ -913,6 +926,28 @@ export const useEditorView = (
 	]);
 
 	useEffect(() => {
+		const handleSetTrackChanges = (event: Event) => {
+			const view = viewRef.current;
+			if (!view || !enableReviews) return;
+
+			const { tracking, author } = (event as CustomEvent).detail;
+			setTrackChanges(view, { tracking, author });
+		};
+
+		document.addEventListener('set-track-changes', handleSetTrackChanges);
+
+		return () =>
+			document.removeEventListener('set-track-changes', handleSetTrackChanges);
+	}, [enableReviews]);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: the document identity drives re-requesting the tracking state for the newly opened document. */
+	useEffect(() => {
+		if (!enableReviews || !viewRef.current || !isDocumentSelected) return;
+
+		document.dispatchEvent(new CustomEvent('request-track-changes'));
+	}, [enableReviews, isDocumentSelected, currentFileId, documentId]);
+
+	useEffect(() => {
 		if (!viewRef.current) return;
 		return registerEditorSearchHighlightEvents(viewRef);
 	}, []);
@@ -926,6 +961,7 @@ export const useEditorView = (
 			currentFileId,
 			documentId,
 			enableComments,
+			enableReviews,
 			updateComments,
 			saveFileToStorage,
 			saveDocumentToLinkedFile,
@@ -938,6 +974,7 @@ export const useEditorView = (
 		currentFileId,
 		documentId,
 		enableComments,
+		enableReviews,
 		updateComments,
 		saveFileToStorage,
 		saveDocumentToLinkedFile,

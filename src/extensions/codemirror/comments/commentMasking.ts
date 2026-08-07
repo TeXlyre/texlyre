@@ -1,4 +1,4 @@
-// src/extensions/codemirror/commentMasking.ts
+// src/extensions/codemirror/comments/commentMasking.ts
 import { ParseContext, type LanguageSupport } from '@codemirror/language';
 import {
 	StateField,
@@ -8,8 +8,10 @@ import {
 } from '@codemirror/state';
 import type { Input, PartialParse, TreeFragment } from '@lezer/common';
 
-import { commentService } from '../../services/CommentService';
-import { hasComments } from '../../utils/fileCommentUtils';
+import {
+	collectAnnotationTagRanges,
+	hasAnnotationTags,
+} from '../../../utils/annotationTagUtils';
 
 export interface MaskRange {
 	from: number;
@@ -17,43 +19,9 @@ export interface MaskRange {
 }
 
 function collectTagRanges(text: string): MaskRange[] {
-	if (!hasComments(text)) return [];
+	if (!hasAnnotationTags(text)) return [];
 
-	const comments = commentService.parseComments(text);
-	if (!comments.length) return [];
-
-	const tagRanges: MaskRange[] = [];
-
-	for (const comment of comments) {
-		if (comment.openTagStart === undefined || comment.openTagEnd === undefined)
-			continue;
-		if (
-			comment.closeTagStart === undefined ||
-			comment.closeTagEnd === undefined
-		)
-			continue;
-
-		tagRanges.push({ from: comment.openTagStart, to: comment.openTagEnd });
-		tagRanges.push({ from: comment.closeTagStart, to: comment.closeTagEnd });
-	}
-
-	tagRanges.sort((a, b) => a.from - b.from);
-
-	const merged: MaskRange[] = [];
-
-	for (const range of tagRanges) {
-		if (range.from >= range.to) continue;
-
-		const last = merged[merged.length - 1];
-
-		if (last && range.from <= last.to) {
-			last.to = Math.max(last.to, range.to);
-		} else {
-			merged.push({ ...range });
-		}
-	}
-
-	return merged;
+	return collectAnnotationTagRanges(text);
 }
 
 function touchesTagSyntax(tr: Transaction): boolean {

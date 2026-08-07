@@ -13,7 +13,7 @@ import type { Extension } from '@codemirror/state';
 import { bibtex } from 'codemirror-lang-bib';
 import { latex } from 'codemirror-lang-latex';
 
-import { withCommentMasking } from './commentMasking';
+import { withCommentMasking } from './comments/commentMasking';
 import { safeTypst as typst } from './languages/safeTypstPatch';
 import { rst } from './languages/rstMode';
 import { createTextMateLanguageForFile } from './languages/textmateMode';
