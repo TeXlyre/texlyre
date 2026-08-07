@@ -13,7 +13,7 @@ class CommentService {
 		const parsedComments: Comment[] = [];
 		let searchStart = 0;
 
-		const openTagRegex = /<###(?:\s|%)*comment(?:\s|%)*id:(?:\s|%)*(\w[\w-]*)/g;
+		const openTagRegex = /<###(?:\s|%)*comment(?:\s|%)*id:(?:\s|%)*([\w-]+)/g;
 
 		while (searchStart < editorContent.length) {
 			openTagRegex.lastIndex = searchStart;

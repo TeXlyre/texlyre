@@ -15,6 +15,7 @@ import {
 import type { LSPClient } from '@codemirror/lsp-client';
 
 import { genericLSPService } from '../../services/GenericLSPService';
+import { maskCommentText } from './commentMasking';
 
 function detectLanguageId(fileName: string, client?: LSPClient): string {
 	const ext = fileName.split('.').pop()?.toLowerCase() || '';
@@ -357,7 +358,7 @@ function createDocumentSyncExtension(fileName: string): Extension {
 
 			private syncOpenState(view: EditorView) {
 				const clients = genericLSPService.getAllClientsForFile(fileName);
-				const text = view.state.doc.toString();
+				const text = maskCommentText(view.state);
 
 				clients.forEach((client) => {
 					if (this.openedFor.has(client)) return;
@@ -374,7 +375,7 @@ function createDocumentSyncExtension(fileName: string): Extension {
 
 				if (!update.docChanged) return;
 				version++;
-				const text = update.state.doc.toString();
+				const text = maskCommentText(update.state);
 				this.openedFor.forEach((client) => {
 					sendNotification(client, 'textDocument/didChange', {
 						textDocument: { uri: fileUri, version },
