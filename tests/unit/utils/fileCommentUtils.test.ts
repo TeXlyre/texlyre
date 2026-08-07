@@ -13,6 +13,9 @@ const wrap = (text: string) => {
     return `${openTag}${text}${closeTag}`;
 };
 
+const rawWrap = (id: string, text: string) =>
+    `\`<### comment id: ${id}, user: tester, time: 1700000000000, content: 'a note', responses: [], resolved: false ###>\`${text}\`</### comment id: ${id} ###>\``;
+
 describe('File Comment Utils', () => {
     describe('hasComments', () => {
         it('should detect comments in a string', () => {
@@ -31,6 +34,19 @@ describe('File Comment Utils', () => {
         it('should return false for a buffer without comments', () => {
             const buffer = new TextEncoder().encode('plain content').buffer;
             expect(hasComments(buffer)).toBe(false);
+        });
+
+        it('should detect comments whose id starts with a dash', () => {
+            expect(hasComments(rawWrap('-XyZ_09', 'hello'))).toBe(true);
+        });
+
+        it('should detect tags wrapped across lines by a formatter', () => {
+            const wrapped = `\`<### comment\nid: wrapped, user: tester, time: 1700000000000, content: 'a note', responses: [], resolved: false ###>\`kept\`</### comment id: wrapped ###>\``;
+            expect(hasComments(wrapped)).toBe(true);
+        });
+
+        it('should not treat lookalike text as a comment', () => {
+            expect(hasComments('a <### heading ###> b')).toBe(false);
         });
     });
 
@@ -52,6 +68,62 @@ describe('File Comment Utils', () => {
         it('should leave content unchanged when close tag is missing', () => {
             const { openTag } = commentService.addComment('x', 'tester');
             const input = `before ${openTag}kept without close`;
+            expect(cleanText(input)).toBe(input);
+        });
+
+        it('should strip a comment whose id starts with a dash', () => {
+            expect(cleanText(`before ${rawWrap('-XyZ_09', 'kept')} after`)).toBe(
+                'before kept after',
+            );
+        });
+
+        it('should strip nested comments', () => {
+            const input = rawWrap('outer', `x ${rawWrap('inner', 'deep')} y`);
+            expect(cleanText(input)).toBe('x deep y');
+        });
+
+        it('should strip adjacent comments without touching the gap', () => {
+            const input = `${rawWrap('aaa', 'one')} mid ${rawWrap('bbb', 'two')}`;
+            expect(cleanText(input)).toBe('one mid two');
+        });
+
+        it('should keep braces and math in the commented text', () => {
+            const text = '\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}';
+            expect(cleanText(`\\[ ${rawWrap('math', text)} \\]`)).toBe(
+                `\\[ ${text} \\]`,
+            );
+        });
+
+        it('should keep multi-line commented text', () => {
+            expect(cleanText(rawWrap('multi', 'first\nsecond'))).toBe(
+                'first\nsecond',
+            );
+        });
+
+        it('should strip tags without surrounding backticks', () => {
+            const input =
+                "before <### comment id: nobt, user: tester, time: 1, content: 'a', responses: [], resolved: false ###>kept</### comment id: nobt ###> after";
+            expect(cleanText(input)).toBe('before kept after');
+        });
+
+        it('should keep stripping after an unmatched open tag', () => {
+            const orphan =
+                "`<### comment id: orphan, user: tester, time: 1700000000000, content: 'a note', responses: [], resolved: false ###>`";
+            const input = `${orphan}stray ${rawWrap('good', 'kept')} end`;
+
+            expect(cleanText(input)).toBe(`${orphan}stray kept end`);
+        });
+
+        it('should strip every comment in a full document', () => {
+            const orphan =
+                "`<### comment id: orphan, user: tester, time: 1700000000000, content: 'a note', responses: [], resolved: false ###>`";
+            const input = `${rawWrap('aaa', 'one')} ${orphan} ${rawWrap('bbb', 'two')} ${rawWrap('ccc', 'three')}`;
+
+            expect(cleanText(input)).toBe(`one ${orphan} two three`);
+        });
+
+        it('should leave a stray close tag untouched', () => {
+            const input = 'before `</### comment id: aaa ###>` after';
             expect(cleanText(input)).toBe(input);
         });
     });

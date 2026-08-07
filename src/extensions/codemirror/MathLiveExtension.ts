@@ -13,6 +13,7 @@ import { MathfieldElement } from 'mathlive';
 import { MathDetector, type MathRegion } from './mathlive/MathDetector';
 import { MathPreviewWidget, MathEditWidget } from './mathlive/MathWidget';
 import { setMathEditRegion } from './BidiExtension';
+import { isInsideCommentTag } from './commentMasking';
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -274,6 +275,8 @@ class MathLiveProcessor {
 	}
 
 	private startEdit(region: MathRegion): void {
+		if (isInsideCommentTag(this.view.state, region.from, region.to)) return;
+
 		this.view.dispatch({
 			effects: setEditingRegion.of(region),
 		});

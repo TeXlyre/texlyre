@@ -8,28 +8,36 @@ export const registerEditorClipboard = (
 	editorElement: HTMLDivElement,
 	viewRef: RefObject<EditorView | null>,
 ) => {
-	const handleCopy = (event: ClipboardEvent) => {
-		const view = viewRef.current;
-		if (!view) return;
+	const handleClipboard = (event: ClipboardEvent) => {
+		const data = event.clipboardData;
+		if (!data) return;
 
-		const selection = view.state.selection;
-		const primaryRange = selection.main;
+		const copied = data.getData('text/plain');
 
-		if (primaryRange.from !== primaryRange.to) {
-			const selectedText = view.state.doc.sliceString(
-				primaryRange.from,
-				primaryRange.to,
-			);
-			const cleanedText = processTextSelection(selectedText);
-
-			event.clipboardData?.setData('text/plain', cleanedText);
-			event.preventDefault();
+		if (copied) {
+			const cleaned = processTextSelection(copied);
+			if (cleaned !== copied) data.setData('text/plain', cleaned);
+			return;
 		}
+
+		if (event.type !== 'copy') return;
+
+		const view = viewRef.current;
+		const range = view?.state.selection.main;
+		if (!view || !range || range.from === range.to) return;
+
+		data.setData(
+			'text/plain',
+			processTextSelection(view.state.doc.sliceString(range.from, range.to)),
+		);
+		event.preventDefault();
 	};
 
-	editorElement.addEventListener('copy', handleCopy);
+	editorElement.addEventListener('copy', handleClipboard);
+	editorElement.addEventListener('cut', handleClipboard);
 
 	return () => {
-		editorElement.removeEventListener('copy', handleCopy);
+		editorElement.removeEventListener('copy', handleClipboard);
+		editorElement.removeEventListener('cut', handleClipboard);
 	};
 };

@@ -13,6 +13,7 @@ import type { Extension } from '@codemirror/state';
 import { bibtex } from 'codemirror-lang-bib';
 import { latex } from 'codemirror-lang-latex';
 
+import { withCommentMasking } from './commentMasking';
 import { safeTypst as typst } from './languages/safeTypstPatch';
 import { rst } from './languages/rstMode';
 import { createTextMateLanguageForFile } from './languages/textmateMode';
@@ -41,20 +42,26 @@ export const createLanguageExtension = (
 	switch (fileType) {
 		case 'latex':
 			return [
-				latex({
-					autoCloseBrackets: false,
-					enableAutocomplete: false,
-					fileName: options.fileName,
-					nestedEnvironments: latexNestedEnvironments,
-					linter: options.detectedByContent
-						? { checkMissingDocumentEnv: false }
-						: undefined,
-				}),
+				withCommentMasking(
+					latex({
+						autoCloseBrackets: false,
+						enableAutocomplete: false,
+						fileName: options.fileName,
+						nestedEnvironments: latexNestedEnvironments,
+						linter: options.detectedByContent
+							? { checkMissingDocumentEnv: false }
+							: undefined,
+					}),
+				),
 			];
 		case 'typst':
-			return [typst()];
+			return [withCommentMasking(typst())];
 		case 'bib':
-			return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
+			return [
+				withCommentMasking(
+					bibtex({ autoCloseBrackets: false, enableAutocomplete: false }),
+				),
+			];
 		case 'markdown':
 			return [
 				markdown({

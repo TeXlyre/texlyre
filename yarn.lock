@@ -6905,10 +6905,10 @@ path-scurry@^2.0.2:
     lru-cache "^11.0.0"
     minipass "^7.1.2"
 
-pdfjs-dist@6.1.200:
-  version "6.1.200"
-  resolved "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-6.1.200.tgz"
-  integrity sha512-o8MolyzirkkLrcdsae/HEOiIcXWI7DS5zGpvqW8xTC2YUsW30rltFw2bDGvw/fskUdEMrQm2br68jzDS5BH2vw==
+pdfjs-dist@6.2.108:
+  version "6.2.108"
+  resolved "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-6.2.108.tgz"
+  integrity sha512-YxFb+SQcodN2rnX9Tn3dHYlqfb7NjlzzfONPpJd+AKoKtUjEdevTfbC07d5TcczzOK6261auRkP/M8OBHs9vFQ==
   optionalDependencies:
     "@napi-rs/canvas" "^1.0.0"
 

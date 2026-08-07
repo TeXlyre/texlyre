@@ -7,6 +7,7 @@ import {
 	StateEffect,
 	StateField,
 	Transaction,
+	type TransactionSpec,
 } from '@codemirror/state';
 import {
 	Decoration,
@@ -18,6 +19,7 @@ import {
 
 import type { Comment } from '../../types/comments';
 import { commentBubbleExtension } from './CommentBubbleExtension';
+import { commentMaskingExtension } from './commentMasking';
 import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('CommentExtension');
@@ -179,7 +181,16 @@ function touchesTags(
 	);
 }
 
-function getSingleChange(tr: Transaction): SingleChange | null {
+function isUserEdit(tr: Transaction): boolean {
+	const userEvent = tr.annotation(Transaction.userEvent);
+
+	return (
+		!!userEvent &&
+		(userEvent.startsWith('input') || userEvent.startsWith('delete'))
+	);
+}
+
+function getChanges(tr: Transaction): SingleChange[] {
 	const changes: SingleChange[] = [];
 
 	tr.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => {
@@ -190,7 +201,7 @@ function getSingleChange(tr: Transaction): SingleChange | null {
 		});
 	});
 
-	return changes.length === 1 ? changes[0] : null;
+	return changes;
 }
 
 function getDeleteDirection(
@@ -372,6 +383,37 @@ function buildProtectedReplacement(
 	};
 }
 
+function buildProtectedSpec(
+	state: EditorState,
+	changes: SingleChange[],
+	ranges: readonly CommentRange[],
+): TransactionSpec {
+	const protectedChanges: SingleChange[] = [];
+	const effects: StateEffect<unknown>[] = [];
+
+	for (const change of changes) {
+		const replacement = buildProtectedReplacement(state, change, ranges);
+
+		if (!replacement) {
+			protectedChanges.push(change);
+			continue;
+		}
+
+		protectedChanges.push({
+			from: replacement.from,
+			to: replacement.to,
+			insert: replacement.insert,
+		});
+		effects.push(...removeCommentEffects(replacement));
+	}
+
+	return {
+		changes: protectedChanges,
+		effects,
+		annotations: skipCommentProtection.of(true),
+	};
+}
+
 function dispatchReplacement(view: EditorView, replacement: Replacement): void {
 	view.dispatch({
 		changes: {
@@ -390,17 +432,27 @@ function dispatchReplacement(view: EditorView, replacement: Replacement): void {
 
 const commentProtectionTransactionFilter = EditorState.transactionFilter.of(
 	(tr) => {
-		if (!tr.docChanged || tr.annotation(skipCommentProtection)) {
+		if (
+			!tr.docChanged ||
+			tr.annotation(skipCommentProtection) ||
+			!isUserEdit(tr)
+		) {
 			return tr;
 		}
 
 		const ranges = tr.startState.field(commentRanges, false);
 		if (!ranges?.length) return tr;
 
-		const change = getSingleChange(tr);
-		if (!change || !touchesTags(change.from, change.to, ranges)) {
+		const changes = getChanges(tr);
+		if (!changes.some((entry) => touchesTags(entry.from, entry.to, ranges))) {
 			return tr;
 		}
+
+		if (changes.length > 1) {
+			return buildProtectedSpec(tr.startState, changes, ranges);
+		}
+
+		const change = changes[0];
 
 		const boundaryDeletion = getBoundaryDeletion(tr, change, ranges);
 		if (boundaryDeletion) {
@@ -621,9 +673,10 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 	if (!view || !Array.isArray(comments)) return;
 
 	if (comments.length === 0) {
-		const currentState = view.state.field(commentState, false);
+		const decorations = view.state.field(commentState, false);
+		const ranges = view.state.field(commentRanges, false);
 
-		if (currentState && currentState.size > 0) {
+		if (decorations?.size || ranges?.length) {
 			view.dispatch({ effects: [clearComments.of(null)] });
 		}
 
@@ -683,7 +736,11 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 			);
 		}
 
-		if (effects.length > 1) {
+		const hasState =
+			view.state.field(commentState, false)?.size ||
+			view.state.field(commentRanges, false)?.length;
+
+		if (effects.length > 1 || hasState) {
 			view.dispatch({ effects });
 		}
 	} catch (error) {
@@ -787,6 +844,7 @@ class CommentProcessor {
 }
 
 export const commentSystemExtension = [
+	commentMaskingExtension,
 	commentRanges,
 	commentState,
 	atomicCommentRanges,

@@ -133,26 +133,11 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 	};
 
 	const deleteComment = (commentId: string) => {
-		const comment = comments.find((c) => c.id === commentId);
-		if (!comment) return;
+		if (!comments.some((c) => c.id === commentId)) return;
 
-		if (
-			comment.openTagStart !== undefined &&
-			comment.openTagEnd !== undefined &&
-			comment.closeTagStart !== undefined &&
-			comment.closeTagEnd !== undefined
-		) {
-			const event = new CustomEvent('comment-delete', {
-				detail: {
-					commentId,
-					openTagStart: comment.openTagStart,
-					openTagEnd: comment.openTagEnd,
-					closeTagStart: comment.closeTagStart,
-					closeTagEnd: comment.closeTagEnd,
-				},
-			});
-			document.dispatchEvent(event);
-		}
+		document.dispatchEvent(
+			new CustomEvent('comment-delete', { detail: { commentId } }),
+		);
 	};
 
 	const deleteResponse = (commentId: string, responseId: string) => {
@@ -171,24 +156,11 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 		};
 		const rawComment = commentService.updateCommentResponses(updatedComment);
 
-		if (
-			comment.openTagStart !== undefined &&
-			comment.openTagEnd !== undefined &&
-			comment.closeTagStart !== undefined &&
-			comment.closeTagEnd !== undefined
-		) {
-			const event = new CustomEvent('comment-update', {
-				detail: {
-					commentId,
-					openTagStart: comment.openTagStart,
-					openTagEnd: comment.openTagEnd,
-					closeTagStart: comment.closeTagStart,
-					closeTagEnd: comment.closeTagEnd,
-					rawComment: rawComment,
-				},
-			});
-			document.dispatchEvent(event);
-		}
+		document.dispatchEvent(
+			new CustomEvent('comment-update', {
+				detail: { commentId, rawComment },
+			}),
+		);
 	};
 
 	const resolveComment = (commentId: string) => {
@@ -203,24 +175,11 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 		};
 		const rawComment = commentService.resolveComment(updatedComment);
 
-		if (
-			comment.openTagStart !== undefined &&
-			comment.openTagEnd !== undefined &&
-			comment.closeTagStart !== undefined &&
-			comment.closeTagEnd !== undefined
-		) {
-			const event = new CustomEvent('comment-update', {
-				detail: {
-					commentId,
-					openTagStart: comment.openTagStart,
-					openTagEnd: comment.openTagEnd,
-					closeTagStart: comment.closeTagStart,
-					closeTagEnd: comment.closeTagEnd,
-					rawComment: rawComment,
-				},
-			});
-			document.dispatchEvent(event);
-		}
+		document.dispatchEvent(
+			new CustomEvent('comment-update', {
+				detail: { commentId, rawComment },
+			}),
+		);
 	};
 
 	const getCommentAtPosition = (position: number) => {

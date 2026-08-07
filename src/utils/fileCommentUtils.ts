@@ -69,15 +69,13 @@ export function cleanText(text: string): string {
 		return text;
 	}
 
+	const openTagRegex = /<###(?:\s|%)*comment(?:\s|%)*id:(?:\s|%)*([\w-]+)/g;
+
 	let cleanedText = text;
-	let foundComments = true;
+	let searchStart = 0;
 
-	const openTagRegex = /<###(?:\s|%)*comment(?:\s|%)*id:(?:\s|%)*(\w[\w-]*)/g;
-
-	while (foundComments) {
-		foundComments = false;
-
-		openTagRegex.lastIndex = 0;
+	while (searchStart < cleanedText.length) {
+		openTagRegex.lastIndex = searchStart;
 		const openMatch = openTagRegex.exec(cleanedText);
 
 		if (!openMatch) break;
@@ -85,15 +83,11 @@ export function cleanText(text: string): string {
 		const openTagStart = openMatch.index;
 		const id = openMatch[1];
 
-		const backtickBefore =
-			openTagStart > 0 && cleanedText[openTagStart - 1] === '`';
-
 		const openTagEnd = cleanedText.indexOf('###>', openTagStart);
-		if (openTagEnd === -1) break;
-
-		const backtickAfter =
-			openTagEnd + 4 < cleanedText.length &&
-			cleanedText[openTagEnd + 4] === '`';
+		if (openTagEnd === -1) {
+			searchStart = openTagStart + 1;
+			continue;
+		}
 
 		const closeTagRegex = new RegExp(
 			`<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${id}(?:\\s|%)*###>`,
@@ -103,8 +97,15 @@ export function cleanText(text: string): string {
 		const closeMatch = closeTagRegex.exec(cleanedText);
 
 		if (!closeMatch) {
-			break;
+			searchStart = openTagEnd + 4;
+			continue;
 		}
+
+		const backtickBefore =
+			openTagStart > 0 && cleanedText[openTagStart - 1] === '`';
+		const backtickAfter =
+			openTagEnd + 4 < cleanedText.length &&
+			cleanedText[openTagEnd + 4] === '`';
 
 		const closeTagStart = closeMatch.index;
 		const closeTagEnd = closeTagStart + closeMatch[0].length;
@@ -131,7 +132,7 @@ export function cleanText(text: string): string {
 			commentedText +
 			cleanedText.substring(actualCloseTagEnd);
 
-		foundComments = true;
+		searchStart = actualOpenTagStart;
 	}
 
 	return cleanedText;

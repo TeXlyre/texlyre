@@ -14,7 +14,10 @@ import type { Awareness } from 'y-protocols/awareness';
 
 import { BibliographyProvider } from '../../contexts/BibliographyContext';
 import { CommentProvider } from '../../contexts/CommentContext';
-import { processComments } from '../../extensions/codemirror/CommentExtension';
+import {
+	clearComments,
+	processComments,
+} from '../../extensions/codemirror/CommentExtension';
 import { hasToolbarSupport } from '../../extensions/codemirror/ToolbarExtension';
 import { useEditorView } from '../../hooks/editor/useEditorView';
 import { useCollab } from '../../hooks/useCollab';
@@ -466,7 +469,12 @@ const EditorContent: React.FC<{
 			if (currentContent === formatted) return;
 
 			const changes = computeReplacementChange(currentContent, formatted);
-			if (changes.length > 0) viewRef.current.dispatch({ changes });
+			if (changes.length > 0) {
+				viewRef.current.dispatch({
+					changes,
+					effects: [clearComments.of(null)],
+				});
+			}
 		},
 		[viewRef],
 	);

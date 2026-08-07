@@ -597,6 +597,8 @@ export const useEditorView = (
 			viewRef.current = null;
 		}
 
+		let disposeClipboard: (() => void) | null = null;
+
 		const contentToUse = isEditingFile
 			? textContent
 			: ytextRef.current?.toString() || '';
@@ -723,6 +725,7 @@ export const useEditorView = (
 		try {
 			const view = new EditorView({ state, parent: editorRef.current });
 			viewRef.current = view;
+			disposeClipboard = registerEditorClipboard(editorRef.current, viewRef);
 			setToolbarController(toolbarControllerRef.current);
 
 			scheduleFilePathSync(info);
@@ -744,6 +747,9 @@ export const useEditorView = (
 		}
 
 		return () => {
+			disposeClipboard?.();
+			disposeClipboard = null;
+
 			if (viewRef.current) {
 				if (isEditingFile && currentFileId) {
 					const snapshot = viewRef.current.state.toJSON({
@@ -826,11 +832,6 @@ export const useEditorView = (
 		toolbarControllerRef.current = controller;
 		setToolbarController(controller);
 	}, [editorSettingsVersion, toolbarVisible, fileName]);
-
-	useEffect(() => {
-		if (!editorRef.current || !viewRef.current) return;
-		return registerEditorClipboard(editorRef.current, viewRef);
-	}, [editorRef]);
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: editorSettingsVersion is the trigger to recreate the auto-saver when auto-save delay/enabled changes. */
 	useEffect(() => {

@@ -42,20 +42,46 @@ export const registerEditorEventHandlers = (
 		}, delay);
 	};
 
-	const isValidTagRange = (
-		openTagStart: number,
-		openTagEnd: number,
-		closeTagStart: number,
-		closeTagEnd: number,
-		contentLength: number,
-	) => {
-		return (
-			openTagStart >= 0 &&
-			openTagEnd > openTagStart &&
-			closeTagStart >= openTagEnd &&
-			closeTagEnd > closeTagStart &&
-			closeTagEnd <= contentLength
+	const locateCommentTags = (content: string, commentId: string) => {
+		const openTagRegex = new RegExp(
+			`<###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${commentId}`,
+			'g',
 		);
+
+		const openMatch = openTagRegex.exec(content);
+		if (!openMatch) return null;
+
+		const openTagStart =
+			openMatch.index > 0 && content[openMatch.index - 1] === '`'
+				? openMatch.index - 1
+				: openMatch.index;
+
+		const openTagCoreEnd = content.indexOf('###>', openMatch.index) + 4;
+		if (openTagCoreEnd < 4) return null;
+
+		const openTagEnd =
+			content[openTagCoreEnd] === '`' ? openTagCoreEnd + 1 : openTagCoreEnd;
+
+		const closeTagRegex = new RegExp(
+			`<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${commentId}(?:\\s|%)*###>`,
+			'g',
+		);
+		closeTagRegex.lastIndex = openTagEnd;
+
+		const closeMatch = closeTagRegex.exec(content);
+		if (!closeMatch) return null;
+
+		const closeTagStart =
+			content[closeMatch.index - 1] === '`'
+				? closeMatch.index - 1
+				: closeMatch.index;
+
+		const closeTagCoreEnd = closeMatch.index + closeMatch[0].length;
+
+		const closeTagEnd =
+			content[closeTagCoreEnd] === '`' ? closeTagCoreEnd + 1 : closeTagCoreEnd;
+
+		return { openTagStart, openTagEnd, closeTagStart, closeTagEnd };
 	};
 
 	const handleCommentResponseAdded = (event: Event) => {
@@ -69,79 +95,23 @@ export const registerEditorEventHandlers = (
 		try {
 			const { commentId, rawComment } = customEvent.detail;
 			const view = viewRef.current;
-			const currentContent = view.state.doc.toString();
+			const tags = locateCommentTags(view.state.doc.toString(), commentId);
 
-			const openTagRegex = new RegExp(
-				`<###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${commentId}`,
-				'g',
-			);
-
-			const openMatch = openTagRegex.exec(currentContent);
-			if (!openMatch) return;
-
-			let openTagStart = openMatch.index;
-
-			if (openTagStart > 0 && currentContent[openTagStart - 1] === '`') {
-				openTagStart -= 1;
-			}
-
-			const openTagCoreEnd =
-				currentContent.indexOf('###>', openMatch.index) + 4;
-
-			if (openTagCoreEnd < 4) return;
-
-			const openTagEnd =
-				openTagCoreEnd < currentContent.length &&
-				currentContent[openTagCoreEnd] === '`'
-					? openTagCoreEnd + 1
-					: openTagCoreEnd;
-
-			const closeTagRegex = new RegExp(
-				`<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${commentId}(?:\\s|%)*###>`,
-				'g',
-			);
-
-			closeTagRegex.lastIndex = openTagEnd;
-			const closeMatch = closeTagRegex.exec(currentContent);
-			if (!closeMatch) return;
-
-			let closeTagStart = closeMatch.index;
-
-			if (closeTagStart > 0 && currentContent[closeTagStart - 1] === '`') {
-				closeTagStart -= 1;
-			}
-
-			const closeTagCoreEnd = closeMatch.index + closeMatch[0].length;
-
-			const closeTagEnd =
-				closeTagCoreEnd < currentContent.length &&
-				currentContent[closeTagCoreEnd] === '`'
-					? closeTagCoreEnd + 1
-					: closeTagCoreEnd;
-
-			if (
-				!isValidTagRange(
-					openTagStart,
-					openTagEnd,
-					closeTagStart,
-					closeTagEnd,
-					currentContent.length,
-				)
-			) {
-				moduleLog.warn('Invalid comment response range, skipping');
+			if (!tags) {
+				moduleLog.warn('Comment tags not found, skipping response');
 				return;
 			}
 
 			view.dispatch({
 				changes: [
 					{
-						from: openTagStart,
-						to: openTagEnd,
+						from: tags.openTagStart,
+						to: tags.openTagEnd,
 						insert: rawComment.openTag,
 					},
 					{
-						from: closeTagStart,
-						to: closeTagEnd,
+						from: tags.closeTagStart,
+						to: tags.closeTagEnd,
 						insert: rawComment.closeTag,
 					},
 				],
@@ -154,47 +124,26 @@ export const registerEditorEventHandlers = (
 	};
 
 	const handleCommentDelete = (event: Event) => {
-		const customEvent = event as CustomEvent<{
-			openTagStart: number;
-			openTagEnd: number;
-			closeTagStart: number;
-			closeTagEnd: number;
-		}>;
+		const customEvent = event as CustomEvent<{ commentId: string }>;
 
 		if (!viewRef.current || isViewOnly || !enableComments) return;
 
 		try {
-			const { openTagStart, openTagEnd, closeTagStart, closeTagEnd } =
-				customEvent.detail;
-
 			const view = viewRef.current;
-			const currentContent = view.state.doc.toString();
+			const tags = locateCommentTags(
+				view.state.doc.toString(),
+				customEvent.detail.commentId,
+			);
 
-			if (
-				!isValidTagRange(
-					openTagStart,
-					openTagEnd,
-					closeTagStart,
-					closeTagEnd,
-					currentContent.length,
-				)
-			) {
-				moduleLog.warn('Invalid comment deletion range, skipping');
+			if (!tags) {
+				moduleLog.warn('Comment tags not found, skipping deletion');
 				return;
 			}
 
 			view.dispatch({
 				changes: [
-					{
-						from: openTagStart,
-						to: openTagEnd,
-						insert: '',
-					},
-					{
-						from: closeTagStart,
-						to: closeTagEnd,
-						insert: '',
-					},
+					{ from: tags.openTagStart, to: tags.openTagEnd, insert: '' },
+					{ from: tags.closeTagStart, to: tags.closeTagEnd, insert: '' },
 				],
 			});
 
@@ -206,50 +155,32 @@ export const registerEditorEventHandlers = (
 
 	const handleCommentUpdate = (event: Event) => {
 		const customEvent = event as CustomEvent<{
-			openTagStart: number;
-			openTagEnd: number;
-			closeTagStart: number;
-			closeTagEnd: number;
+			commentId: string;
 			rawComment: { openTag: string; closeTag: string };
 		}>;
 
 		if (!viewRef.current || isViewOnly || !enableComments) return;
 
 		try {
-			const {
-				openTagStart,
-				openTagEnd,
-				closeTagStart,
-				closeTagEnd,
-				rawComment,
-			} = customEvent.detail;
-
+			const { commentId, rawComment } = customEvent.detail;
 			const view = viewRef.current;
-			const currentContent = view.state.doc.toString();
+			const tags = locateCommentTags(view.state.doc.toString(), commentId);
 
-			if (
-				!isValidTagRange(
-					openTagStart,
-					openTagEnd,
-					closeTagStart,
-					closeTagEnd,
-					currentContent.length,
-				)
-			) {
-				moduleLog.warn('Invalid comment update range, skipping');
+			if (!tags) {
+				moduleLog.warn('Comment tags not found, skipping update');
 				return;
 			}
 
 			view.dispatch({
 				changes: [
 					{
-						from: openTagStart,
-						to: openTagEnd,
+						from: tags.openTagStart,
+						to: tags.openTagEnd,
 						insert: rawComment.openTag,
 					},
 					{
-						from: closeTagStart,
-						to: closeTagEnd,
+						from: tags.closeTagStart,
+						to: tags.closeTagEnd,
 						insert: rawComment.closeTag,
 					},
 				],
