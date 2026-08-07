@@ -68,10 +68,11 @@ export const PluginHeader: React.FC<PluginHeaderProps> = ({
 		? formatTooltipInfo(tooltipInfo, pluginName, pluginVersion)
 		: '';
 
-	if (!headerVisible) return null;
-
 	return (
-		<div className='plugin-header'>
+		<div
+			className='plugin-header'
+			style={{ display: headerVisible ? undefined : 'none' }}
+		>
 			<div className='file-info'>
 				<div className='filepath-info'>
 					<span
