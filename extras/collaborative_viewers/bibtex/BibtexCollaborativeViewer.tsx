@@ -59,8 +59,6 @@ function getPluginToggleButtons(fileTypes: string[] | undefined) {
 	return { lsp, bib };
 }
 
-const noopAddComment = () => ({ openTag: '', closeTag: '', commentId: '' });
-const noopParseComments = () => [];
 const noopUpdateComments = () => {};
 
 function parseContent(content: string): BibtexEntry[] {
@@ -80,8 +78,6 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	documentId,
 	isDocumentSelected,
 	onUpdateContent,
-	parseComments,
-	addComment,
 	updateComments,
 }) => {
 	const { getAwareness } = useCollab();
@@ -400,8 +396,6 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		isOriginalView ? isDocumentSelected : true,
 		isOriginalView ? initialContentRef.current : processedContent,
 		handleContentUpdate,
-		isOriginalView ? parseComments || noopParseComments : noopParseComments,
-		isOriginalView ? addComment || noopAddComment : noopAddComment,
 		isOriginalView ? updateComments || noopUpdateComments : noopUpdateComments,
 		!isOriginalView,
 		false,
