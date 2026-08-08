@@ -134,11 +134,11 @@ const ReviewPanel: React.FC<ReviewPanelProps> = ({ className = '' }) => {
 
 			{activeTab === 'list' && (
 				<div className='review-panel-actions'>
-					<button onClick={acceptAllReviews} disabled={!visibleReviews.length}>
-						{t('Accept all')}
-					</button>
 					<button onClick={resolveAllReviews} disabled={!visibleReviews.length}>
 						{t('Resolve all')}
+					</button>
+					<button onClick={acceptAllReviews} disabled={!visibleReviews.length}>
+						{t('Accept all')}
 					</button>
 					<button onClick={rejectAllReviews} disabled={!visibleReviews.length}>
 						{t('Reject all')}
