@@ -12,8 +12,8 @@ import { stripAnnotationTagTokens } from '../../../utils/annotationTagUtils';
 import {
 	type DecorationEntry,
 	hiddenTagEntries,
-} from '../comments/tagDecorations';
-import type { TagRange } from '../comments/tagRanges';
+} from '../annotations/tagDecorations';
+import type { TagRange } from '../annotations/tagRanges';
 import { computeReviewSegments, readReviewBody } from './reviewSegments';
 
 export interface ReviewChunk extends TagRange {

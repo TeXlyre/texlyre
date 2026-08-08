@@ -1,4 +1,4 @@
-import { RangeSet, type StateEffectType, StateField } from '@codemirror/state';
+import { RangeSet, StateField } from '@codemirror/state';
 import { Decoration, EditorView } from '@codemirror/view';
 
 export interface TagRange {
@@ -19,24 +19,13 @@ export function isValidTagRange(range: TagRange, docLength: number): boolean {
 	);
 }
 
-/**
- * Annotation ranges are derived from the document itself. Re-scan on every
- * document change so decorations, atomic ranges, and parsers always agree.
- */
+/** Annotation ranges are always derived from the current document. */
 export function createDerivedTagRangeField<T extends TagRange>(
 	scan: (doc: string) => T[],
-	clear?: StateEffectType<null>,
 ): StateField<T[]> {
 	return StateField.define<T[]>({
-		create(state) {
-			return scan(state.doc.toString());
-		},
-
-		update(value, tr) {
-			if (tr.docChanged) return scan(tr.newDoc.toString());
-			if (clear && tr.effects.some((effect) => effect.is(clear))) return [];
-			return value;
-		},
+		create: (state) => scan(state.doc.toString()),
+		update: (value, tr) => (tr.docChanged ? scan(tr.newDoc.toString()) : value),
 	});
 }
 

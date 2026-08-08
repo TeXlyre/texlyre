@@ -1,10 +1,8 @@
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
-import {
-    commentSystemExtension,
-    processComments,
-} from '@src/extensions/codemirror/CommentExtension';
+import { annotationSystemExtension } from '@src/extensions/codemirror/AnnotationExtension';
+import { commentSystemExtension } from '@src/extensions/codemirror/CommentExtension';
 import {
     getReviewChunks,
     reviewSystemExtension,
@@ -35,14 +33,17 @@ const createView = (doc: string) => {
     const view = new EditorView({
         state: EditorState.create({
             doc,
-            extensions: [commentSystemExtension, reviewSystemExtension],
+            extensions: [
+                annotationSystemExtension,
+                commentSystemExtension,
+                reviewSystemExtension,
+            ],
         }),
         parent: document.body,
     });
 
     views.push(view);
     setTrackChanges(view, { tracking: true, author: 'tester' });
-    processComments(view, commentService.parseComments(doc));
 
     return view;
 };
@@ -86,7 +87,12 @@ describe('annotation clipboard round-trip', () => {
             const event = paste(view, reviewOpen('aaa', 'hello world'), 0);
 
             expect(event.defaultPrevented).toBe(true);
-            expect(containsAnnotationMarker(view.state.doc.sliceString(0, 20), 'review')).toBe(false);
+            expect(
+                containsAnnotationMarker(
+                    view.state.doc.sliceString(0, 20),
+                    'review',
+                ),
+            ).toBe(false);
             expect(getReviewChunks(view.state)).toHaveLength(1);
         });
 
@@ -98,7 +104,9 @@ describe('annotation clipboard round-trip', () => {
 
             const [chunk] = getReviewChunks(view.state);
             expect(chunk.openStart).toBe(before);
-            expect(view.state.doc.sliceString(chunk.openEnd, chunk.closeStart)).toBe('');
+            expect(
+                view.state.doc.sliceString(chunk.openEnd, chunk.closeStart),
+            ).toBe('');
         });
 
         it('should not duplicate a review id when a whole chunk is pasted', () => {
@@ -120,8 +128,9 @@ describe('annotation clipboard round-trip', () => {
             const inserted = chunks.find((chunk) => chunk.id !== 'aaa');
 
             expect(chunks.map((chunk) => chunk.id)).not.toContain('bbb');
+            expect(inserted).toBeDefined();
             expect(
-                view.state.doc.sliceString(inserted.openEnd, inserted.closeStart),
+                view.state.doc.sliceString(inserted!.openEnd, inserted!.closeStart),
             ).toBe('x new y');
         });
     });
@@ -136,9 +145,13 @@ describe('annotation clipboard round-trip', () => {
             const bodyStart = start + commentOpen('ccc').length;
             const bodyEnd = bodyStart + 'kept'.length;
 
-            expect(copy(view, start, bodyEnd + commentClose('ccc').length)).toBe('kept');
+            expect(
+                copy(view, start, bodyEnd + commentClose('ccc').length),
+            ).toBe('kept');
             expect(copy(view, start, bodyEnd)).toBe('kept');
-            expect(copy(view, bodyStart, bodyEnd + commentClose('ccc').length)).toBe('kept');
+            expect(
+                copy(view, bodyStart, bodyEnd + commentClose('ccc').length),
+            ).toBe('kept');
         });
 
         it('should not inject an orphan open tag on paste', () => {
@@ -146,7 +159,12 @@ describe('annotation clipboard round-trip', () => {
             const event = paste(view, commentOpen('ccc'), 0);
 
             expect(event.defaultPrevented).toBe(true);
-            expect(containsAnnotationMarker(view.state.doc.sliceString(0, 20), 'comment')).toBe(false);
+            expect(
+                containsAnnotationMarker(
+                    view.state.doc.sliceString(0, 20),
+                    'comment',
+                ),
+            ).toBe(false);
         });
 
         it('should not duplicate a comment id when a whole comment is pasted', () => {

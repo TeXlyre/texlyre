@@ -21,7 +21,6 @@ interface EditorEventHandlerOptions {
 	documentId?: string;
 	enableComments: boolean;
 	enableReviews?: boolean;
-	updateComments: (content: string) => void;
 	saveFileToStorage: (content: string) => void | Promise<void>;
 	saveDocumentToLinkedFile: (content: string) => void | Promise<void>;
 	setShowSaveIndicator: (value: boolean) => void;
@@ -38,18 +37,10 @@ export const registerEditorEventHandlers = (
 		documentId,
 		enableComments,
 		enableReviews,
-		updateComments,
 		saveFileToStorage,
 		saveDocumentToLinkedFile,
 		setShowSaveIndicator,
 	} = opts;
-
-	const refreshCommentsSoon = (delay = 50) => {
-		setTimeout(() => {
-			if (!viewRef.current) return;
-			updateComments(viewRef.current.state.doc.toString());
-		}, delay);
-	};
 
 	const locateCommentTags = (content: string, commentId: string) =>
 		locateAnnotationTags(content, 'comment', commentId);
@@ -86,8 +77,6 @@ export const registerEditorEventHandlers = (
 					},
 				],
 			});
-
-			refreshCommentsSoon(10);
 		} catch (error) {
 			moduleLog.error('Error processing comment response:', error);
 		}
@@ -116,8 +105,6 @@ export const registerEditorEventHandlers = (
 					{ from: tags.closeTagStart, to: tags.closeTagEnd, insert: '' },
 				],
 			});
-
-			refreshCommentsSoon();
 		} catch (error) {
 			moduleLog.error('Error processing comment deletion:', error);
 		}
@@ -155,8 +142,6 @@ export const registerEditorEventHandlers = (
 					},
 				],
 			});
-
-			refreshCommentsSoon();
 		} catch (error) {
 			moduleLog.error('Error processing comment update:', error);
 		}

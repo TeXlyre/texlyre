@@ -15,10 +15,6 @@ import type { Awareness } from 'y-protocols/awareness';
 import { BibliographyProvider } from '../../contexts/BibliographyContext';
 import { CommentProvider } from '../../contexts/CommentContext';
 import { ReviewProvider } from '../../contexts/ReviewContext';
-import {
-	clearComments,
-	processComments,
-} from '../../extensions/codemirror/CommentExtension';
 import { hasToolbarSupport } from '../../extensions/codemirror/ToolbarExtension';
 import { useEditorView } from '../../hooks/editor/useEditorView';
 import { useCollab } from '../../hooks/useCollab';
@@ -234,8 +230,6 @@ const EditorContent: React.FC<{
 		isDocumentSelected,
 		textContent,
 		onUpdateContent,
-		parseComments,
-		addComment,
 		updateComments,
 		isEditingFile,
 		isViewOnly,
@@ -360,30 +354,6 @@ const EditorContent: React.FC<{
 		updateComments(textContent);
 	}, [textContent, isDocumentSelected, updateComments]);
 
-	const handleContentChanged = useCallback(
-		(event: Event) => {
-			const customEvent = event as CustomEvent;
-			if (customEvent.detail && customEvent.detail.view === viewRef.current) {
-				const editorContent = customEvent.detail.content;
-				updateComments(editorContent);
-				processComments(viewRef.current!, parseComments(editorContent));
-			}
-		},
-		[parseComments, updateComments, viewRef],
-	);
-
-	useEffect(() => {
-		document.addEventListener(
-			'codemirror-content-changed',
-			handleContentChanged,
-		);
-		return () =>
-			document.removeEventListener(
-				'codemirror-content-changed',
-				handleContentChanged,
-			);
-	}, [handleContentChanged]);
-
 	useEffect(() => {
 		let timeoutId: NodeJS.Timeout;
 		if (
@@ -423,7 +393,6 @@ const EditorContent: React.FC<{
 					],
 					selection: { anchor: cursorPos, head: cursorPos },
 				});
-				updateComments(view.state.doc.toString());
 			} catch (error) {
 				moduleLog.error('Error adding comment:', error);
 			}
@@ -438,7 +407,7 @@ const EditorContent: React.FC<{
 				'add-comment-to-editor',
 				handleAddCommentToEditor,
 			);
-	}, [viewRef, isViewOnly, addComment, updateComments]);
+	}, [viewRef, isViewOnly, addComment]);
 
 	useEffect(() => {
 		const handleTriggerFormat = async (event: Event) => {
@@ -478,10 +447,7 @@ const EditorContent: React.FC<{
 
 			const changes = computeReplacementChange(currentContent, formatted);
 			if (changes.length > 0) {
-				viewRef.current.dispatch({
-					changes,
-					effects: [clearComments.of(null)],
-				});
+				viewRef.current.dispatch({ changes });
 			}
 		},
 		[viewRef],

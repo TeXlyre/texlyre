@@ -50,10 +50,7 @@ export function readReviewBody(raw: string): ReviewBody {
 	};
 }
 
-export function restoreReviewBody(
-	raw: string,
-	originalText: string,
-): string {
+export function restoreReviewBody(raw: string, originalText: string): string {
 	const matches = scanAnnotationTags(raw, 'comment');
 
 	if (!matches.length) return originalText;

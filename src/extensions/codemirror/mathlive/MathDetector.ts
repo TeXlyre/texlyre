@@ -1,7 +1,7 @@
 // src/extensions/codemirror/mathlive/MathDetector.ts
 import type { EditorView } from '@codemirror/view';
 
-import { maskCommentText } from '../comments/commentMasking';
+import { maskAnnotationText } from '../annotations/annotationMasking';
 import { getPatternsForFileType, type FileType } from './patterns';
 
 export interface MathRegion {
@@ -30,7 +30,7 @@ export class MathDetector {
 	}
 
 	detectMathAtPosition(view: EditorView, pos: number): MathRegion | null {
-		const doc = maskCommentText(view.state);
+		const doc = maskAnnotationText(view.state);
 		const patterns = getPatternsForFileType(this.currentFileType);
 
 		for (const patternConfig of patterns) {

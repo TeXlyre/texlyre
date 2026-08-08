@@ -13,7 +13,7 @@ import type { Extension } from '@codemirror/state';
 import { bibtex } from 'codemirror-lang-bib';
 import { latex } from 'codemirror-lang-latex';
 
-import { withCommentMasking } from './comments/commentMasking';
+import { withAnnotationMasking } from './annotations/annotationMasking';
 import { safeTypst as typst } from './languages/safeTypstPatch';
 import { rst } from './languages/rstMode';
 import { createTextMateLanguageForFile } from './languages/textmateMode';
@@ -42,7 +42,7 @@ export const createLanguageExtension = (
 	switch (fileType) {
 		case 'latex':
 			return [
-				withCommentMasking(
+				withAnnotationMasking(
 					latex({
 						autoCloseBrackets: false,
 						enableAutocomplete: false,
@@ -55,10 +55,10 @@ export const createLanguageExtension = (
 				),
 			];
 		case 'typst':
-			return [withCommentMasking(typst())];
+			return [withAnnotationMasking(typst())];
 		case 'bib':
 			return [
-				withCommentMasking(
+				withAnnotationMasking(
 					bibtex({ autoCloseBrackets: false, enableAutocomplete: false }),
 				),
 			];

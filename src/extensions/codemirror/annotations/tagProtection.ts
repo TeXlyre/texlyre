@@ -1,4 +1,4 @@
-// src/extensions/codemirror/comments/tagProtection.ts
+// src/extensions/codemirror/annotations/tagProtection.ts
 import {
 	Annotation,
 	EditorState,
@@ -83,7 +83,11 @@ function syntaxFor(ranges: readonly AnnotationRange[]): SyntaxRange[] {
 		.sort((a, b) => a.from - b.from);
 }
 
-function overlapsRange(from: number, to: number, range: AnnotationRange): boolean {
+function overlapsRange(
+	from: number,
+	to: number,
+	range: AnnotationRange,
+): boolean {
 	return from < range.closeEnd && to > range.openStart;
 }
 
@@ -91,16 +95,14 @@ function insideBody(from: number, to: number, range: AnnotationRange): boolean {
 	return from >= range.openEnd && to <= range.closeStart;
 }
 
-/** Expand a selection until every intersected annotation is either wholly
- * inside it or wholly contains it. This keeps annotation intervals laminar. */
-export function expandAnnotationSelection(
-	state: EditorState,
+/** Expand until every intersected annotation is contained or containing. */
+function expandSelection(
+	ranges: readonly AnnotationRange[],
 	from: number,
 	to: number,
 ): { from: number; to: number } {
 	if (from >= to) return { from, to };
 
-	const ranges = rangesFor(state);
 	let start = from;
 	let end = to;
 	let changed = true;
@@ -137,7 +139,8 @@ function redirectSingleDelete(
 	const backward = event === 'delete.backward';
 	const forward = event === 'delete.forward';
 	if (!backward && !forward) return null;
-	if (!syntax.some((range) => intersects(change.from, change.to, range))) return null;
+	if (!syntax.some((range) => intersects(change.from, change.to, range)))
+		return null;
 
 	let pos = backward ? change.from - 1 : change.to;
 	while (pos >= 0 && pos < state.doc.length) {
@@ -230,7 +233,7 @@ export function normalizeAnnotationChange(
 			(range.owner.kind === 'review' || !droppedComments.has(range.owner.id)) &&
 			intersects(change.from, change.to, range),
 	);
-	const envelope = expandAnnotationSelection(state, change.from, change.to);
+	const envelope = expandSelection(ranges, change.from, change.to);
 
 	if (
 		!protectedSyntax.length &&
@@ -241,7 +244,10 @@ export function normalizeAnnotationChange(
 		return null;
 	}
 
-	const from = Math.min(envelope.from, ...protectedSyntax.map((range) => range.from));
+	const from = Math.min(
+		envelope.from,
+		...protectedSyntax.map((range) => range.from),
+	);
 	const to = Math.max(envelope.to, ...protectedSyntax.map((range) => range.to));
 	const rendered = buildInsert(state, change, from, to, protectedSyntax);
 
@@ -256,7 +262,10 @@ export const annotationPasteSanitizer = EditorView.domEventHandlers({
 		if (cleaned === text) return false;
 
 		event.preventDefault();
-		view.dispatch({ ...view.state.replaceSelection(cleaned), userEvent: 'input.paste' });
+		view.dispatch({
+			...view.state.replaceSelection(cleaned),
+			userEvent: 'input.paste',
+		});
 		return true;
 	},
 });
@@ -356,7 +365,8 @@ export function createTagProtection(): Extension {
 			userEvent: event,
 			scrollIntoView: tr.scrollIntoView,
 		};
-		if (normalized.length === 1) spec.selection = { anchor: normalized[0].cursorPos };
+		if (normalized.length === 1)
+			spec.selection = { anchor: normalized[0].cursorPos };
 		return spec;
 	});
 

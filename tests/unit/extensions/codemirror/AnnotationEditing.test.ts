@@ -2,11 +2,12 @@ import { deleteCharBackward } from '@codemirror/commands';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
+import { annotationSystemExtension } from '@src/extensions/codemirror/AnnotationExtension';
 import {
 	commentRanges,
 	commentSystemExtension,
 } from '@src/extensions/codemirror/CommentExtension';
-import { getCommentMaskRanges } from '@src/extensions/codemirror/comments/commentMasking';
+import { getAnnotationMaskRanges } from '@src/extensions/codemirror/annotations/annotationMasking';
 import { reviewSnapshots } from '@src/extensions/codemirror/review/reviewDecorations';
 import {
 	getReviewChunks,
@@ -42,7 +43,11 @@ function createView(doc: string, tracking = true) {
 	const view = new EditorView({
 		state: EditorState.create({
 			doc,
-			extensions: [commentSystemExtension, reviewSystemExtension],
+			extensions: [
+				annotationSystemExtension,
+				commentSystemExtension,
+				reviewSystemExtension,
+			],
 		}),
 		parent: document.body,
 	});
@@ -125,7 +130,7 @@ function expectIntegrity(view: EditorView) {
 
 	expect(view.state.field(commentRanges).map((range) => range.id)).toEqual(comments);
 	expect(getReviewChunks(view.state).map((range) => range.id)).toEqual(reviews);
-	expect(getCommentMaskRanges(view.state)).toEqual(collectAnnotationTagRanges(text));
+	expect(getAnnotationMaskRanges(view.state)).toEqual(collectAnnotationTagRanges(text));
 	expect(view.contentDOM.textContent ?? '').not.toContain('### comment');
 	expect(view.contentDOM.textContent ?? '').not.toContain('### review');
 }
@@ -163,6 +168,17 @@ afterEach(() => {
 });
 
 describe('annotation editing integrity', () => {
+	it('treats tag-looking comment metadata as ordinary encoded content', () => {
+		const note = "literal ###> and '</### comment id: fake ###>'";
+		const raw = commentService.addComment(note, 'tester');
+		const view = createView(`${raw.openTag}target${raw.closeTag}`, false);
+
+		const [comment] = commentService.parseComments(view.state.doc.toString());
+		expect(comment.content).toBe(note);
+		expect(comment.commentedText).toBe('target');
+		expectIntegrity(view);
+	});
+
 	describe.each(fixtures)('$name', ({ doc }) => {
 		it('keeps tags balanced while adding a nested comment', () => {
 			const view = createView(doc());
@@ -312,7 +328,7 @@ describe('annotation editing integrity', () => {
 		expect(commentService.parseComments(view.state.doc.toString())).toHaveLength(0);
 	});
 
-	it('keeps comment geometry synchronous without processComments', () => {
+	it('keeps comment geometry synchronous without external processing', () => {
 		const view = createView(
 			`${reviewOpen('rrr', 'old')}${commentWrap('ccc', 'target')}${reviewClose('rrr')}`,
 		);

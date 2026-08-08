@@ -15,7 +15,7 @@ export interface DecorationEntry {
  * a line with no client rects, which older CodeMirror views can crash on while
  * resolving hover/mouse coordinates.
  */
-export class HiddenTagWidget extends WidgetType {
+class HiddenTagWidget extends WidgetType {
 	constructor(
 		readonly className: string,
 		readonly id: string,
@@ -72,7 +72,6 @@ export function hiddenTagEntries(
 	];
 }
 
-
 export function createDerivedDecorationField<T extends TagRange>(
 	field: StateField<T[]>,
 	build: (range: T, doc: Text) => DecorationEntry[],
@@ -83,9 +82,7 @@ export function createDerivedDecorationField<T extends TagRange>(
 			.flatMap((range) => build(range, doc))
 			.filter(
 				(entry) =>
-					entry.from >= 0 &&
-					entry.from <= entry.to &&
-					entry.to <= doc.length,
+					entry.from >= 0 && entry.from <= entry.to && entry.to <= doc.length,
 			);
 
 		entries.sort(

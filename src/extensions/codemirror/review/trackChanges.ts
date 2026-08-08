@@ -20,7 +20,7 @@ import {
 	normalizeAnnotationChange,
 	normalizedTagProtection,
 	skipTagProtection,
-} from '../comments/tagProtection';
+} from '../annotations/tagProtection';
 import type { ReviewChunk } from './reviewDecorations';
 
 export interface ReviewConfig {
@@ -46,7 +46,8 @@ interface TrackChangesDeps {
 	config: StateField<ReviewConfig>;
 }
 
-const visibleText = (text: string) => stripAnnotationTagTokens(text, ['comment']);
+const visibleText = (text: string) =>
+	stripAnnotationTagTokens(text, ['comment']);
 
 function stripReviewSyntax(change: EditChange): EditChange {
 	const beforeCursor = change.insert.slice(0, change.cursorOffset);
@@ -81,7 +82,12 @@ function buildPieces(
 	const pieces: TextPiece[] = [];
 	let pos = from;
 	let currentFrom = 0;
-	const push = (docFrom: number, docTo: number, original: string, current: string) => {
+	const push = (
+		docFrom: number,
+		docTo: number,
+		original: string,
+		current: string,
+	) => {
 		pieces.push({ docFrom, docTo, currentFrom, original, current });
 		currentFrom += current.length;
 	};
@@ -132,7 +138,10 @@ function trackChange(
 	);
 
 	if (containing) {
-		const body = state.doc.sliceString(containing.openEnd, containing.closeStart);
+		const body = state.doc.sliceString(
+			containing.openEnd,
+			containing.closeStart,
+		);
 		const offset = change.from - containing.openEnd;
 		const nextBody =
 			body.slice(0, offset) +
@@ -141,21 +150,32 @@ function trackChange(
 
 		if (visibleText(nextBody) !== containing.originalText) return null;
 		return {
-			change: { from: containing.openStart, to: containing.closeEnd, insert: nextBody },
+			change: {
+				from: containing.openStart,
+				to: containing.closeEnd,
+				insert: nextBody,
+			},
 			cursorPos: containing.openStart + offset + change.cursorOffset,
 		};
 	}
 
 	const covered = collectChunks(change, chunks, config.author);
-	const from = Math.min(change.from, ...covered.map((chunk) => chunk.openStart));
+	const from = Math.min(
+		change.from,
+		...covered.map((chunk) => chunk.openStart),
+	);
 	const to = Math.max(change.to, ...covered.map((chunk) => chunk.closeEnd));
 	const pieces = buildPieces(state, from, to, covered);
-	const originalText = visibleText(pieces.map((piece) => piece.original).join(''));
+	const originalText = visibleText(
+		pieces.map((piece) => piece.original).join(''),
+	);
 	const currentText = pieces.map((piece) => piece.current).join('');
 	const insertAt = mapToCurrent(pieces, change.from);
 	const insertEnd = mapToCurrent(pieces, change.to);
 	const nextText =
-		currentText.slice(0, insertAt) + change.insert + currentText.slice(insertEnd);
+		currentText.slice(0, insertAt) +
+		change.insert +
+		currentText.slice(insertEnd);
 
 	if (nextText === currentText) return null;
 	if (visibleText(nextText) === originalText) {
@@ -183,7 +203,8 @@ function trackChange(
 
 export function createTrackChangesFilter(deps: TrackChangesDeps): Extension {
 	return EditorState.transactionFilter.of((tr) => {
-		if (!tr.docChanged || tr.annotation(skipTagProtection) || !isUserEdit(tr)) return tr;
+		if (!tr.docChanged || tr.annotation(skipTagProtection) || !isUserEdit(tr))
+			return tr;
 
 		const config = tr.startState.field(deps.config, false);
 		if (!config?.tracking || !config.author) return tr;
@@ -201,7 +222,9 @@ export function createTrackChangesFilter(deps: TrackChangesDeps): Extension {
 		for (const raw of original) {
 			if (
 				!alreadyNormalized &&
-				ANNOTATION_KINDS.some((kind) => containsAnnotationMarker(raw.insert, kind))
+				ANNOTATION_KINDS.some((kind) =>
+					containsAnnotationMarker(raw.insert, kind),
+				)
 			) {
 				tracked.push(raw);
 				continue;
@@ -219,7 +242,13 @@ export function createTrackChangesFilter(deps: TrackChangesDeps): Extension {
 					: raw.insert.length,
 				userInserted: !!event?.startsWith('input') && raw.insert.length > 0,
 			};
-			const result = trackChange(tr.startState, change, chunks, config, forward);
+			const result = trackChange(
+				tr.startState,
+				change,
+				chunks,
+				config,
+				forward,
+			);
 			const next = result?.change ?? change;
 			if (next.from < lastEnd) return tr;
 
@@ -241,7 +270,8 @@ export function createTrackChangesFilter(deps: TrackChangesDeps): Extension {
 			userEvent: event,
 			scrollIntoView: tr.scrollIntoView,
 		};
-		if (cursorPos !== null && original.length === 1) spec.selection = { anchor: cursorPos };
+		if (cursorPos !== null && original.length === 1)
+			spec.selection = { anchor: cursorPos };
 		return spec;
 	});
 }

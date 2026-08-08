@@ -1,6 +1,10 @@
-// src/extensions/codemirror/comments/commentMasking.ts
+// src/extensions/codemirror/annotations/annotationMasking.ts
 import { ParseContext, type LanguageSupport } from '@codemirror/language';
-import { StateField, type EditorState, type Extension } from '@codemirror/state';
+import {
+	StateField,
+	type EditorState,
+	type Extension,
+} from '@codemirror/state';
 import type { Input, PartialParse, TreeFragment } from '@lezer/common';
 
 import {
@@ -17,7 +21,7 @@ function collectTagRanges(text: string): MaskRange[] {
 	return hasAnnotationTags(text) ? collectAnnotationTagRanges(text) : [];
 }
 
-export const commentMaskRanges = StateField.define<MaskRange[]>({
+export const annotationMaskRanges = StateField.define<MaskRange[]>({
 	create(state) {
 		return collectTagRanges(state.doc.toString());
 	},
@@ -27,21 +31,21 @@ export const commentMaskRanges = StateField.define<MaskRange[]>({
 	},
 });
 
-export function getCommentMaskRanges(state: EditorState): MaskRange[] {
-	return state.field(commentMaskRanges, false) ?? [];
+export function getAnnotationMaskRanges(state: EditorState): MaskRange[] {
+	return state.field(annotationMaskRanges, false) ?? [];
 }
 
-export function isInsideCommentTag(
+export function isInsideAnnotationTag(
 	state: EditorState,
 	from: number,
 	to: number,
 ): boolean {
-	return getCommentMaskRanges(state).some(
+	return getAnnotationMaskRanges(state).some(
 		(range) => from < range.to && to > range.from,
 	);
 }
 
-export function maskCommentTags(
+export function maskAnnotationTags(
 	text: string,
 	ranges: readonly MaskRange[],
 ): string {
@@ -63,8 +67,11 @@ export function maskCommentTags(
 	return masked + text.slice(pos);
 }
 
-export function maskCommentText(state: EditorState): string {
-	return maskCommentTags(state.doc.toString(), getCommentMaskRanges(state));
+export function maskAnnotationText(state: EditorState): string {
+	return maskAnnotationTags(
+		state.doc.toString(),
+		getAnnotationMaskRanges(state),
+	);
 }
 
 function subtractMask(
@@ -99,18 +106,21 @@ type RangedParser = {
 	) => PartialParse;
 };
 
-const MASKED = Symbol.for('texlyre.commentMaskedParser');
+const MASKED = Symbol.for('texlyre.annotationMaskedParser');
 
-export function withCommentMasking(support: LanguageSupport): LanguageSupport {
+export function withAnnotationMasking(
+	support: LanguageSupport,
+): LanguageSupport {
 	const parser = support.language.parser as unknown as RangedParser &
 		Record<symbol, boolean>;
 
-	if (typeof parser?.createParse !== 'function' || parser[MASKED]) return support;
+	if (typeof parser?.createParse !== 'function' || parser[MASKED])
+		return support;
 
 	const createParse = parser.createParse.bind(parser);
 	parser.createParse = (input, fragments, ranges) => {
 		const state = ParseContext.get()?.state;
-		const mask = state ? getCommentMaskRanges(state) : [];
+		const mask = state ? getAnnotationMaskRanges(state) : [];
 		return createParse(
 			input,
 			fragments,
@@ -121,4 +131,4 @@ export function withCommentMasking(support: LanguageSupport): LanguageSupport {
 	return support;
 }
 
-export const commentMaskingExtension: Extension = [commentMaskRanges];
+export const annotationMaskingExtension: Extension = [annotationMaskRanges];

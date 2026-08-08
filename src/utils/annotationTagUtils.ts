@@ -30,7 +30,7 @@ export interface AnnotationRange {
 const openTagPattern = (kind: AnnotationKind) =>
 	`<###(?:\\s|%)*${kind}(?:\\s|%)*id:`;
 
-export function annotationDetectionRegex(kind: AnnotationKind): RegExp {
+function annotationDetectionRegex(kind: AnnotationKind): RegExp {
 	return new RegExp(openTagPattern(kind));
 }
 
@@ -57,15 +57,13 @@ export function scanAnnotationTags(
 	while (searchStart < text.length) {
 		openTagRegex.lastIndex = searchStart;
 		const openMatch = openTagRegex.exec(text);
-
 		if (!openMatch) break;
 
 		const openTagStart = openMatch.index;
 		const id = openMatch[1];
-
 		const backtickBefore = openTagStart > 0 && text[openTagStart - 1] === '`';
-
 		const openTagEnd = text.indexOf('###>', openTagStart);
+
 		if (openTagEnd === -1) {
 			searchStart = openTagStart + 1;
 			continue;
@@ -73,11 +71,9 @@ export function scanAnnotationTags(
 
 		const backtickAfter =
 			openTagEnd + 4 < text.length && text[openTagEnd + 4] === '`';
-
 		const openTagContent = text
 			.substring(openTagStart, openTagEnd + 4)
 			.replace(/\n\s*%\s*/g, ' ');
-
 		const closeTagRegex = new RegExp(
 			`<\\/###(?:\\s|%)*${kind}(?:\\s|%)*id:(?:\\s|%)*${id}(?:\\s|%)*###>`,
 			'g',
@@ -95,7 +91,6 @@ export function scanAnnotationTags(
 
 		openTagRegex.lastIndex = openTagEnd + 4;
 		const nextOpenMatch = openTagRegex.exec(text);
-
 		if (
 			nextOpenMatch &&
 			nextOpenMatch[1] === id &&
@@ -139,7 +134,6 @@ export function locateAnnotationTags(
 	id: string,
 ): AnnotationTagPositions | null {
 	const match = scanAnnotationTags(text, kind).find((entry) => entry.id === id);
-
 	if (!match) return null;
 
 	return {
@@ -154,31 +148,22 @@ export function collectAnnotationTagRanges(
 	text: string,
 	kinds: readonly AnnotationKind[] = ANNOTATION_KINDS,
 ): AnnotationRange[] {
-	const ranges: AnnotationRange[] = [];
-
-	for (const kind of kinds) {
-		for (const match of scanAnnotationTags(text, kind)) {
-			ranges.push({ from: match.openTagStart, to: match.openTagEnd });
-			ranges.push({ from: match.closeTagStart, to: match.closeTagEnd });
-		}
-	}
-
-	ranges.sort((a, b) => a.from - b.from);
+	const ranges = kinds
+		.flatMap((kind) =>
+			scanAnnotationTags(text, kind).flatMap((match) => [
+				{ from: match.openTagStart, to: match.openTagEnd },
+				{ from: match.closeTagStart, to: match.closeTagEnd },
+			]),
+		)
+		.filter((range) => range.from < range.to)
+		.sort((a, b) => a.from - b.from);
 
 	const merged: AnnotationRange[] = [];
-
 	for (const range of ranges) {
-		if (range.from >= range.to) continue;
-
 		const last = merged[merged.length - 1];
-
-		if (last && range.from <= last.to) {
-			last.to = Math.max(last.to, range.to);
-		} else {
-			merged.push({ ...range });
-		}
+		if (last && range.from <= last.to) last.to = Math.max(last.to, range.to);
+		else merged.push({ ...range });
 	}
-
 	return merged;
 }
 
@@ -204,12 +189,10 @@ export function stripAnnotationTags(
 
 	let stripped = '';
 	let pos = 0;
-
 	for (const range of ranges) {
 		if (range.from > pos) stripped += text.substring(pos, range.from);
 		pos = Math.max(pos, range.to);
 	}
-
 	return stripped + text.substring(pos);
 }
 
@@ -225,19 +208,16 @@ function hasBinaryAnnotationTags(
 	const idMarker = encoder.encode('id:');
 	const kindMarkers = kinds.map((kind) => encoder.encode(kind));
 	const whitespaceChars = [0x20, 0x09, 0x0a, 0x0d];
-
 	const isSeparator = (byte: number) =>
 		whitespaceChars.includes(byte) || byte === percent;
-
-	const matchAt = (pos: number, marker: Uint8Array): boolean => {
+	const matchAt = (pos: number, marker: Uint8Array) => {
 		if (pos + marker.length > view.length) return false;
 		for (let j = 0; j < marker.length; j++) {
 			if (view[pos + j] !== marker[j]) return false;
 		}
 		return true;
 	};
-
-	const skipSeparators = (pos: number): number => {
+	const skipSeparators = (pos: number) => {
 		while (pos < view.length && isSeparator(view[pos])) pos++;
 		return pos;
 	};
@@ -245,20 +225,16 @@ function hasBinaryAnnotationTags(
 	for (let i = 0; i < view.length; i++) {
 		let pos = i;
 		if (view[pos] === backtick) pos++;
-
 		if (!matchAt(pos, openMarker)) continue;
 		pos += openMarker.length;
-
 		const afterOpen = skipSeparators(pos);
 
 		for (const kindMarker of kindMarkers) {
 			if (!matchAt(afterOpen, kindMarker)) continue;
-
 			const afterKind = skipSeparators(afterOpen + kindMarker.length);
 			if (matchAt(afterKind, idMarker)) return true;
 		}
 	}
-
 	return false;
 }
 
@@ -266,10 +242,8 @@ export function hasAnnotationTags(
 	content: string | ArrayBuffer,
 	kinds: readonly AnnotationKind[] = ANNOTATION_KINDS,
 ): boolean {
-	if (typeof content !== 'string') {
-		return hasBinaryAnnotationTags(content as ArrayBuffer, kinds);
-	}
-
+	if (typeof content !== 'string')
+		return hasBinaryAnnotationTags(content, kinds);
 	return kinds.some((kind) => annotationDetectionRegex(kind).test(content));
 }
 
@@ -280,11 +254,7 @@ export function calculateLineNumber(content: string, position: number): number {
 export function encodeAnnotationText(text: string): string {
 	const bytes = new TextEncoder().encode(text);
 	let binary = '';
-
-	for (const byte of bytes) {
-		binary += String.fromCharCode(byte);
-	}
-
+	for (const byte of bytes) binary += String.fromCharCode(byte);
 	return btoa(binary);
 }
 
@@ -298,33 +268,39 @@ export function decodeAnnotationText(encoded: string): string {
 	}
 }
 
+/** Reads Base64 metadata written as `<name>64` and legacy plain `<name>` fields. */
+export function parseAnnotationTextField(source: string, name: string): string {
+	const encoded = source.match(new RegExp(`${name}64:\\s*'([^']*)'`, 's'));
+	if (encoded) return decodeAnnotationText(encoded[1]);
+
+	const legacy = source.match(new RegExp(`${name}:\\s*'([^']*)'`, 's'));
+	return legacy ? legacy[1].replace(/\s+/g, ' ').trim() : '';
+}
+
 export function parseAnnotationResponses(
 	openTagContent: string,
 ): CommentResponse[] {
 	const responsesMatch = openTagContent.match(/responses:\s*\[(.*?)\]/s);
-	const responsesString = responsesMatch ? responsesMatch[1] : '';
-
-	if (!responsesString?.trim()) return [];
+	const responsesString = responsesMatch?.[1] ?? '';
+	if (!responsesString.trim()) return [];
 
 	const responses: CommentResponse[] = [];
-	const cleanedResponsesString = responsesString.replace(/\n\s*%\s*/g, ' ');
+	const cleaned = responsesString.replace(/\n\s*%\s*/g, ' ');
 	const responseRegex =
-		/<####(?:\s|%)*response(?:\s|%)*id:(?:\s|%)*'([\w-]+)',(?:\s|%)*user:(?:\s|%)*([^,]+?),(?:\s|%)*time:(?:\s|%)*(\d+),(?:\s|%)*content:(?:\s|%)*'([^']*)'(?:\s|%)*####\/>/g;
-	let responseMatch: RegExpExecArray | null;
+		/<####(?:\s|%)*response(?:\s|%)*id:(?:\s|%)*'([\w-]+)',(?:\s|%)*user:(?:\s|%)*([^,]+?),(?:\s|%)*time:(?:\s|%)*(\d+),(?:\s|%)*content(64)?:(?:\s|%)*'([^']*)'(?:\s|%)*####\/>/g;
+	let match: RegExpExecArray | null;
 
-	while (
-		(responseMatch = responseRegex.exec(cleanedResponsesString)) !== null
-	) {
-		const [, id, user, timestamp, content] = responseMatch;
-
+	while ((match = responseRegex.exec(cleaned)) !== null) {
+		const [, id, user, timestamp, encoded, content] = match;
 		responses.push({
 			id,
 			user: user.trim(),
 			timestamp: Number.parseInt(timestamp),
-			content: content.replace(/\s+/g, ' ').trim(),
+			content: encoded
+				? decodeAnnotationText(content)
+				: content.replace(/\s+/g, ' ').trim(),
 		});
 	}
-
 	return responses;
 }
 
@@ -334,7 +310,7 @@ export function formatAnnotationResponses(
 	return responses
 		.map(
 			(response) =>
-				`<#### response id: '${response.id}', user: ${response.user}, time: ${response.timestamp}, content: '${response.content}' ####/>`,
+				`<#### response id: '${response.id}', user: ${response.user}, time: ${response.timestamp}, content64: '${encodeAnnotationText(response.content)}' ####/>`,
 		)
 		.join(', ');
 }

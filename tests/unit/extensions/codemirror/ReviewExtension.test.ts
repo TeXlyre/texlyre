@@ -5,10 +5,8 @@ import {
 import { EditorSelection, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
-import {
-    commentSystemExtension,
-    processComments,
-} from '@src/extensions/codemirror/CommentExtension';
+import { annotationSystemExtension } from '@src/extensions/codemirror/AnnotationExtension';
+import { commentSystemExtension } from '@src/extensions/codemirror/CommentExtension';
 import { reviewSnapshots } from '@src/extensions/codemirror/review/reviewDecorations';
 import {
     acceptReviewById,
@@ -38,21 +36,21 @@ const createView = (doc: string, tracking = false) => {
     const view = new EditorView({
         state: EditorState.create({
             doc,
-            extensions: [commentSystemExtension, reviewSystemExtension],
+            extensions: [
+                annotationSystemExtension,
+                commentSystemExtension,
+                reviewSystemExtension,
+            ],
         }),
         parent: document.body,
     });
 
     views.push(view);
     setTrackChanges(view, { tracking, author: 'tester' });
-    processComments(view, commentService.parseComments(doc));
 
     return view;
 };
 
-const sync = (view: EditorView) => {
-    processComments(view, commentService.parseComments(view.state.doc.toString()));
-};
 
 const type = (view: EditorView, from: number, insert: string) => {
     view.dispatch({
@@ -278,7 +276,6 @@ describe('ReviewExtension', () => {
                 changes: { from: 1, to: doc.length - 1 },
                 userEvent: 'delete.selection',
             });
-            sync(view);
 
             const parsed = reviews(view);
             expect(parsed).toHaveLength(1);
@@ -286,7 +283,7 @@ describe('ReviewExtension', () => {
             expect(parsed[0].currentText).toBe('');
         });
 
-        it('should not track a deletion that splits a comment tag', () => {
+        it('should track the visible deletion without splitting the comment', () => {
             const doc = `a ${commentOpen}kept${commentClose} b`;
             const view = createView(doc, true);
             const [comment] = commentService.parseComments(doc);
@@ -295,9 +292,17 @@ describe('ReviewExtension', () => {
                 changes: { from: comment.openTagStart + 5, to: doc.length - 1 },
                 userEvent: 'delete.selection',
             });
-            sync(view);
 
-            expect(reviews(view)).toHaveLength(0);
+            const parsedReviews = reviews(view);
+            expect(parsedReviews).toHaveLength(1);
+            expect(parsedReviews[0].originalText).toBe('kept ');
+            expect(cleanText(parsedReviews[0].currentText)).toBe('');
+
+            const parsedComments = commentService.parseComments(
+                view.state.doc.toString(),
+            );
+            expect(parsedComments).toHaveLength(1);
+            expect(parsedComments[0].commentedText).toBe('');
         });
 
         it('should keep deleting backwards on every keypress', () => {
@@ -380,7 +385,6 @@ describe('ReviewExtension', () => {
                 changes: { from: 1, to: doc.length - 1 },
                 userEvent: 'delete.selection',
             });
-            sync(view);
 
             expect(reviews(view)[0].originalText).not.toContain('###');
         });
@@ -405,7 +409,6 @@ describe('ReviewExtension', () => {
                 changes: { from: review.openTagStart - 1, to: review.closeTagEnd },
                 userEvent: 'delete.selection',
             });
-            sync(view);
 
             const parsed = reviews(view);
             expect(parsed).toHaveLength(1);

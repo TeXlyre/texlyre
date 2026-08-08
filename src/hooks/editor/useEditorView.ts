@@ -40,6 +40,7 @@ import { UndoManager } from 'yjs';
 
 import { createLanguageExtension } from '../../extensions/codemirror/LanguageExtension';
 import { resolveHighlightTheme } from '../../extensions/codemirror/HighlightThemeExtension';
+import { annotationSystemExtension } from '../../extensions/codemirror/AnnotationExtension';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
 import {
 	reviewSystemExtension,
@@ -135,8 +136,6 @@ export const useEditorView = (
 	isDocumentSelected: boolean,
 	textContent: string,
 	onUpdateContent: (content: string) => void,
-	_parseComments: (text: string) => unknown[],
-	_addComment: (content: string) => unknown,
 	updateComments: (content: string) => void,
 	isEditingFile = false,
 	isViewOnly = false,
@@ -281,8 +280,9 @@ export const useEditorView = (
 		let cursorUpdateTimeout: NodeJS.Timeout | null = null;
 
 		return EditorView.updateListener.of((update: ViewUpdate) => {
-			if (update.docChanged && autoSaveRef.current) {
-				autoSaveRef.current();
+			if (update.docChanged) {
+				if (enableComments) updateComments(update.state.doc.toString());
+				if (autoSaveRef.current) autoSaveRef.current();
 			}
 
 			if (update.selectionSet) {
@@ -499,6 +499,11 @@ export const useEditorView = (
 		return [formatBinding, saveBinding];
 	};
 
+	const buildAnnotationExtensions = (): Extension[] =>
+		!isViewOnly && (enableComments || enableReviews)
+			? [annotationSystemExtension]
+			: [];
+
 	const buildCommentExtensions = (): Extension[] => {
 		if (!enableComments || isViewOnly) return [];
 
@@ -703,6 +708,7 @@ export const useEditorView = (
 			extensions.push(keymap.of(historyKeymap));
 		}
 
+		extensions.push(...buildAnnotationExtensions());
 		extensions.push(...buildCommentExtensions());
 		extensions.push(...buildReviewExtensions());
 		extensions.push(...buildKeymapExtensions(info));
@@ -904,9 +910,7 @@ export const useEditorView = (
 		if (!ytextRef.current || !isDocumentSelected || isEditingFile) return;
 
 		return registerYjsBinding(ytextRef.current, {
-			enableComments,
 			onUpdateContent,
-			updateComments,
 			autoSaveRef,
 			isUpdatingRef,
 			viewRef,
@@ -918,9 +922,7 @@ export const useEditorView = (
 	}, [
 		isDocumentSelected,
 		isEditingFile,
-		enableComments,
 		onUpdateContent,
-		updateComments,
 		currentFileId,
 		documentId,
 	]);
@@ -962,7 +964,6 @@ export const useEditorView = (
 			documentId,
 			enableComments,
 			enableReviews,
-			updateComments,
 			saveFileToStorage,
 			saveDocumentToLinkedFile,
 			setShowSaveIndicator,
@@ -975,7 +976,6 @@ export const useEditorView = (
 		documentId,
 		enableComments,
 		enableReviews,
-		updateComments,
 		saveFileToStorage,
 		saveDocumentToLinkedFile,
 	]);

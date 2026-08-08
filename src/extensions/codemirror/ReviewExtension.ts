@@ -4,13 +4,12 @@ import type { EditorView } from '@codemirror/view';
 
 import { createNamedLogger } from '@/logging';
 import { reviewService } from '../../services/ReviewService';
-import { createDerivedDecorationField } from './comments/tagDecorations';
-import { createTagActions } from './comments/tagProtection';
+import { createDerivedDecorationField } from './annotations/tagDecorations';
+import { createTagActions } from './annotations/tagProtection';
 import {
 	createAtomicTagRanges,
 	createDerivedTagRangeField,
-} from './comments/tagRanges';
-
+} from './annotations/tagRanges';
 import {
 	type ReviewChunk,
 	buildReviewDecorations,
