@@ -3,25 +3,23 @@ import {
 	Annotation,
 	EditorState,
 	type Extension,
-	Prec,
-	type StateEffect,
 	type StateField,
 	Transaction,
 	type TransactionSpec,
 } from '@codemirror/state';
-import { EditorView, keymap } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 
 import type { NamedLogger } from '@/logging';
-import { stripAnnotationTagTokens } from '../../../utils/annotationTagUtils';
 import {
-	type TagEffects,
-	type TagPayload,
-	type TagRange,
-	intersects,
-	touchesTags,
-} from './tagRanges';
+	ANNOTATION_KINDS,
+	type AnnotationKind,
+	scanAnnotationTags,
+	stripAnnotationTagTokens,
+} from '../../../utils/annotationTagUtils';
+import type { TagRange } from './tagRanges';
 
 export const skipTagProtection = Annotation.define<boolean>();
+export const normalizedTagProtection = Annotation.define<boolean>();
 
 export interface SingleChange {
 	from: number;
@@ -29,459 +27,266 @@ export interface SingleChange {
 	insert: string;
 }
 
-export interface Replacement {
+export interface Replacement extends SingleChange {
+	cursorPos: number;
+}
+
+interface AnnotationRange extends TagRange {
+	kind: AnnotationKind;
+}
+
+interface SyntaxRange {
 	from: number;
 	to: number;
-	insert: string;
-	cursorPos: number;
-	removeId?: string;
-	removeIds?: string[];
+	open: boolean;
+	owner: AnnotationRange;
 }
 
 export function isUserEdit(tr: Transaction): boolean {
-	const userEvent = tr.annotation(Transaction.userEvent);
-
-	return (
-		!!userEvent &&
-		(userEvent.startsWith('input') || userEvent.startsWith('delete'))
-	);
+	const event = tr.annotation(Transaction.userEvent);
+	return !!event && (event.startsWith('input') || event.startsWith('delete'));
 }
 
 export function getChanges(tr: Transaction): SingleChange[] {
 	const changes: SingleChange[] = [];
-
-	tr.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => {
-		changes.push({
-			from: fromA,
-			to: toA,
-			insert: inserted.toString(),
-		});
+	tr.changes.iterChanges((from, to, _fromB, _toB, inserted) => {
+		changes.push({ from, to, insert: inserted.toString() });
 	});
-
 	return changes;
 }
 
-function getDeleteDirection(
-	tr: Transaction,
-	change: SingleChange,
-): 'backward' | 'forward' | null {
-	if (change.insert.length > 0 || change.to - change.from !== 1) {
-		return null;
-	}
+const intersects = (from: number, to: number, range: SyntaxRange) =>
+	from === to
+		? from > range.from && from < range.to
+		: from < range.to && to > range.from;
 
-	const userEvent = tr.annotation(Transaction.userEvent);
-	if (userEvent === 'delete.backward') return 'backward';
-	if (userEvent === 'delete.forward') return 'forward';
-
-	const selection = tr.startState.selection.main;
-	if (!selection.empty) return null;
-
-	if (selection.from === change.to) return 'backward';
-	if (selection.from === change.from) return 'forward';
-
-	return null;
+function rangesFor(state: EditorState): AnnotationRange[] {
+	const text = state.doc.toString();
+	return ANNOTATION_KINDS.flatMap((kind) =>
+		scanAnnotationTags(text, kind).map((tag) => ({
+			kind,
+			id: tag.id,
+			openStart: tag.openTagStart,
+			openEnd: tag.openTagEnd,
+			closeStart: tag.closeTagStart,
+			closeEnd: tag.closeTagEnd,
+		})),
+	);
 }
 
-export function unwrapTagReplacement(
+function syntaxFor(ranges: readonly AnnotationRange[]): SyntaxRange[] {
+	return ranges
+		.flatMap((owner) => [
+			{ from: owner.openStart, to: owner.openEnd, open: true, owner },
+			{ from: owner.closeStart, to: owner.closeEnd, open: false, owner },
+		])
+		.sort((a, b) => a.from - b.from);
+}
+
+function overlapsRange(from: number, to: number, range: AnnotationRange): boolean {
+	return from < range.closeEnd && to > range.openStart;
+}
+
+function insideBody(from: number, to: number, range: AnnotationRange): boolean {
+	return from >= range.openEnd && to <= range.closeStart;
+}
+
+/** Expand a selection until every intersected annotation is either wholly
+ * inside it or wholly contains it. This keeps annotation intervals laminar. */
+export function expandAnnotationSelection(
 	state: EditorState,
-	range: TagRange,
-): Replacement {
+	from: number,
+	to: number,
+): { from: number; to: number } {
+	if (from >= to) return { from, to };
+
+	const ranges = rangesFor(state);
+	let start = from;
+	let end = to;
+	let changed = true;
+
+	while (changed) {
+		changed = false;
+
+		for (const range of ranges) {
+			if (!overlapsRange(start, end, range)) continue;
+
+			const containsRange = start <= range.openStart && end >= range.closeEnd;
+			if (containsRange || insideBody(start, end, range)) continue;
+
+			const nextStart = Math.min(start, range.openStart);
+			const nextEnd = Math.max(end, range.closeEnd);
+			if (nextStart === start && nextEnd === end) continue;
+
+			start = nextStart;
+			end = nextEnd;
+			changed = true;
+		}
+	}
+
+	return { from: start, to: end };
+}
+
+function redirectSingleDelete(
+	state: EditorState,
+	change: SingleChange,
+	event: string | undefined,
+	syntax: readonly SyntaxRange[],
+): SingleChange | null {
+	if (change.insert || change.to - change.from !== 1) return null;
+	const backward = event === 'delete.backward';
+	const forward = event === 'delete.forward';
+	if (!backward && !forward) return null;
+	if (!syntax.some((range) => intersects(change.from, change.to, range))) return null;
+
+	let pos = backward ? change.from - 1 : change.to;
+	while (pos >= 0 && pos < state.doc.length) {
+		const hidden = syntax.find((range) => pos >= range.from && pos < range.to);
+		if (!hidden) return { from: pos, to: pos + 1, insert: '' };
+		pos = backward ? hidden.from - 1 : hidden.to;
+	}
+
 	return {
-		from: range.openStart,
-		to: range.closeEnd,
-		insert: state.doc.sliceString(range.openEnd, range.closeStart),
-		cursorPos: range.openStart,
-		removeId: range.id,
+		from: change.from,
+		to: change.to,
+		insert: state.doc.sliceString(change.from, change.to),
 	};
 }
 
-function getBoundaryDeletion(
-	tr: Transaction,
-	change: SingleChange,
-	ranges: readonly TagRange[],
-): Replacement | null {
-	const direction = getDeleteDirection(tr, change);
-	if (!direction) return null;
-
-	const cursorPos = direction === 'backward' ? change.to : change.from;
-
-	for (const range of ranges) {
-		const atOpenBoundary =
-			direction === 'backward'
-				? cursorPos === range.openEnd
-				: cursorPos === range.openStart;
-
-		const atCloseBoundary =
-			direction === 'backward'
-				? cursorPos === range.closeEnd
-				: cursorPos === range.closeStart;
-
-		if (atOpenBoundary || atCloseBoundary) {
-			return unwrapTagReplacement(tr.startState, range);
-		}
-	}
-
-	return null;
-}
-
-function getProtectedCursorMove(
-	tr: Transaction,
-	change: SingleChange,
-	ranges: readonly TagRange[],
-): number | null {
-	const direction = getDeleteDirection(tr, change);
-	if (!direction) return null;
-
-	for (const range of ranges) {
-		if (intersects(change.from, change.to, range.openStart, range.openEnd)) {
-			return direction === 'backward' ? range.openStart : range.openEnd;
-		}
-
-		if (intersects(change.from, change.to, range.closeStart, range.closeEnd)) {
-			return direction === 'backward' ? range.closeStart : range.closeEnd;
-		}
-	}
-
-	return null;
-}
-
-function buildProtectedReplacement(
+function buildInsert(
 	state: EditorState,
 	change: SingleChange,
-	ranges: readonly TagRange[],
-): Replacement | null {
-	const from = Math.min(change.from, change.to);
-	const to = Math.max(change.from, change.to);
+	from: number,
+	to: number,
+	protectedSyntax: readonly SyntaxRange[],
+): { insert: string; cursorPos: number } {
+	const anchorRange = protectedSyntax.find(
+		(range) => change.from > range.from && change.from < range.to,
+	);
+	const anchor = anchorRange
+		? anchorRange.open
+			? anchorRange.to
+			: anchorRange.from
+		: change.from;
 
-	if (!touchesTags(from, to, ranges)) {
-		return null;
-	}
-
-	const protectedPieces: Array<{ from: number; to: number }> = [];
-	const removeIds: string[] = [];
-
-	for (const range of ranges) {
-		if (range.closeEnd <= from || range.openStart >= to) {
-			continue;
-		}
-
-		if (from <= range.openStart && to >= range.closeEnd) {
-			removeIds.push(range.id);
-			continue;
-		}
-
-		for (const protectedRange of [
-			{ from: range.openStart, to: range.openEnd },
-			{ from: range.closeStart, to: range.closeEnd },
-		]) {
-			const protectedFrom = Math.max(protectedRange.from, from);
-			const protectedTo = Math.min(protectedRange.to, to);
-
-			if (protectedFrom < protectedTo) {
-				protectedPieces.push({
-					from: protectedFrom,
-					to: protectedTo,
-				});
-			}
-		}
-	}
-
-	protectedPieces.sort((a, b) => a.from - b.from || a.to - b.to);
-
-	const mergedPieces: Array<{ from: number; to: number }> = [];
-
-	for (const piece of protectedPieces) {
-		const last = mergedPieces[mergedPieces.length - 1];
-
-		if (last && piece.from <= last.to) {
-			last.to = Math.max(last.to, piece.to);
-		} else {
-			mergedPieces.push({ ...piece });
-		}
-	}
+	const kept = [
+		...(from < change.from ? [{ from, to: change.from }] : []),
+		...protectedSyntax.map(({ from, to }) => ({ from, to })),
+		...(change.to < to ? [{ from: change.to, to }] : []),
+	].sort((a, b) => a.from - b.from || a.to - b.to);
 
 	let insert = '';
 	let cursorOffset = 0;
 	let inserted = false;
+	let lastTo = -1;
 
-	const appendInsertedText = () => {
+	const addInsert = () => {
 		if (inserted) return;
-
 		insert += change.insert;
 		cursorOffset = insert.length;
 		inserted = true;
 	};
 
-	for (const piece of mergedPieces) {
-		appendInsertedText();
-		insert += state.doc.sliceString(piece.from, piece.to);
+	for (const range of kept) {
+		if (range.to <= lastTo) continue;
+		const rangeFrom = Math.max(range.from, lastTo);
+		if (!inserted && anchor <= rangeFrom) addInsert();
+		insert += state.doc.sliceString(rangeFrom, range.to);
+		lastTo = range.to;
 	}
+	addInsert();
 
-	appendInsertedText();
-
-	return {
-		from,
-		to,
-		insert,
-		cursorPos: from + cursorOffset,
-		removeIds,
-	};
+	return { insert, cursorPos: from + cursorOffset };
 }
 
-export interface TagProtection {
-	extension: Extension;
-	dispatchReplacement: (view: EditorView, replacement: Replacement) => void;
-	unwrapById: (view: EditorView, id: string) => boolean;
-	replaceById: (view: EditorView, id: string, insert: string) => boolean;
+/**
+ * Whole comments may be removed with their selected text. Review wrappers are
+ * never removed by ordinary editing. Partial annotation syntax stays atomic.
+ */
+export function normalizeAnnotationChange(
+	state: EditorState,
+	input: SingleChange,
+	event?: string,
+): Replacement | null {
+	const ranges = rangesFor(state);
+	if (!ranges.length) return null;
+
+	const syntax = syntaxFor(ranges);
+	const change = redirectSingleDelete(state, input, event, syntax) ?? input;
+	const droppedComments = new Set(
+		ranges
+			.filter(
+				(range) =>
+					range.kind === 'comment' &&
+					change.from < change.to &&
+					change.from <= range.openStart &&
+					change.to >= range.closeEnd,
+			)
+			.map((range) => range.id),
+	);
+
+	const protectedSyntax = syntax.filter(
+		(range) =>
+			(range.owner.kind === 'review' || !droppedComments.has(range.owner.id)) &&
+			intersects(change.from, change.to, range),
+	);
+	const envelope = expandAnnotationSelection(state, change.from, change.to);
+
+	if (
+		!protectedSyntax.length &&
+		envelope.from === change.from &&
+		envelope.to === change.to &&
+		change === input
+	) {
+		return null;
+	}
+
+	const from = Math.min(envelope.from, ...protectedSyntax.map((range) => range.from));
+	const to = Math.max(envelope.to, ...protectedSyntax.map((range) => range.to));
+	const rendered = buildInsert(state, change, from, to, protectedSyntax);
+
+	return { from, to, insert: rendered.insert, cursorPos: rendered.cursorPos };
 }
 
 export const annotationPasteSanitizer = EditorView.domEventHandlers({
 	paste(event, view) {
 		const text = event.clipboardData?.getData('text/plain');
 		if (!text) return false;
-
 		const cleaned = stripAnnotationTagTokens(text);
 		if (cleaned === text) return false;
 
 		event.preventDefault();
-		view.dispatch({
-			...view.state.replaceSelection(cleaned),
-			userEvent: 'input.paste',
-		});
-
+		view.dispatch({ ...view.state.replaceSelection(cleaned), userEvent: 'input.paste' });
 		return true;
 	},
 });
 
-export function createTagProtection<P extends TagPayload>(
-	field: StateField<TagRange[]>,
-	effects: TagEffects<P> | null,
+export function createTagActions<T extends TagRange>(
+	field: StateField<T[]>,
 	log: NamedLogger,
-	options: { boundaryUnwrap?: boolean } = {},
-): TagProtection {
-	const { boundaryUnwrap = true } = options;
-	const removeEffects = (replacement: Replacement): StateEffect<unknown>[] => {
-		const ids =
-			replacement.removeIds ??
-			(replacement.removeId ? [replacement.removeId] : []);
+) {
+	const find = (view: EditorView, id: string) =>
+		view.state.field(field, false)?.find((range) => range.id === id) ?? null;
 
-		if (!effects) return [];
-
-		return [...new Set(ids)].map((id) => effects.remove.of(id));
-	};
-
-	const buildProtectedSpec = (
-		state: EditorState,
-		changes: SingleChange[],
-		ranges: readonly TagRange[],
-	): TransactionSpec => {
-		const protectedChanges: SingleChange[] = [];
-		const specEffects: StateEffect<unknown>[] = [];
-
-		for (const change of changes) {
-			const replacement = buildProtectedReplacement(state, change, ranges);
-
-			if (!replacement) {
-				protectedChanges.push(change);
-				continue;
-			}
-
-			protectedChanges.push({
-				from: replacement.from,
-				to: replacement.to,
-				insert: replacement.insert,
-			});
-			specEffects.push(...removeEffects(replacement));
-		}
-
-		return {
-			changes: protectedChanges,
-			effects: specEffects,
-			annotations: skipTagProtection.of(true),
-		};
-	};
-
-	const dispatchReplacement = (
-		view: EditorView,
-		replacement: Replacement,
-	): void => {
+	const replace = (view: EditorView, replacement: Replacement) => {
 		view.dispatch({
-			changes: {
-				from: replacement.from,
-				to: replacement.to,
-				insert: replacement.insert,
-			},
-			selection: {
-				anchor: replacement.cursorPos,
-				head: replacement.cursorPos,
-			},
-			effects: removeEffects(replacement),
+			changes: replacement,
+			selection: { anchor: replacement.cursorPos },
 			annotations: skipTagProtection.of(true),
 		});
 	};
 
-	const transactionFilter = EditorState.transactionFilter.of((tr) => {
-		if (!tr.docChanged || tr.annotation(skipTagProtection) || !isUserEdit(tr)) {
-			return tr;
-		}
-
-		const ranges = tr.startState.field(field, false);
-		if (!ranges?.length) return tr;
-
-		const changes = getChanges(tr);
-		if (!changes.some((entry) => touchesTags(entry.from, entry.to, ranges))) {
-			return tr;
-		}
-
-		if (changes.length > 1) {
-			return buildProtectedSpec(tr.startState, changes, ranges);
-		}
-
-		const change = changes[0];
-
-		const boundaryDeletion = boundaryUnwrap
-			? getBoundaryDeletion(tr, change, ranges)
-			: null;
-
-		if (boundaryDeletion) {
-			return {
-				changes: {
-					from: boundaryDeletion.from,
-					to: boundaryDeletion.to,
-					insert: boundaryDeletion.insert,
-				},
-				selection: {
-					anchor: boundaryDeletion.cursorPos,
-					head: boundaryDeletion.cursorPos,
-				},
-				effects: removeEffects(boundaryDeletion),
-				annotations: skipTagProtection.of(true),
-			};
-		}
-
-		const cursorMove = getProtectedCursorMove(tr, change, ranges);
-		if (cursorMove !== null) {
-			return {
-				selection: {
-					anchor: cursorMove,
-					head: cursorMove,
-				},
-				annotations: skipTagProtection.of(true),
-			};
-		}
-
-		const replacement = buildProtectedReplacement(
-			tr.startState,
-			change,
-			ranges,
-		);
-		if (!replacement) return tr;
-
-		const originalText = tr.startState.doc.sliceString(
-			replacement.from,
-			replacement.to,
-		);
-
-		if (originalText === replacement.insert) {
-			return {
-				selection: {
-					anchor: replacement.cursorPos,
-					head: replacement.cursorPos,
-				},
-				annotations: skipTagProtection.of(true),
-			};
-		}
-
-		return {
-			changes: {
-				from: replacement.from,
-				to: replacement.to,
-				insert: replacement.insert,
-			},
-			selection: {
-				anchor: replacement.cursorPos,
-				head: replacement.cursorPos,
-			},
-			effects: removeEffects(replacement),
-			annotations: skipTagProtection.of(true),
-		};
-	});
-
-	const getBoundaryTag = (
-		view: EditorView,
-		direction: 'forward' | 'backward',
-	): TagRange | null => {
-		const selection = view.state.selection.main;
-		if (!selection.empty) return null;
-
-		const ranges = view.state.field(field, false);
-		if (!ranges?.length) return null;
-
-		const pos = selection.from;
-
-		for (const range of ranges) {
-			const atOpenBoundary =
-				direction === 'backward'
-					? pos === range.openEnd
-					: pos === range.openStart;
-
-			const atCloseBoundary =
-				direction === 'backward'
-					? pos === range.closeEnd
-					: pos === range.closeStart;
-
-			if (atOpenBoundary || atCloseBoundary) {
-				return range;
-			}
-		}
-
-		return null;
-	};
-
-	const deleteWholeTagIfBoundary = (
-		view: EditorView,
-		direction: 'forward' | 'backward',
-	): boolean => {
-		const range = getBoundaryTag(view, direction);
-		if (!range) return false;
-
-		try {
-			dispatchReplacement(view, unwrapTagReplacement(view.state, range));
-			return true;
-		} catch (error) {
-			log.error('Error deleting tagged chunk:', error);
-			return false;
-		}
-	};
-
-	const deletionKeymap = Prec.highest(
-		keymap.of([
-			{
-				key: 'Backspace',
-				run: (view) => deleteWholeTagIfBoundary(view, 'backward'),
-			},
-			{
-				key: 'Delete',
-				run: (view) => deleteWholeTagIfBoundary(view, 'forward'),
-			},
-		]),
-	);
-
-	const findRange = (view: EditorView, id: string) =>
-		view.state.field(field, false)?.find((range) => range.id === id) ?? null;
-
 	return {
-		extension: boundaryUnwrap
-			? [transactionFilter, deletionKeymap]
-			: [transactionFilter],
-		dispatchReplacement,
-
-		unwrapById(view, id) {
-			const range = findRange(view, id);
+		unwrapById(view: EditorView, id: string) {
+			const range = find(view, id);
 			if (!range) return false;
-
 			try {
-				dispatchReplacement(view, unwrapTagReplacement(view.state, range));
+				replace(view, {
+					from: range.openStart,
+					to: range.closeEnd,
+					insert: view.state.doc.sliceString(range.openEnd, range.closeStart),
+					cursorPos: range.openStart,
+				});
 				return true;
 			} catch (error) {
 				log.error('Error unwrapping tagged chunk:', error);
@@ -489,17 +294,15 @@ export function createTagProtection<P extends TagPayload>(
 			}
 		},
 
-		replaceById(view, id, insert) {
-			const range = findRange(view, id);
+		replaceById(view: EditorView, id: string, insert: string) {
+			const range = find(view, id);
 			if (!range) return false;
-
 			try {
-				dispatchReplacement(view, {
+				replace(view, {
 					from: range.openStart,
 					to: range.closeEnd,
 					insert,
 					cursorPos: range.openStart + insert.length,
-					removeId: id,
 				});
 				return true;
 			} catch (error) {
@@ -508,4 +311,54 @@ export function createTagProtection<P extends TagPayload>(
 			}
 		},
 	};
+}
+
+export function createTagProtection(): Extension {
+	const filter = EditorState.transactionFilter.of((tr) => {
+		if (
+			!tr.docChanged ||
+			tr.annotation(skipTagProtection) ||
+			tr.annotation(normalizedTagProtection) ||
+			!isUserEdit(tr)
+		) {
+			return tr;
+		}
+
+		const event = tr.annotation(Transaction.userEvent);
+		const original = getChanges(tr);
+		const normalized = original.map(
+			(change) =>
+				normalizeAnnotationChange(tr.startState, change, event) ?? {
+					...change,
+					cursorPos: change.from + change.insert.length,
+				},
+		);
+
+		if (
+			!normalized.some(
+				(change, index) =>
+					change.from !== original[index].from ||
+					change.to !== original[index].to ||
+					change.insert !== original[index].insert,
+			)
+		) {
+			return tr;
+		}
+
+		for (let i = 1; i < normalized.length; i++) {
+			if (normalized[i].from < normalized[i - 1].to) return [];
+		}
+
+		const spec: TransactionSpec = {
+			changes: normalized.map(({ from, to, insert }) => ({ from, to, insert })),
+			effects: tr.effects,
+			annotations: normalizedTagProtection.of(true),
+			userEvent: event,
+			scrollIntoView: tr.scrollIntoView,
+		};
+		if (normalized.length === 1) spec.selection = { anchor: normalized[0].cursorPos };
+		return spec;
+	});
+
+	return [filter, annotationPasteSanitizer];
 }

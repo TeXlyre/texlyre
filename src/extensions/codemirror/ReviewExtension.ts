@@ -5,15 +5,12 @@ import type { EditorView } from '@codemirror/view';
 import { createNamedLogger } from '@/logging';
 import { reviewService } from '../../services/ReviewService';
 import { createDerivedDecorationField } from './comments/tagDecorations';
-import {
-	annotationPasteSanitizer,
-	createTagProtection,
-} from './comments/tagProtection';
+import { createTagActions } from './comments/tagProtection';
 import {
 	createAtomicTagRanges,
 	createDerivedTagRangeField,
 } from './comments/tagRanges';
-import { commentRanges } from './CommentExtension';
+
 import {
 	type ReviewChunk,
 	buildReviewDecorations,
@@ -37,13 +34,9 @@ export const reviewConfig = StateField.define<ReviewConfig>({
 
 	update(value, tr) {
 		let next = value;
-
 		for (const effect of tr.effects) {
-			if (effect.is(setReviewConfig)) {
-				next = { ...next, ...effect.value };
-			}
+			if (effect.is(setReviewConfig)) next = { ...next, ...effect.value };
 		}
-
 		return next;
 	},
 });
@@ -62,9 +55,7 @@ export const reviewChunks = createDerivedTagRangeField<ReviewChunk>((doc) =>
 	})),
 );
 
-const reviewProtection = createTagProtection(reviewChunks, null, moduleLog, {
-	boundaryUnwrap: false,
-});
+const reviewActions = createTagActions(reviewChunks, moduleLog);
 
 export const reviewState = createDerivedDecorationField(
 	reviewChunks,
@@ -76,14 +67,14 @@ export function getReviewChunks(state: EditorState): readonly ReviewChunk[] {
 }
 
 export function acceptReviewById(view: EditorView, id: string): boolean {
-	return reviewProtection.unwrapById(view, id);
+	return reviewActions.unwrapById(view, id);
 }
 
 export function rejectReviewById(view: EditorView, id: string): boolean {
 	const chunk = getReviewChunks(view.state).find((entry) => entry.id === id);
 	if (!chunk) return false;
 
-	return reviewProtection.replaceById(
+	return reviewActions.replaceById(
 		view,
 		id,
 		restoreReviewBody(
@@ -110,7 +101,6 @@ export function resolveAllReviews(view: EditorView, accept: boolean): boolean {
 						),
 			})),
 		});
-
 		return true;
 	} catch (error) {
 		moduleLog.error('Error resolving reviews:', error);
@@ -133,7 +123,6 @@ export function replaceReviewTags(
 				{ from: chunk.closeStart, to: chunk.closeEnd, insert: tags.closeTag },
 			],
 		});
-
 		return true;
 	} catch (error) {
 		moduleLog.error('Error updating review tags:', error);
@@ -153,13 +142,10 @@ export const reviewSystemExtension = [
 	reviewConfig,
 	reviewState,
 	createAtomicTagRanges(reviewChunks),
-	reviewProtection.extension,
 	createReviewReporter(reviewChunks),
 	reviewClickHandler,
-	annotationPasteSanitizer,
 	createTrackChangesFilter({
 		reviewChunks,
-		commentRanges,
 		config: reviewConfig,
 	}),
 ];

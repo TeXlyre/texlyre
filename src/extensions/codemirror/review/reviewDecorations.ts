@@ -1,4 +1,3 @@
-// src/extensions/codemirror/review/reviewDecorations.ts
 import type { StateField, Text } from '@codemirror/state';
 import {
 	Decoration,
@@ -9,6 +8,7 @@ import {
 
 import type { CommentResponse } from '../../../types/comments';
 import type { ReviewSegment, ReviewSnapshot } from '../../../types/review';
+import { stripAnnotationTagTokens } from '../../../utils/annotationTagUtils';
 import {
 	type DecorationEntry,
 	hiddenTagEntries,
@@ -129,9 +129,10 @@ export function reviewSnapshots(
 		user: chunk.user,
 		timestamp: chunk.timestamp,
 		originalText: chunk.originalText,
-		currentText: readReviewBody(
-			doc.sliceString(chunk.openEnd, chunk.closeStart),
-		).text,
+		currentText: stripAnnotationTagTokens(
+			readReviewBody(doc.sliceString(chunk.openEnd, chunk.closeStart)).text,
+			['comment'],
+		),
 		responses: chunk.responses,
 		line: doc.lineAt(chunk.openStart).number,
 		docTop: blockTopAt(chunk.openStart),

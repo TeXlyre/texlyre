@@ -1,11 +1,6 @@
 // src/extensions/codemirror/comments/commentMasking.ts
 import { ParseContext, type LanguageSupport } from '@codemirror/language';
-import {
-	StateField,
-	type EditorState,
-	type Extension,
-	type Transaction,
-} from '@codemirror/state';
+import { StateField, type EditorState, type Extension } from '@codemirror/state';
 import type { Input, PartialParse, TreeFragment } from '@lezer/common';
 
 import {
@@ -19,23 +14,7 @@ export interface MaskRange {
 }
 
 function collectTagRanges(text: string): MaskRange[] {
-	if (!hasAnnotationTags(text)) return [];
-
-	return collectAnnotationTagRanges(text);
-}
-
-function touchesTagSyntax(tr: Transaction): boolean {
-	let touches = false;
-
-	tr.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => {
-		if (touches) return;
-
-		touches =
-			inserted.toString().includes('#') ||
-			(toA > fromA && tr.startState.doc.sliceString(fromA, toA).includes('#'));
-	});
-
-	return touches;
+	return hasAnnotationTags(text) ? collectAnnotationTagRanges(text) : [];
 }
 
 export const commentMaskRanges = StateField.define<MaskRange[]>({
@@ -44,18 +23,7 @@ export const commentMaskRanges = StateField.define<MaskRange[]>({
 	},
 
 	update(ranges, tr) {
-		if (!tr.docChanged) return ranges;
-
-		if (!touchesTagSyntax(tr)) {
-			return ranges.length
-				? ranges.map((range) => ({
-						from: tr.changes.mapPos(range.from, 1),
-						to: tr.changes.mapPos(range.to, -1),
-					}))
-				: ranges;
-		}
-
-		return collectTagRanges(tr.state.doc.toString());
+		return tr.docChanged ? collectTagRanges(tr.newDoc.toString()) : ranges;
 	},
 });
 
@@ -85,7 +53,6 @@ export function maskCommentTags(
 	for (const range of ranges) {
 		const from = Math.max(pos, range.from);
 		const to = Math.min(text.length, range.to);
-
 		if (to <= from) continue;
 
 		masked += text.slice(pos, from);
@@ -112,7 +79,6 @@ function subtractMask(
 		for (const masked of mask) {
 			const from = Math.max(masked.from, range.from + 1);
 			const to = Math.min(masked.to, range.to - 1);
-
 			if (to <= from || to <= pos) continue;
 
 			if (from > pos) result.push({ from: pos, to: from });
@@ -139,16 +105,12 @@ export function withCommentMasking(support: LanguageSupport): LanguageSupport {
 	const parser = support.language.parser as unknown as RangedParser &
 		Record<symbol, boolean>;
 
-	if (typeof parser?.createParse !== 'function' || parser[MASKED]) {
-		return support;
-	}
+	if (typeof parser?.createParse !== 'function' || parser[MASKED]) return support;
 
 	const createParse = parser.createParse.bind(parser);
-
 	parser.createParse = (input, fragments, ranges) => {
 		const state = ParseContext.get()?.state;
 		const mask = state ? getCommentMaskRanges(state) : [];
-
 		return createParse(
 			input,
 			fragments,
@@ -156,7 +118,6 @@ export function withCommentMasking(support: LanguageSupport): LanguageSupport {
 		);
 	};
 	parser[MASKED] = true;
-
 	return support;
 }
 
