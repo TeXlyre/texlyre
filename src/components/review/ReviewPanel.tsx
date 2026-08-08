@@ -13,8 +13,13 @@ interface ReviewPanelProps {
 const CARD_GAP = 8;
 
 const ReviewPanel: React.FC<ReviewPanelProps> = ({ className = '' }) => {
-	const { reviews, showReviews, acceptAllReviews, rejectAllReviews } =
-		useReview();
+	const {
+		reviews,
+		showReviews,
+		acceptAllReviews,
+		rejectAllReviews,
+		resolveAllReviews,
+	} = useReview();
 	const [activeTab, setActiveTab] = useState<'list' | 'resolved'>('list');
 	const contentRef = useRef<HTMLDivElement>(null);
 	const trackRef = useRef<HTMLDivElement>(null);
@@ -24,6 +29,8 @@ const ReviewPanel: React.FC<ReviewPanelProps> = ({ className = '' }) => {
 		height: number;
 	}>({ tops: {}, height: 0 });
 	const [documentHeight, setDocumentHeight] = useState(0);
+	const syncedScrollRef = useRef(-1);
+	const userScrolledRef = useRef(false);
 
 	const visibleReviews = useMemo(
 		() =>
@@ -61,7 +68,7 @@ const ReviewPanel: React.FC<ReviewPanelProps> = ({ className = '' }) => {
 				? current
 				: { tops, height };
 		});
-	}, [visibleReviews]);
+	});
 
 	useEffect(() => {
 		const followEditor = (event: Event) => {
@@ -73,10 +80,21 @@ const ReviewPanel: React.FC<ReviewPanelProps> = ({ className = '' }) => {
 				event as CustomEvent
 			).detail;
 			const delta = content.getBoundingClientRect().top - documentTop;
+			const target = Math.max(0, delta);
 
 			track.style.marginTop = `${Math.max(0, -delta)}px`;
-			content.scrollTop = Math.max(0, delta);
 			setDocumentHeight(editorHeight ?? 0);
+
+			if (
+				userScrolledRef.current &&
+				Math.abs(target - content.scrollTop) < content.clientHeight
+			) {
+				return;
+			}
+
+			content.scrollTop = target;
+			syncedScrollRef.current = content.scrollTop;
+			userScrolledRef.current = false;
 		};
 
 		document.addEventListener('reviews-changed', followEditor);
@@ -100,14 +118,12 @@ const ReviewPanel: React.FC<ReviewPanelProps> = ({ className = '' }) => {
 				<h3>{t('Changes')}</h3>
 				<div className='view-tabs'>
 					<button
-						type='button'
 						className={`tab-button ${activeTab === 'list' ? 'active' : ''}`}
 						onClick={() => setActiveTab('list')}
 					>
 						{t('Active')}
 					</button>
 					<button
-						type='button'
 						className={`tab-button ${activeTab === 'resolved' ? 'active' : ''}`}
 						onClick={() => setActiveTab('resolved')}
 					>
@@ -118,24 +134,30 @@ const ReviewPanel: React.FC<ReviewPanelProps> = ({ className = '' }) => {
 
 			{activeTab === 'list' && (
 				<div className='review-panel-actions'>
-					<button
-						type='button'
-						onClick={acceptAllReviews}
-						disabled={!visibleReviews.length}
-					>
+					<button onClick={acceptAllReviews} disabled={!visibleReviews.length}>
 						{t('Accept all')}
 					</button>
-					<button
-						type='button'
-						onClick={rejectAllReviews}
-						disabled={!visibleReviews.length}
-					>
+					<button onClick={resolveAllReviews} disabled={!visibleReviews.length}>
+						{t('Resolve all')}
+					</button>
+					<button onClick={rejectAllReviews} disabled={!visibleReviews.length}>
 						{t('Reject all')}
 					</button>
 				</div>
 			)}
 
-			<div className='review-panel-content' ref={contentRef}>
+			<div
+				className='review-panel-content'
+				ref={contentRef}
+				onScroll={() => {
+					const content = contentRef.current;
+					if (!content) return;
+
+					if (Math.abs(content.scrollTop - syncedScrollRef.current) > 1) {
+						userScrolledRef.current = true;
+					}
+				}}
+			>
 				{visibleReviews.length === 0 ? (
 					<div className='no-reviews'>
 						{activeTab === 'resolved'

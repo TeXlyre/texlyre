@@ -7,7 +7,7 @@ import { useComments } from '../../hooks/useComments';
 import type { Comment } from '../../types/comments';
 import { formatDate } from '../../utils/dateUtils';
 import { gotoEditor } from '../../utils/editorNavigator';
-import { CheckIcon, TrashIcon } from '../common/Icons';
+import { ResolveIcon, TrashIcon } from '../common/Icons';
 
 interface CommentItemProps {
 	comment: Comment;
@@ -80,7 +80,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 							comment.resolved ? t('Mark as unresolved') : t('Mark as resolved')
 						}
 					>
-						<CheckIcon />
+						<ResolveIcon />
 					</button>
 					<button
 						className='delete-button'

@@ -50,22 +50,17 @@ class DeletedTextWidget extends WidgetType {
 	constructor(
 		readonly text: string,
 		readonly id: string,
-		readonly resolved: boolean,
 	) {
 		super();
 	}
 
 	eq(other: DeletedTextWidget): boolean {
-		return (
-			this.text === other.text &&
-			this.id === other.id &&
-			this.resolved === other.resolved
-		);
+		return this.text === other.text && this.id === other.id;
 	}
 
 	toDOM(): HTMLElement {
 		const span = document.createElement('span');
-		span.className = `cm-review-deleted${this.resolved ? ' resolved' : ''}`;
+		span.className = 'cm-review-deleted';
 		span.dataset.reviewId = this.id;
 		span.textContent = this.text;
 		return span;
@@ -93,6 +88,8 @@ export function buildReviewDecorations(
 		'review-close-tag',
 	);
 
+	if (chunk.resolved) return entries;
+
 	const body = readReviewBody(doc.sliceString(chunk.openEnd, chunk.closeStart));
 
 	for (const segment of cachedSegments(chunk.originalText, body.text)) {
@@ -101,7 +98,7 @@ export function buildReviewDecorations(
 		if (segment.type === 'delete') {
 			entries.push({
 				decoration: Decoration.widget({
-					widget: new DeletedTextWidget(segment.text, chunk.id, chunk.resolved),
+					widget: new DeletedTextWidget(segment.text, chunk.id),
 					side: -1,
 				}),
 				from: chunk.openEnd + body.docOffset(segment.from),
@@ -113,7 +110,7 @@ export function buildReviewDecorations(
 
 		entries.push({
 			decoration: Decoration.mark({
-				class: `cm-review-inserted${chunk.resolved ? ' resolved' : ''}`,
+				class: 'cm-review-inserted',
 				attributes: { 'data-review-id': chunk.id },
 			}),
 			from: chunk.openEnd + body.docOffset(segment.from),

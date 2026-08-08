@@ -60,6 +60,7 @@ export interface ReviewContextType {
 	resolveReview: (reviewId: string) => void;
 	acceptAllReviews: () => void;
 	rejectAllReviews: () => void;
+	resolveAllReviews: () => void;
 	addResponse: (reviewId: string, content: string) => void;
 	deleteResponse: (reviewId: string, responseId: string) => void;
 }

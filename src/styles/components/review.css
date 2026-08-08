@@ -21,12 +21,6 @@
 	text-decoration: line-through;
 }
 
-.cm-review-inserted.resolved,
-.cm-review-deleted.resolved {
-	background-color: transparent;
-	opacity: 0.6;
-}
-
 .highlight-review {
 	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.2) !important;
 	transition: background-color 0.3s ease;
@@ -34,7 +28,7 @@
 
 /* Review panel styles */
 .review-panel {
-	order: 3;
+	order: 2;
 	width: var(--comment-panel-width);
 	display: flex;
 	flex-direction: column;
@@ -76,6 +70,7 @@
 .review-panel-actions button {
 	flex: 1;
 	margin: 0;
+	height: var(--button-height-md);
 	padding: var(--space-xs) var(--space-sm);
 	border: 1px solid var(--accent-border);
 	border-radius: var(--radius-sm);

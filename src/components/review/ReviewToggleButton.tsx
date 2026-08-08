@@ -33,7 +33,6 @@ export const TrackChangesButton: React.FC<ReviewButtonProps> = ({
 		<div className={`tracking-button-container ${className}`}>
 			<div className='tracking-button-group' ref={groupRef}>
 				<button
-					type='button'
 					className={`control-button tracking-button ${trackChanges ? 'active' : ''}`}
 					onClick={toggleTrackChanges}
 					title={
@@ -48,7 +47,6 @@ export const TrackChangesButton: React.FC<ReviewButtonProps> = ({
 				</button>
 
 				<button
-					type='button'
 					className='control-button dropdown-toggle'
 					onClick={() => setIsDropdownOpen(!isDropdownOpen)}
 					title={t('Tracking Options')}
@@ -97,7 +95,6 @@ const ReviewToggleButton: React.FC<ReviewButtonProps> = ({
 
 	return (
 		<button
-			type='button'
 			className={`control-button ${className} ${showReviews ? 'active' : ''}`}
 			onClick={toggleReviews}
 			title={t('{action} Changes{numReviews}', {

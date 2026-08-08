@@ -619,9 +619,9 @@ const EditorContent: React.FC<{
 				<PluginControlGroup>
 					{!isViewOnly && (
 						<>
-							<CommentToggleButton className='header-comment-button' />
 							<TrackChangesButton className='header-review-button' />
 							<ReviewToggleButton className='header-review-button' />
+							<CommentToggleButton className='header-comment-button' />
 						</>
 					)}
 				</PluginControlGroup>
@@ -709,9 +709,9 @@ const EditorContent: React.FC<{
 				<PluginControlGroup>
 					{!isViewOnly && (
 						<>
-							<CommentToggleButton className='header-comment-button' />
 							<TrackChangesButton className='header-review-button' />
 							<ReviewToggleButton className='header-review-button' />
+							<CommentToggleButton className='header-comment-button' />
 						</>
 					)}
 				</PluginControlGroup>
@@ -767,9 +767,9 @@ const EditorContent: React.FC<{
 				<PluginControlGroup>
 					{!isViewOnly && (
 						<>
-							<CommentToggleButton className='header-comment-button' />
 							<TrackChangesButton className='header-review-button' />
 							<ReviewToggleButton className='header-review-button' />
+							<CommentToggleButton className='header-comment-button' />
 						</>
 					)}
 				</PluginControlGroup>
@@ -947,8 +947,8 @@ const EditorContent: React.FC<{
 					)}
 				</div>
 
-				{!isViewOnly && <CommentPanel className='editor-comment-panel' />}
 				{!isViewOnly && <ReviewPanel className='editor-review-panel' />}
+				{!isViewOnly && <CommentPanel className='editor-comment-panel' />}
 				{!isViewOnly && <BibliographyPanel className='editor-lsp-panel' />}
 			</div>
 		</>

@@ -12,6 +12,8 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { useCollab } from '../hooks/useCollab';
 import { usePersistentState } from '../hooks/usePersistentState';
+import { useProperties } from '../hooks/useProperties';
+import { fileStorageService } from '../services/FileStorageService';
 import { reviewService } from '../services/ReviewService';
 import type { DocumentList } from '../types/documents';
 import type { ReviewContextType, ReviewSnapshot } from '../types/review';
@@ -35,8 +37,15 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 		`review-tracking:${documentKey}`,
 		false,
 	);
+	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const { user } = useAuth();
 	const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
+	const {
+		isReady: arePropertiesReady,
+		getProperty,
+		setProperty,
+		registerProperty,
+	} = useProperties();
 
 	const trackChangesShared =
 		!!sharedKey && !!doc?.projectMetadata?.trackedFiles?.includes(sharedKey);
@@ -44,6 +53,47 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 	const trackChanges = trackChangesLocal || trackChangesShared;
 
 	const signatureRef = useRef('');
+	const propertiesRegistered = useRef(false);
+
+	useEffect(() => {
+		if (propertiesRegistered.current) return;
+		propertiesRegistered.current = true;
+
+		registerProperty({
+			id: 'review-panel-visible',
+			category: 'UI',
+			subcategory: 'Editor',
+			defaultValue: false,
+		});
+	}, [registerProperty]);
+
+	useEffect(() => {
+		if (!arePropertiesReady || propertiesLoaded) return;
+
+		const projectId = fileStorageService.getCurrentProjectId();
+		if (projectId) {
+			setShowReviews(
+				getProperty('review-panel-visible', {
+					scope: 'project',
+					projectId,
+				}) === true,
+			);
+		}
+
+		setPropertiesLoaded(true);
+	}, [arePropertiesReady, propertiesLoaded, getProperty]);
+
+	useEffect(() => {
+		if (!propertiesLoaded) return;
+
+		const projectId = fileStorageService.getCurrentProjectId();
+		if (!projectId) return;
+
+		setProperty('review-panel-visible', showReviews, {
+			scope: 'project',
+			projectId,
+		});
+	}, [showReviews, propertiesLoaded, setProperty]);
 
 	useEffect(() => {
 		const handleReviewsChanged = (event: Event) => {
@@ -130,17 +180,23 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 
 	const rejectAllReviews = () => dispatchReviewEvent('review-reject-all');
 
+	const setReviewResolved = (review: ReviewSnapshot, resolved: boolean) =>
+		dispatchReviewEvent('review-update', {
+			reviewId: review.id,
+			rawReview: reviewService.updateReview({ ...review, resolved }),
+		});
+
 	const resolveReview = (reviewId: string) => {
 		const review = reviews.find((entry) => entry.id === reviewId);
 		if (!review) return;
 
-		dispatchReviewEvent('review-update', {
-			reviewId,
-			rawReview: reviewService.updateReview({
-				...review,
-				resolved: !review.resolved,
-			}),
-		});
+		setReviewResolved(review, !review.resolved);
+	};
+
+	const resolveAllReviews = () => {
+		for (const review of reviews) {
+			if (!review.resolved) setReviewResolved(review, true);
+		}
 	};
 
 	const updateResponses = (
@@ -192,6 +248,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 				resolveReview,
 				acceptAllReviews,
 				rejectAllReviews,
+				resolveAllReviews,
 				addResponse,
 				deleteResponse,
 			}}

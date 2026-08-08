@@ -68,7 +68,6 @@ const ReviewItem = forwardRef<HTMLDivElement, ReviewItemProps>(
 					</div>
 					<div className='review-header-actions'>
 						<button
-							type='button'
 							className='resolve-button'
 							onClick={() => resolveReview(review.id)}
 							title={
@@ -80,7 +79,6 @@ const ReviewItem = forwardRef<HTMLDivElement, ReviewItemProps>(
 							<ResolveIcon />
 						</button>
 						<button
-							type='button'
 							className='accept-button'
 							onClick={() => acceptReview(review.id)}
 							title={t('Accept change')}
@@ -88,7 +86,6 @@ const ReviewItem = forwardRef<HTMLDivElement, ReviewItemProps>(
 							<CheckIcon />
 						</button>
 						<button
-							type='button'
 							className='reject-button'
 							onClick={() => rejectReview(review.id)}
 							title={t('Reject change')}
@@ -99,7 +96,6 @@ const ReviewItem = forwardRef<HTMLDivElement, ReviewItemProps>(
 				</div>
 
 				<button
-					type='button'
 					className='review-diff'
 					onClick={() => gotoEditor(null, { line: review.line })}
 					title={t('Go to line {line}', { line: review.line })}
@@ -128,7 +124,6 @@ const ReviewItem = forwardRef<HTMLDivElement, ReviewItemProps>(
 										</div>
 									</div>
 									<button
-										type='button'
 										className='delete-button small'
 										onClick={() => deleteResponse(review.id, response.id)}
 										title={t('Delete response')}
@@ -155,7 +150,6 @@ const ReviewItem = forwardRef<HTMLDivElement, ReviewItemProps>(
 
 							<div className='form-actions'>
 								<button
-									type='button'
 									className='cancel-response-button'
 									onClick={() => {
 										setIsAddingResponse(false);
@@ -165,7 +159,6 @@ const ReviewItem = forwardRef<HTMLDivElement, ReviewItemProps>(
 									{t('Cancel')}
 								</button>
 								<button
-									type='button'
 									className='submit-response-button'
 									onClick={handleAddResponse}
 									disabled={!newResponse.trim()}
@@ -176,7 +169,6 @@ const ReviewItem = forwardRef<HTMLDivElement, ReviewItemProps>(
 						</div>
 					) : (
 						<button
-							type='button'
 							className='add-response-button'
 							onClick={() => setIsAddingResponse(true)}
 						>
