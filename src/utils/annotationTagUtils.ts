@@ -93,6 +93,18 @@ export function scanAnnotationTags(
 		const closeTagStart = closeMatch.index;
 		const closeTagEnd = closeTagStart + closeMatch[0].length;
 
+		openTagRegex.lastIndex = openTagEnd + 4;
+		const nextOpenMatch = openTagRegex.exec(text);
+
+		if (
+			nextOpenMatch &&
+			nextOpenMatch[1] === id &&
+			nextOpenMatch.index < closeTagStart
+		) {
+			searchStart = openTagEnd + 4;
+			continue;
+		}
+
 		const innerStart = openTagEnd + 4 + (backtickAfter ? 1 : 0);
 		const innerEnd =
 			closeTagStart -
@@ -168,6 +180,19 @@ export function collectAnnotationTagRanges(
 	}
 
 	return merged;
+}
+
+const tagTokenPattern = (kind: AnnotationKind) =>
+	`\`?<###(?:\\s|%)*${kind}(?:\\s|%)*id:[\\s\\S]*?###>\`?|\`?<\\/###(?:\\s|%)*${kind}(?:\\s|%)*id:(?:\\s|%)*[\\w-]+(?:\\s|%)*###>\`?`;
+
+export function stripAnnotationTagTokens(
+	text: string,
+	kinds: readonly AnnotationKind[] = ANNOTATION_KINDS,
+): string {
+	return text.replace(
+		new RegExp(kinds.map(tagTokenPattern).join('|'), 'g'),
+		'',
+	);
 }
 
 export function stripAnnotationTags(

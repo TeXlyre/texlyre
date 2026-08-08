@@ -5,7 +5,10 @@ import type { EditorView } from '@codemirror/view';
 import { createNamedLogger } from '@/logging';
 import { reviewService } from '../../services/ReviewService';
 import { createDerivedDecorationField } from './comments/tagDecorations';
-import { createTagProtection } from './comments/tagProtection';
+import {
+	annotationPasteSanitizer,
+	createTagProtection,
+} from './comments/tagProtection';
 import {
 	createAtomicTagRanges,
 	createDerivedTagRangeField,
@@ -17,6 +20,7 @@ import {
 	createReviewReporter,
 	reviewClickHandler,
 } from './review/reviewDecorations';
+import { restoreReviewBody } from './review/reviewSegments';
 import {
 	type ReviewConfig,
 	createTrackChangesFilter,
@@ -79,7 +83,14 @@ export function rejectReviewById(view: EditorView, id: string): boolean {
 	const chunk = getReviewChunks(view.state).find((entry) => entry.id === id);
 	if (!chunk) return false;
 
-	return reviewProtection.replaceById(view, id, chunk.originalText);
+	return reviewProtection.replaceById(
+		view,
+		id,
+		restoreReviewBody(
+			view.state.doc.sliceString(chunk.openEnd, chunk.closeStart),
+			chunk.originalText,
+		),
+	);
 }
 
 export function resolveAllReviews(view: EditorView, accept: boolean): boolean {
@@ -93,7 +104,10 @@ export function resolveAllReviews(view: EditorView, accept: boolean): boolean {
 				to: chunk.closeEnd,
 				insert: accept
 					? view.state.doc.sliceString(chunk.openEnd, chunk.closeStart)
-					: chunk.originalText,
+					: restoreReviewBody(
+							view.state.doc.sliceString(chunk.openEnd, chunk.closeStart),
+							chunk.originalText,
+						),
 			})),
 		});
 
@@ -142,6 +156,7 @@ export const reviewSystemExtension = [
 	reviewProtection.extension,
 	createReviewReporter(reviewChunks),
 	reviewClickHandler,
+	annotationPasteSanitizer,
 	createTrackChangesFilter({
 		reviewChunks,
 		commentRanges,

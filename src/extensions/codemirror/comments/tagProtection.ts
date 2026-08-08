@@ -9,9 +9,10 @@ import {
 	Transaction,
 	type TransactionSpec,
 } from '@codemirror/state';
-import { type EditorView, keymap } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
 
 import type { NamedLogger } from '@/logging';
+import { stripAnnotationTagTokens } from '../../../utils/annotationTagUtils';
 import {
 	type TagEffects,
 	type TagPayload,
@@ -233,6 +234,24 @@ export interface TagProtection {
 	unwrapById: (view: EditorView, id: string) => boolean;
 	replaceById: (view: EditorView, id: string, insert: string) => boolean;
 }
+
+export const annotationPasteSanitizer = EditorView.domEventHandlers({
+	paste(event, view) {
+		const text = event.clipboardData?.getData('text/plain');
+		if (!text) return false;
+
+		const cleaned = stripAnnotationTagTokens(text);
+		if (cleaned === text) return false;
+
+		event.preventDefault();
+		view.dispatch({
+			...view.state.replaceSelection(cleaned),
+			userEvent: 'input.paste',
+		});
+
+		return true;
+	},
+});
 
 export function createTagProtection<P extends TagPayload>(
 	field: StateField<TagRange[]>,

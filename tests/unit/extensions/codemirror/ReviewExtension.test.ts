@@ -270,7 +270,7 @@ describe('ReviewExtension', () => {
             expect(parsed[0].currentText).toBe('hi');
         });
 
-        it('should not track a deletion that spans comment tags', () => {
+        it('should track a deletion that encloses a whole comment', () => {
             const doc = `a ${commentOpen}kept${commentClose} b`;
             const view = createView(doc, true);
 
@@ -280,7 +280,109 @@ describe('ReviewExtension', () => {
             });
             sync(view);
 
+            const parsed = reviews(view);
+            expect(parsed).toHaveLength(1);
+            expect(parsed[0].originalText).toBe(' kept ');
+            expect(parsed[0].currentText).toBe('');
+        });
+
+        it('should not track a deletion that splits a comment tag', () => {
+            const doc = `a ${commentOpen}kept${commentClose} b`;
+            const view = createView(doc, true);
+            const [comment] = commentService.parseComments(doc);
+
+            view.dispatch({
+                changes: { from: comment.openTagStart + 5, to: doc.length - 1 },
+                userEvent: 'delete.selection',
+            });
+            sync(view);
+
             expect(reviews(view)).toHaveLength(0);
+        });
+
+        it('should keep deleting backwards on every keypress', () => {
+            const view = createView('one two', true);
+            view.dispatch({ selection: { anchor: 7 } });
+            const lengths: number[] = [];
+
+            for (let step = 0; step < 3; step++) {
+                const head = view.state.selection.main.head;
+                view.dispatch({
+                    changes: { from: head - 1, to: head },
+                    userEvent: 'delete.backward',
+                });
+                lengths.push(reviews(view)[0]?.originalText.length ?? 0);
+            }
+
+            expect(lengths).toEqual([1, 2, 3]);
+        });
+
+        it('should leave the cursor outside the tags after a backward deletion', () => {
+            const view = createView('one two', true);
+            view.dispatch({ selection: { anchor: 7 } });
+            view.dispatch({
+                changes: { from: 6, to: 7 },
+                userEvent: 'delete.backward',
+            });
+
+            const [chunk] = getReviewChunks(view.state);
+            expect(view.state.selection.main.head).toBe(chunk.openStart);
+        });
+
+        it('should leave the cursor outside the tags after a forward deletion', () => {
+            const view = createView('one two', true);
+            view.dispatch({ selection: { anchor: 0 } });
+            view.dispatch({
+                changes: { from: 0, to: 1 },
+                userEvent: 'delete.forward',
+            });
+
+            const [chunk] = getReviewChunks(view.state);
+            expect(view.state.selection.main.head).toBe(chunk.closeEnd);
+        });
+
+        it('should keep deleting forwards on every keypress', () => {
+            const view = createView('one two', true);
+            view.dispatch({ selection: { anchor: 0 } });
+            const lengths: number[] = [];
+
+            for (let step = 0; step < 3; step++) {
+                const head = view.state.selection.main.head;
+                view.dispatch({
+                    changes: { from: head, to: head + 1 },
+                    userEvent: 'delete.forward',
+                });
+                lengths.push(reviews(view)[0]?.originalText.length ?? 0);
+            }
+
+            expect(lengths).toEqual([1, 2, 3]);
+        });
+
+        it('should track a multi-line deletion as one review', () => {
+            const view = createView('one\ntwo\nthree\nfour', true);
+
+            view.dispatch({
+                changes: { from: 4, to: 13 },
+                userEvent: 'delete.selection',
+            });
+
+            const parsed = reviews(view);
+            expect(parsed).toHaveLength(1);
+            expect(parsed[0].originalText).toBe('two\nthree');
+            expect(parsed[0].currentText).toBe('');
+        });
+
+        it('should strip nested comment tags from the stored original text', () => {
+            const doc = `a ${commentOpen}kept${commentClose} b`;
+            const view = createView(doc, true);
+
+            view.dispatch({
+                changes: { from: 1, to: doc.length - 1 },
+                userEvent: 'delete.selection',
+            });
+            sync(view);
+
+            expect(reviews(view)[0].originalText).not.toContain('###');
         });
 
         it('should track an edit inside a comment body without losing the comment', () => {
@@ -355,6 +457,43 @@ describe('ReviewExtension', () => {
             resolveAllReviews(view, false);
 
             expect(view.state.doc.toString()).toBe('old and gonekept');
+        });
+
+        it('should keep a nested comment when a review is rejected', () => {
+            const view = createView(
+                `x ${openTag('aaa', 'old')}${commentOpen}new${commentClose}${closeTag('aaa')} y`,
+            );
+
+            rejectReviewById(view, 'aaa');
+
+            expect(view.state.doc.toString()).toBe(
+                `x ${commentOpen}old${commentClose} y`,
+            );
+            expect(commentService.parseComments(view.state.doc.toString())).toHaveLength(1);
+        });
+
+        it('should keep a nested comment when every review is rejected', () => {
+            const view = createView(
+                `${openTag('aaa', 'old')}${commentOpen}new${commentClose}${closeTag('aaa')}`,
+            );
+
+            resolveAllReviews(view, false);
+
+            expect(view.state.doc.toString()).toBe(
+                `${commentOpen}old${commentClose}`,
+            );
+        });
+
+        it('should keep a nested comment when a review is accepted', () => {
+            const view = createView(
+                `x ${openTag('aaa', 'old')}${commentOpen}new${commentClose}${closeTag('aaa')} y`,
+            );
+
+            acceptReviewById(view, 'aaa');
+
+            expect(view.state.doc.toString()).toBe(
+                `x ${commentOpen}new${commentClose} y`,
+            );
         });
 
         it('should report failure for an unknown review id', () => {
@@ -456,6 +595,14 @@ describe('ReviewExtension', () => {
 			const view = createView(`line one\nline two ${wrap('aaa', 'old', 'new')}`);
 
 			expect(snapshots(view)[0].line).toBe(2);
+		});
+
+		it('should report a nested comment body without its tags', () => {
+			const view = createView(
+				`${openTag('aaa', 'old')}${commentOpen}new${commentClose}${closeTag('aaa')}`,
+			);
+
+			expect(snapshots(view)[0].currentText).toBe('new');
 		});
 
 		it('should report the live body text of a review', () => {

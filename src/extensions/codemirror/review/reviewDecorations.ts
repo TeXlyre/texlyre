@@ -14,7 +14,7 @@ import {
 	hiddenTagEntries,
 } from '../comments/tagDecorations';
 import type { TagRange } from '../comments/tagRanges';
-import { computeReviewSegments } from './reviewSegments';
+import { computeReviewSegments, readReviewBody } from './reviewSegments';
 
 export interface ReviewChunk extends TagRange {
 	user: string;
@@ -87,9 +87,9 @@ export function buildReviewDecorations(
 		'review-close-tag',
 	);
 
-	const currentText = doc.sliceString(chunk.openEnd, chunk.closeStart);
+	const body = readReviewBody(doc.sliceString(chunk.openEnd, chunk.closeStart));
 
-	for (const segment of cachedSegments(chunk.originalText, currentText)) {
+	for (const segment of cachedSegments(chunk.originalText, body.text)) {
 		if (segment.type === 'equal') continue;
 
 		if (segment.type === 'delete') {
@@ -98,8 +98,8 @@ export function buildReviewDecorations(
 					widget: new DeletedTextWidget(segment.text, chunk.id),
 					side: -1,
 				}),
-				from: chunk.openEnd + segment.from,
-				to: chunk.openEnd + segment.from,
+				from: chunk.openEnd + body.docOffset(segment.from),
+				to: chunk.openEnd + body.docOffset(segment.from),
 				priority: 400 + segment.from,
 			});
 			continue;
@@ -110,8 +110,8 @@ export function buildReviewDecorations(
 				class: 'cm-review-inserted',
 				attributes: { 'data-review-id': chunk.id },
 			}),
-			from: chunk.openEnd + segment.from,
-			to: chunk.openEnd + segment.to,
+			from: chunk.openEnd + body.docOffset(segment.from),
+			to: chunk.openEnd + body.docOffset(segment.to),
 			priority: 500 + segment.from,
 		});
 	}
@@ -129,7 +129,9 @@ export function reviewSnapshots(
 		user: chunk.user,
 		timestamp: chunk.timestamp,
 		originalText: chunk.originalText,
-		currentText: doc.sliceString(chunk.openEnd, chunk.closeStart),
+		currentText: readReviewBody(
+			doc.sliceString(chunk.openEnd, chunk.closeStart),
+		).text,
 		responses: chunk.responses,
 		line: doc.lineAt(chunk.openStart).number,
 		docTop: blockTopAt(chunk.openStart),

@@ -1,6 +1,10 @@
 // src/utils/fileCommentUtils.ts
 import type { FileNode } from '../types/files';
-import { hasAnnotationTags, stripAnnotationTags } from './annotationTagUtils';
+import {
+	hasAnnotationTags,
+	stripAnnotationTagTokens,
+	stripAnnotationTags,
+} from './annotationTagUtils';
 
 export interface ProcessorStats {
 	total: number;
@@ -97,5 +101,5 @@ export function processFilesWithStats(
 }
 
 export function processTextSelection(text: string): string {
-	return cleanText(text);
+	return stripAnnotationTagTokens(text);
 }

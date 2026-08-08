@@ -3,10 +3,16 @@ import {
 	EditorState,
 	type Extension,
 	type StateField,
+	Transaction,
 	type TransactionSpec,
 } from '@codemirror/state';
 
-import { containsAnnotationMarker } from '../../../utils/annotationTagUtils';
+import {
+	ANNOTATION_KINDS,
+	containsAnnotationMarker,
+	stripAnnotationTagTokens,
+	stripAnnotationTags,
+} from '../../../utils/annotationTagUtils';
 import { reviewService } from '../../../services/ReviewService';
 import {
 	type SingleChange,
@@ -14,7 +20,7 @@ import {
 	isUserEdit,
 	skipTagProtection,
 } from '../comments/tagProtection';
-import { type TagRange, touchesTags } from '../comments/tagRanges';
+import { type TagRange, intersects } from '../comments/tagRanges';
 import type { ReviewChunk } from './reviewDecorations';
 
 export interface ReviewConfig {
@@ -34,6 +40,31 @@ interface TrackChangesDeps {
 	reviewChunks: StateField<ReviewChunk[]>;
 	commentRanges: StateField<TagRange[]>;
 	config: StateField<ReviewConfig>;
+}
+
+function splitsComment(
+	change: SingleChange,
+	ranges: readonly TagRange[],
+): boolean {
+	return ranges.some((range) => {
+		if (!intersects(change.from, change.to, range.openStart, range.closeEnd)) {
+			return false;
+		}
+
+		const insideBody =
+			change.from >= range.openEnd && change.to <= range.closeStart;
+		const covers =
+			change.from <= range.openStart && change.to >= range.closeEnd;
+
+		return !insideBody && !covers;
+	});
+}
+
+function hasUnbalancedComments(text: string): boolean {
+	return (
+		stripAnnotationTagTokens(text, ['comment']) !==
+		stripAnnotationTags(text, ['comment'])
+	);
 }
 
 function collectChunks(
@@ -123,16 +154,20 @@ function trackChange(
 	change: SingleChange,
 	deps: TrackChangesDeps,
 	config: ReviewConfig,
+	forward: boolean,
 ): { change: SingleChange; cursorPos: number } | null {
 	const chunks = state.field(deps.reviewChunks, false) ?? [];
 	const commentRanges = state.field(deps.commentRanges, false) ?? [];
 
-	if (touchesTags(change.from, change.to, commentRanges)) return null;
+	if (splitsComment(change, commentRanges)) return null;
+
+	if (hasUnbalancedComments(state.doc.sliceString(change.from, change.to))) {
+		return null;
+	}
 
 	if (
-		containsAnnotationMarker(
-			state.doc.sliceString(change.from, change.to),
-			'comment',
+		ANNOTATION_KINDS.some((kind) =>
+			containsAnnotationMarker(change.insert, kind),
 		)
 	) {
 		return null;
@@ -198,18 +233,20 @@ function trackChange(
 			: null;
 
 	const raw = reviewService.createReview(
-		originalText,
+		stripAnnotationTagTokens(originalText, ['comment']),
 		config.author,
 		owned ?? undefined,
 	);
 
+	const insert = `${raw.openTag}${nextText}${raw.closeTag}`;
+
 	return {
-		change: {
-			from,
-			to,
-			insert: `${raw.openTag}${nextText}${raw.closeTag}`,
-		},
-		cursorPos: from + raw.openTag.length + insertAt + change.insert.length,
+		change: { from, to, insert },
+		cursorPos: change.insert
+			? from + raw.openTag.length + insertAt + change.insert.length
+			: forward
+				? from + insert.length
+				: from,
 	};
 }
 
@@ -222,6 +259,9 @@ export function createTrackChangesFilter(deps: TrackChangesDeps): Extension {
 		const config = tr.startState.field(deps.config, false);
 		if (!config?.tracking || !config.author) return tr;
 
+		const forward =
+			tr.annotation(Transaction.userEvent) === 'delete.forward';
+
 		const changes = getChanges(tr);
 		const tracked: SingleChange[] = [];
 		let cursorPos: number | null = null;
@@ -229,7 +269,13 @@ export function createTrackChangesFilter(deps: TrackChangesDeps): Extension {
 		let lastEnd = -1;
 
 		for (const change of changes) {
-			const result = trackChange(tr.startState, change, deps, config);
+			const result = trackChange(
+				tr.startState,
+				change,
+				deps,
+				config,
+				forward,
+			);
 
 			if (!result) {
 				tracked.push(change);

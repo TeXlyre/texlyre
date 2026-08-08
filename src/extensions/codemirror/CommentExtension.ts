@@ -12,7 +12,10 @@ import {
 	createTagDecorationField,
 	hiddenTagEntries,
 } from './comments/tagDecorations';
-import { createTagProtection } from './comments/tagProtection';
+import {
+	annotationPasteSanitizer,
+	createTagProtection,
+} from './comments/tagProtection';
 import {
 	type TagPayload,
 	createAtomicTagRanges,
@@ -160,6 +163,7 @@ export const commentSystemExtension = [
 	commentState,
 	createAtomicTagRanges(commentRanges),
 	commentProtection.extension,
+	annotationPasteSanitizer,
 	contentProcessorExtension,
 	...commentBubbleExtension,
 ];

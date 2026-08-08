@@ -8,6 +8,7 @@ import {
     locateAnnotationTags,
     parseAnnotationResponses,
     scanAnnotationTags,
+    stripAnnotationTagTokens,
     stripAnnotationTags,
 } from '@src/utils/annotationTagUtils';
 
@@ -47,6 +48,15 @@ describe('Annotation Tag Utils', () => {
                 "`<### review id: orphan, user: tester, time: 1, original: '', responses: [] ###>`stray";
 
             expect(scanAnnotationTags(doc, 'review')).toHaveLength(0);
+        });
+
+        it('should pair a duplicated open id with the nearest close tag', () => {
+            const orphan = reviewWrap('aaa', 'gone', '').split('`</###')[0];
+            const doc = `${orphan}body ${reviewWrap('aaa', 'gone', '')}tail`;
+            const matches = scanAnnotationTags(doc, 'review');
+
+            expect(matches).toHaveLength(1);
+            expect(matches[0].openTagStart).toBe(doc.lastIndexOf('`<###'));
         });
 
         it('should handle tags wrapped across lines by a formatter', () => {
@@ -133,6 +143,46 @@ describe('Annotation Tag Utils', () => {
             expect(stripAnnotationTags(doc, ['review'])).toBe(
                 `${commentWrap('aaa', 'kept')}|new`,
             );
+        });
+    });
+
+    describe('stripAnnotationTagTokens', () => {
+        it('should behave like stripAnnotationTags on balanced tags', () => {
+            const doc = `${commentWrap('aaa', 'kept')} ${reviewWrap('bbb', 'old', 'new')}`;
+
+            expect(stripAnnotationTagTokens(doc)).toBe(stripAnnotationTags(doc));
+        });
+
+        it('should strip an orphan open tag', () => {
+            const [orphan] = reviewWrap('aaa', 'gone', '').split('`</###');
+
+            expect(stripAnnotationTagTokens(`before ${orphan}after`)).toBe(
+                'before after',
+            );
+        });
+
+        it('should strip an orphan close tag', () => {
+            expect(
+                stripAnnotationTagTokens('before `</### comment id: aaa ###>` after'),
+            ).toBe('before  after');
+        });
+
+        it('should strip an orphan tag wrapped across lines by a formatter', () => {
+            const doc =
+                "a `<### review\nid: wrapped, user: tester, time: 1, original: 'b2xk', responses: [] ###>`b";
+
+            expect(stripAnnotationTagTokens(doc)).toBe('a b');
+        });
+
+        it('should only strip the requested kind', () => {
+            const [orphan] = commentWrap('aaa', 'kept').split('`</###');
+            const doc = `${orphan}|${reviewWrap('bbb', 'old', 'new')}`;
+
+            expect(stripAnnotationTagTokens(doc, ['review'])).toBe(`${orphan}|new`);
+        });
+
+        it('should leave plain text untouched', () => {
+            expect(stripAnnotationTagTokens('plain text')).toBe('plain text');
         });
     });
 

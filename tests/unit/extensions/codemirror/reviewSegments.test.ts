@@ -1,7 +1,13 @@
 import {
     computeReviewSegments,
     countReviewChanges,
+    readReviewBody,
+    restoreReviewBody,
 } from '@src/extensions/codemirror/review/reviewSegments';
+
+const commentOpen =
+    "`<### comment id: ccc, user: tester, time: 1, content: 'n', responses: [], resolved: false ###>`";
+const commentClose = '`</### comment id: ccc ###>`';
 
 const types = (original: string, current: string) =>
     computeReviewSegments(original, current).map((segment) => segment.type);
@@ -77,6 +83,58 @@ describe('reviewSegments', () => {
         expect(countReviewChanges(computeReviewSegments('same', 'same'))).toEqual({
             inserted: 0,
             deleted: 0,
+        });
+    });
+
+    describe('readReviewBody', () => {
+        it('should return the raw text when there is nothing nested', () => {
+            const body = readReviewBody('plain');
+
+            expect(body.text).toBe('plain');
+            expect(body.docOffset(3)).toBe(3);
+        });
+
+        it('should hide a nested comment from the body text', () => {
+            const raw = `a${commentOpen}x${commentClose}b`;
+
+            expect(readReviewBody(raw).text).toBe('axb');
+        });
+
+        it('should map body offsets back onto document offsets', () => {
+            const raw = `a${commentOpen}x${commentClose}b`;
+            const body = readReviewBody(raw);
+
+            expect(body.docOffset(0)).toBe(0);
+            expect(body.docOffset(1)).toBe(raw.indexOf('x'));
+            expect(body.docOffset(2)).toBe(raw.lastIndexOf('b'));
+            expect(body.docOffset(3)).toBe(raw.length);
+        });
+
+        it('should diff against the masked body instead of the tag syntax', () => {
+            const raw = `${commentOpen}new${commentClose}`;
+
+            expect(types('old', readReviewBody(raw).text)).toEqual([
+                'delete',
+                'insert',
+            ]);
+        });
+    });
+
+    describe('restoreReviewBody', () => {
+        it('should return the original text when there is nothing nested', () => {
+            expect(restoreReviewBody('new', 'old')).toBe('old');
+        });
+
+        it('should wrap the original text in a nested comment', () => {
+            const raw = `${commentOpen}new${commentClose}`;
+
+            expect(restoreReviewBody(raw, 'old')).toBe(
+                `${commentOpen}old${commentClose}`,
+            );
+        });
+
+        it('should ignore an unbalanced comment tag', () => {
+            expect(restoreReviewBody(`${commentOpen}new`, 'old')).toBe('old');
         });
     });
 });
