@@ -68,7 +68,8 @@ function collectChunks(
 			chunk.openStart < change.to && chunk.closeEnd > change.from
 				? true
 				: (chunk.closeEnd === change.from || chunk.openStart === change.to) &&
-					chunk.user === author,
+					chunk.user === author &&
+					!chunk.resolved,
 		)
 		.sort((a, b) => a.openStart - b.openStart);
 }
@@ -186,7 +187,9 @@ function trackChange(
 	}
 
 	const existing =
-		covered.length === 1 && covered[0].user === config.author
+		covered.length === 1 &&
+		covered[0].user === config.author &&
+		!covered[0].resolved
 			? covered[0]
 			: undefined;
 	const raw = reviewService.createReview(originalText, config.author, existing);

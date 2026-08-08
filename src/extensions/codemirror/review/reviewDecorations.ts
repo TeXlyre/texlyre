@@ -21,6 +21,7 @@ export interface ReviewChunk extends TagRange {
 	timestamp: number;
 	originalText: string;
 	responses: CommentResponse[];
+	resolved: boolean;
 }
 
 const SEGMENT_CACHE_LIMIT = 200;
@@ -49,17 +50,22 @@ class DeletedTextWidget extends WidgetType {
 	constructor(
 		readonly text: string,
 		readonly id: string,
+		readonly resolved: boolean,
 	) {
 		super();
 	}
 
 	eq(other: DeletedTextWidget): boolean {
-		return this.text === other.text && this.id === other.id;
+		return (
+			this.text === other.text &&
+			this.id === other.id &&
+			this.resolved === other.resolved
+		);
 	}
 
 	toDOM(): HTMLElement {
 		const span = document.createElement('span');
-		span.className = 'cm-review-deleted';
+		span.className = `cm-review-deleted${this.resolved ? ' resolved' : ''}`;
 		span.dataset.reviewId = this.id;
 		span.textContent = this.text;
 		return span;
@@ -95,7 +101,7 @@ export function buildReviewDecorations(
 		if (segment.type === 'delete') {
 			entries.push({
 				decoration: Decoration.widget({
-					widget: new DeletedTextWidget(segment.text, chunk.id),
+					widget: new DeletedTextWidget(segment.text, chunk.id, chunk.resolved),
 					side: -1,
 				}),
 				from: chunk.openEnd + body.docOffset(segment.from),
@@ -107,7 +113,7 @@ export function buildReviewDecorations(
 
 		entries.push({
 			decoration: Decoration.mark({
-				class: 'cm-review-inserted',
+				class: `cm-review-inserted${chunk.resolved ? ' resolved' : ''}`,
 				attributes: { 'data-review-id': chunk.id },
 			}),
 			from: chunk.openEnd + body.docOffset(segment.from),
@@ -134,6 +140,7 @@ export function reviewSnapshots(
 			['comment'],
 		),
 		responses: chunk.responses,
+		resolved: chunk.resolved,
 		line: doc.lineAt(chunk.openStart).number,
 		docTop: blockTopAt(chunk.openStart),
 	}));
@@ -158,6 +165,7 @@ export function createReviewReporter(field: StateField<ReviewChunk[]>) {
 							(pos) => view.lineBlockAt(pos).top,
 						),
 						documentTop: view.documentTop,
+						documentHeight: view.contentHeight,
 						view,
 					},
 				}),

@@ -51,6 +51,7 @@ export const reviewChunks = createDerivedTagRangeField<ReviewChunk>((doc) =>
 		timestamp: review.timestamp,
 		originalText: review.originalText,
 		responses: review.responses,
+		resolved: review.resolved,
 	})),
 );
 
@@ -84,7 +85,7 @@ export function rejectReviewById(view: EditorView, id: string): boolean {
 }
 
 export function resolveAllReviews(view: EditorView, accept: boolean): boolean {
-	const chunks = getReviewChunks(view.state);
+	const chunks = getReviewChunks(view.state).filter((chunk) => !chunk.resolved);
 	if (!chunks.length) return false;
 
 	try {

@@ -1181,7 +1181,10 @@ const Editor: React.FC<EditorComponentProps> = ({
 					editorContent={textContent}
 					onUpdateContent={onUpdateContent}
 				>
-					<ReviewProvider documentKey={fileId || documentId}>
+					<ReviewProvider
+						documentKey={fileId || documentId}
+						sharedKey={filePath || linkedFileInfo?.filePath || documentId}
+					>
 						<div className='editor-container viewer-container collaborative-viewer'>
 							<CollaborativeViewerBridge
 								plugin={collaborativeViewerPlugin}
@@ -1292,7 +1295,10 @@ const Editor: React.FC<EditorComponentProps> = ({
 				editorContent={textContent}
 				onUpdateContent={handleContentUpdate}
 			>
-				<ReviewProvider documentKey={fileId || documentId}>
+				<ReviewProvider
+					documentKey={fileId || documentId}
+					sharedKey={filePath || linkedFileInfo?.filePath || documentId}
+				>
 					<div className='editor-container'>
 						<EditorContent
 							editorRef={editorRef}

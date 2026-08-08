@@ -8,7 +8,7 @@ import { useReview } from '../../hooks/useReview';
 import type { ReviewSnapshot } from '../../types/review';
 import { formatDate } from '../../utils/dateUtils';
 import { gotoEditor } from '../../utils/editorNavigator';
-import { CheckIcon, CloseIcon, TrashIcon } from '../common/Icons';
+import { CheckIcon, CloseIcon, ResolveIcon, TrashIcon } from '../common/Icons';
 
 interface ReviewItemProps {
 	review: ReviewSnapshot;
@@ -24,8 +24,13 @@ const ReviewItem = forwardRef<HTMLDivElement, ReviewItemProps>(
 	({ review, top }, ref) => {
 		const [newResponse, setNewResponse] = useState('');
 		const [isAddingResponse, setIsAddingResponse] = useState(false);
-		const { acceptReview, rejectReview, addResponse, deleteResponse } =
-			useReview();
+		const {
+			acceptReview,
+			rejectReview,
+			resolveReview,
+			addResponse,
+			deleteResponse,
+		} = useReview();
 
 		const segments = useMemo(
 			() => computeReviewSegments(review.originalText, review.currentText),
@@ -49,7 +54,7 @@ const ReviewItem = forwardRef<HTMLDivElement, ReviewItemProps>(
 
 		return (
 			<div
-				className='review-item'
+				className={`review-item ${review.resolved ? 'resolved' : ''}`}
 				data-review-id={review.id}
 				ref={ref}
 				style={top === undefined ? undefined : { top: `${top}px` }}
@@ -62,6 +67,18 @@ const ReviewItem = forwardRef<HTMLDivElement, ReviewItemProps>(
 						<div className='review-time'>{formatDate(review.timestamp)}</div>
 					</div>
 					<div className='review-header-actions'>
+						<button
+							type='button'
+							className='resolve-button'
+							onClick={() => resolveReview(review.id)}
+							title={
+								review.resolved
+									? t('Mark as unresolved')
+									: t('Mark as resolved')
+							}
+						>
+							<ResolveIcon />
+						</button>
 						<button
 							type='button'
 							className='accept-button'
@@ -85,7 +102,7 @@ const ReviewItem = forwardRef<HTMLDivElement, ReviewItemProps>(
 					type='button'
 					className='review-diff'
 					onClick={() => gotoEditor(null, { line: review.line })}
-					title={t('Go to change')}
+					title={t('Go to line {line}', { line: review.line })}
 				>
 					{segments.map((segment) => (
 						<span
@@ -100,57 +117,72 @@ const ReviewItem = forwardRef<HTMLDivElement, ReviewItemProps>(
 				{review.responses.length > 0 && (
 					<div className='review-responses'>
 						{review.responses.map((response) => (
-							<div key={response.id} className='review-response'>
-								<div className='review-response-header'>
-									<span className='review-author' title={response.user}>
-										{truncateUsername(response.user)}
-									</span>
-									<span className='review-time'>
-										{formatDate(response.timestamp)}
-									</span>
+							<div key={response.id} className='response-item'>
+								<div className='response-header'>
+									<div className='response-author-container'>
+										<div className='response-author' title={response.user}>
+											{truncateUsername(response.user)}
+										</div>
+										<div className='response-time'>
+											{formatDate(response.timestamp)}
+										</div>
+									</div>
 									<button
 										type='button'
-										className='delete-button'
+										className='delete-button small'
 										onClick={() => deleteResponse(review.id, response.id)}
 										title={t('Delete response')}
 									>
 										<TrashIcon />
 									</button>
 								</div>
-								<div className='review-response-content'>
-									{response.content}
-								</div>
+								<div className='response-content'>{response.content}</div>
 							</div>
 						))}
 					</div>
 				)}
 
-				{isAddingResponse ? (
-					<div className='review-response-form'>
-						<textarea
-							value={newResponse}
-							onChange={(event) => setNewResponse(event.target.value)}
-							onKeyDown={handleKeyDown}
-							placeholder={t('Write a reply...')}
-						/>
-						<div className='review-response-actions'>
-							<button type='button' onClick={() => setIsAddingResponse(false)}>
-								{t('Cancel')}
-							</button>
-							<button type='button' onClick={handleAddResponse}>
-								{t('Reply')}
-							</button>
+				{!review.resolved &&
+					(isAddingResponse ? (
+						<div className='add-response-form'>
+							<textarea
+								value={newResponse}
+								onChange={(event) => setNewResponse(event.target.value)}
+								onKeyDown={handleKeyDown}
+								placeholder={t('Type your response...')}
+								rows={2}
+							/>
+
+							<div className='form-actions'>
+								<button
+									type='button'
+									className='cancel-response-button'
+									onClick={() => {
+										setIsAddingResponse(false);
+										setNewResponse('');
+									}}
+								>
+									{t('Cancel')}
+								</button>
+								<button
+									type='button'
+									className='submit-response-button'
+									onClick={handleAddResponse}
+									disabled={!newResponse.trim()}
+								>
+									{t('Submit')}
+								</button>
+							</div>
 						</div>
-					</div>
-				) : (
-					<button
-						type='button'
-						className='review-reply-button'
-						onClick={() => setIsAddingResponse(true)}
-					>
-						{t('Reply')}
-					</button>
-				)}
+					) : (
+						<button
+							type='button'
+							className='add-response-button'
+							onClick={() => setIsAddingResponse(true)}
+						>
+							{t('Add response')}
+						</button>
+					))}
 			</div>
 		);
 	},

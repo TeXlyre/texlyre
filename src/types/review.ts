@@ -8,6 +8,7 @@ export interface Review {
 	originalText: string;
 	currentText: string;
 	responses: CommentResponse[];
+	resolved: boolean;
 	startPosition: number;
 	endPosition: number;
 	openTagStart: number;
@@ -39,6 +40,7 @@ export interface ReviewSnapshot {
 	originalText: string;
 	currentText: string;
 	responses: CommentResponse[];
+	resolved: boolean;
 	line: number;
 	docTop: number;
 }
@@ -48,9 +50,14 @@ export interface ReviewContextType {
 	showReviews: boolean;
 	toggleReviews: () => void;
 	trackChanges: boolean;
+	trackChangesLocal: boolean;
+	trackChangesShared: boolean;
+	canShareTracking: boolean;
 	toggleTrackChanges: () => void;
+	toggleTrackChangesShared: () => void;
 	acceptReview: (reviewId: string) => void;
 	rejectReview: (reviewId: string) => void;
+	resolveReview: (reviewId: string) => void;
 	acceptAllReviews: () => void;
 	rejectAllReviews: () => void;
 	addResponse: (reviewId: string, content: string) => void;

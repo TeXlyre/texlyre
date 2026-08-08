@@ -10,8 +10,10 @@ import {
 } from 'react';
 
 import { useAuth } from '../hooks/useAuth';
+import { useCollab } from '../hooks/useCollab';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { reviewService } from '../services/ReviewService';
+import type { DocumentList } from '../types/documents';
 import type { ReviewContextType, ReviewSnapshot } from '../types/review';
 
 export const ReviewContext = createContext<ReviewContextType | null>(null);
@@ -19,19 +21,27 @@ export const ReviewContext = createContext<ReviewContextType | null>(null);
 interface ReviewProviderProps {
 	children: ReactNode;
 	documentKey: string;
+	sharedKey?: string;
 }
 
 export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 	children,
 	documentKey,
+	sharedKey,
 }) => {
 	const [reviews, setReviews] = useState<ReviewSnapshot[]>([]);
 	const [showReviews, setShowReviews] = useState<boolean>(false);
-	const [trackChanges, setTrackChanges] = usePersistentState<boolean>(
+	const [trackChangesLocal, setTrackChangesLocal] = usePersistentState<boolean>(
 		`review-tracking:${documentKey}`,
 		false,
 	);
 	const { user } = useAuth();
+	const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
+
+	const trackChangesShared =
+		!!sharedKey && !!doc?.projectMetadata?.trackedFiles?.includes(sharedKey);
+	const canShareTracking = !!changeDoc && !!sharedKey;
+	const trackChanges = trackChangesLocal || trackChangesShared;
 
 	const signatureRef = useRef('');
 
@@ -43,7 +53,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 			const signature = next
 				.map(
 					(review) =>
-						`${review.id}:${review.docTop}:${review.originalText.length}:${review.currentText}:${review.responses.length}`,
+						`${review.id}:${review.docTop}:${review.originalText.length}:${review.currentText}:${review.responses.length}:${review.resolved}`,
 				)
 				.join('|');
 
@@ -82,8 +92,25 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 	const toggleReviews = () => setShowReviews((visible) => !visible);
 
 	const toggleTrackChanges = () => {
-		setTrackChanges(!trackChanges);
-		if (!trackChanges) setShowReviews(true);
+		setTrackChangesLocal(!trackChangesLocal);
+		if (!trackChangesLocal) setShowReviews(true);
+	};
+
+	const toggleTrackChangesShared = () => {
+		if (!changeDoc || !sharedKey) return;
+
+		changeDoc((d) => {
+			if (!d.projectMetadata) {
+				d.projectMetadata = { name: '', description: '' };
+			}
+
+			const tracked = d.projectMetadata.trackedFiles ?? [];
+			d.projectMetadata.trackedFiles = tracked.includes(sharedKey)
+				? tracked.filter((entry: string) => entry !== sharedKey)
+				: [...tracked, sharedKey];
+		});
+
+		if (!trackChangesShared) setShowReviews(true);
 	};
 
 	const dispatchReviewEvent = (
@@ -103,19 +130,26 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 
 	const rejectAllReviews = () => dispatchReviewEvent('review-reject-all');
 
+	const resolveReview = (reviewId: string) => {
+		const review = reviews.find((entry) => entry.id === reviewId);
+		if (!review) return;
+
+		dispatchReviewEvent('review-update', {
+			reviewId,
+			rawReview: reviewService.updateReview({
+				...review,
+				resolved: !review.resolved,
+			}),
+		});
+	};
+
 	const updateResponses = (
 		review: ReviewSnapshot,
 		responses: ReviewSnapshot['responses'],
 	) => {
 		dispatchReviewEvent('review-update', {
 			reviewId: review.id,
-			rawReview: reviewService.updateReview({
-				id: review.id,
-				user: review.user,
-				timestamp: review.timestamp,
-				originalText: review.originalText,
-				responses,
-			}),
+			rawReview: reviewService.updateReview({ ...review, responses }),
 		});
 	};
 
@@ -148,9 +182,14 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 				showReviews,
 				toggleReviews,
 				trackChanges,
+				trackChangesLocal,
+				trackChangesShared,
+				canShareTracking,
 				toggleTrackChanges,
+				toggleTrackChangesShared,
 				acceptReview,
 				rejectReview,
+				resolveReview,
 				acceptAllReviews,
 				rejectAllReviews,
 				addResponse,

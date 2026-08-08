@@ -18,6 +18,7 @@ interface ReviewTagFields {
 	timestamp: number;
 	originalText: string;
 	responses: readonly CommentResponse[];
+	resolved: boolean;
 }
 
 function formatTags(fields: ReviewTagFields): ReviewRaw {
@@ -25,7 +26,7 @@ function formatTags(fields: ReviewTagFields): ReviewRaw {
 	const original = encodeAnnotationText(fields.originalText);
 
 	return {
-		openTag: `\`<### review id: ${fields.id}, user: ${fields.user}, time: ${fields.timestamp}, original: '${original}', responses: [${responsesString}] ###>\``,
+		openTag: `\`<### review id: ${fields.id}, user: ${fields.user}, time: ${fields.timestamp}, original: '${original}', responses: [${responsesString}], resolved: ${fields.resolved} ###>\``,
 		closeTag: `\`</### review id: ${fields.id} ###>\``,
 		reviewId: fields.id,
 	};
@@ -37,6 +38,9 @@ class ReviewService {
 			const userMatch = match.openTagContent.match(/user:\s*([^,]+?)(?=\s*,)/);
 			const timeMatch = match.openTagContent.match(/time:\s*(\d+)/);
 			const originalMatch = match.openTagContent.match(/original:\s*'([^']*)'/);
+			const resolvedMatch = match.openTagContent.match(
+				/resolved:\s*(true|false)/,
+			);
 
 			return {
 				id: match.id,
@@ -47,6 +51,7 @@ class ReviewService {
 					: '',
 				currentText: match.innerText,
 				responses: parseAnnotationResponses(match.openTagContent),
+				resolved: resolvedMatch?.[1] === 'true',
 				startPosition: match.openTagStart,
 				endPosition: match.closeTagEnd,
 				openTagStart: match.openTagStart,
@@ -61,7 +66,10 @@ class ReviewService {
 	createReview(
 		originalText: string,
 		username: string,
-		existing?: Pick<Review, 'id' | 'user' | 'timestamp' | 'responses'>,
+		existing?: Pick<
+			Review,
+			'id' | 'user' | 'timestamp' | 'responses' | 'resolved'
+		>,
 	): ReviewRaw {
 		return formatTags({
 			id: existing?.id ?? nanoid(),
@@ -69,13 +77,14 @@ class ReviewService {
 			timestamp: existing?.timestamp ?? Date.now(),
 			originalText,
 			responses: existing?.responses ?? [],
+			resolved: existing?.resolved ?? false,
 		});
 	}
 
 	updateReview(
 		review: Pick<
 			Review,
-			'id' | 'user' | 'timestamp' | 'originalText' | 'responses'
+			'id' | 'user' | 'timestamp' | 'originalText' | 'responses' | 'resolved'
 		>,
 	): ReviewRaw {
 		return formatTags({
@@ -84,6 +93,7 @@ class ReviewService {
 			timestamp: review.timestamp,
 			originalText: review.originalText,
 			responses: review.responses,
+			resolved: review.resolved,
 		});
 	}
 

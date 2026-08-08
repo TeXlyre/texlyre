@@ -1,9 +1,15 @@
 // src/components/review/ReviewToggleButton.tsx
 import type React from 'react';
+import { useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useReview } from '../../hooks/useReview';
-import { EditingViewIcon, ToolbarStrikeIcon } from '../common/Icons';
+import PositionedDropdown from '../common/PositionedDropdown';
+import {
+	ChevronDownIcon,
+	ReviewPanelIcon,
+	TrackChangesIcon,
+} from '../common/Icons';
 
 interface ReviewButtonProps {
 	className?: string;
@@ -12,18 +18,75 @@ interface ReviewButtonProps {
 export const TrackChangesButton: React.FC<ReviewButtonProps> = ({
 	className = '',
 }) => {
-	const { trackChanges, toggleTrackChanges } = useReview();
+	const {
+		trackChanges,
+		trackChangesLocal,
+		trackChangesShared,
+		canShareTracking,
+		toggleTrackChanges,
+		toggleTrackChangesShared,
+	} = useReview();
+	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+	const groupRef = useRef<HTMLDivElement>(null);
 
 	return (
-		<button
-			className={`control-button ${className} ${trackChanges ? 'active' : ''}`}
-			onClick={toggleTrackChanges}
-			title={t('{action} tracking changes', {
-				action: trackChanges ? t('Stop') : t('Start'),
-			})}
-		>
-			<EditingViewIcon />
-		</button>
+		<div className={`tracking-button-container ${className}`}>
+			<div className='tracking-button-group' ref={groupRef}>
+				<button
+					type='button'
+					className={`control-button tracking-button ${trackChanges ? 'active' : ''}`}
+					onClick={toggleTrackChanges}
+					title={
+						trackChangesShared
+							? t('Tracking changes for all collaborators')
+							: t('{action} tracking changes', {
+									action: trackChangesLocal ? t('Stop') : t('Start'),
+								})
+					}
+				>
+					<TrackChangesIcon />
+				</button>
+
+				<button
+					type='button'
+					className='control-button dropdown-toggle'
+					onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+					title={t('Tracking Options')}
+				>
+					<ChevronDownIcon />
+				</button>
+			</div>
+
+			<PositionedDropdown
+				isOpen={isDropdownOpen}
+				triggerElement={groupRef.current}
+				className='tracking-dropdown'
+				onClose={() => setIsDropdownOpen(false)}
+			>
+				<div className='dropdown-section'>
+					<div className='dropdown-title'>{t('Track Changes:')}</div>
+
+					<label className='dropdown-checkbox'>
+						<input
+							type='checkbox'
+							checked={trackChangesLocal}
+							onChange={toggleTrackChanges}
+						/>
+						{t('Track my changes in this file')}
+					</label>
+
+					<label className='dropdown-checkbox'>
+						<input
+							type='checkbox'
+							checked={trackChangesShared}
+							onChange={toggleTrackChangesShared}
+							disabled={!canShareTracking}
+						/>
+						{t('Track changes for all collaborators')}
+					</label>
+				</div>
+			</PositionedDropdown>
+		</div>
 	);
 };
 
@@ -34,6 +97,7 @@ const ReviewToggleButton: React.FC<ReviewButtonProps> = ({
 
 	return (
 		<button
+			type='button'
 			className={`control-button ${className} ${showReviews ? 'active' : ''}`}
 			onClick={toggleReviews}
 			title={t('{action} Changes{numReviews}', {
@@ -42,7 +106,7 @@ const ReviewToggleButton: React.FC<ReviewButtonProps> = ({
 			})}
 		>
 			<div className='review-button-container'>
-				<ToolbarStrikeIcon />
+				<ReviewPanelIcon />
 				{reviews.length > 0 && (
 					<span className='review-count-badge'>{reviews.length}</span>
 				)}
