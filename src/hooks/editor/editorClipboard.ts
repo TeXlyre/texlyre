@@ -20,8 +20,6 @@ export const registerEditorClipboard = (
 			return;
 		}
 
-		if (event.type !== 'copy') return;
-
 		const view = viewRef.current;
 		const range = view?.state.selection.main;
 		if (!view || !range || range.from === range.to) return;
@@ -30,7 +28,8 @@ export const registerEditorClipboard = (
 			'text/plain',
 			processTextSelection(view.state.doc.sliceString(range.from, range.to)),
 		);
-		event.preventDefault();
+
+		if (event.type === 'copy') event.preventDefault();
 	};
 
 	editorElement.addEventListener('copy', handleClipboard);

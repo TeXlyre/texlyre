@@ -70,6 +70,35 @@ describe('registerEditorClipboard', () => {
         expect(data.getData('text/plain')).toBe('before kept after');
     });
 
+    it('should strip an orphan open tag left by a partial selection', () => {
+        const doc = `before ${wrap('aaa', 'kept')} after`;
+        setup(doc);
+
+        const { data } = fireClipboard('copy', openTag('aaa'));
+
+        expect(data.getData('text/plain')).toBe('');
+    });
+
+    it('should strip an orphan close tag left by a partial selection', () => {
+        const doc = `before ${wrap('aaa', 'kept')} after`;
+        setup(doc);
+
+        const { data } = fireClipboard('cut', closeTag('aaa'));
+
+        expect(data.getData('text/plain')).toBe('');
+    });
+
+    it('should fall back to the selection on cut without cancelling the edit', () => {
+        const doc = `before ${wrap('aaa', 'kept')} after`;
+        setup(doc);
+        view.dispatch({ selection: { anchor: 0, head: doc.length } });
+
+        const { data, event } = fireClipboard('cut');
+
+        expect(data.getData('text/plain')).toBe('before kept after');
+        expect(event.defaultPrevented).toBe(false);
+    });
+
     it('should strip every comment of a select-all copy', () => {
         const doc = `${wrap('aaa', 'one')} mid ${wrap('bbb', 'two')}`;
         setup(doc);

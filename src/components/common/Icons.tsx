@@ -885,6 +885,64 @@ export const UploadIcon: React.FC = () => (
 	</svg>
 );
 
+export const TrackChangesIcon: React.FC = () => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		width='16'
+		height='16'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+	>
+		<line x1='3' y1='6' x2='14' y2='6' />
+		<line x1='3' y1='11' x2='9' y2='11' />
+		<line x1='3' y1='16' x2='7' y2='16' />
+		<path d='M19.4 9.6a1.9 1.9 0 0 0-2.7 0L11 15.3l-.7 3.4 3.4-.7 5.7-5.7a1.9 1.9 0 0 0 0-2.7z' />
+	</svg>
+);
+
+export const ReviewPanelIcon: React.FC = () => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		width='16'
+		height='16'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+	>
+		<rect x='3' y='4' width='18' height='16' rx='2' />
+		<line x1='13' y1='4' x2='13' y2='20' />
+		<line x1='6' y1='9' x2='10' y2='9' />
+		<line x1='6' y1='14' x2='10' y2='14' />
+		<line x1='15.5' y1='9' x2='18.5' y2='9' />
+		<line x1='17' y1='7.5' x2='17' y2='10.5' />
+		<line x1='15.5' y1='15' x2='18.5' y2='15' />
+	</svg>
+);
+
+export const ResolveIcon: React.FC = () => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		width='16'
+		height='16'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+	>
+		<circle cx='12' cy='12' r='9' />
+		<polyline points='8.5 12 11 14.5 15.5 9.5' />
+	</svg>
+);
+
 export const CommentIcon: React.FC = () => (
 	<svg
 		xmlns='http://www.w3.org/2000/svg'

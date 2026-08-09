@@ -31,7 +31,7 @@
 }
 
 .bib-panel {
-	order: 3;
+	order: 4;
 	width: var(--lsp-panel-width, 350px);
 	display: flex;
 	flex-direction: column;
@@ -372,10 +372,6 @@
 .bib-search-input:focus {
 	outline: none;
 	border-color: var(--pico-primary);
-}
-
-.bib-search-input::placeholder {
-	color: var(--pico-secondary);
 }
 
 .bib-clear-search-button {

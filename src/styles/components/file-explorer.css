@@ -14,6 +14,7 @@
 	width: 100%;
 	background-color: var(--pico-secondary-background);
 	border-radius: var(--radius-lg);
+	border: 1px solid transparent;
 	display: flex;
 	flex-direction: column;
 	color: var(--text-color);
@@ -23,7 +24,7 @@
 }
 
 .file-explorer:hover {
-	border: 1px solid var(--accent-border);
+	border-color: var(--accent-border);
 }
 
 .file-explorer-header {

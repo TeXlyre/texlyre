@@ -41,9 +41,13 @@
 	font-family: inherit;
 }
 
+.comment-search input.comment-search-input {
+	margin-bottom: 0;
+}
+
 /* Comment panel styles */
 .comment-panel {
-	order: 2;
+	order: 3;
 	width: var(--comment-panel-width);
 	display: flex;
 	flex-direction: column;

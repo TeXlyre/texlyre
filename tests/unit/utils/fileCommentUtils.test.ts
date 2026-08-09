@@ -6,10 +6,16 @@ import {
     processFilesWithStats,
 } from '@src/utils/fileCommentUtils';
 import { commentService } from '@src/services/CommentService';
+import { reviewService } from '@src/services/ReviewService';
 import type { FileNode } from '@src/types/files';
 
 const wrap = (text: string) => {
     const { openTag, closeTag } = commentService.addComment('a note', 'tester');
+    return `${openTag}${text}${closeTag}`;
+};
+
+const reviewWrap = (original: string, text: string) => {
+    const { openTag, closeTag } = reviewService.createReview(original, 'tester');
     return `${openTag}${text}${closeTag}`;
 };
 
@@ -43,6 +49,15 @@ describe('File Comment Utils', () => {
         it('should detect tags wrapped across lines by a formatter', () => {
             const wrapped = `\`<### comment\nid: wrapped, user: tester, time: 1700000000000, content: 'a note', responses: [], resolved: false ###>\`kept\`</### comment id: wrapped ###>\``;
             expect(hasComments(wrapped)).toBe(true);
+        });
+
+        it('should detect reviews in a string', () => {
+            expect(hasComments(reviewWrap('old', 'new'))).toBe(true);
+        });
+
+        it('should detect reviews in an ArrayBuffer', () => {
+            const buffer = new TextEncoder().encode(reviewWrap('old', 'new')).buffer;
+            expect(hasComments(buffer)).toBe(true);
         });
 
         it('should not treat lookalike text as a comment', () => {
@@ -122,6 +137,28 @@ describe('File Comment Utils', () => {
             expect(cleanText(input)).toBe(`one ${orphan} two three`);
         });
 
+        it('should strip a review and keep the changed text', () => {
+            expect(cleanText(`before ${reviewWrap('old', 'new')} after`)).toBe(
+                'before new after',
+            );
+        });
+
+        it('should strip a deletion review, dropping the removed text', () => {
+            expect(cleanText(`before ${reviewWrap('gone ', '')}after`)).toBe(
+                'before after',
+            );
+        });
+
+        it('should strip comments and reviews from the same document', () => {
+            const input = `${wrap('kept')} and ${reviewWrap('old', 'new')}`;
+            expect(cleanText(input)).toBe('kept and new');
+        });
+
+        it('should strip a review nested inside a comment', () => {
+            const input = rawWrap('outer', `x ${reviewWrap('old', 'new')} y`);
+            expect(cleanText(input)).toBe('x new y');
+        });
+
         it('should leave a stray close tag untouched', () => {
             const input = 'before `</### comment id: aaa ###>` after';
             expect(cleanText(input)).toBe(input);
@@ -129,6 +166,10 @@ describe('File Comment Utils', () => {
     });
 
     describe('cleanContent', () => {
+        it('should clean review content', () => {
+            expect(cleanContent(reviewWrap('old', 'new'))).toBe('new');
+        });
+
         it('should clean string content', () => {
             expect(cleanContent(wrap('kept'))).toBe('kept');
         });

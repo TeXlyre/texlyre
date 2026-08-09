@@ -10,8 +10,6 @@ import { useEditorView } from '@/hooks/editor/useEditorView';
 
 const EMPTY_TOOLBAR_ITEMS: ToolbarEntry[] = [];
 
-const noopParse = () => [];
-const noopAdd = () => ({ openTag: '', closeTag: '', commentId: '' });
 const noopUpdate = () => {};
 
 interface MilkdownTextPaneProps {
@@ -23,8 +21,6 @@ interface MilkdownTextPaneProps {
 	fileName: string;
 	fileId?: string;
 	isEditingFile: boolean;
-	parseComments?: (text: string) => unknown[];
-	addComment?: (content: string) => unknown;
 	updateComments?: (content: string) => void;
 	registerView?: (getContent: () => string) => void;
 	showToolbar?: boolean;
@@ -39,8 +35,6 @@ const MilkdownTextPane: React.FC<MilkdownTextPaneProps> = ({
 	fileName,
 	fileId,
 	isEditingFile,
-	parseComments,
-	addComment,
 	updateComments,
 	registerView,
 	showToolbar = true,
@@ -54,8 +48,6 @@ const MilkdownTextPane: React.FC<MilkdownTextPaneProps> = ({
 		isDocumentSelected,
 		markdown,
 		onChange,
-		parseComments || noopParse,
-		addComment || noopAdd,
 		updateComments || noopUpdate,
 		isEditingFile,
 		false,

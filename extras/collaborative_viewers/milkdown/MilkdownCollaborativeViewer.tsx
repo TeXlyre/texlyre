@@ -105,8 +105,6 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	docUrl,
 	documentId,
 	isDocumentSelected,
-	parseComments,
-	addComment,
 	updateComments,
 }) => {
 	const { getSetting } = useSettings();
@@ -514,13 +512,11 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 						docUrl={docUrl}
 						documentId={documentId}
 						isDocumentSelected={isDocumentSelected}
-						markdown={textPaneInitialMarkdownRef.current ?? markdownRef.current}
+						markdown={textPaneInitialMarkdownRef.current ?? markdown}
 						onChange={handleTextChange}
 						fileName={fileName}
 						isEditingFile={false}
 						showToolbar={showToolbar}
-						parseComments={parseComments}
-						addComment={addComment}
 						updateComments={updateComments}
 						registerView={(getContent) => {
 							getTextContentRef.current = getContent;

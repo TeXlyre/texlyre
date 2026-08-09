@@ -1,0 +1,312 @@
+/* CodeMirror review styles */
+.review-open-tag,
+.review-close-tag {
+	display: none !important;
+	width: 0 !important;
+	height: 0 !important;
+	overflow: hidden !important;
+	position: absolute !important;
+	visibility: hidden !important;
+}
+
+.cm-review-inserted {
+	background-color: color-mix(in srgb, var(--color-success) 18%, transparent);
+	text-decoration: underline;
+	text-decoration-color: var(--color-success);
+}
+
+.cm-review-deleted {
+	background-color: color-mix(in srgb, var(--color-error) 15%, transparent);
+	color: var(--pico-secondary);
+	text-decoration: line-through;
+}
+
+.highlight-review {
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.2) !important;
+	transition: background-color 0.3s ease;
+}
+
+/* Review panel styles */
+.review-panel {
+	order: 2;
+	width: var(--comment-panel-width);
+	display: flex;
+	flex-direction: column;
+	border-left: 1px solid var(--accent-border);
+	background-color: var(--pico-secondary-background);
+	height: 100%;
+	position: relative;
+	overflow: hidden;
+	flex-shrink: 0;
+}
+
+.editor-review-panel {
+	height: 100%;
+	box-shadow: var(--shadow-md);
+}
+
+.review-panel-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: var(--space-sm);
+	border-bottom: 1px solid var(--accent-border);
+	flex-shrink: 0;
+}
+
+.review-panel-header h3 {
+	margin: 0 var(--space-xs) 0 0;
+	font-size: 0.8rem;
+}
+
+.review-panel-actions {
+	display: flex;
+	gap: var(--space-sm);
+	padding: var(--space-sm);
+	border-bottom: 1px solid var(--accent-border);
+	flex-shrink: 0;
+}
+
+.review-panel-actions button {
+	flex: 1;
+	margin: 0;
+	height: var(--button-height-md);
+	padding: var(--space-xs) var(--space-sm);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	background-color: transparent;
+	color: var(--text-color);
+	font-size: 0.75rem;
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
+}
+
+.review-panel-actions button:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
+}
+
+.review-panel-actions button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.review-panel-content {
+	flex: 1;
+	overflow-y: auto;
+	position: relative;
+}
+
+.review-panel-track {
+	position: relative;
+}
+
+.review-panel-title {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+}
+
+.review-sync-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0;
+	padding: 0;
+	width: 1.5rem;
+	height: 1.5rem;
+	border: 0;
+	background: transparent;
+	color: var(--text-color);
+	cursor: pointer;
+	opacity: 0.7;
+}
+
+.review-sync-button:hover {
+	opacity: 1;
+	background-color: var(--pico-primary-focus);
+}
+
+.no-reviews {
+	text-align: center;
+	padding: var(--space-md);
+	color: var(--pico-secondary);
+}
+
+.review-item {
+	position: absolute;
+	left: var(--space-sm);
+	right: var(--space-sm);
+	padding: var(--space-sd);
+	font-size: 0.8rem;
+	border-radius: var(--radius-lg);
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+}
+
+.review-item.resolved {
+	opacity: 0.7;
+	background-color: var(--pico-secondary-background);
+}
+
+.review-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: var(--space-sm);
+}
+
+.review-author-container {
+	display: flex;
+	flex-direction: column;
+}
+
+.review-author {
+	font-weight: 500;
+	color: var(--pico-primary);
+	max-width: 150px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.review-time {
+	font-size: 0.6rem;
+	color: var(--pico-secondary);
+	margin-top: 2px;
+}
+
+.review-header-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+}
+
+.review-header-actions button {
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: var(--pico-secondary);
+	padding: 0;
+	opacity: 0.7;
+	transition: opacity var(--transition-normal);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+}
+
+.review-header-actions button:hover {
+	opacity: 1;
+}
+
+.review-header-actions .resolve-button:hover,
+.review-header-actions .accept-button:hover {
+	color: var(--color-success);
+}
+
+.review-header-actions .reject-button:hover {
+	color: var(--color-error);
+}
+
+.review-item.resolved .resolve-button {
+	color: var(--color-success);
+	opacity: 1;
+}
+
+.review-diff {
+	background: none;
+	border: none;
+	padding: 0;
+	margin: 0 0 var(--space-sd) 0;
+	width: 100%;
+	text-align: left;
+	cursor: pointer;
+	white-space: pre-wrap;
+	word-break: break-word;
+	font-family: var(--pico-font-family-monospace, monospace);
+	font-size: 0.75rem;
+	color: var(--text-color);
+}
+
+.review-segment-insert {
+	background-color: color-mix(in srgb, var(--color-success) 18%, transparent);
+	text-decoration: underline;
+}
+
+.review-segment-delete {
+	background-color: color-mix(in srgb, var(--color-error) 15%, transparent);
+	color: var(--pico-secondary);
+	text-decoration: line-through;
+}
+
+.review-responses {
+	margin-top: var(--space-sm);
+	margin-left: var(--space-md);
+	padding-left: var(--space-sm);
+	border-left: 2px solid var(--accent-border);
+}
+
+.review-button-container {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+.review-count-badge {
+	background-color: var(--color-success);
+	color: #fff;
+	margin: 0.25rem 0.25rem;
+	padding: 0.225rem 0.295rem;
+	border-radius: 10px;
+	font-size: 0.55rem;
+	font-weight: 600;
+	min-width: 1.25rem;
+	text-align: center;
+	line-height: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	vertical-align: middle;
+}
+
+.tracking-button-container {
+	display: flex;
+	gap: var(--space-xs);
+	position: relative;
+}
+
+.tracking-button-group {
+	display: flex;
+	align-items: center;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+}
+
+.tracking-button-group .tracking-button {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+	flex: 2;
+	width: 20px;
+}
+
+.tracking-button-group .dropdown-toggle {
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+	flex: 1;
+	min-width: 0 !important;
+}
+
+.tracking-dropdown {
+	min-width: 240px;
+	padding: var(--space-sm);
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-md);
+}
+
+.tracking-dropdown .dropdown-checkbox + .dropdown-checkbox {
+	margin-top: var(--space-sm);
+}

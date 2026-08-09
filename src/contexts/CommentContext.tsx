@@ -5,11 +5,14 @@ import {
 	createContext,
 	useCallback,
 	useEffect,
+	useRef,
 	useState,
 } from 'react';
 
 import { useAuth } from '../hooks/useAuth';
+import { useProperties } from '../hooks/useProperties';
 import { commentService } from '../services/CommentService';
+import { fileStorageService } from '../services/FileStorageService';
 import type {
 	Comment,
 	CommentContextType,
@@ -34,7 +37,55 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 }) => {
 	const [comments, setComments] = useState<Comment[]>([]);
 	const [showComments, setShowComments] = useState<boolean>(false);
+	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const { user } = useAuth();
+	const {
+		isReady: arePropertiesReady,
+		getProperty,
+		setProperty,
+		registerProperty,
+	} = useProperties();
+	const propertiesRegistered = useRef(false);
+
+	useEffect(() => {
+		if (propertiesRegistered.current) return;
+		propertiesRegistered.current = true;
+
+		registerProperty({
+			id: 'comment-panel-visible',
+			category: 'UI',
+			subcategory: 'Editor',
+			defaultValue: false,
+		});
+	}, [registerProperty]);
+
+	useEffect(() => {
+		if (!arePropertiesReady || propertiesLoaded) return;
+
+		const projectId = fileStorageService.getCurrentProjectId();
+		if (projectId) {
+			setShowComments(
+				getProperty('comment-panel-visible', {
+					scope: 'project',
+					projectId,
+				}) === true,
+			);
+		}
+
+		setPropertiesLoaded(true);
+	}, [arePropertiesReady, propertiesLoaded, getProperty]);
+
+	useEffect(() => {
+		if (!propertiesLoaded) return;
+
+		const projectId = fileStorageService.getCurrentProjectId();
+		if (!projectId) return;
+
+		setProperty('comment-panel-visible', showComments, {
+			scope: 'project',
+			projectId,
+		});
+	}, [showComments, propertiesLoaded, setProperty]);
 
 	const getCommentById = useCallback(
 		(commentId: string) => {
