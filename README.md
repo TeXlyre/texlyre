@@ -2,13 +2,14 @@
 
 A **[local-first](https://www.inkandswitch.com/essay/local-first/)** real-time [LaTeX](https://www.latex-project.org/) and [Typst](https://typst.app) collaboration platform with offline editing capabilities. Built with React, TypeScript, and Yjs for collaborative document editing.
 
-[![GitHub Pages](https://img.shields.io/badge/🟢%20Live-GitHub%20Pages-181717.svg?logo=github)](https://texlyre.org/texlyre)
+[![TeXlyre](https://img.shields.io/website?url=https%3A%2F%2Ftexlyre.org%2Ftexlyre%2F&label=TeXlyre&up_message=%F0%9F%9F%A2%20online&down_message=%F0%9F%94%B4%20offline&up_color=555&down_color=555)](https://texlyre.github.io/texlyre/)
+[![Uptime](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FTeXlyre%2Fupptime%2FHEAD%2Fapi%2Ftexlyre-app%2Fuptime.json)](https://texlyre.github.io/upptime/)
+
 [![Tests](https://img.shields.io/github/actions/workflow/status/texlyre/texlyre/test.yml?label=tests)](https://github.com/texlyre/texlyre/actions)
-[![Deploy](https://img.shields.io/github/actions/workflow/status/texlyre/texlyre/deploy.yml?label=deploy)](https://github.com/texlyre/texlyre/actions)
 [![Crowdin](https://badges.crowdin.net/texlyre/localized.svg)](https://crowdin.com/project/texlyre)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org/)
+[![React](https://img.shields.io/badge/React-19+-61DAFB.svg)](https://react.dev/)
 
 ![Main editor interface showing split view with LaTeX code on left, compiled PDF on right](showcase/main_showcase_dark.png)
 
@@ -34,6 +35,14 @@ TeXlyre also includes embedded diagram editors including [Draw.io](https://www.d
 <img src="showcase/collab_cursor_drawio.png" alt="Collaborators editing a draw.io diagram simultaneously within a TeXlyre project">
 </p>
 
+### Comments and Review
+
+TeXlyre supports inline **comments** and **tracked changes** for collaborative review. Comments can be discussed and resolved, while tracked insertions and deletions appear in the review panel where they can be accepted, rejected, or discussed.
+
+<p align="center">
+<img src="showcase/review_comment_panel.png" alt="TeXlyre editor with tracked edits and the review panel open">
+</p>
+
 ### LaTeX Compilation
 
 The platform integrates **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX (TeX Live 2020)) and [BusyTeX (TeX Live 2026)](https://github.com/busytex/busytex) WASM engines** to provide in-browser LaTeX compilation without server dependencies. Currently supports **pdfTeX**, **XeTeX**, and **LuaTeX** engines for document processing. TeXlyre supports real-time syntax highlighting and error detection, with an integrated PDF viewer that offers zoom, navigation, and side-by-side editing capabilities.
@@ -56,10 +65,6 @@ The platform integrates **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)
 <p align="center">
 <img src="showcase/error_parser_zoomed_typst.png" alt="Typst compilation in progress" width="600">
 </p>
-
-### Local-first Architecture
-
-TeXlyre prioritizes data ownership and offline capability. All documents are stored locally using **IndexedDB**, enabling full offline editing with automatic synchronization when connectivity returns. The File System Access API provides direct folder synchronization for external backup solutions, while project export and import features ensure complete data portability across devices and installations.
 
 ### File Management and Synchronization
 
@@ -94,12 +99,19 @@ Mathematical expressions can be edited interactively using inline previews power
 
 ### Language Server Protocol (LSP)
 
-TeXlyre offers limited LSP support over WebSocket. The CodeMirror editor acts as a client for LSP servers deployed locally. As an example, TeXlyre integrates with a locally-run Harper LS grammar and spell checker (see the [Harper LS recipe](https://texlyre.org/docs/supported-lsp/harper-ls) for instructions on how to deploy and integrate the server with TeXlyre).
+TeXlyre offers limited LSP support over WebSocket. The CodeMirror editor acts as a client for LSP servers deployed locally. As an example, TeXlyre integrates with a locally-run `ltex-ls-plus` grammar and spell checker (see the [LTeX LS Plus recipe](https://texlyre.github.io/docs/supported-lsp/ltx-ls-plus) for instructions on how to deploy and integrate the server with TeXlyre).
 
 <p align="center">
   <img src="showcase/harper_ls_zoomed.png"
        alt="TeXlyre LSP client receiving grammar and spell-checking actions over WebSocket from the Harper LS server">
 </p>
+
+### External LSP and Typesetters
+
+TeXlyre can connect to external language servers and typesetters running outside the browser. These tools can be deployed alongside a self-hosted instance using [Chelys recipes](https://github.com/TeXlyre/texlyre-infrastructure#chelys-recipes), or managed locally through [Chelys](https://github.com/TeXlyre/chelys#local-tooling), the TeXlyre desktop companion.
+
+The infrastructure recipes support language servers such as **[LTeX LS Plus](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/ltex-ls-plus)**, **[Harper LS](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/harper-ls)**, **[TexLab](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/texlab)**, **[Tinymist](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/tinymist-lsp)**, and **[JabRef LSP](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/jabref-ls)**, as well as external typesetters including **[SILE](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/sile)**, **[ConTeXt LMTX](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/context)**, **[PreTeXt](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/pretext)**, **[TeX Live](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/texlive)**, **[Tinymist](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/tinymist)**, **[Asciidoctor](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/asciidoctor)**, **[Quarto](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/quarto)**, **[LilyPond](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/lilypond)**, **[Slidev](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/slidev)**, and **[Sphinx](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/sphinx)**. Chelys provides local language-server and typesetter setup through its recipe UI.
+
 
 ## Quick Start
 
