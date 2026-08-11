@@ -4,13 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import PositionedDropdown from '../common/PositionedDropdown';
-import { useExternalCompiler } from '../../hooks/useExternalCompiler';
+import { useExternalTypesetter } from '../../hooks/useExternalTypesetter';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';
 import { fileStorageService } from '../../services/FileStorageService';
 import type {
-	CompilerProvider,
-	CompilerUIField,
+	TypesetterProvider,
+	TypesetterUIField,
 	TranslatableText,
 } from '../../types/compilation';
 import {
@@ -28,7 +28,7 @@ import {
 } from '../../utils/compilerUtils';
 
 interface ExternalExportButtonProps {
-	provider: CompilerProvider;
+	provider: TypesetterProvider;
 	className?: string;
 	linkedFileInfo?: {
 		fileName?: string;
@@ -43,7 +43,7 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 	className = '',
 	linkedFileInfo,
 }) => {
-	const { isCompiling, isExporting, exportDocument } = useExternalCompiler();
+	const { isCompiling, isExporting, exportDocument } = useExternalTypesetter();
 	const { selectedFileId, getFile, fileTree } = useFileTree();
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -157,7 +157,7 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 	const isDisabled = isCompiling || isExporting || !effectiveMainFile;
 
 	const isFieldVisible = useCallback(
-		(field: CompilerUIField): boolean => {
+		(field: TypesetterUIField): boolean => {
 			if (!field.showWhen) return true;
 			const dep = fields.find((f) => f.key === field.showWhen?.field);
 			if (!dep) return true;
@@ -181,7 +181,7 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 		? `${groupKey.toUpperCase()} Options`
 		: 'Options';
 
-	const renderField = (field: CompilerUIField) => {
+	const renderField = (field: TypesetterUIField) => {
 		const stored = readValue(field.key);
 		const value = stored === undefined ? fieldDefault(field) : stored;
 

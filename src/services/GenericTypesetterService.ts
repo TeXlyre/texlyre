@@ -1,50 +1,36 @@
 // src/services/GenericTypesetterService.ts
 import { nanoid } from 'nanoid';
+import type { ClientTransport, TransportConfig } from '@chelys/types/transport';
 
-import { t } from '@/i18n';
+import { toArrayBuffer } from '../utils/fileUtils';
 import type {
 	CompileArtifact,
-	CompilerInputFile,
-	CompilerOutputFormat,
-	CompilerTransportConfig,
-	CompilerUISchema,
+	TypesetterInputFile,
+	TypesetterOutputFormat,
+	TypesetterUISchema,
 } from '../types/compilation';
-import { createNamedLogger } from '@/logging';
+import {
+	ExternalServiceBase,
+	type ExternalServiceConfig,
+} from './ExternalServiceBase';
 
-const moduleLog = createNamedLogger('GenericTypesetterService');
-
-type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
-type StatusListener = (configId: string, status: ConnectionStatus) => void;
-
-export interface TypesetterServerConfig {
-	id: string;
-	name: string;
-	enabled: boolean;
+export interface TypesetterServerConfig extends ExternalServiceConfig {
 	incrementalSync?: boolean;
+	compileTimeoutMs?: number;
 	projectType: string;
 	projectGroup?: string;
 	inputExtensions: string[];
-	inputFiles?: CompilerInputFile[];
-	outputFormats: CompilerOutputFormat[];
-	transportConfig: CompilerTransportConfig;
+	inputFiles?: TypesetterInputFile[];
+	outputFormats: TypesetterOutputFormat[];
+	transportConfig: TransportConfig;
 	capabilities: { outline?: boolean; formatter?: string };
-	ui?: CompilerUISchema;
+	ui?: TypesetterUISchema;
 }
 
 export interface TypesetterFile {
 	path: string;
 	content: Uint8Array;
 	lastModified?: number;
-}
-
-interface ManifestEntry {
-	path: string;
-	hash: string;
-}
-
-interface HashCacheEntry {
-	lastModified?: number;
-	hash: string;
 }
 
 export interface TypesetterCompileRequest {
@@ -63,26 +49,59 @@ export interface TypesetterCompileResult {
 	artifacts?: CompileArtifact[];
 }
 
+interface ManifestEntry {
+	path: string;
+	hash: string;
+}
+
+interface HashCacheEntry {
+	lastModified?: number;
+	hash: string;
+}
+
+interface PendingRequest {
+	resolve: (result: TypesetterCompileResult) => void;
+	reject: (error: Error) => void;
+	timer: ReturnType<typeof setTimeout>;
+}
+
 interface Connection {
-	socket: WebSocket;
-	pending: Map<
-		string,
-		{
-			resolve: (result: TypesetterCompileResult) => void;
-			reject: (error: Error) => void;
-		}
-	>;
+	transport: ClientTransport;
+	pending: Map<string, PendingRequest>;
+}
+
+interface WireArtifact {
+	id: string;
+	name: string;
+	mimeType?: string;
+	data: string;
+}
+
+interface WireCompileResult {
+	requestId: string;
+	status: number;
+	log: string;
+	format: string;
+	mimeType?: string;
+	output?: string;
+	artifacts?: WireArtifact[];
 }
 
 const MISSING_FILES_STATUS = -2;
+const DEFAULT_COMPILE_TIMEOUT_MS = 10 * 60 * 1000;
+const BASE64_CHUNK_SIZE = 0x8000;
 
-class GenericTypesetterService {
-	private configs: Map<string, TypesetterServerConfig> = new Map();
-	private connections: Map<string, Connection> = new Map();
-	private connectionStatuses: Map<string, ConnectionStatus> = new Map();
-	private statusListeners: Set<StatusListener> = new Set();
-	private hashCaches: Map<string, Map<string, HashCacheEntry>> = new Map();
-	private sentHashes: Map<string, Map<string, string>> = new Map();
+class GenericTypesetterService extends ExternalServiceBase<TypesetterServerConfig> {
+	protected readonly transportLabel = 'typesetter';
+
+	private readonly connections = new Map<string, Connection>();
+	private readonly connecting = new Map<string, Promise<Connection>>();
+	private readonly compiling = new Map<
+		string,
+		Promise<TypesetterCompileResult>
+	>();
+	private readonly hashCaches = new Map<string, Map<string, HashCacheEntry>>();
+	private readonly sentHashes = new Map<string, Map<string, string>>();
 
 	registerConfig(config: TypesetterServerConfig): void {
 		this.configs.set(config.id, config);
@@ -98,7 +117,7 @@ class GenericTypesetterService {
 	unregisterConfig(configId: string): void {
 		this.disconnect(configId);
 		this.configs.delete(configId);
-		this.connectionStatuses.delete(configId);
+		this.clearConnectionStatus(configId);
 		this.hashCaches.delete(configId);
 	}
 
@@ -106,45 +125,60 @@ class GenericTypesetterService {
 		this.sentHashes.delete(configId);
 	}
 
-	getConfig(configId: string): TypesetterServerConfig | undefined {
-		return this.configs.get(configId);
-	}
-
-	getConnectionStatus(configId: string): ConnectionStatus {
-		return this.connectionStatuses.get(configId) ?? 'disconnected';
-	}
-
-	onStatusChange(listener: StatusListener): () => void {
-		this.statusListeners.add(listener);
-		return () => this.statusListeners.delete(listener);
-	}
-
 	async compile(
 		configId: string,
 		request: TypesetterCompileRequest,
 	): Promise<TypesetterCompileResult> {
-		const config = this.configs.get(configId);
-		if (!config) {
-			throw new Error(`Typesetter config not found: ${configId}`);
+		const pending = this.compiling.get(configId);
+		if (pending) return pending;
+
+		const attempt = this.performCompile(configId, request);
+		this.compiling.set(configId, attempt);
+		try {
+			return await attempt;
+		} finally {
+			if (this.compiling.get(configId) === attempt) {
+				this.compiling.delete(configId);
+			}
 		}
+	}
+
+	private async performCompile(
+		configId: string,
+		request: TypesetterCompileRequest,
+	): Promise<TypesetterCompileResult> {
+		const config = this.configs.get(configId);
+		if (!config) throw new Error(`Typesetter config not found: ${configId}`);
 
 		const connection = await this.ensureConnection(config);
-
 		if (!config.incrementalSync) {
-			return this.send(connection, request, request.files);
+			return this.send(configId, config, connection, request, request.files);
 		}
 
 		const manifest = await this.buildManifest(configId, request.files);
-		const sent = this.sentHashes.get(configId) ?? new Map<string, string>();
+		const sent = this.sentHashes.get(configId);
 		const changed = request.files.filter(
-			(file) => sent.get(file.path) !== manifest.get(file.path),
+			(file) => sent?.get(file.path) !== manifest.get(file.path),
 		);
-
-		const result = await this.send(connection, request, changed, manifest);
+		const result = await this.send(
+			configId,
+			config,
+			connection,
+			request,
+			changed,
+			manifest,
+		);
 
 		if (result.status === MISSING_FILES_STATUS) {
 			this.sentHashes.delete(configId);
-			return this.send(connection, request, request.files, manifest);
+			return this.send(
+				configId,
+				config,
+				connection,
+				request,
+				request.files,
+				manifest,
+			);
 		}
 
 		this.sentHashes.set(configId, manifest);
@@ -152,162 +186,142 @@ class GenericTypesetterService {
 	}
 
 	private send(
+		configId: string,
+		config: TypesetterServerConfig,
 		connection: Connection,
 		request: TypesetterCompileRequest,
 		files: TypesetterFile[],
 		manifest?: Map<string, string>,
 	): Promise<TypesetterCompileResult> {
 		const requestId = nanoid();
+		const timeoutMs = Math.max(
+			1_000,
+			config.compileTimeoutMs ?? DEFAULT_COMPILE_TIMEOUT_MS,
+		);
 
-		return new Promise<TypesetterCompileResult>((resolve, reject) => {
-			connection.pending.set(requestId, { resolve, reject });
-			connection.socket.send(
-				JSON.stringify({
-					requestId,
-					mainFile: request.mainFile,
-					format: request.format,
-					options: request.options ?? {},
-					...(manifest
-						? {
-								manifest: Array.from(
-									manifest,
-									([path, hash]): ManifestEntry => ({
-										path,
-										hash,
-									}),
-								),
-							}
-						: {}),
-					files: files.map((file) => ({
-						path: file.path,
-						content: this.encodeBytes(file.content),
-					})),
-				}),
+		return new Promise((resolve, reject) => {
+			const timer = setTimeout(
+				() =>
+					this.handleRequestTimeout(configId, config, connection, timeoutMs),
+				timeoutMs,
 			);
+			connection.pending.set(requestId, { resolve, reject, timer });
+
+			try {
+				connection.transport.send(
+					JSON.stringify({
+						requestId,
+						mainFile: request.mainFile,
+						format: request.format,
+						options: request.options ?? {},
+						...(manifest ? { manifest: this.serializeManifest(manifest) } : {}),
+						files: files.map((file) => ({
+							path: file.path,
+							content: this.encodeBytes(file.content),
+						})),
+					}),
+				);
+			} catch (error) {
+				clearTimeout(timer);
+				connection.pending.delete(requestId);
+				reject(error instanceof Error ? error : new Error(String(error)));
+			}
 		});
 	}
 
-	private async buildManifest(
+	private handleRequestTimeout(
 		configId: string,
-		files: TypesetterFile[],
-	): Promise<Map<string, string>> {
-		const cache =
-			this.hashCaches.get(configId) ?? new Map<string, HashCacheEntry>();
-		const nextCache = new Map<string, HashCacheEntry>();
-		const manifest = new Map<string, string>();
-
-		for (const file of files) {
-			const cached = cache.get(file.path);
-			const reusable =
-				cached !== undefined &&
-				file.lastModified !== undefined &&
-				cached.lastModified === file.lastModified;
-
-			const hash = reusable
-				? cached.hash
-				: await this.hashContent(file.content);
-
-			nextCache.set(file.path, { lastModified: file.lastModified, hash });
-			manifest.set(file.path, hash);
-		}
-
-		this.hashCaches.set(configId, nextCache);
-		return manifest;
+		config: TypesetterServerConfig,
+		connection: Connection,
+		timeoutMs: number,
+	): void {
+		if (connection.pending.size === 0) return;
+		this.failConnection(
+			configId,
+			connection,
+			new Error(
+				`Compilation timed out after ${Math.ceil(timeoutMs / 1_000)} seconds for ${config.name}`,
+			),
+		);
 	}
 
-	private async hashContent(content: Uint8Array): Promise<string> {
-		const buffer = content.buffer.slice(
-			content.byteOffset,
-			content.byteOffset + content.byteLength,
-		) as ArrayBuffer;
-		const digest = await crypto.subtle.digest('SHA-256', buffer);
-		return Array.from(new Uint8Array(digest))
-			.map((byte) => byte.toString(16).padStart(2, '0'))
-			.join('');
+	private failConnection(
+		configId: string,
+		connection: Connection,
+		error: Error,
+	): void {
+		if (this.connections.get(configId) === connection) {
+			this.connections.delete(configId);
+		}
+		this.rejectPending(connection, error);
+		this.sentHashes.delete(configId);
+		this.abortTransport(configId);
+		this.setConnectionStatus(configId, 'error');
 	}
 
 	private async ensureConnection(
 		config: TypesetterServerConfig,
 	): Promise<Connection> {
 		const existing = this.connections.get(config.id);
-		if (existing && existing.socket.readyState === WebSocket.OPEN) {
-			return existing;
-		}
-
-		if (config.transportConfig.type !== 'websocket') {
-			throw new Error(
-				`Unsupported typesetter transport: ${config.transportConfig.type}`,
-			);
-		}
-
-		const url = config.transportConfig.url;
-		if (!url) throw new Error(t('Typesetter transport URL is missing'));
-
-		this.setConnectionStatus(config.id, 'connecting');
-		const socket = new WebSocket(url);
-		socket.binaryType = 'arraybuffer';
-		const connection: Connection = { socket, pending: new Map() };
-		this.connections.set(config.id, connection);
-
-		socket.addEventListener('message', (event) => {
-			this.handleMessage(config.id, event.data);
-		});
-		socket.addEventListener('close', () => {
-			this.failPending(config.id, new Error('Connection closed'));
-			this.setConnectionStatus(config.id, 'disconnected');
+		if (existing?.transport.isOpen) return existing;
+		if (existing) {
 			this.connections.delete(config.id);
-			this.sentHashes.delete(config.id);
-		});
-		socket.addEventListener('error', () => {
-			this.setConnectionStatus(config.id, 'error');
-		});
+			this.rejectPending(existing, new Error('Connection closed'));
+			this.closeTransport(config.id);
+		}
 
-		await new Promise<void>((resolve, reject) => {
-			socket.addEventListener('open', () => {
-				this.setConnectionStatus(config.id, 'connected');
-				resolve();
-			});
-			socket.addEventListener('error', () =>
-				reject(
-					new Error(
-						t('Failed to connect to {provider}', { provider: t('typesetter') }),
-					),
-				),
+		const pending = this.connecting.get(config.id);
+		if (pending) return pending;
+
+		const attempt = this.createConnection(config);
+		this.connecting.set(config.id, attempt);
+		try {
+			return await attempt;
+		} finally {
+			if (this.connecting.get(config.id) === attempt) {
+				this.connecting.delete(config.id);
+			}
+		}
+	}
+
+	private async createConnection(
+		config: TypesetterServerConfig,
+	): Promise<Connection> {
+		const transport = await this.openTransport(config);
+		if (!transport.isOpen) {
+			this.closeTransport(config.id);
+			throw new Error(`Connection closed while opening ${config.name}`);
+		}
+
+		const connection: Connection = { transport, pending: new Map() };
+		this.connections.set(config.id, connection);
+		transport.onMessage((payload) => {
+			this.handleMessage(
+				config.id,
+				typeof payload === 'string'
+					? payload
+					: new TextDecoder().decode(payload),
 			);
 		});
-
 		return connection;
 	}
 
-	private handleMessage(configId: string, data: unknown): void {
+	private handleMessage(configId: string, data: string): void {
 		const connection = this.connections.get(configId);
-		if (!connection || typeof data !== 'string') return;
+		if (!connection) return;
 
-		let payload: {
-			requestId: string;
-			status: number;
-			log: string;
-			format: string;
-			mimeType?: string;
-			output?: string;
-			artifacts?: Array<{
-				id: string;
-				name: string;
-				mimeType?: string;
-				data: string;
-			}>;
-		};
+		let payload: WireCompileResult;
 		try {
-			payload = JSON.parse(data);
+			payload = JSON.parse(data) as WireCompileResult;
 		} catch {
 			return;
 		}
 
-		const handler = connection.pending.get(payload.requestId);
-		if (!handler) return;
+		const pending = connection.pending.get(payload.requestId);
+		if (!pending) return;
 		connection.pending.delete(payload.requestId);
-
-		handler.resolve({
+		clearTimeout(pending.timer);
+		pending.resolve({
 			status: payload.status,
 			log: payload.log,
 			format: payload.format,
@@ -322,46 +336,84 @@ class GenericTypesetterService {
 		});
 	}
 
-	private disconnect(configId: string): void {
-		this.sentHashes.delete(configId);
-		const connection = this.connections.get(configId);
-		if (!connection) return;
-		this.failPending(configId, new Error('Connection reset'));
-		connection.socket.close();
-		this.connections.delete(configId);
+	private async buildManifest(
+		configId: string,
+		files: TypesetterFile[],
+	): Promise<Map<string, string>> {
+		const cache = this.hashCaches.get(configId);
+		const nextCache = new Map<string, HashCacheEntry>();
+		const manifest = new Map<string, string>();
+
+		for (const file of files) {
+			const cached = cache?.get(file.path);
+			const hash =
+				cached &&
+				file.lastModified !== undefined &&
+				cached.lastModified === file.lastModified
+					? cached.hash
+					: await this.hashContent(file.content);
+			nextCache.set(file.path, { lastModified: file.lastModified, hash });
+			manifest.set(file.path, hash);
+		}
+
+		this.hashCaches.set(configId, nextCache);
+		return manifest;
 	}
 
-	private failPending(configId: string, error: Error): void {
+	private async hashContent(content: Uint8Array): Promise<string> {
+		const buffer = content.buffer.slice(
+			content.byteOffset,
+			content.byteOffset + content.byteLength,
+		);
+		const digest = await crypto.subtle.digest('SHA-256', toArrayBuffer(buffer));
+		return Array.from(new Uint8Array(digest), (byte) =>
+			byte.toString(16).padStart(2, '0'),
+		).join('');
+	}
+
+	private serializeManifest(manifest: Map<string, string>): ManifestEntry[] {
+		return Array.from(manifest, ([path, hash]) => ({ path, hash }));
+	}
+
+	private disconnect(configId: string): void {
+		this.sentHashes.delete(configId);
+		this.connecting.delete(configId);
+		this.compiling.delete(configId);
 		const connection = this.connections.get(configId);
-		if (!connection) return;
-		connection.pending.forEach((handler) => {
-			handler.reject(error);
-		});
+		if (connection) {
+			this.connections.delete(configId);
+			this.rejectPending(connection, new Error('Connection reset'));
+		}
+		this.closeTransport(configId);
+	}
+
+	protected handleTransportClose(configId: string): void {
+		const connection = this.connections.get(configId);
+		if (connection) {
+			this.rejectPending(connection, new Error('Connection closed'));
+			this.connections.delete(configId);
+		}
+		this.sentHashes.delete(configId);
+	}
+
+	private rejectPending(connection: Connection, error: Error): void {
+		for (const pending of connection.pending.values()) {
+			clearTimeout(pending.timer);
+			pending.reject(error);
+		}
 		connection.pending.clear();
 	}
 
-	private setConnectionStatus(
-		configId: string,
-		status: ConnectionStatus,
-	): void {
-		this.connectionStatuses.set(configId, status);
-		this.statusListeners.forEach((listener) => {
-			try {
-				listener(configId, status);
-			} catch (error) {
-				moduleLog.error('Status listener error:', error);
-			}
-		});
-	}
-
 	private encodeBytes(bytes: Uint8Array): string {
-		const chunkSize = 0x8000;
 		const chunks: string[] = [];
-		for (let i = 0; i < bytes.length; i += chunkSize) {
+		for (let offset = 0; offset < bytes.length; offset += BASE64_CHUNK_SIZE) {
 			chunks.push(
 				String.fromCharCode.apply(
 					null,
-					bytes.subarray(i, i + chunkSize) as unknown as number[],
+					bytes.subarray(
+						offset,
+						offset + BASE64_CHUNK_SIZE,
+					) as unknown as number[],
 				),
 			);
 		}
@@ -370,11 +422,7 @@ class GenericTypesetterService {
 
 	private decodeBytes(encoded: string): Uint8Array {
 		const binary = atob(encoded);
-		const bytes = new Uint8Array(binary.length);
-		for (let i = 0; i < binary.length; i++) {
-			bytes[i] = binary.charCodeAt(i);
-		}
-		return bytes;
+		return Uint8Array.from(binary, (character) => character.charCodeAt(0));
 	}
 }
 

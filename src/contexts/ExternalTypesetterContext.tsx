@@ -1,9 +1,9 @@
-// src/contexts/ExternalCompilerContext.tsx
+// src/contexts/ExternalTypesetterContext.tsx
 import type React from 'react';
 import { type ReactNode, createContext, useCallback, useState } from 'react';
 
 import { useFileTree } from '../hooks/useFileTree';
-import { compilerRegistryService } from '../services/CompilerRegistryService';
+import { typesetterRegistryService } from '../services/TypesetterRegistryService';
 import { fileStorageService } from '../services/FileStorageService';
 import { latexSourceMapService } from '../services/LaTeXSourceMapService';
 import {
@@ -19,13 +19,14 @@ import { type DownloadableFile, downloadFiles } from '../utils/zipUtils';
 import { findCompileArtifact, outputExtension } from '../utils/compilerUtils';
 import { getProjectName } from '../utils/urlUtils';
 import { toBytes } from '../utils/fileUtils';
+import { cleanBytes } from '../utils/fileCommentUtils';
 
 interface ExternalExportOptions {
 	includeLog?: boolean;
 	options?: Record<string, string | number | boolean>;
 }
 
-interface ExternalCompilerContextType {
+interface ExternalTypesetterContextType {
 	isCompiling: boolean;
 	isExporting: boolean;
 	compileError: string | null;
@@ -51,10 +52,10 @@ interface ExternalCompilerContextType {
 	clearCache: (providerId: string) => Promise<void>;
 }
 
-export const ExternalCompilerContext =
-	createContext<ExternalCompilerContextType | null>(null);
+export const ExternalTypesetterContext =
+	createContext<ExternalTypesetterContextType | null>(null);
 
-interface ExternalCompilerProviderProps {
+interface ExternalTypesetterProviderProps {
 	children: ReactNode;
 }
 
@@ -72,8 +73,8 @@ const getBaseName = (filePath: string): string => {
 	return name.replace(/\.[^.]+$/, '');
 };
 
-export const ExternalCompilerProvider: React.FC<
-	ExternalCompilerProviderProps
+export const ExternalTypesetterProvider: React.FC<
+	ExternalTypesetterProviderProps
 > = ({ children }) => {
 	const { fileTree } = useFileTree();
 	const [isCompiling, setIsCompiling] = useState(false);
@@ -108,7 +109,7 @@ export const ExternalCompilerProvider: React.FC<
 			if (content === undefined) continue;
 			files.push({
 				path: node.path,
-				content: toBytes(content),
+				content: node.isBinary ? toBytes(content) : cleanBytes(content),
 				lastModified: node.lastModified,
 			});
 		}
@@ -122,7 +123,7 @@ export const ExternalCompilerProvider: React.FC<
 			format = 'pdf',
 			options?: Record<string, string | number | boolean>,
 		) => {
-			const provider = compilerRegistryService.get(providerId);
+			const provider = typesetterRegistryService.get(providerId);
 			if (!provider) {
 				setCompileError(`Compiler not found: ${providerId}`);
 				return;
@@ -216,7 +217,7 @@ export const ExternalCompilerProvider: React.FC<
 			format = 'pdf',
 			exportOptions: ExternalExportOptions = {},
 		) => {
-			const provider = compilerRegistryService.get(providerId);
+			const provider = typesetterRegistryService.get(providerId);
 			if (!provider) {
 				setCompileError(`Compiler not found: ${providerId}`);
 				return;
@@ -293,7 +294,7 @@ export const ExternalCompilerProvider: React.FC<
 	}, []);
 
 	return (
-		<ExternalCompilerContext.Provider
+		<ExternalTypesetterContext.Provider
 			value={{
 				isCompiling,
 				isExporting,
@@ -311,6 +312,6 @@ export const ExternalCompilerProvider: React.FC<
 			}}
 		>
 			{children}
-		</ExternalCompilerContext.Provider>
+		</ExternalTypesetterContext.Provider>
 	);
 };

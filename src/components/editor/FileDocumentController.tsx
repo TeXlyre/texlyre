@@ -25,8 +25,8 @@ import {
 	isTypstContent,
 } from '../../utils/fileUtils';
 import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
-import { compilerRegistryService } from '../../services/CompilerRegistryService';
-import type { CompilerProvider } from '../../types/compilation';
+import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
+import type { TypesetterProvider } from '../../types/compilation';
 import { gotoEditor } from '../../utils/editorNavigator';
 import type { YjsDocUrl } from '../../types/yjs';
 import { EditorTabsProvider } from '../../contexts/EditorTabsContext';
@@ -37,7 +37,7 @@ import LaTeXOutline from './LaTeXOutline';
 import TypstOutline from './TypstOutline';
 import LaTeXOutput from '../output/LaTeXOutput';
 import TypstOutput from '../output/TypstOutput';
-import ExternalCompilerOutput from '../output/ExternalCompilerOutput';
+import ExternalTypesetterOutput from '../output/ExternalTypesetterOutput';
 import ProjectExportModal from '../project/ProjectExportModal';
 import DocumentExplorer from './DocumentExplorer';
 import Editor from './Editor';
@@ -208,7 +208,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	const [externalOutputCollapsed, setExternalOutputCollapsed] = useState(false);
 	const [showLatexOutput, setShowLatexOutput] = useState(false);
 	const [activeExternalProvider, setActiveExternalProvider] =
-		useState<CompilerProvider | null>(null);
+		useState<TypesetterProvider | null>(null);
 	const [showTypstOutput, setShowTypstOutput] = useState(false);
 	const [temporaryLatexExpand, setTemporaryLatexExpand] = useState(false);
 	const [temporaryTypstExpand, setTemporaryTypstExpand] = useState(false);
@@ -268,13 +268,13 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		(name?: string) => {
 			const extension = name?.split('.').pop() ?? '';
 			const byExtension = name
-				? compilerRegistryService.getForExtension(extension, projectType)
+				? typesetterRegistryService.getForExtension(extension, projectType)
 				: undefined;
 			const effectiveType =
 				byExtension?.projectType ??
-				compilerRegistryService.getForProjectType(projectType)?.projectType ??
+				typesetterRegistryService.getForProjectType(projectType)?.projectType ??
 				projectType;
-			const provider = compilerRegistryService.resolve(
+			const provider = typesetterRegistryService.resolve(
 				effectiveType,
 				compilerId,
 			);
@@ -1397,7 +1397,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 						onCollapse={handleExternalOutputCollapse}
 						className='external-output-container'
 					>
-						<ExternalCompilerOutput
+						<ExternalTypesetterOutput
 							provider={activeExternalProvider}
 							onExpandExternalOutput={
 								popoutViewerService.isWindowOpen()

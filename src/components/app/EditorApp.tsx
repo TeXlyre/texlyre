@@ -10,7 +10,7 @@ import { FileSyncProvider } from '../../contexts/FileSyncContext';
 import { FileTreeProvider } from '../../contexts/FileTreeContext';
 import { LaTeXProvider } from '../../contexts/LaTeXContext';
 import { TypstProvider } from '../../contexts/TypstContext';
-import { ExternalCompilerProvider } from '../../contexts/ExternalCompilerContext';
+import { ExternalTypesetterProvider } from '../../contexts/ExternalTypesetterContext';
 import { SourceMapProvider } from '../../contexts/SourceMapContext';
 import { ContentFormatterProvider } from '../../contexts/ContentFormatterContext';
 import { useAuth } from '../../hooks/useAuth';
@@ -21,7 +21,7 @@ import { useGlobalKeyboard } from '../../hooks/useGlobalKeyboard';
 import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
 import { useOffline } from '../../hooks/useOffline';
 import { fileStorageService } from '../../services/FileStorageService';
-import { compilerRegistryService } from '../../services/CompilerRegistryService';
+import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import { popoutViewerService } from '../../services/PopoutViewerService';
 import type { DocumentList } from '../../types/documents';
 import type { YjsDocUrl } from '../../types/yjs';
@@ -138,7 +138,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const projectType = doc?.projectMetadata?.type || 'latex';
 	const projectTypeKnown = doc?.projectMetadata?.type !== undefined;
 	const projectCompilerId = doc?.projectMetadata?.compilerId;
-	const activeCompilerProvider = compilerRegistryService.resolve(
+	const activeTypesetterProvider = typesetterRegistryService.resolve(
 		projectType,
 		projectCompilerId,
 	);
@@ -543,18 +543,18 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			/>,
 		];
 
-		if (activeCompilerProvider?.source === 'chelys') {
+		if (activeTypesetterProvider?.source === 'chelys') {
 			return (
 				<>
 					<ExternalCompileButton
-						provider={activeCompilerProvider}
+						provider={activeTypesetterProvider}
 						className='header-compile-button'
 						onExpandExternalOutput={handleExpandExternalOutput}
 						linkedFileInfo={linkedFileInfo}
 						useSharedSettings={true}
 					/>
 					<ExternalExportButton
-						provider={activeCompilerProvider}
+						provider={activeTypesetterProvider}
 						className='output-export-button'
 						linkedFileInfo={linkedFileInfo}
 					/>
@@ -688,7 +688,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					{t('Typesetter: ')}{' '}
 					<TypesetterInfo
 						type={projectType}
-						provider={activeCompilerProvider}
+						provider={activeTypesetterProvider}
 					/>
 				</div>
 
@@ -856,13 +856,13 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 					<FileSyncProvider docUrl={props.docUrl}>
 						<LaTeXProvider>
 							<TypstProvider>
-								<ExternalCompilerProvider>
+								<ExternalTypesetterProvider>
 									<SourceMapProvider>
 										<ContentFormatterProvider>
 											<EditorAppView {...props} />
 										</ContentFormatterProvider>
 									</SourceMapProvider>
-								</ExternalCompilerProvider>
+								</ExternalTypesetterProvider>
 							</TypstProvider>
 						</LaTeXProvider>
 					</FileSyncProvider>

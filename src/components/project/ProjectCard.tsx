@@ -15,7 +15,7 @@ import {
 	FileTextIcon,
 	FileIcon,
 } from '../common/Icons.tsx';
-import { compilerRegistryService } from '../../services/CompilerRegistryService';
+import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import TypesetterInfo from '../common/TypesetterInfo';
 import { formatDate, formatLastModified } from '@/utils/dateUtils.ts';
 
@@ -185,7 +185,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 					<div className='project-type-info'>
 						<TypesetterInfo
 							type={project.type}
-							provider={compilerRegistryService.resolve(
+							provider={typesetterRegistryService.resolve(
 								project.type,
 								project.compilerId,
 							)}

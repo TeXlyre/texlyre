@@ -2,7 +2,7 @@
 import { t } from '@/i18n';
 import type {
 	CompileArtifact,
-	CompilerUIField,
+	TypesetterUIField,
 	TranslatableText,
 } from '../types/compilation';
 import type { FileNode } from '../types/files';
@@ -14,7 +14,7 @@ export function resolveLabel(value?: TranslatableText): string {
 }
 
 export function fieldDefault(
-	field: CompilerUIField,
+	field: TypesetterUIField,
 ): string | number | boolean {
 	if (field.defaultValue !== undefined) return field.defaultValue;
 	if (field.kind === 'boolean') return false;
@@ -22,7 +22,7 @@ export function fieldDefault(
 }
 
 export function collectValues(
-	fields: CompilerUIField[],
+	fields: TypesetterUIField[],
 	read: (key: string) => unknown,
 ): {
 	format?: string;

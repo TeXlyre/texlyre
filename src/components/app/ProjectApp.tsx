@@ -3,7 +3,7 @@ import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { t } from '@/i18n';
-import { compilerRegistryService } from '../../services/CompilerRegistryService';
+import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 import { useAuth } from '../../hooks/useAuth';
 import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
@@ -148,7 +148,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						userProjects.map(
 							(project) =>
 								project.group ??
-								compilerRegistryService.get(project.compilerId ?? '')
+								typesetterRegistryService.get(project.compilerId ?? '')
 									?.projectGroup ??
 								project.type,
 						),

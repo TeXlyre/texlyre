@@ -1,26 +1,29 @@
-// src/services/CompilerRegistryService.ts
+// src/services/TypesetterRegistryService.ts
 import { t } from '@/i18n';
-import type { CompilerInputFile, CompilerProvider } from '../types/compilation';
+import type {
+	TypesetterInputFile,
+	TypesetterProvider,
+} from '../types/compilation';
 import { createNamedLogger } from '@/logging';
 
-const moduleLog = createNamedLogger('CompilerRegistryService');
+const moduleLog = createNamedLogger('TypesetterRegistryService');
 
 type RegistryListener = () => void;
 
-export interface CompilerProjectType {
+export interface TypesetterProjectType {
 	projectType: string;
 	label: string;
-	source: CompilerProvider['source'];
+	source: TypesetterProvider['source'];
 	compilerId: string;
 }
 
-class CompilerRegistryService {
-	private providers: Map<string, CompilerProvider> = new Map();
+class TypesetterRegistryService {
+	private providers: Map<string, TypesetterProvider> = new Map();
 	private listeners: Set<RegistryListener> = new Set();
 	private version = 0;
 	private builtinsRegistered = false;
 
-	register(provider: CompilerProvider): void {
+	register(provider: TypesetterProvider): void {
 		this.providers.set(provider.id, provider);
 		this.notify();
 	}
@@ -84,15 +87,15 @@ class CompilerRegistryService {
 		}
 	}
 
-	get(providerId: string): CompilerProvider | undefined {
+	get(providerId: string): TypesetterProvider | undefined {
 		return this.providers.get(providerId);
 	}
 
-	list(): CompilerProvider[] {
+	list(): TypesetterProvider[] {
 		return Array.from(this.providers.values());
 	}
 
-	getProjectGroup(provider: CompilerProvider): string {
+	getProjectGroup(provider: TypesetterProvider): string {
 		return provider.projectGroup ?? provider.projectType;
 	}
 
@@ -104,7 +107,7 @@ class CompilerRegistryService {
 		return labels[projectGroup] ?? projectGroup;
 	}
 
-	listForProjectType(projectType: string): CompilerProvider[] {
+	listForProjectType(projectType: string): TypesetterProvider[] {
 		const providers = this.list().filter(
 			(provider) => provider.projectType === projectType,
 		);
@@ -114,7 +117,7 @@ class CompilerRegistryService {
 		];
 	}
 
-	listForProjectGroup(projectGroup: string): CompilerProvider[] {
+	listForProjectGroup(projectGroup: string): TypesetterProvider[] {
 		const providers = this.list().filter(
 			(provider) => this.getProjectGroup(provider) === projectGroup,
 		);
@@ -124,9 +127,9 @@ class CompilerRegistryService {
 		];
 	}
 
-	listProjectTypes(): CompilerProjectType[] {
+	listProjectTypes(): TypesetterProjectType[] {
 		const seen = new Set<string>();
-		const projectTypes: CompilerProjectType[] = [];
+		const projectTypes: TypesetterProjectType[] = [];
 		const groupTypes = new Map<string, Set<string>>();
 
 		for (const provider of this.list()) {
@@ -160,14 +163,14 @@ class CompilerRegistryService {
 		return projectTypes;
 	}
 
-	getForProjectType(projectType: string): CompilerProvider | undefined {
+	getForProjectType(projectType: string): TypesetterProvider | undefined {
 		return this.listForProjectType(projectType)[0];
 	}
 
 	resolve(
 		projectType: string,
 		compilerId?: string,
-	): CompilerProvider | undefined {
+	): TypesetterProvider | undefined {
 		const selected = compilerId ? this.providers.get(compilerId) : undefined;
 		if (selected?.projectType === projectType) return selected;
 		return this.getForProjectType(projectType);
@@ -176,7 +179,7 @@ class CompilerRegistryService {
 	getForExtension(
 		extension: string,
 		projectType?: string,
-	): CompilerProvider | undefined {
+	): TypesetterProvider | undefined {
 		const normalized = extension.replace(/^\./, '').toLowerCase();
 		const matches = this.list().filter((provider) =>
 			provider.inputExtensions.includes(normalized),
@@ -192,8 +195,8 @@ class CompilerRegistryService {
 		return matches[0];
 	}
 
-	getInputFilesForProjectType(projectType: string): CompilerInputFile[] {
-		const merged = new Map<string, CompilerInputFile>();
+	getInputFilesForProjectType(projectType: string): TypesetterInputFile[] {
+		const merged = new Map<string, TypesetterInputFile>();
 
 		for (const provider of this.listForProjectType(projectType)) {
 			const inputs = provider.inputFiles?.length
@@ -230,4 +233,4 @@ class CompilerRegistryService {
 	}
 }
 
-export const compilerRegistryService = new CompilerRegistryService();
+export const typesetterRegistryService = new TypesetterRegistryService();

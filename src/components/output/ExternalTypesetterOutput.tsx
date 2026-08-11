@@ -1,16 +1,16 @@
-// src/components/output/ExternalCompilerOutput.tsx
+// src/components/output/ExternalTypesetterOutput.tsx
 import type React from 'react';
 import { createElement, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { t } from '@/i18n';
 import { fileStorageService } from '../../services/FileStorageService';
-import { useExternalCompiler } from '../../hooks/useExternalCompiler';
+import { useExternalTypesetter } from '../../hooks/useExternalTypesetter';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';
 import { useSourceMap } from '../../hooks/useSourceMap';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import type { RendererController } from '../../plugins/PluginInterface';
-import type { CompilerProvider } from '../../types/compilation';
+import type { TypesetterProvider } from '../../types/compilation';
 import type { SourceMapClickMode } from '../../types/sourceMap';
 import { toArrayBuffer } from '../../utils/fileUtils';
 import ExternalCompileButton from './ExternalCompileButton';
@@ -21,8 +21,8 @@ import {
 	resolveLabel,
 } from '../../utils/compilerUtils';
 
-interface ExternalCompilerOutputProps {
-	provider: CompilerProvider;
+interface ExternalTypesetterOutputProps {
+	provider: TypesetterProvider;
 	className?: string;
 	onExpandExternalOutput?: () => void;
 	linkedFileInfo?: {
@@ -38,7 +38,7 @@ const indicatorColor: Record<string, string> = {
 	error: '#dc3545',
 };
 
-const ExternalCompilerOutput: React.FC<ExternalCompilerOutputProps> = ({
+const ExternalTypesetterOutput: React.FC<ExternalTypesetterOutputProps> = ({
 	provider,
 	className = '',
 	onExpandExternalOutput,
@@ -54,7 +54,7 @@ const ExternalCompilerOutput: React.FC<ExternalCompilerOutputProps> = ({
 		logIndicator,
 		toggleOutputView,
 		compileDocument,
-	} = useExternalCompiler();
+	} = useExternalTypesetter();
 
 	const projectId = fileStorageService.getCurrentProjectId() || undefined;
 	const { fileTree, selectedFileId, getFile } = useFileTree();
@@ -324,4 +324,4 @@ const ExternalCompilerOutput: React.FC<ExternalCompilerOutputProps> = ({
 	);
 };
 
-export default ExternalCompilerOutput;
+export default ExternalTypesetterOutput;
