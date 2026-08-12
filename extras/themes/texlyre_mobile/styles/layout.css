@@ -409,7 +409,8 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	overflow-y: auto !important;
 }
 
-[data-layout="texlyre-mobile"] body.mobile-view-editor .comment-panel {
+[data-layout="texlyre-mobile"] body.mobile-view-editor .comment-panel,
+[data-layout="texlyre-mobile"] body.mobile-view-editor .review-panel {
 	position: relative !important;
 	right: 0 !important;
 	width: 65vw !important;
@@ -419,9 +420,8 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	box-shadow: var(--mobile-shadow-lg) !important;
 }
 
-[data-layout="texlyre-mobile"]
-	body.mobile-view-editor
-	.comment-panel.editor-comment-panel {
+[data-layout="texlyre-mobile"] body.mobile-view-editor .comment-panel.editor-comment-panel,
+[data-layout="texlyre-mobile"] body.mobile-view-editor .review-panel.editor-review-panel {
 	display: flex !important;
 }
 
