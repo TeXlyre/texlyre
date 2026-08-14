@@ -145,6 +145,7 @@ class BusyTeXService {
 
 		const result = await busyTeXEngine.compile(mainFileName, cleanedNodes, {
 			bibtex: true,
+			biber: null,
 			makeindex: true,
 			rerun: true,
 			remoteEndpoint: this.texliveEndpoint || undefined,

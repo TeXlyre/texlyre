@@ -8055,10 +8055,10 @@ test-exclude@^6.0.0:
     glob "^7.1.4"
     minimatch "^3.0.4"
 
-texlyre-busytex@^1.3.1:
-  version "1.3.1"
-  resolved "https://registry.npmjs.org/texlyre-busytex/-/texlyre-busytex-1.3.1.tgz"
-  integrity sha512-iy6usXP1+fz4t39KmcUVwNzszCjWABRMU42kosuHvdSDZatNFYuuntJ5re8rratQFB1w0S/56xikS+F0qLj/JA==
+texlyre-busytex@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.npmjs.org/texlyre-busytex/-/texlyre-busytex-1.4.0.tgz"
+  integrity sha512-Fsx6DQyKibmIK+FErpVZwZAX99syRFEq1aARm7FNHtT+MBjvS57SJQkk+PeeYcFqGOEcDZvJ/d+Na/Oq2WSbXw==
 
 tinyglobby@^0.2.10, tinyglobby@^0.2.15, tinyglobby@^0.2.17:
   version "0.2.17"

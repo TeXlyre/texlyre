@@ -136,6 +136,7 @@ export class BusyTeXEngine {
 		fileNodes: FileNode[],
 		options: {
 			bibtex?: boolean;
+			biber?: boolean;
 			makeindex?: boolean | null;
 			rerun?: boolean;
 			remoteEndpoint?: string;
@@ -159,6 +160,7 @@ export class BusyTeXEngine {
 				files,
 				mainTexPath,
 				options.bibtex ?? null,
+				options.biber ?? null,
 				options.makeindex ?? null,
 				options.rerun ?? null,
 				'silent',
