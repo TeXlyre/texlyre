@@ -13,38 +13,41 @@ import type { LSPClientConfig } from '@codemirror/lsp-client';
 
 import { useSettings } from '../hooks/useSettings';
 import { genericLSPService } from '../services/GenericLSPService';
+import type { LSPConfigBlock } from '../types/lsp';
+import {
+	moveConfig,
+	parseLspConfigs,
+	upsertConfig,
+	withoutDisabled,
+} from '../utils/toolConfigUtils';
 import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('LSPConfigContext');
 
-interface LSPConfig {
-	id: string;
-	name: string;
-	enabled: boolean;
-	fileExtensions: string[];
-	languageIdMap?: Record<string, string>;
-	transportConfig: {
-		type: 'websocket' | 'worker';
-		url?: string;
-		workerPath?: string;
-		contentLength?: boolean;
-	};
-	clientConfig: string;
-}
+export const LSP_CONFIGS_SETTING = 'generic-lsp-configs';
+export const LSP_DISABLED_CONFIGS_SETTING = 'generic-lsp-disabled-configs';
+
+type LSPConfig = LSPConfigBlock;
 
 interface LSPConfigContextType {
 	configs: LSPConfig[];
+	disabledConfigs: LSPConfig[];
+	addConfigs: (configs: LSPConfig[]) => void;
 	addConfig: (config: LSPConfig) => void;
 	updateConfig: (id: string, updates: Partial<LSPConfig>) => void;
 	removeConfig: (id: string) => void;
+	setConfigEnabled: (id: string, enabled: boolean) => void;
 	getConfigsForFile: (fileName: string) => LSPConfig[];
 }
 
 export const LSPConfigContext = createContext<LSPConfigContextType>({
 	configs: [],
+	disabledConfigs: [],
+	addConfigs: () => {},
 	addConfig: () => {},
 	updateConfig: () => {},
 	removeConfig: () => {},
+	setConfigEnabled: () => {},
 	getConfigsForFile: () => [],
 });
 
@@ -60,21 +63,18 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({
 	const registeredConfigIdsRef = useRef<Set<string>>(new Set());
 	const lastSerializedConfigsRef = useRef<Map<string, string>>(new Map());
 
-	const settingValue = getSetting('generic-lsp-configs')?.value;
+	const settingValue = getSetting(LSP_CONFIGS_SETTING)?.value;
+	const disabledSettingValue = getSetting(LSP_DISABLED_CONFIGS_SETTING)?.value;
 
-	const storedConfigs = useMemo(() => {
-		if (typeof settingValue === 'string') {
-			try {
-				return JSON.parse(settingValue) as LSPConfig[];
-			} catch {
-				return [];
-			}
-		} else if (Array.isArray(settingValue)) {
-			return settingValue as LSPConfig[];
-		}
+	const disabledConfigs = useMemo(
+		() => parseLspConfigs(disabledSettingValue),
+		[disabledSettingValue],
+	);
 
-		return [];
-	}, [settingValue]);
+	const storedConfigs = useMemo(
+		() => withoutDisabled(parseLspConfigs(settingValue), disabledConfigs),
+		[settingValue, disabledConfigs],
+	);
 
 	useEffect(() => {
 		moduleLog.info(`Loaded ${storedConfigs.length} LSP configurations`);
@@ -128,38 +128,73 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({
 	}, [storedConfigs]);
 
 	const saveConfigs = useCallback(
-		(newConfigs: LSPConfig[]) => {
-			setConfigs(newConfigs);
-			updateSetting('generic-lsp-configs', newConfigs);
+		(active: LSPConfig[], disabled: LSPConfig[]) => {
+			updateSetting(LSP_CONFIGS_SETTING, active);
+			updateSetting(LSP_DISABLED_CONFIGS_SETTING, disabled);
 		},
 		[updateSetting],
 	);
 
-	const addConfig = useCallback(
-		(config: LSPConfig) => {
-			const updated = [...configs, config];
-			saveConfigs(updated);
+	const addConfigs = useCallback(
+		(incoming: LSPConfig[]) => {
+			if (incoming.length === 0) return;
+
+			const incomingIds = new Set(incoming.map((config) => config.id));
+
+			saveConfigs(
+				incoming.reduce((acc, config) => upsertConfig(acc, config), configs),
+				disabledConfigs.filter((entry) => !incomingIds.has(entry.id)),
+			);
 		},
-		[configs, saveConfigs],
+		[configs, disabledConfigs, saveConfigs],
+	);
+
+	const addConfig = useCallback(
+		(config: LSPConfig) => addConfigs([config]),
+		[addConfigs],
 	);
 
 	const updateConfig = useCallback(
 		(id: string, updates: Partial<LSPConfig>) => {
-			const updated = configs.map((c) =>
-				c.id === id ? { ...c, ...updates } : c,
-			);
-			saveConfigs(updated);
+			const apply = (list: LSPConfig[]) =>
+				list.map((entry) =>
+					entry.id === id ? { ...entry, ...updates } : entry,
+				);
+
+			saveConfigs(apply(configs), apply(disabledConfigs));
 		},
-		[configs, saveConfigs],
+		[configs, disabledConfigs, saveConfigs],
 	);
 
 	const removeConfig = useCallback(
 		(id: string) => {
-			const updated = configs.filter((c) => c.id !== id);
-			saveConfigs(updated);
+			saveConfigs(
+				configs.filter((entry) => entry.id !== id),
+				disabledConfigs.filter((entry) => entry.id !== id),
+			);
 			genericLSPService.unregisterConfig(id);
 		},
-		[configs, saveConfigs],
+		[configs, disabledConfigs, saveConfigs],
+	);
+
+	const setConfigEnabled = useCallback(
+		(id: string, enabled: boolean) => {
+			const source = enabled ? disabledConfigs : configs;
+			const target = enabled ? configs : disabledConfigs;
+			const moved = moveConfig(source, target, id);
+
+			if (!moved) {
+				updateConfig(id, { enabled });
+				return;
+			}
+
+			const next = moved.to.map((entry) =>
+				entry.id === id ? { ...entry, enabled } : entry,
+			);
+
+			saveConfigs(enabled ? next : moved.from, enabled ? moved.from : next);
+		},
+		[configs, disabledConfigs, saveConfigs, updateConfig],
 	);
 
 	const getConfigsForFile = useCallback(
@@ -176,9 +211,12 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({
 		<LSPConfigContext.Provider
 			value={{
 				configs,
+				disabledConfigs,
+				addConfigs,
 				addConfig,
 				updateConfig,
 				removeConfig,
+				setConfigEnabled,
 				getConfigsForFile,
 			}}
 		>

@@ -15,6 +15,7 @@ import {
 import type { LSPClient } from '@codemirror/lsp-client';
 
 import { genericLSPService } from '../../services/GenericLSPService';
+import { createSemanticTokensExtension } from './SemanticTokensLSPExtension';
 
 function detectLanguageId(fileName: string, client?: LSPClient): string {
 	const ext = fileName.split('.').pop()?.toLowerCase() || '';
@@ -69,7 +70,7 @@ function sendNotification(client: LSPClient, method: string, params: any) {
 		if (transport?.send) {
 			transport.send(JSON.stringify({ jsonrpc: '2.0', method, params }));
 		}
-	} catch {}
+	} catch { }
 }
 
 function createLSPDiagnosticsExtension(fileName: string): Extension {
@@ -350,9 +351,14 @@ function createDocumentSyncExtension(fileName: string): Extension {
 	return ViewPlugin.fromClass(
 		class {
 			private openedFor = new Set<LSPClient>();
+			private readonly view: EditorView;
+			private readonly handleFileSaved: () => void;
 
 			constructor(view: EditorView) {
+				this.view = view;
 				this.syncOpenState(view);
+				this.handleFileSaved = () => this.notifySaved();
+				document.addEventListener('file-saved', this.handleFileSaved);
 			}
 
 			private syncOpenState(view: EditorView) {
@@ -366,6 +372,18 @@ function createDocumentSyncExtension(fileName: string): Extension {
 						textDocument: { uri: fileUri, languageId, version, text },
 					});
 					this.openedFor.add(client);
+				});
+			}
+
+			private notifySaved() {
+				const text = this.view.state.doc.toString();
+				this.openedFor.forEach((client) => {
+					const save = (client as any).serverCapabilities?.textDocumentSync?.save;
+					if (!save) return;
+					sendNotification(client, 'textDocument/didSave', {
+						textDocument: { uri: fileUri },
+						...(save.includeText ? { text } : {}),
+					});
 				});
 			}
 
@@ -384,6 +402,7 @@ function createDocumentSyncExtension(fileName: string): Extension {
 			}
 
 			destroy() {
+				document.removeEventListener('file-saved', this.handleFileSaved);
 				this.openedFor.forEach((client) => {
 					sendNotification(client, 'textDocument/didClose', {
 						textDocument: { uri: fileUri },
@@ -395,6 +414,33 @@ function createDocumentSyncExtension(fileName: string): Extension {
 	);
 }
 
+function documentationToText(documentation: any): string {
+	if (!documentation) return '';
+	if (typeof documentation === 'string') return documentation;
+	return typeof documentation.value === 'string' ? documentation.value : '';
+}
+
+function createCompletionInfo(client: LSPClient, item: any) {
+	return async (): Promise<HTMLElement | null> => {
+		const direct = documentationToText(item.documentation);
+		if (direct) return renderHoverContent(direct);
+
+		const capabilities = (client as any).serverCapabilities;
+		if (capabilities?.completionProvider?.resolveProvider !== true) return null;
+
+		try {
+			const resolved = await (client as any).request(
+				'completionItem/resolve',
+				item,
+			);
+			const text = documentationToText(resolved?.documentation);
+			return text ? renderHoverContent(text) : null;
+		} catch {
+			return null;
+		}
+	};
+}
+
 export function getGenericLSPExtensionsForFile(fileName: string): Extension[] {
 	if (!fileName) return [];
 
@@ -402,6 +448,7 @@ export function getGenericLSPExtensionsForFile(fileName: string): Extension[] {
 		createDocumentSyncExtension(fileName),
 		createAggregatedHoverExtension(fileName),
 		createLSPDiagnosticsExtension(fileName),
+		createSemanticTokensExtension(fileName),
 	];
 }
 
@@ -444,24 +491,24 @@ export function getGenericLSPCompletionSources(fileName: string) {
 							label: item.label,
 							type: item.kind === 1 ? 'text' : 'keyword',
 							detail: item.detail,
-							info: item.documentation,
+							info: createCompletionInfo(client, item),
 							apply: range
 								? (view: EditorView) => {
-										const from = Math.min(
-											doc.line(Math.min(range.start.line + 1, doc.lines)).from +
-												range.start.character,
-											doc.length,
-										);
-										const to = Math.min(
-											doc.line(Math.min(range.end.line + 1, doc.lines)).from +
-												range.end.character,
-											doc.length,
-										);
-										view.dispatch({
-											changes: { from, to, insert },
-											selection: { anchor: from + insert.length },
-										});
-									}
+									const from = Math.min(
+										doc.line(Math.min(range.start.line + 1, doc.lines)).from +
+										range.start.character,
+										doc.length,
+									);
+									const to = Math.min(
+										doc.line(Math.min(range.end.line + 1, doc.lines)).from +
+										range.end.character,
+										doc.length,
+									);
+									view.dispatch({
+										changes: { from, to, insert },
+										selection: { anchor: from + insert.length },
+									});
+								}
 								: insert,
 						};
 					});
@@ -470,7 +517,7 @@ export function getGenericLSPCompletionSources(fileName: string) {
 						from: context.pos,
 						options,
 					};
-				} catch {}
+				} catch { }
 			}
 
 			return null;

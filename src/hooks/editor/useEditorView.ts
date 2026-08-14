@@ -58,6 +58,7 @@ import {
 	getGenericLSPCompletionSources,
 } from '../../extensions/codemirror/GenericLSPExtension';
 import { createCodeActionsExtension } from '../../extensions/codemirror/CodeActionsLSPExtension';
+import { createSignatureHelpExtension } from '../../extensions/codemirror/SignatureHelpLSPExtension';
 import {
 	createToolbarController,
 	type ToolbarController,
@@ -667,6 +668,7 @@ export const useEditorView = (
 			extensions.push(...getGenericLSPExtensionsForFile(fileName));
 			completionSources.push(...getGenericLSPCompletionSources(fileName));
 			extensions.push(createCodeActionsExtension(fileName));
+			extensions.push(createSignatureHelpExtension(fileName));
 		}
 
 		if (info.isLatex || info.isTypst || info.isBib) {
@@ -823,11 +825,11 @@ export const useEditorView = (
 		const toolbarExt: Extension[] =
 			(info.isLatex || info.isTypst) && toolbarVisible
 				? [
-						(controller = createToolbarController(
-							info.fileType as 'latex' | 'typst',
-							undoManagerRef.current || undefined,
-						)).extension,
-					]
+					(controller = createToolbarController(
+						info.fileType as 'latex' | 'typst',
+						undoManagerRef.current || undefined,
+					)).extension,
+				]
 				: [];
 
 		view.dispatch({
