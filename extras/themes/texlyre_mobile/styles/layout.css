@@ -420,8 +420,12 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	box-shadow: var(--mobile-shadow-lg) !important;
 }
 
-[data-layout="texlyre-mobile"] body.mobile-view-editor .comment-panel.editor-comment-panel,
-[data-layout="texlyre-mobile"] body.mobile-view-editor .review-panel.editor-review-panel {
+[data-layout="texlyre-mobile"]
+	body.mobile-view-editor
+	.comment-panel.editor-comment-panel,
+[data-layout="texlyre-mobile"]
+	body.mobile-view-editor
+	.review-panel.editor-review-panel {
 	display: flex !important;
 }
 
