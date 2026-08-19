@@ -47,6 +47,8 @@
     "pdf-viewer-rendering-quality": "high",
     "repository-proxy-url": "https://proxy.texlyre.org/?url=",
     "latex-sourcemap-enable": true,
+    "status-json-url": "",
+    "status-page-url": "",
     "templates-api-url": "https://texlyre.github.io/texlyre-templates/api/templates.json",
     "theme-plugin": "texlyre-wide-theme",
     "theme-variant": "dark",

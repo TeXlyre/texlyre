@@ -110,6 +110,8 @@ const config: TexlyreConfig = {
                 pdfViewerRenderingQuality: 'high',
                 repositoryProxyUrl: 'https://proxy.texlyre.org/?url=',
                 latexSourcemapEnable: true,
+                statusJsonUrl: 'https://raw.githubusercontent.com/TeXlyre/upptime/master/status.json',
+                statusPageUrl: 'https://texlyre.org/upptime',
                 templatesApiUrl: 'https://texlyre.github.io/texlyre-templates/api/templates.json',
                 themePlugin: 'texlyre-wide-theme',
                 themeVariant: 'atom_light',
@@ -156,6 +158,8 @@ const config: TexlyreConfig = {
                 fileSyncServerUrl: 'http://localhost:8080',
                 latexBusytexEndpoint: 'http://localhost:8070',
                 latexTexliveEndpoint: 'http://localhost:5004',
+                statusJsonUrl: '',
+                statusPageUrl: '',
                 themeVariant: 'dark',
 
             },

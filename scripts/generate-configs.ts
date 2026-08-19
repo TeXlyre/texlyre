@@ -1,7 +1,7 @@
 // scripts/generate-configs.ts
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { updateManifestExtensions } from './update-manifest-extensions.ts';
 
@@ -11,7 +11,7 @@ const rootDir = path.join(Dirname, '..');
 
 async function loadConfig() {
 	const configPath = path.join(rootDir, 'texlyre.config.ts');
-	const { default: config } = await import(configPath);
+	const { default: config } = await import(pathToFileURL(configPath).href);
 	return config;
 }
 

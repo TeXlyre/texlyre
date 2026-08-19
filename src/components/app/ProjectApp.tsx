@@ -36,6 +36,8 @@ import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
 import { NewProjectIcon } from '../common/Icons';
 import { createNamedLogger } from '@/logging';
+import FooterLinks from '../common/FooterLinks';
+import ServiceStatusBanner from '../common/ServiceStatusBanner';
 
 const moduleLog = createNamedLogger('ProjectApp');
 
@@ -460,6 +462,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)}
 				/>
 			)}
+			<ServiceStatusBanner />
 			<header>
 				<div className='header-left'>
 					<h1>{t('All Projects')}</h1>
@@ -562,41 +565,12 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			</div>
 
 			<footer>
-				<p className='texlyre-info'>
-					<span className='footer-links'>
-						<a
-							href='https://texlyre.org/docs/intro'
-							target='_blank'
-							rel='noreferrer'
-						>
-							{t('Documentation')}
-						</a>{' '}
-						•{' '}
-						<a
-							href='https://github.com/TeXlyre/texlyre'
-							target='_blank'
-							rel='noreferrer'
-						>
-							{t('Source Code')}
-						</a>{' '}
-						•{' '}
-						<button
-							type='button'
-							onClick={() => {
-								pushHash('privacy-policy');
-								setShowPrivacy(true);
-							}}
-							className='privacy-link'
-						>
-							{t('Privacy')}
-						</button>{' '}
-						•{/* {t('Built with TeXlyre')} */}
-						<a href='https://texlyre.org' target='_blank' rel='noreferrer'>
-							<img src={texlyreLogo} className='logo' alt={t('TeXlyre logo')} />
-						</a>{' '}
-						{`v${__APP_VERSION__}`}
-					</span>
-				</p>
+				<FooterLinks
+					onShowPrivacy={() => {
+						pushHash('privacy-policy');
+						setShowPrivacy(true);
+					}}
+				/>
 			</footer>
 
 			<PrivacyModal

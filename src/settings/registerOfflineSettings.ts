@@ -17,6 +17,8 @@ export function useRegisterOfflineSettings() {
 			'offline-airgap-external-requests',
 			'offline-force-collab-offline',
 			'offline-hide-banner',
+			'status-page-url',
+			'status-json-url',
 		]);
 
 		const initialForceAppOffline =
@@ -80,6 +82,28 @@ export function useRegisterOfflineSettings() {
 				'Hide the offline warning banner while keeping offline behavior enabled',
 			),
 			defaultValue: initialHideOfflineBanner,
+		});
+
+		registerSetting({
+			id: 'status-page-url',
+			category: t('Connectivity'),
+			subcategory: t('Service Status'),
+			type: 'text',
+			label: t('Status page URL'),
+			description: t(
+				'Link to the service status page. Leave empty to hide status links and warnings',
+			),
+			defaultValue: (batchedSettings['status-page-url'] as string) ?? '',
+		});
+
+		registerSetting({
+			id: 'status-json-url',
+			category: t('Connectivity'),
+			subcategory: t('Service Status'),
+			type: 'text',
+			label: t('Status JSON URL'),
+			description: t('Status endpoint used to warn about service outages'),
+			defaultValue: (batchedSettings['status-json-url'] as string) ?? '',
 		});
 	}, [registerSetting, batchGetSettings]);
 }

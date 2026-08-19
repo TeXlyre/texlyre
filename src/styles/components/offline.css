@@ -8,6 +8,11 @@
 	top: 0;
 }
 
+.service-status-banner {
+	background:
+		linear-gradient(135deg, #ffa60044, #ffd60056), var(--pico-background);
+}
+
 .offline-content {
 	display: flex;
 	align-items: left;

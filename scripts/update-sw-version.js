@@ -1,14 +1,14 @@
 // scripts/update-sw-version.js
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 async function loadConfig() {
 	const configPath = join(__dirname, '..', 'texlyre.config.ts');
-	const { default: config } = await import(configPath);
+	const { default: config } = await import(pathToFileURL(configPath).href);
 	return config;
 }
 
