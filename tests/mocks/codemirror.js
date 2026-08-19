@@ -4,6 +4,7 @@ module.exports = {
     helix: jest.fn(),
     latex: jest.fn(() => ({ extension: [] })),
     latexCompletionSource: jest.fn(),
+    vim: jest.fn(() => ({ extension: [] })),
     typst: jest.fn(() => ({
         extension: [],
         language: {
