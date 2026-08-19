@@ -102,9 +102,7 @@ export function useRegisterOfflineSettings() {
 			subcategory: t('Service Status'),
 			type: 'text',
 			label: t('Status JSON URL'),
-			description: t(
-				'Status endpoint used to warn about service outages',
-			),
+			description: t('Status endpoint used to warn about service outages'),
 			defaultValue: (batchedSettings['status-json-url'] as string) ?? '',
 		});
 	}, [registerSetting, batchGetSettings]);

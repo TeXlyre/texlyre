@@ -32,7 +32,11 @@ const FooterLinks: React.FC<FooterLinksProps> = ({
 						•{' '}
 					</>
 				) : null}
-				<a href='https://texlyre.org/docs/intro' target='_blank' rel='noreferrer'>
+				<a
+					href='https://texlyre.org/docs/intro'
+					target='_blank'
+					rel='noreferrer'
+				>
 					{t('Documentation')}
 				</a>{' '}
 				•{' '}
