@@ -2,6 +2,7 @@
 import { INITIAL, type IGrammar } from 'vscode-textmate';
 
 import { getTextMateGrammar } from '../extensions/codemirror/languages/textmateMode';
+import { stripAnnotationTags } from './annotationTagUtils';
 
 export interface TextMateOutlineSection {
 	id: string;
@@ -115,7 +116,7 @@ export class TextMateOutlineParser {
 
 		const sections: TextMateOutlineSection[] = [];
 		const stack: TextMateOutlineSection[] = [];
-		const lines = content.split('\n');
+		const lines = stripAnnotationTags(content).split('\n');
 		let ruleStack = INITIAL;
 
 		for (let index = 0; index < lines.length; index++) {

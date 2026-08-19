@@ -1,4 +1,6 @@
 // src/utils/latexOutlineParser.ts
+import { stripAnnotationTags } from './annotationTagUtils';
+
 export interface OutlineSection {
 	id: string;
 	title: string;
@@ -29,7 +31,7 @@ export class LaTeXOutlineParser {
 	};
 
 	static parse(content: string): OutlineSection[] {
-		const lines = content.split('\n');
+		const lines = stripAnnotationTags(content).split('\n');
 		const sections: OutlineSection[] = [];
 		const sectionStack: OutlineSection[] = [];
 
