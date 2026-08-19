@@ -1,4 +1,6 @@
 // src/utils/typstOutlineParser.ts
+import { stripAnnotationTags } from './annotationTagUtils';
+
 export interface TypstOutlineSection {
 	id: string;
 	title: string;
@@ -19,7 +21,7 @@ export class TypstOutlineParser {
 	};
 
 	static parse(content: string): TypstOutlineSection[] {
-		const lines = content.split('\n');
+		const lines = stripAnnotationTags(content).split('\n');
 		const sections: TypstOutlineSection[] = [];
 		const sectionStack: TypstOutlineSection[] = [];
 
