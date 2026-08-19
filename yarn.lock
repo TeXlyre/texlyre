@@ -2790,7 +2790,7 @@
     "@napi-rs/canvas-win32-arm64-msvc" "1.0.2"
     "@napi-rs/canvas-win32-x64-msvc" "1.0.2"
 
-"@napi-rs/wasm-runtime@^1.1.4":
+"@napi-rs/wasm-runtime@1.2.3":
   version "1.2.3"
   resolved "https://registry.npmjs.org/@napi-rs/wasm-runtime/-/wasm-runtime-1.2.3.tgz"
   integrity sha512-UMduMbqO5s5zF2NkNacMT/yK5Y5QiKvWr2+50bzIIxFDwVJ2h49b+oyjaCGPhJxd2/gC2x39EHv/gHVuu36x2Q==
