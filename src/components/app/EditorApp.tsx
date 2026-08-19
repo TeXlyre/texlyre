@@ -3,7 +3,6 @@ import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
-import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 import { ChatProvider } from '../../contexts/ChatContext';
 import { CollabProvider } from '../../contexts/CollabContext';
 import { FileSyncProvider } from '../../contexts/FileSyncContext';
@@ -59,6 +58,8 @@ import GuestUpgradeModal from '../auth/GuestUpgradeModal';
 import { isValidYjsUrl, pushHash } from '../../utils/urlUtils';
 import { clickWhenReady } from '../../utils/editorNavigator';
 import { createNamedLogger } from '@/logging';
+import FooterLinks from '../common/FooterLinks';
+import ServiceStatusBanner from '../common/ServiceStatusBanner';
 
 const moduleLog = createNamedLogger('EditorApp');
 
@@ -597,6 +598,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	return (
 		<div className='app-container'>
 			{isOfflineMode && !hideOfflineBanner && <OfflineBanner />}
+			<ServiceStatusBanner />
 			{isGuestUser(user) && (
 				<GuestUpgradeBanner
 					onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)}
@@ -692,49 +694,13 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					/>
 				</div>
 
-				<p className='texlyre-info'>
-					<span className='footer-links'>
-						<button
-							type='button'
-							onClick={() => setShowKeyboardShortcuts(true)}
-							className='shortcuts-link'
-						>
-							{t('Keyboard Map')}
-						</button>{' '}
-						•{' '}
-						<a
-							href='https://texlyre.org/docs/intro'
-							target='_blank'
-							rel='noreferrer'
-						>
-							{t('Documentation')}
-						</a>{' '}
-						•{' '}
-						<a
-							href='https://github.com/TeXlyre/texlyre'
-							target='_blank'
-							rel='noreferrer'
-						>
-							{t('Source Code')}
-						</a>{' '}
-						•{' '}
-						<button
-							type='button'
-							onClick={() => {
-								pushHash('privacy-policy');
-								setShowPrivacy(true);
-							}}
-							className='privacy-link'
-						>
-							{t('Privacy')}
-						</button>{' '}
-						•{/* {t('Built with TeXlyre')} */}
-						<a href='https://texlyre.org' target='_blank' rel='noreferrer'>
-							<img src={texlyreLogo} className='logo' alt={t('TeXlyre logo')} />
-						</a>{' '}
-						{`v${__APP_VERSION__}`}
-					</span>
-				</p>
+				<FooterLinks
+					onShowPrivacy={() => {
+						pushHash('privacy-policy');
+						setShowPrivacy(true);
+					}}
+					onShowShortcuts={() => setShowKeyboardShortcuts(true)}
+				/>
 
 				<ChatPanel className='footer-chat' />
 			</footer>

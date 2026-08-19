@@ -12,6 +12,7 @@ import Register from '../auth/Register';
 import PrivacyModal from '../common/PrivacyModal';
 import ThemeToggleButton from '../settings/ThemeToggleButton';
 import LanguageToggleButton from '../settings/LanguageToggleButton';
+import FooterLinks from '../common/FooterLinks';
 
 interface AuthContainerProps {
 	onAuthSuccess: () => void;
@@ -91,41 +92,12 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 				</div>
 			</div>
 			<footer>
-				<p className='texlyre-info'>
-					<span className='footer-links'>
-						<a
-							href='https://texlyre.org/docs/intro'
-							target='_blank'
-							rel='noreferrer'
-						>
-							{t('Documentation')}
-						</a>{' '}
-						•{' '}
-						<a
-							href='https://github.com/TeXlyre/texlyre'
-							target='_blank'
-							rel='noreferrer'
-						>
-							{t('Source Code')}
-						</a>{' '}
-						•{' '}
-						<button
-							type='button'
-							onClick={() => {
-								pushHash('privacy-policy');
-								setShowPrivacy(true);
-							}}
-							className='privacy-link'
-						>
-							{t('Privacy')}
-						</button>{' '}
-						•{/* {t('Built with TeXlyre')} */}
-						<a href='https://texlyre.org' target='_blank' rel='noreferrer'>
-							<img src={texlyreLogo} className='logo' alt={t('TeXlyre logo')} />
-						</a>{' '}
-						{`v${__APP_VERSION__}`}
-					</span>
-				</p>
+				<FooterLinks
+					onShowPrivacy={() => {
+						pushHash('privacy-policy');
+						setShowPrivacy(true);
+					}}
+				/>
 			</footer>
 
 			<PrivacyModal
