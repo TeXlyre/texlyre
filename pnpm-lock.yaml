@@ -289,6 +289,18 @@ importers:
       '@biomejs/biome':
         specifier: ^2.5.9
         version: 2.5.9
+      '@emnapi/core':
+        specifier: 1.11.3
+        version: 1.11.3
+      '@emnapi/runtime':
+        specifier: 1.11.3
+        version: 1.11.3
+      '@emnapi/wasi-threads':
+        specifier: 1.2.3
+        version: 1.2.3
+      '@napi-rs/wasm-runtime':
+        specifier: 1.2.3
+        version: 1.2.3(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -6887,17 +6899,14 @@ snapshots:
     dependencies:
       '@emnapi/wasi-threads': 1.2.3
       tslib: 2.8.1
-    optional: true
 
   '@emnapi/runtime@1.11.3':
     dependencies:
       tslib: 2.8.1
-    optional: true
 
   '@emnapi/wasi-threads@1.2.3':
     dependencies:
       tslib: 2.8.1
-    optional: true
 
   '@epic-web/invariant@1.0.0': {}
 
@@ -7704,7 +7713,6 @@ snapshots:
       '@emnapi/core': 1.11.3
       '@emnapi/runtime': 1.11.3
       '@tybys/wasm-util': 0.10.3
-    optional: true
 
   '@ocavue/utils@1.6.0': {}
 
@@ -8038,7 +8046,6 @@ snapshots:
   '@tybys/wasm-util@0.10.3':
     dependencies:
       tslib: 2.8.1
-    optional: true
 
   '@types/aria-query@5.0.4': {}
 
