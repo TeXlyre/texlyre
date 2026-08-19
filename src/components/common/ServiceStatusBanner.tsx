@@ -64,7 +64,7 @@ const ServiceStatusBanner: React.FC = () => {
 							<>
 								{' • '}
 								<a href={pageUrl} target='_blank' rel='noreferrer'>
-									{t('Service status')}
+									{t('Service Status')}
 								</a>
 							</>
 						) : null}
