@@ -67,6 +67,15 @@
 	--color-warning: #ffc107;
 	--color-info: #007bff;
 	--color-secondary: #6c757d;
+
+	/* Storage Colors */
+	--color-storage-projects: #2563eb;
+	--color-storage-typesetter: #d97706;
+	--color-storage-leftover: #dc2626;
+	--color-storage-app: #7c3aed;
+	--color-storage-offline: #0891b2;
+	--color-storage-overhead: #64748b;
+	--color-storage-other: #94a3b8;
 }
 
 [data-theme-mode="dark"] {
@@ -88,4 +97,13 @@
 	--color-warning: #ffd43b;
 	--color-info: #4dabf7;
 	--color-secondary: #adb5bd;
+
+	/* Storage Colors */
+	--color-storage-projects: #60a5fa;
+	--color-storage-typesetter: #fbbf24;
+	--color-storage-leftover: #f87171;
+	--color-storage-app: #a78bfa;
+	--color-storage-offline: #22d3ee;
+	--color-storage-overhead: #94a3b8;
+	--color-storage-other: #64748b;
 }

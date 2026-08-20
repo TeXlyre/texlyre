@@ -185,7 +185,7 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 			<h3 style={{ paddingTop: '1rem' }}>{t('Local Storage Data')}</h3>
 
 			<div className='warning-message'>
-				<h3>{t('\u26A0\uFE0F Warning: This action cannot be undone')}</h3>
+				<h4>{t('\u26A0\uFE0F Warning: This action cannot be undone')}</h4>
 				<p>
 					{t(
 						'Clearing or uploading local storage data is permanent and cannot be undone. Make sure to export your data before clearing if you want to keep it.',

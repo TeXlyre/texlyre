@@ -42,3 +42,8 @@
 .app-container.offline-mode .chat-panel {
 	display: none;
 }
+
+.storage-banner {
+	background:
+		linear-gradient(135deg, #ffa60044, #ff6b6b44), var(--pico-background);
+}
