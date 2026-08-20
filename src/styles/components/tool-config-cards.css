@@ -1,0 +1,191 @@
+.tool-config-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.tool-config-list-header {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-sm);
+}
+
+.tool-config-json-toggle {
+	margin-left: auto;
+}
+
+.tool-config-empty {
+	margin: 0;
+	color: var(--pico-secondary);
+	font-style: italic;
+	font-size: 0.9rem;
+}
+
+.tool-config-card {
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-lg);
+	background-color: var(--pico-background);
+	padding: var(--space-md);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.tool-config-card.inactive {
+	opacity: 0.7;
+}
+
+.tool-config-card-main {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: var(--space-sm);
+	flex-wrap: wrap;
+}
+
+.tool-config-card-info {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	flex-wrap: wrap;
+}
+
+.tool-config-icon {
+	display: inline-flex;
+	align-items: center;
+	color: var(--pico-secondary);
+}
+
+.tool-config-icon svg,
+.tool-config-icon img {
+	width: 1.1rem;
+	height: 1.1rem;
+}
+
+.tool-config-name {
+	font-weight: 600;
+	color: var(--text-color);
+}
+
+.tool-config-badge {
+	font-size: 0.7rem;
+	padding: 0 var(--space-sm);
+	border-radius: var(--radius-sm);
+	background-color: var(--pico-secondary-background);
+	color: var(--pico-secondary);
+}
+
+.tool-config-state {
+	font-size: 0.75rem;
+	font-weight: 600;
+	padding: var(--space-xs) var(--space-sm);
+	border-radius: var(--radius-sm);
+	white-space: nowrap;
+}
+
+.tool-config-state-connected {
+	color: var(--color-success);
+}
+
+.tool-config-state-connecting {
+	color: var(--color-warning);
+}
+
+.tool-config-state-disconnected {
+	color: var(--pico-secondary);
+}
+
+.tool-config-state-error {
+	color: var(--color-error);
+}
+
+.tool-config-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	flex-wrap: wrap;
+}
+
+.tool-config-actions .button {
+	padding: var(--space-xs) var(--space-md);
+}
+
+.tool-config-actions-utility {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+	margin-left: auto;
+}
+
+.tool-config-actions-utility .button.icon-only {
+	padding: var(--space-xs);
+}
+
+.tool-config-disabled {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding-top: var(--space-sm);
+	border-top: 1px solid var(--accent-border);
+}
+
+.tool-config-disabled > .button {
+	align-self: flex-start;
+}
+
+.tool-config-json {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.tool-config-form,
+.tool-config-import {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.tool-config-form-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: var(--space-sm);
+}
+
+.tool-config-form-header h4 {
+	margin: 0;
+}
+
+.tool-config-import.dragging {
+	background-color: var(--pico-primary-focus);
+	outline: 2px dashed var(--pico-primary);
+	border-radius: var(--radius-lg);
+}
+
+.tool-config-import-options {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.tool-config-import-options .import-option-button {
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	text-align: left;
+	gap: var(--space-md);
+	padding: var(--space-md);
+	min-height: 0;
+}
+
+.tool-config-import-options .import-option-button svg {
+	margin-bottom: 0;
+	flex: 0 0 auto;
+}
+
+.tool-config-import-options .import-option-button strong {
+	margin-bottom: var(--space-xs);
+	font-size: 1rem;
+}
