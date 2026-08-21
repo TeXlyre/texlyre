@@ -40,7 +40,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
 	onDeleteSelected,
 	onToggleViewMode,
 	viewMode: externalViewMode = 'grid',
-	itemsPerPage = 8,
+	itemsPerPage: maxItemsPerPage = 12,
 }) => {
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const propertiesRegistered = useRef(false);
@@ -53,11 +53,25 @@ const ProjectList: React.FC<ProjectListProps> = ({
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 	const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 	const [displayedProjects, setDisplayedProjects] = useState<Project[]>([]);
-	const [selectedProjects, setSelectedProjects] = useState<Set<string>>(
-		new Set(),
-	);
+	const [selectedProjects, setSelectedProjects] = useState<Set<string>>(new Set(),);
 	const [isSelectionMode, setIsSelectionMode] = useState(false);
+	const gridRef = useRef<HTMLDivElement>(null);
+	const [columns, setColumns] = useState(1);
+	const itemsPerPage = maxItemsPerPage - (maxItemsPerPage % columns);
 	const totalPages = Math.ceil(projects.length / itemsPerPage);
+
+	useEffect(() => {
+		const grid = gridRef.current;
+		if (!grid) return;
+
+		const update = () =>
+			setColumns(getComputedStyle(grid).gridTemplateColumns.split(' ').length);
+
+		update();
+		const observer = new ResizeObserver(update);
+		observer.observe(grid);
+		return () => observer.disconnect();
+	}, [displayedProjects.length]);
 
 	useEffect(() => {
 		if (propertiesRegistered.current) return;
@@ -322,7 +336,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
 						)}
 					</div>
 				) : (
-					<div className={`projects-${viewMode}`}>
+					<div ref={gridRef} className={`projects-${viewMode}`}>
 						{displayedProjects.map((project) => (
 							<ProjectCard
 								key={project.id}
