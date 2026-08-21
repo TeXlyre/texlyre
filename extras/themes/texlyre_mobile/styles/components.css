@@ -357,13 +357,15 @@
 	border: none;
 }
 
-.mobile-nav-button {
-	flex: 1;
+[data-layout="texlyre-mobile"] .mobile-nav-button {
+	flex: 1 1 0;
+	min-width: 0;
+	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: var(--mobile-spacing-xs);
+	gap: 2px;
 	background: none;
 	border: none;
 	color: var(--pico-secondary);
@@ -371,33 +373,40 @@
 	transition: all var(--mobile-transition-fast);
 	font-size: var(--mobile-font-xs);
 	font-weight: 500;
-	padding: var(--mobile-spacing-md) var(--mobile-spacing-sm);
+	padding: 0 var(--mobile-spacing-xs);
 	text-align: center;
-	min-height: var(--mobile-nav-height);
+	min-height: 0;
+	height: 100%;
+	overflow: hidden;
 }
 
-.mobile-nav-button:hover,
-.mobile-nav-button.active {
+[data-layout="texlyre-mobile"] .mobile-nav-button:hover,
+[data-layout="texlyre-mobile"] .mobile-nav-button.active {
 	color: var(--pico-primary);
 	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
 }
 
-.mobile-nav-button svg {
-	width: var(--mobile-icon-size-lg);
-	height: var(--mobile-icon-size-lg);
+[data-layout="texlyre-mobile"] .mobile-nav-button svg {
+	width: var(--mobile-icon-size-md);
+	height: var(--mobile-icon-size-md);
 	flex-shrink: 0;
 	transition: transform var(--mobile-transition-fast);
 }
 
-.mobile-nav-button.active svg {
+[data-layout="texlyre-mobile"] .mobile-nav-button.active svg {
 	transform: scale(1.1);
 }
 
-.mobile-nav-button span {
+[data-layout="texlyre-mobile"] .mobile-nav-button span {
 	font-size: var(--mobile-font-xs);
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
+	line-height: 1.1;
+	max-width: 100%;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 [data-layout="texlyre-mobile"] ::-webkit-scrollbar {

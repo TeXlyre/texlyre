@@ -215,12 +215,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 			</p>
 
 			<div className='project-meta'>
-				<span>
+				<span title={formatDate(project.createdAt)}>
 					{t('Created: {createdAt}', {
 						createdAt: formatDate(project.createdAt),
 					})}
 				</span>
-				<span>
+				<span title={formatDate(project.updatedAt)}>
 					{t('Last Modified: {lastModified}', {
 						lastModified: formatLastModified(project.updatedAt),
 					})}
