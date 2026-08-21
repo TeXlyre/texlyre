@@ -155,7 +155,6 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
 	padding-left: max(0px, env(safe-area-inset-left));
 	padding-right: max(0px, env(safe-area-inset-right));
-	padding-bottom: max(0px, env(safe-area-inset-bottom));
 }
 
 /* Footer & info */
