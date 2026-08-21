@@ -376,7 +376,7 @@
 	padding: 0 var(--mobile-spacing-xs);
 	text-align: center;
 	min-height: 0;
-	height: 100%;
+	align-self: stretch;
 	overflow: hidden;
 }
 
