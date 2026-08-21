@@ -4,9 +4,9 @@
 	--mobile-nav-height: 60px;
 }
 
-[data-layout="texlyre-mobile"] html,
-[data-layout="texlyre-mobile"] body {
-	height: 100vh;
+html[data-layout="texlyre-mobile"],
+html[data-layout="texlyre-mobile"] body {
+	height: 100dvh;
 	overflow: hidden;
 	margin: 0;
 	padding: 0;
@@ -16,7 +16,7 @@
 }
 
 [data-layout="texlyre-mobile"] #root {
-	height: 100vh;
+	height: 100dvh;
 	width: 100vw;
 	max-width: 100% !important;
 	margin: 0;
@@ -29,7 +29,7 @@
 [data-layout="texlyre-mobile"] .app-container {
 	display: flex;
 	flex-direction: column;
-	height: 100vh;
+	height: 100dvh;
 	width: 100vw;
 	overflow: hidden;
 }
