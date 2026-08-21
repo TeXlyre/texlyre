@@ -375,8 +375,7 @@
 	font-weight: 500;
 	padding: 0 var(--mobile-spacing-xs);
 	text-align: center;
-	min-height: 0;
-	align-self: stretch;
+	min-height: calc(var(--mobile-nav-height) - 1px);
 	overflow: hidden;
 }
 

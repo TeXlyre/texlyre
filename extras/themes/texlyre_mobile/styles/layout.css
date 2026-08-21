@@ -8,7 +8,6 @@ html[data-layout="texlyre-mobile"],
 html[data-layout="texlyre-mobile"] body {
 	height: 100dvh;
 	overflow: hidden;
-	overscroll-behavior: none;
 	-webkit-text-size-adjust: 100%;
 	text-size-adjust: 100%;
 	margin: 0;
