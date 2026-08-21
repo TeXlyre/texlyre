@@ -4,9 +4,11 @@
 	--mobile-nav-height: 60px;
 }
 
-html[data-layout="texlyre-mobile"] {
-	height: 100%;
-	overflow: hidden;
+@supports (-moz-appearance: none) {
+	html[data-layout="texlyre-mobile"] {
+		height: 100%;
+		overflow: hidden;
+	}
 }
 
 [data-layout="texlyre-mobile"] html,
@@ -52,7 +54,7 @@ html[data-layout="texlyre-mobile"] {
 	flex-direction: column;
 	padding-left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
 	padding-right: max(var(--mobile-spacing-md), env(safe-area-inset-right));
-	padding-top: max(var(--mobile-spacing-sm), env(safe-area-inset-top));
+	padding-top: var(--mobile-spacing-sm);
 }
 
 [data-layout="texlyre-mobile"] .header-row {
