@@ -4,8 +4,8 @@
 	--mobile-nav-height: 60px;
 }
 
-html[data-layout="texlyre-mobile"],
-html[data-layout="texlyre-mobile"] body {
+[data-layout="texlyre-mobile"] html,
+[data-layout="texlyre-mobile"] body {
 	height: 100dvh;
 	overflow: hidden;
 	margin: 0;
