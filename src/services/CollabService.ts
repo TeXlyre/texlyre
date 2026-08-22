@@ -197,7 +197,7 @@ class CollabService {
 		}
 
 		const awarenessTimeout = options?.awarenessTimeout ?? 30000;
-		if (provider.awareness) {
+		if (provider.awareness && awarenessTimeout !== false) {
 			provider.awareness.on('update', () => {
 				const states = provider.awareness.getStates();
 				const now = Date.now();
