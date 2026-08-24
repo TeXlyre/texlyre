@@ -1,14 +1,19 @@
 .settings-sidebar {
 	width: var(--sidebar-width);
+	flex-shrink: 0;
 	border-right: 1px solid var(--accent-border);
 	overflow-y: auto;
+	overscroll-behavior: contain;
 	background-color: var(--pico-secondary-background);
 }
 
 .settings-search {
-	position: relative;
+	position: sticky;
+	top: 0;
+	z-index: 1;
 	padding: var(--space-sm);
 	border-bottom: 1px solid var(--accent-border);
+	background-color: var(--pico-secondary-background);
 }
 
 .settings-search .search-input {
@@ -68,8 +73,10 @@
 
 .settings-content {
 	flex: 1;
+	min-width: 0;
 	padding: 0 var(--space-md);
 	overflow-y: auto;
+	overscroll-behavior: contain;
 }
 
 .settings-content h3 {
@@ -207,11 +214,18 @@
 	background-color: var(--pico-primary-focus);
 }
 
+.modal-container:has(.settings-wrapper) {
+	height: min(700px, 90vh);
+}
+
+.modal-container:has(.settings-wrapper) .modal-content {
+	display: flex;
+	overflow: hidden;
+}
+
 .settings-container {
 	display: flex;
 	flex: 1;
-	height: 70vh;
-	max-height: 700px;
 	min-height: 0;
 	overflow: hidden;
 	position: relative;
@@ -242,7 +256,8 @@
 .settings-wrapper {
 	display: flex;
 	flex-direction: column;
-	height: 100%;
+	flex: 1;
+	min-height: 0;
 	position: relative;
 }
 

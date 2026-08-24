@@ -57,7 +57,10 @@ const APP_THEME_MAP: Record<string, HighlightTheme> = {
 	light: 'light',
 	monokai: 'monokai',
 	tomorrow_night_blue: 'tomorrowNightBlue',
-	github_light: 'githubLight',
+	nord: 'nord',
+	deuteranopia: 'duotoneDark',
+	protanopia: 'duotoneLight',
+	tritanopia: 'xcodeLight',
 	solarized_light: 'solarizedLight',
 	atom_light: 'githubLight',
 };
@@ -110,9 +113,13 @@ const THEME_EXTENSION_MAP: Record<HighlightTheme, Extension> = {
 	xcodeLight: xcodeLight,
 };
 
-export function resolveHighlightTheme(theme: HighlightTheme): Extension {
+export function resolveHighlightTheme(
+	theme: HighlightTheme,
+	appVariant?: string,
+): Extension {
 	if (theme === 'auto') {
-		const appTheme = document.documentElement.getAttribute('data-theme') ?? '';
+		const appTheme =
+			appVariant ?? document.documentElement.getAttribute('data-theme') ?? '';
 		const mapped = APP_THEME_MAP[appTheme];
 		return mapped
 			? THEME_EXTENSION_MAP[mapped]

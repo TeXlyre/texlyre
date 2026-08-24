@@ -112,16 +112,6 @@
 	max-width: 150px;
 }
 
-[data-layout="texlyre-mobile"] .header-right .user-dropdown-menu {
-	position: fixed !important;
-	inset-block-start: calc(var(--mobile-spacing-lg) * 5) !important;
-	inset-inline-start: auto !important;
-	inset-inline-end: 0 !important;
-	inset-block-end: auto !important;
-	margin: 0 !important;
-	transform: translate(0, 0) !important;
-}
-
 /* Main content */
 [data-layout="texlyre-mobile"] .main-content {
 	flex: 1;

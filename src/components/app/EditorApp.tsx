@@ -13,6 +13,7 @@ import { ExternalCompilerProvider } from '../../contexts/ExternalCompilerContext
 import { SourceMapProvider } from '../../contexts/SourceMapContext';
 import { ContentFormatterProvider } from '../../contexts/ContentFormatterContext';
 import { useAuth } from '../../hooks/useAuth';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { useLaTeX } from '../../hooks/useLaTeX';
 import { useTypst } from '../../hooks/useTypst';
 import { useCollab } from '../../hooks/useCollab';
@@ -100,6 +101,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		clearAllActivities,
 		changeDirectory,
 	} = useFileSystemBackup();
+	const headerRightRef = useWheelScroll<HTMLDivElement>();
 	const [showProfileModal, setShowProfileModal] = useState(false);
 	const [profileTab, setProfileTab] = useState<ProfileSettingsTab>('account');
 	const [showAccountExportModal, setShowAccountExportModal] = useState(false);
@@ -641,7 +643,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						</div>
 					)}
 				</div>
-				<div className='header-right'>
+				<div className='header-right scroll-x' ref={headerRightRef}>
 					<CompileButtons />
 
 					<ShareProjectButton

@@ -1,0 +1,13 @@
+/* extras/themes/texlyre_slim/styles/variants/nord.css */
+[data-theme="nord"][data-theme-plugin="texlyre-slim"] {
+	--accent-background: #3b4252;
+	--accent-border: #4c566a;
+	--editor-background: #2e3440;
+	--editor-text: #d8dee9;
+	--sidebar-background: #2e3440;
+	--sidebar-border: #4c566a;
+	--text-color: #d8dee9;
+
+	--pico-primary-rgb: 136, 192, 208;
+	--pico-secondary-rgb: 129, 161, 193;
+}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useSearch } from '../../hooks/useSearch';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { SearchIcon, ReplaceIcon, FileTextIcon } from '../common/Icons';
 import { fileOperationNotificationService } from '../../services/FileOperationNotificationService';
 import SearchReplaceModal from './SearchReplaceModal';
@@ -47,6 +48,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 	} = useSearch();
 
 	const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const headerActionsRef = useWheelScroll<HTMLDivElement>();
 	const [showReplaceModal, setShowReplaceModal] = useState(false);
 	const [pendingReplace, setPendingReplace] = useState<{
 		type: 'file' | 'document' | 'all';
@@ -246,7 +248,10 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 		<div className={`search-panel ${className}`}>
 			<div className='file-explorer-header'>
 				<h3>{t('Search')}</h3>
-				<div className='search-mode-toggle file-explorer-actions'>
+				<div
+					className='search-mode-toggle file-explorer-actions scroll-x'
+					ref={headerActionsRef}
+				>
 					<button
 						className={`mode-toggle-btn ${!showReplace ? 'active' : ''}`}
 						onClick={() => showReplace && toggleReplace()}

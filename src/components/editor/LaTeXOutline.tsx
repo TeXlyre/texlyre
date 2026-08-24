@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { useProperties } from '../../hooks/useProperties';
 import { useFileTree } from '../../hooks/useFileTree';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { LaTeXOutlineParser } from '../../utils/latexOutlineParser';
 import OutlineItem from './LaTeXOutlineItem';
 import StatisticsModal from './StatisticsModal';
@@ -46,6 +47,7 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const { fileTree } = useFileTree();
 	const propertiesRegistered = useRef(false);
+	const headerRef = useWheelScroll<HTMLDivElement>();
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [isCollapsed, setIsCollapsed] = useState(true);
 	const [refreshKey, setRefreshKey] = useState(0);
@@ -142,7 +144,7 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 	if (sections.length === 0) {
 		return (
 			<div className='latex-outline'>
-				<div className='latex-outline-header'>
+				<div className='latex-outline-header scroll-x' ref={headerRef}>
 					<button className='outline-toggle-btn' onClick={handleToggleCollapse}>
 						{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
 					</button>
@@ -193,7 +195,7 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 
 	return (
 		<div className='latex-outline'>
-			<div className='latex-outline-header'>
+			<div className='latex-outline-header scroll-x' ref={headerRef}>
 				<button className='outline-toggle-btn' onClick={handleToggleCollapse}>
 					{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
 				</button>

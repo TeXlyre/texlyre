@@ -1,8 +1,10 @@
 @import "./shared/variables.css";
+@import "./shared/fonts.css";
 @import "./shared/buttons.css";
 @import "./shared/forms.css";
 @import "./shared/modals.css";
 @import "./shared/dropdowns.css";
+@import "./shared/scrollable.css";
 
 :root {
 	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;

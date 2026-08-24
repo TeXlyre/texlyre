@@ -3,15 +3,16 @@ import { useEffect, useRef } from 'react';
 
 import { t } from '@/i18n';
 import {
+	MAX_FONT_SIZE,
+	MIN_FONT_SIZE,
 	defaultEditorSettings,
-	fontFamilyMap,
-	fontSizeMap,
+	resolveFontFamily,
+	resolveFontSize,
 } from '../contexts/EditorContext';
 import { useSettings } from '../hooks/useSettings';
 import type {
 	EditorKeymapMode,
 	FontFamily,
-	FontSize,
 	HighlightTheme,
 } from '../types/editor';
 
@@ -41,9 +42,9 @@ export function useRegisterEditorSettings() {
 		const initialFontFamily =
 			(batchedSettings['editor-font-family'] as FontFamily) ??
 			defaultEditorSettings.fontFamily;
-		const initialFontSize =
-			(batchedSettings['editor-font-size'] as FontSize) ??
-			defaultEditorSettings.fontSize;
+		const initialFontSize = resolveFontSize(
+			batchedSettings['editor-font-size'],
+		);
 		const initialShowLineNumbers =
 			(batchedSettings['editor-show-line-numbers'] as boolean) ??
 			defaultEditorSettings.showLineNumbers;
@@ -77,12 +78,12 @@ export function useRegisterEditorSettings() {
 
 		document.documentElement.style.setProperty(
 			'--editor-font-family',
-			fontFamilyMap[initialFontFamily],
+			resolveFontFamily(initialFontFamily),
 		);
 
 		document.documentElement.style.setProperty(
 			'--editor-font-size',
-			fontSizeMap[initialFontSize],
+			`${initialFontSize}px`,
 		);
 
 		registerSetting({
@@ -95,17 +96,20 @@ export function useRegisterEditorSettings() {
 			defaultValue: initialFontFamily,
 			options: [
 				{ label: t('Monospace (System)'), value: 'monospace' },
-				{ label: t('JetBrains Mono'), value: 'jetbrains-mono' },
 				{ label: t('Fira Code'), value: 'fira-code' },
-				{ label: t('Source Code Pro'), value: 'source-code-pro' },
-				{ label: t('Inconsolata'), value: 'inconsolata' },
-				{ label: t('Serif'), value: 'serif' },
-				{ label: t('Sans Serif'), value: 'sans-serif' },
+				{ label: t('DejaVu Sans Mono'), value: 'dejavu-mono' },
+				{ label: t('Libertinus Mono'), value: 'libertinus-mono' },
+				{ label: t('New Computer Modern'), value: 'new-computer-modern' },
+				{ label: t('IBM Plex Serif'), value: 'ibm-plex-serif' },
+				{ label: t('IBM Plex Sans'), value: 'ibm-plex-sans' },
+				{ label: t('Literata'), value: 'literata' },
+				{ label: t('Serif (System)'), value: 'serif' },
+				{ label: t('Sans Serif (System)'), value: 'sans-serif' },
 			],
 			onChange: (value) => {
 				document.documentElement.style.setProperty(
 					'--editor-font-family',
-					fontFamilyMap[value as FontFamily],
+					resolveFontFamily(value),
 				);
 			},
 		});
@@ -114,23 +118,16 @@ export function useRegisterEditorSettings() {
 			id: 'editor-font-size',
 			category: t('Appearance'),
 			subcategory: t('Text Editor'),
-			type: 'select',
-			label: t('Font size'),
-			description: t('Select the font size for the editor'),
+			type: 'number',
+			label: t('Font size (pixels)'),
+			description: t('Set the font size for the editor'),
 			defaultValue: initialFontSize,
-			options: [
-				{ label: t('Extra Small (10px)'), value: 'xs' },
-				{ label: t('Small (12px)'), value: 'sm' },
-				{ label: t('Base (14px)'), value: 'base' },
-				{ label: t('Large (16px)'), value: 'lg' },
-				{ label: t('Extra Large (18px)'), value: 'xl' },
-				{ label: t('2X Large (20px)'), value: '2xl' },
-				{ label: t('3X Large (24px)'), value: '3xl' },
-			],
+			min: MIN_FONT_SIZE,
+			max: MAX_FONT_SIZE,
 			onChange: (value) => {
 				document.documentElement.style.setProperty(
 					'--editor-font-size',
-					fontSizeMap[value as FontSize],
+					`${resolveFontSize(value)}px`,
 				);
 			},
 		});

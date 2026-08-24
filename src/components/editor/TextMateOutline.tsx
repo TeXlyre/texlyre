@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useProperties } from '../../hooks/useProperties';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import {
 	TextMateOutlineParser,
 	type TextMateOutlineSection,
@@ -31,6 +32,7 @@ const TextMateOutline: React.FC<TextMateOutlineProps> = ({
 	onRefresh,
 }) => {
 	const { getProperty, setProperty } = useProperties();
+	const headerRef = useWheelScroll<HTMLDivElement>();
 	const [sections, setSections] = useState<TextMateOutlineSection[]>([]);
 	const [refreshKey, setRefreshKey] = useState(0);
 	const [isCollapsed, setIsCollapsed] = useState(
@@ -79,7 +81,7 @@ const TextMateOutline: React.FC<TextMateOutlineProps> = ({
 
 	return (
 		<div className='textmate-outline'>
-			<div className='textmate-outline-header'>
+			<div className='textmate-outline-header scroll-x' ref={headerRef}>
 				<button className='outline-toggle-btn' onClick={handleToggleCollapse}>
 					{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
 				</button>

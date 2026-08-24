@@ -81,7 +81,7 @@ export function useRegisterThemeSettings(
 
 		const variants = currentThemePlugin.getThemeVariants() || [];
 		const variantOptions = variants.map((variant) => ({
-			label: variant.name,
+			label: t(variant.name),
 			value: variant.id,
 		}));
 

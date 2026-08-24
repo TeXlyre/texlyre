@@ -45,13 +45,13 @@ describe('Modal Component', () => {
     });
 
     it('should render different sizes', () => {
-        const { rerender, container } = render(
+        const { rerender, baseElement } = render(
             <Modal isOpen={true} onClose={jest.fn()} title="Test Modal" size="small">
                 <div>Content</div>
             </Modal>
         );
 
-        expect(container.querySelector('.modal-small')).toBeInTheDocument();
+        expect(baseElement.querySelector('.modal-small')).toBeInTheDocument();
 
         rerender(
             <Modal isOpen={true} onClose={jest.fn()} title="Test Modal" size="large">
@@ -59,6 +59,6 @@ describe('Modal Component', () => {
             </Modal>
         );
 
-        expect(container.querySelector('.modal-large')).toBeInTheDocument();
+        expect(baseElement.querySelector('.modal-large')).toBeInTheDocument();
     });
 });

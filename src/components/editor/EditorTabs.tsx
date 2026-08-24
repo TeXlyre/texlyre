@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { t } from '@/i18n';
 import { useEditorTabs } from '../../hooks/useEditorTabs';
 import { useHeaderVisibility } from '../../hooks/useHeaderVisibility';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import type { EditorTab } from '../../types/editorTabs';
 import {
@@ -69,6 +70,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 	const contextMenuRef = useRef<HTMLDivElement>(null);
 	const tabsContainerRef = useRef<HTMLDivElement>(null);
 	const tabsRef = useRef<HTMLDivElement>(null);
+	const setTabsRef = useWheelScroll(tabsRef);
 
 	const updateScrollState = useCallback(() => {
 		const container = tabsContainerRef.current;
@@ -145,24 +147,6 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 			});
 		});
 	}, [activeTabId, tabs.length]);
-
-	useEffect(() => {
-		const tabs = tabsRef.current;
-		if (!tabs) return;
-
-		const handleWheel = (e: WheelEvent) => {
-			if (e.deltaY !== 0) {
-				e.preventDefault();
-				tabs.scrollLeft += e.deltaY;
-			}
-		};
-
-		tabs.addEventListener('wheel', handleWheel, { passive: false });
-
-		return () => {
-			tabs.removeEventListener('wheel', handleWheel);
-		};
-	}, []);
 
 	const handleTabClick = useCallback(
 		(e: React.MouseEvent, tabId: string) => {
@@ -416,7 +400,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 					<ChevronLeftIcon />
 				</button>
 
-				<div ref={tabsRef} className='editor-tabs' role='tablist'>
+				<div ref={setTabsRef} className='editor-tabs' role='tablist'>
 					{tabs.map((tab, index) => (
 						<div
 							key={tab.id}

@@ -6,6 +6,7 @@ import { t } from '@/i18n';
 import { compilerRegistryService } from '../../services/CompilerRegistryService';
 import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 import { useAuth } from '../../hooks/useAuth';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
 import { useTheme } from '../../hooks/useTheme';
 import type { Project, ProjectType, ProjectGroup } from '../../types/projects';
@@ -102,6 +103,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		currentLayout?.defaultFileExplorerWidth || 250,
 	);
 
+	const headerRightRef = useWheelScroll<HTMLDivElement>();
 	const [showProfileModal, setShowProfileModal] = useState(false);
 	const [profileTab, setProfileTab] = useState<ProfileSettingsTab>('account');
 	const [showAccountExportModal, setShowAccountExportModal] = useState(false);
@@ -479,7 +481,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					</a>
 				</div>
 
-				<div className='header-right'>
+				<div className='header-right scroll-x' ref={headerRightRef}>
 					{!isGuestUser(user) && (
 						<BackupStatusIndicator className='header-backup-indicator' />
 					)}

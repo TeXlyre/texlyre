@@ -76,6 +76,12 @@ import {
 } from '../../extensions/codemirror/LinkNavigationExtension';
 import { useAuth } from '../useAuth';
 import { useEditor } from '../useEditor';
+import { useTheme } from '../useTheme';
+import {
+	resolveFontFamily,
+	resolveFontSize,
+} from '../../contexts/EditorContext';
+import type { EditorSettings } from '../../types/editor';
 import { autoSaveService } from '../../services/AutoSaveService';
 import { detectFileType, isBibFile } from '../../utils/fileUtils';
 import { collabService } from '../../services/CollabService';
@@ -93,6 +99,21 @@ import {
 import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('useEditorView');
+
+const applyEditorAppearance = (
+	view: EditorView,
+	settings: EditorSettings,
+): void => {
+	const fontFamily = resolveFontFamily(settings.fontFamily);
+	const fontSize = `${resolveFontSize(settings.fontSize)}px`;
+
+	for (const element of [view.dom, view.scrollDOM, view.contentDOM]) {
+		element.style.fontFamily = fontFamily;
+		element.style.fontSize = fontSize;
+	}
+
+	view.requestMeasure();
+};
 
 type FileTypeInfo = {
 	fileType: ReturnType<typeof detectFileType>;
@@ -161,6 +182,7 @@ export const useEditorView = (
 	} = useEditor();
 
 	const { user } = useAuth();
+	const { currentVariant } = useTheme();
 
 	const ytextRef = useRef<Y.Text | null>(null);
 	const viewRef = useRef<EditorView | null>(null);
@@ -635,7 +657,10 @@ export const useEditorView = (
 
 		const buildHighlightExtension = (): Extension =>
 			getSyntaxHighlightingEnabled()
-				? resolveHighlightTheme(editorSettings.highlightTheme || 'auto')
+				? resolveHighlightTheme(
+						editorSettings.highlightTheme || 'auto',
+						currentVariant,
+					)
 				: [];
 
 		if (info.isLatex || info.isTypst) {
@@ -746,6 +771,7 @@ export const useEditorView = (
 		try {
 			const view = new EditorView({ state, parent: editorRef.current });
 			viewRef.current = view;
+			applyEditorAppearance(view, editorSettings);
 
 			if (enableComments) {
 				updateComments(view.state.doc.toString());
@@ -846,7 +872,10 @@ export const useEditorView = (
 				language.reconfigure(buildLanguageExtension(info)),
 				highlight.reconfigure(
 					getSyntaxHighlightingEnabled()
-						? resolveHighlightTheme(editorSettings.highlightTheme || 'auto')
+						? resolveHighlightTheme(
+								editorSettings.highlightTheme || 'auto',
+								currentVariant,
+							)
 						: [],
 				),
 				languageSpecific.reconfigure(
@@ -860,9 +889,31 @@ export const useEditorView = (
 			],
 		});
 
+		applyEditorAppearance(view, editorSettings);
+
 		toolbarControllerRef.current = controller;
 		setToolbarController(controller);
 	}, [editorSettingsVersion, toolbarVisible, fileName]);
+
+	useEffect(() => {
+		const view = viewRef.current;
+		if (!view) return;
+
+		view.dispatch({
+			effects: compartmentsRef.current.highlight.reconfigure(
+				getSyntaxHighlightingEnabled()
+					? resolveHighlightTheme(
+							editorSettings.highlightTheme || 'auto',
+							currentVariant,
+						)
+					: [],
+			),
+		});
+	}, [
+		currentVariant,
+		editorSettings.highlightTheme,
+		getSyntaxHighlightingEnabled,
+	]);
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: editorSettingsVersion is the trigger to recreate the auto-saver when auto-save delay/enabled changes. */
 	useEffect(() => {

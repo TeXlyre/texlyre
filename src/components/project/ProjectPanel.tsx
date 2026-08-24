@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { t } from '@/i18n';
 import { compilerRegistryService } from '../../services/CompilerRegistryService';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import type { Project } from '../../types/projects';
 import { formatLastModified } from '../../utils/dateUtils';
 import { ImportIcon, NewProjectIcon, StarIcon } from '../common/Icons';
@@ -35,6 +36,7 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 	availableTypes,
 	availableGroups,
 }) => {
+	const headerActionsRef = useWheelScroll<HTMLDivElement>();
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedTag, setSelectedTag] = useState('');
 	const [selectedType, setSelectedType] = useState('');
@@ -50,7 +52,7 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 		<div className='file-explorer'>
 			<div className='file-explorer-header'>
 				<h3>{t('Projects')}</h3>
-				<div className='file-explorer-actions'>
+				<div className='file-explorer-actions scroll-x' ref={headerActionsRef}>
 					<button
 						className='action-btn'
 						title={t('New Project')}

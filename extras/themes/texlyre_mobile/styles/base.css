@@ -48,6 +48,8 @@
 	font-size: var(--mobile-font-md);
 	line-height: 1.6;
 	touch-action: manipulation;
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
 }
 
 [data-theme-plugin="texlyre-mobile"] button,
@@ -112,6 +114,12 @@
 [data-theme-plugin="texlyre-mobile"] span {
 	font-size: var(--mobile-font-sm);
 	line-height: 1.6;
+}
+
+[data-theme-plugin="texlyre-mobile"] .cm-editor div,
+[data-theme-plugin="texlyre-mobile"] .cm-editor span {
+	font-size: inherit;
+	line-height: inherit;
 }
 
 [data-theme-plugin="texlyre-mobile"] small {

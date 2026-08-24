@@ -10,12 +10,4 @@
 
 	--pico-primary-rgb: 166, 226, 46;
 	--pico-secondary-rgb: 253, 151, 31;
-
-	--syntax-keyword: #f92672;
-	--syntax-function: #a6e22e;
-	--syntax-string: #e6db74;
-	--syntax-number: #ae81ff;
-	--syntax-comment: #75715e;
-	--syntax-variable: #fd971f;
-	--syntax-tag: #66d9ef;
 }

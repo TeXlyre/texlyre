@@ -1,6 +1,7 @@
 // src/components/common/Modal.tsx
 import type React from 'react';
 import { type ReactNode, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 import { t } from '@/i18n';
 import { CloseIcon } from './Icons';
@@ -73,7 +74,7 @@ const Modal: React.FC<ModalProps> = ({
 
 	if (!isOpen) return null;
 
-	return (
+	return createPortal(
 		<div className='modal-overlay'>
 			<div className={`modal-container modal-${size}`} ref={modalRef}>
 				<div className='modal-header'>
@@ -101,7 +102,8 @@ const Modal: React.FC<ModalProps> = ({
 				</div>
 				<div className='modal-content'>{children}</div>
 			</div>
-		</div>
+		</div>,
+		document.body,
 	);
 };
 
