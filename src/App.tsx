@@ -5,7 +5,7 @@
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
- * any later version.
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -51,6 +51,9 @@ import './styles/components/plugin-toolbar.css';
 import './styles/components/popover.css';
 import './styles/components/collaborator-avatars.css';
 import './styles/components/settings.css';
+import './styles/components/tool-config-cards.css';
+import './styles/components/shared-tools.css';
+import './styles/components/icon-button.css';
 import './styles/components/language.css';
 import './styles/components/offline.css';
 import './styles/components/typesetter.css';
@@ -67,8 +70,9 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ChelysProvider } from './contexts/ChelysContext';
 import { EditorProvider } from './contexts/EditorContext';
 import { LSPConfigProvider } from './contexts/LSPConfigContext';
+import { SharedToolPreferencesProvider } from './contexts/SharedToolPreferencesContext';
 import { TypesetterConfigProvider } from './contexts/TypesetterConfigContext';
-import { compilerRegistryService } from './services/CompilerRegistryService';
+import { typesetterRegistryService } from './services/TypesetterRegistryService';
 import { FileSystemBackupProvider } from './contexts/FileSystemBackupContext';
 import { OfflineProvider } from './contexts/OfflineContext';
 import { PropertiesProvider } from './contexts/PropertiesContext';
@@ -83,7 +87,7 @@ import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('App');
 
-compilerRegistryService.registerBuiltins();
+typesetterRegistryService.registerBuiltins();
 
 function App() {
 	const [isInitializing, setIsInitializing] = useState(true);
@@ -148,9 +152,11 @@ function App() {
 												<FileSystemBackupProvider>
 													<LSPConfigProvider>
 														<TypesetterConfigProvider>
-															<EditorProvider>
-																<AppContent />
-															</EditorProvider>
+															<SharedToolPreferencesProvider>
+																<EditorProvider>
+																	<AppContent />
+																</EditorProvider>
+															</SharedToolPreferencesProvider>
 														</TypesetterConfigProvider>
 													</LSPConfigProvider>
 												</FileSystemBackupProvider>
