@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { useCollab } from '../../hooks/useCollab';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import CollaboratorAvatars from '../common/CollaboratorAvatars';
 import type { Document } from '../../types/documents';
 import type { YjsDocUrl } from '../../types/yjs';
@@ -62,6 +63,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 	const [editName, setEditName] = useState('');
 	const [activeMenu, setActiveMenu] = useState<string | null>(null);
 	const menuRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+	const headerActionsRef = useWheelScroll<HTMLDivElement>();
 	const [showPropertiesModal, setShowPropertiesModal] = useState(false);
 	const [propertiesInfo, setPropertiesInfo] =
 		useState<DocumentPropertiesInfo | null>(null);
@@ -185,7 +187,10 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 			<div className='file-explorer'>
 				<div className='file-explorer-header'>
 					<h3>{t('Documents')}</h3>
-					<div className='file-explorer-actions'>
+					<div
+						className='file-explorer-actions scroll-x'
+						ref={headerActionsRef}
+					>
 						{syncSession ? (
 							<button
 								className='action-btn'

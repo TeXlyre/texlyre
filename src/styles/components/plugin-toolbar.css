@@ -1,13 +1,11 @@
 .plugin-toolbar {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	align-items: center;
-	align-content: flex-start;
 	gap: 2px;
 	padding: var(--space-xs);
 	background-color: var(--pico-background) !important;
 	border-bottom: 1px solid var(--accent-border);
-	position: relative;
 	flex-shrink: 0;
 	width: auto !important;
 }
@@ -51,9 +49,6 @@
 }
 
 .plugin-toolbar-overflow-menu {
-	position: absolute;
-	top: 100%;
-	z-index: var(--z-dropdown);
 	min-width: min-content;
 	max-height: 40vh;
 	padding: var(--space-xs) 0;

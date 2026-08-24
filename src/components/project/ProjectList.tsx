@@ -53,7 +53,9 @@ const ProjectList: React.FC<ProjectListProps> = ({
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 	const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 	const [displayedProjects, setDisplayedProjects] = useState<Project[]>([]);
-	const [selectedProjects, setSelectedProjects] = useState<Set<string>>(new Set(),);
+	const [selectedProjects, setSelectedProjects] = useState<Set<string>>(
+		new Set(),
+	);
 	const [isSelectionMode, setIsSelectionMode] = useState(false);
 	const gridRef = useRef<HTMLDivElement>(null);
 	const [columns, setColumns] = useState(1);

@@ -10,7 +10,9 @@ import {
 import { renderToString } from 'react-dom/server';
 
 import { t } from '@/i18n';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { MoreHorizontalIcon } from './Icons';
+import PositionedDropdown from './PositionedDropdown';
 
 export interface ToolbarButton {
 	key: string;
@@ -73,7 +75,8 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 	protectedTailGroups = 0,
 }) => {
 	const toolbarRef = useRef<HTMLDivElement>(null);
-	const overflowMenuRef = useRef<HTMLDivElement>(null);
+	const setToolbarRef = useWheelScroll(toolbarRef);
+	const overflowButtonRef = useRef<HTMLButtonElement>(null);
 	const isBaselineRef = useRef(true);
 	const widthCacheRef = useRef<{
 		byKey: Map<string, number>;
@@ -182,41 +185,6 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 		return () => observer.disconnect();
 	}, [measure]);
 
-	useLayoutEffect(() => {
-		if (!overflowOpen) return;
-
-		const root = toolbarRef.current;
-		const menu = overflowMenuRef.current;
-		const button = root?.querySelector<HTMLElement>(
-			`[data-item="${OVERFLOW_KEY}"]`,
-		);
-		if (!root || !menu || !button) return;
-
-		const rootRect = root.getBoundingClientRect();
-		const buttonRect = button.getBoundingClientRect();
-		menu.style.left = `${buttonRect.left - rootRect.left}px`;
-	}, [overflowOpen]);
-
-	useEffect(() => {
-		if (!overflowOpen) return;
-
-		const handleDocumentClick = (event: MouseEvent) => {
-			const target = event.target as Node;
-			const root = toolbarRef.current;
-			if (!root) return;
-			const button = root.querySelector(`[data-item="${OVERFLOW_KEY}"]`);
-			if (
-				!button?.contains(target) &&
-				!overflowMenuRef.current?.contains(target)
-			) {
-				setOverflowOpen(false);
-			}
-		};
-
-		document.addEventListener('click', handleDocumentClick);
-		return () => document.removeEventListener('click', handleDocumentClick);
-	}, [overflowOpen]);
-
 	const { groups, tail } = splitGroups(items);
 	const collapsedGroups: ToolbarButton[][] = [];
 	const visibleGroups: ToolbarButton[][] = [];
@@ -229,9 +197,11 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 		item: ToolbarButton,
 		icon = item.icon,
 		onClick: (event: React.MouseEvent) => void = () => onRun(item.key),
+		buttonRef?: React.Ref<HTMLButtonElement>,
 	) => (
 		<button
 			key={item.key}
+			ref={buttonRef}
 			type='button'
 			className='plugin-toolbar__item'
 			data-item={item.key}
@@ -264,7 +234,7 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 	};
 
 	return (
-		<div ref={toolbarRef} className='plugin-toolbar'>
+		<div ref={setToolbarRef} className='plugin-toolbar scroll-x'>
 			{visibleGroups.map((group, idx) => (
 				<span key={`group-${groupKey(group)}`} style={{ display: 'contents' }}>
 					{idx > 0 && <span className='plugin-toolbar__split' />}
@@ -284,6 +254,7 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 							event.stopPropagation();
 							setOverflowOpen((open) => !open);
 						},
+						overflowButtonRef,
 					)}
 				</>
 			)}
@@ -299,38 +270,39 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 				),
 			)}
 
-			{overflowOpen && collapsedGroups.length > 0 && (
-				<div
-					ref={overflowMenuRef}
-					className='plugin-toolbar-overflow-menu dropdown-menu'
-				>
-					{collapsedGroups.map((group, groupIdx) => (
-						<div key={`section-${groupKey(group)}`}>
-							<div className='plugin-toolbar-overflow-section'>
-								{group.map((item) => (
-									<button
-										key={item.key}
-										type='button'
-										className='dropdown-item plugin-toolbar-overflow-item'
-										onMouseDown={(event) => event.preventDefault()}
-										onClick={() => runOverflowItem(item.key)}
-									>
-										<span
-											className='plugin-toolbar-overflow-icon'
-											/* biome-ignore lint/security/noDangerouslySetInnerHtml: Trusted pre-rendered icon */
-											dangerouslySetInnerHTML={{ __html: item.icon || '' }}
-										/>
-										<span>{item.label}</span>
-									</button>
-								))}
-							</div>
-							{groupIdx < collapsedGroups.length - 1 && (
-								<div className='plugin-toolbar-overflow-separator' />
-							)}
+			<PositionedDropdown
+				isOpen={overflowOpen && collapsedGroups.length > 0}
+				triggerElement={overflowButtonRef.current}
+				className='plugin-toolbar-overflow-menu dropdown-menu'
+				align='left'
+				onClose={() => setOverflowOpen(false)}
+			>
+				{collapsedGroups.map((group, groupIdx) => (
+					<div key={`section-${groupKey(group)}`}>
+						<div className='plugin-toolbar-overflow-section'>
+							{group.map((item) => (
+								<button
+									key={item.key}
+									type='button'
+									className='dropdown-item plugin-toolbar-overflow-item'
+									onMouseDown={(event) => event.preventDefault()}
+									onClick={() => runOverflowItem(item.key)}
+								>
+									<span
+										className='plugin-toolbar-overflow-icon'
+										/* biome-ignore lint/security/noDangerouslySetInnerHtml: Trusted pre-rendered icon */
+										dangerouslySetInnerHTML={{ __html: item.icon || '' }}
+									/>
+									<span>{item.label}</span>
+								</button>
+							))}
 						</div>
-					))}
-				</div>
-			)}
+						{groupIdx < collapsedGroups.length - 1 && (
+							<div className='plugin-toolbar-overflow-separator' />
+						)}
+					</div>
+				))}
+			</PositionedDropdown>
 		</div>
 	);
 };

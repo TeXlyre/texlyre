@@ -12,6 +12,7 @@ import { useProperties } from '../../hooks/useProperties';
 import { useTheme } from '../../hooks/useTheme';
 import { useEditorTabs } from '../../hooks/useEditorTabs';
 import { usePeerDocumentTracking } from '../../hooks/usePeerDocumentTracking';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { fileStorageService } from '../../services/FileStorageService';
 import { popoutViewerService } from '../../services/PopoutViewerService';
@@ -177,6 +178,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	const [compilerId, setCompilerId] = useState<string | undefined>();
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
+	const viewToggleRef = useWheelScroll<HTMLDivElement>();
 	const [activeView, setActiveView] = useState<
 		'documents' | 'files' | 'search'
 	>('files');
@@ -1167,7 +1169,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					maintainAlignment={true}
 					className='explorer-container'
 				>
-					<div className='view-toggle'>
+					<div className='view-toggle scroll-x' ref={viewToggleRef}>
 						<button
 							className={activeView === 'files' ? 'active' : ''}
 							onClick={handleSwitchToFiles}

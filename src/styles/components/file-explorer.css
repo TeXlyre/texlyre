@@ -40,6 +40,7 @@
 .file-explorer-header h3 {
 	margin: 0;
 	font-size: 1rem;
+	flex-shrink: 0;
 }
 
 .file-explorer-actions {
@@ -359,6 +360,8 @@
 
 .view-toggle button {
 	flex: 1;
+	min-width: min-content;
+	white-space: nowrap;
 	padding: var(--space-sm);
 	background: none;
 	border: none;

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { useProperties } from '../../hooks/useProperties';
 import { useFileTree } from '../../hooks/useFileTree';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { TypstOutlineParser } from '../../utils/typstOutlineParser';
 import TypstOutlineItem from './TypstOutlineItem';
 import StatisticsModal from './StatisticsModal';
@@ -46,6 +47,7 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const { fileTree } = useFileTree();
 	const propertiesRegistered = useRef(false);
+	const headerRef = useWheelScroll<HTMLDivElement>();
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [isCollapsed, setIsCollapsed] = useState(true);
 	const [refreshKey, setRefreshKey] = useState(0);
@@ -142,7 +144,7 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 	if (sections.length === 0) {
 		return (
 			<div className='typst-outline'>
-				<div className='typst-outline-header'>
+				<div className='typst-outline-header scroll-x' ref={headerRef}>
 					<button className='outline-toggle-btn' onClick={handleToggleCollapse}>
 						{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
 					</button>
@@ -187,7 +189,7 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 
 	return (
 		<div className='typst-outline'>
-			<div className='typst-outline-header'>
+			<div className='typst-outline-header scroll-x' ref={headerRef}>
 				<button className='outline-toggle-btn' onClick={handleToggleCollapse}>
 					{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
 				</button>

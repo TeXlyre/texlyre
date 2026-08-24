@@ -4,6 +4,7 @@ import { type DragEvent, useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useFileTree } from '../../hooks/useFileTree';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import type { FileNode } from '../../types/files';
 import type { ProjectType } from '../../types/projects';
 import { validateFileName } from '../../utils/fileUtils';
@@ -89,6 +90,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		new Set(['/']),
 	);
 	const dropRef = useRef<HTMLDivElement>(null);
+	const headerActionsRef = useWheelScroll<HTMLDivElement>();
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
 	const [showDragDropDialog, setShowDragDropDialog] = useState(false);
@@ -940,7 +942,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			>
 				<div className='file-explorer-header'>
 					<h3>{t('Files')}</h3>
-					<div className='file-explorer-actions'>
+					<div
+						className='file-explorer-actions scroll-x'
+						ref={headerActionsRef}
+					>
 						<button
 							className='action-btn'
 							title={t('Refresh File Tree')}

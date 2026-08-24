@@ -3,6 +3,7 @@
 @import "./shared/forms.css";
 @import "./shared/modals.css";
 @import "./shared/dropdowns.css";
+@import "./shared/scrollable.css";
 
 :root {
 	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
