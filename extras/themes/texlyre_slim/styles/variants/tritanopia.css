@@ -1,0 +1,26 @@
+/* extras/themes/texlyre_slim/styles/variants/tritanopia.css */
+[data-theme="tritanopia"][data-theme-plugin="texlyre-slim"] {
+	--accent-background: #f7f3f2;
+	--accent-border: #ded5d3;
+	--editor-background: #ffffff;
+	--editor-text: #1b1f24;
+	--sidebar-background: #f7f3f2;
+	--sidebar-border: #ded5d3;
+	--text-color: #1b1f24;
+
+	--pico-primary-rgb: 204, 51, 17;
+	--pico-secondary-rgb: 111, 106, 106;
+
+	--color-error: #cc3311;
+	--color-success: #009e73;
+	--color-warning: #ee7733;
+	--color-info: #882255;
+
+	--color-storage-projects: #cc3311;
+	--color-storage-typesetter: #ee7733;
+	--color-storage-leftover: #882255;
+	--color-storage-app: #009e73;
+	--color-storage-offline: #005f4b;
+	--color-storage-overhead: #9a9a9a;
+	--color-storage-other: #5c5c5c;
+}

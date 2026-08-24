@@ -76,6 +76,7 @@ import {
 } from '../../extensions/codemirror/LinkNavigationExtension';
 import { useAuth } from '../useAuth';
 import { useEditor } from '../useEditor';
+import { useTheme } from '../useTheme';
 import {
 	resolveFontFamily,
 	resolveFontSize,
@@ -181,6 +182,7 @@ export const useEditorView = (
 	} = useEditor();
 
 	const { user } = useAuth();
+	const { currentVariant } = useTheme();
 
 	const ytextRef = useRef<Y.Text | null>(null);
 	const viewRef = useRef<EditorView | null>(null);
@@ -655,7 +657,10 @@ export const useEditorView = (
 
 		const buildHighlightExtension = (): Extension =>
 			getSyntaxHighlightingEnabled()
-				? resolveHighlightTheme(editorSettings.highlightTheme || 'auto')
+				? resolveHighlightTheme(
+						editorSettings.highlightTheme || 'auto',
+						currentVariant,
+					)
 				: [];
 
 		if (info.isLatex || info.isTypst) {
@@ -867,7 +872,10 @@ export const useEditorView = (
 				language.reconfigure(buildLanguageExtension(info)),
 				highlight.reconfigure(
 					getSyntaxHighlightingEnabled()
-						? resolveHighlightTheme(editorSettings.highlightTheme || 'auto')
+						? resolveHighlightTheme(
+								editorSettings.highlightTheme || 'auto',
+								currentVariant,
+							)
 						: [],
 				),
 				languageSpecific.reconfigure(
@@ -886,6 +894,26 @@ export const useEditorView = (
 		toolbarControllerRef.current = controller;
 		setToolbarController(controller);
 	}, [editorSettingsVersion, toolbarVisible, fileName]);
+
+	useEffect(() => {
+		const view = viewRef.current;
+		if (!view) return;
+
+		view.dispatch({
+			effects: compartmentsRef.current.highlight.reconfigure(
+				getSyntaxHighlightingEnabled()
+					? resolveHighlightTheme(
+							editorSettings.highlightTheme || 'auto',
+							currentVariant,
+						)
+					: [],
+			),
+		});
+	}, [
+		currentVariant,
+		editorSettings.highlightTheme,
+		getSyntaxHighlightingEnabled,
+	]);
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: editorSettingsVersion is the trigger to recreate the auto-saver when auto-save delay/enabled changes. */
 	useEffect(() => {

@@ -1,5 +1,4 @@
 // extras/themes/texlyre_wide/TeXlyreWideTheme.ts
-import { t } from '@/i18n';
 import type {
 	ThemeLayout,
 	ThemePlugin,
@@ -16,7 +15,7 @@ const createTeXlyreWideTheme = (): ThemePlugin => {
 		name: 'TeXlyre Wide Theme',
 		containerClass: 'texlyre-wide',
 		defaultFileExplorerWidth: 320,
-		minFileExplorerWidth: 150,
+		minFileExplorerWidth: 250,
 		maxFileExplorerWidth: 1250,
 		stylesheetPath: './styles/layout.css',
 	};
@@ -41,18 +40,21 @@ const createTeXlyreWideTheme = (): ThemePlugin => {
 		version: '2.0.0',
 		type: 'theme',
 		themes: [
-			{ id: 'light', name: t('Light'), isDark: false },
-			{ id: 'dark', name: t('Dark'), isDark: true },
-			{ id: 'system', name: t('System'), isDark: false },
-			{ id: 'monokai', name: t('Monokai'), isDark: true },
+			{ id: 'light', name: 'Light', isDark: false },
+			{ id: 'dark', name: 'Dark', isDark: true },
+			{ id: 'system', name: 'System', isDark: false },
+			{ id: 'monokai', name: 'Monokai', isDark: true },
 			{
 				id: 'tomorrow_night_blue',
-				name: t('Tomorrow Night Blue'),
+				name: 'Tomorrow Night Blue',
 				isDark: true,
 			},
-			{ id: 'github_light', name: t('GitHub Light'), isDark: false },
-			{ id: 'solarized_light', name: t('Solarized Light'), isDark: false },
-			{ id: 'atom_light', name: t('Atom Light'), isDark: false },
+			{ id: 'nord', name: 'Nord', isDark: true },
+			{ id: 'deuteranopia', name: 'Deuteranopia', isDark: true },
+			{ id: 'protanopia', name: 'Protanopia', isDark: false },
+			{ id: 'tritanopia', name: 'Tritanopia', isDark: false },
+			{ id: 'solarized_light', name: 'Solarized Light', isDark: false },
+			{ id: 'atom_light', name: 'Atom Light', isDark: false },
 		],
 
 		applyTheme(variantId: string): boolean {

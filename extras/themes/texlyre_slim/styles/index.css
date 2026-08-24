@@ -7,6 +7,9 @@
 @import "./variants/dark.css";
 @import "./variants/monokai.css";
 @import "./variants/tomorrow_night_blue.css";
-@import "./variants/github_light.css";
+@import "./variants/nord.css";
+@import "./variants/deuteranopia.css";
+@import "./variants/protanopia.css";
+@import "./variants/tritanopia.css";
 @import "./variants/solarized_light.css";
 @import "./variants/atom_light.css";

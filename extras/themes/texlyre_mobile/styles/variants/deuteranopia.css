@@ -1,0 +1,26 @@
+/* extras/themes/texlyre_mobile/styles/variants/deuteranopia.css */
+[data-theme="deuteranopia"][data-theme-plugin="texlyre-mobile"] {
+	--accent-background: #242832;
+	--accent-border: #3a4150;
+	--editor-background: #1c1f26;
+	--editor-text: #e6e8eb;
+	--sidebar-background: #1c1f26;
+	--sidebar-border: #3a4150;
+	--text-color: #e6e8eb;
+
+	--pico-primary-rgb: 86, 180, 233;
+	--pico-secondary-rgb: 154, 164, 178;
+
+	--color-error: #d55e00;
+	--color-success: #56b4e9;
+	--color-warning: #f0e442;
+	--color-info: #8ecdf2;
+
+	--color-storage-projects: #56b4e9;
+	--color-storage-typesetter: #e69f00;
+	--color-storage-leftover: #d55e00;
+	--color-storage-app: #cc79a7;
+	--color-storage-offline: #0072b2;
+	--color-storage-overhead: #9aa4b2;
+	--color-storage-other: #f0e442;
+}

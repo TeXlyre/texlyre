@@ -1,0 +1,26 @@
+/* extras/themes/texlyre_slim/styles/variants/protanopia.css */
+[data-theme="protanopia"][data-theme-plugin="texlyre-slim"] {
+	--accent-background: #f2f4f7;
+	--accent-border: #ccd3dc;
+	--editor-background: #ffffff;
+	--editor-text: #1b1f24;
+	--sidebar-background: #f2f4f7;
+	--sidebar-border: #ccd3dc;
+	--text-color: #1b1f24;
+
+	--pico-primary-rgb: 0, 114, 178;
+	--pico-secondary-rgb: 91, 102, 117;
+
+	--color-error: #a35a00;
+	--color-success: #0072b2;
+	--color-warning: #8a6d00;
+	--color-info: #2b7bb9;
+
+	--color-storage-projects: #0072b2;
+	--color-storage-typesetter: #e69f00;
+	--color-storage-leftover: #a35a00;
+	--color-storage-app: #8a5a8a;
+	--color-storage-offline: #56b4e9;
+	--color-storage-overhead: #8a94a6;
+	--color-storage-other: #8a6d00;
+}
