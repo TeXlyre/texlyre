@@ -3,12 +3,15 @@ export type FontFamily =
 	| 'monospace'
 	| 'serif'
 	| 'sans-serif'
-	| 'jetbrains-mono'
 	| 'fira-code'
-	| 'source-code-pro'
-	| 'inconsolata';
+	| 'dejavu-mono'
+	| 'libertinus-mono'
+	| 'new-computer-modern'
+	| 'ibm-plex-serif'
+	| 'ibm-plex-sans'
+	| 'literata';
 
-export type FontSize = 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl';
+export type FontSize = number;
 
 export type EditorKeymapMode = 'vim' | 'helix' | 'emacs' | null;
 

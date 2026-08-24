@@ -76,6 +76,11 @@ import {
 } from '../../extensions/codemirror/LinkNavigationExtension';
 import { useAuth } from '../useAuth';
 import { useEditor } from '../useEditor';
+import {
+	resolveFontFamily,
+	resolveFontSize,
+} from '../../contexts/EditorContext';
+import type { EditorSettings } from '../../types/editor';
 import { autoSaveService } from '../../services/AutoSaveService';
 import { detectFileType, isBibFile } from '../../utils/fileUtils';
 import { collabService } from '../../services/CollabService';
@@ -93,6 +98,21 @@ import {
 import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('useEditorView');
+
+const applyEditorAppearance = (
+	view: EditorView,
+	settings: EditorSettings,
+): void => {
+	const fontFamily = resolveFontFamily(settings.fontFamily);
+	const fontSize = `${resolveFontSize(settings.fontSize)}px`;
+
+	for (const element of [view.dom, view.scrollDOM, view.contentDOM]) {
+		element.style.fontFamily = fontFamily;
+		element.style.fontSize = fontSize;
+	}
+
+	view.requestMeasure();
+};
 
 type FileTypeInfo = {
 	fileType: ReturnType<typeof detectFileType>;
@@ -746,6 +766,7 @@ export const useEditorView = (
 		try {
 			const view = new EditorView({ state, parent: editorRef.current });
 			viewRef.current = view;
+			applyEditorAppearance(view, editorSettings);
 
 			if (enableComments) {
 				updateComments(view.state.doc.toString());
@@ -859,6 +880,8 @@ export const useEditorView = (
 				toolbarComp.reconfigure(toolbarExt),
 			],
 		});
+
+		applyEditorAppearance(view, editorSettings);
 
 		toolbarControllerRef.current = controller;
 		setToolbarController(controller);

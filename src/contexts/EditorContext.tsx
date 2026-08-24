@@ -7,21 +7,23 @@ import { useSettings } from '../hooks/useSettings';
 import type {
 	EditorSettings,
 	FontFamily,
-	FontSize,
 	HighlightTheme,
 	EditorKeymapMode,
 } from '../types/editor';
 import type { CollabConnectOptions, CollabProviderType } from '../types/collab';
 
-export const fontSizeMap: Record<FontSize, string> = {
-	xs: '10px',
-	sm: '12px',
-	base: '14px',
-	lg: '16px',
-	xl: '18px',
-	'2xl': '20px',
-	'3xl': '24px',
+const LEGACY_FONT_SIZES: Record<string, number> = {
+	xs: 10,
+	sm: 12,
+	base: 14,
+	lg: 16,
+	xl: 18,
+	'2xl': 20,
+	'3xl': 24,
 };
+
+export const MIN_FONT_SIZE = 8;
+export const MAX_FONT_SIZE = 72;
 
 export const fontFamilyMap: Record<FontFamily, string> = {
 	monospace:
@@ -29,18 +31,30 @@ export const fontFamilyMap: Record<FontFamily, string> = {
 	serif: "ui-serif, 'Times New Roman', 'Times', serif",
 	'sans-serif':
 		"ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif",
-	'jetbrains-mono':
-		"'JetBrains Mono', ui-monospace, 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace",
-	'fira-code':
-		"'Fira Code', ui-monospace, 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace",
-	'source-code-pro':
-		"'Source Code Pro', ui-monospace, 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace",
-	inconsolata:
-		"'Inconsolata', ui-monospace, 'SF Mono', 'Monaco', 'Roboto Mono', monospace",
+	'fira-code': "'Fira Code', ui-monospace, monospace",
+	'dejavu-mono': "'DejaVu Sans Mono', ui-monospace, monospace",
+	'libertinus-mono': "'Libertinus Mono', ui-monospace, monospace",
+	'new-computer-modern': "'New Computer Modern', ui-serif, serif",
+	'ibm-plex-serif': "'IBM Plex Serif', ui-serif, serif",
+	'ibm-plex-sans': "'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif",
+	literata: "'Literata', ui-serif, serif",
 };
 
+export const resolveFontSize = (value: unknown): number => {
+	const size =
+		typeof value === 'number'
+			? value
+			: (LEGACY_FONT_SIZES[String(value)] ?? defaultEditorSettings.fontSize);
+
+	return Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, size));
+};
+
+export const resolveFontFamily = (value: unknown): string =>
+	fontFamilyMap[value as FontFamily] ??
+	fontFamilyMap[defaultEditorSettings.fontFamily];
+
 export const defaultEditorSettings: EditorSettings = {
-	fontSize: 'lg',
+	fontSize: 16,
 	fontFamily: 'monospace',
 	showLineNumbers: true,
 	syntaxHighlighting: true,
@@ -101,9 +115,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 			fontFamily:
 				(getSetting('editor-font-family')?.value as FontFamily) ??
 				defaultEditorSettings.fontFamily,
-			fontSize:
-				(getSetting('editor-font-size')?.value as FontSize) ??
-				defaultEditorSettings.fontSize,
+			fontSize: resolveFontSize(getSetting('editor-font-size')?.value),
 			showLineNumbers:
 				(getSetting('editor-show-line-numbers')?.value as boolean) ??
 				defaultEditorSettings.showLineNumbers,
