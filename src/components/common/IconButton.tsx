@@ -38,6 +38,7 @@ const IconButton: React.FC<IconButtonProps> = ({
 	const needsConfirm = variant === 'danger' || !!confirm;
 
 	const handleTrigger = () => {
+		setHovered(false);
 		if (needsConfirm) {
 			setConfirming(!confirming);
 			return;
@@ -46,6 +47,7 @@ const IconButton: React.FC<IconButtonProps> = ({
 	};
 
 	const handleConfirm = () => {
+		setHovered(false);
 		setConfirming(false);
 		onClick?.();
 	};
@@ -105,7 +107,10 @@ const IconButton: React.FC<IconButtonProps> = ({
 					<button
 						type='button'
 						className='button secondary smaller'
-						onClick={() => setConfirming(false)}
+						onClick={() => {
+							setHovered(false);
+							setConfirming(false);
+						}}
 					>
 						{t('Cancel')}
 					</button>

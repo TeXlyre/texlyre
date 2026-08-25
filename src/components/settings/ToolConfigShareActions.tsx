@@ -48,7 +48,7 @@ const ToolConfigShareActions: React.FC<ToolConfigShareActionsProps> = ({
 			<IconButton
 				icon={<CopyIcon />}
 				label={copied ? t('Copied!') : t('Copy recipe')}
-				tooltip={share.message ?? t('Copies this recipe to the clipboard.')}
+				tooltip={t(share.message ?? t('Copies this recipe to the clipboard.'))}
 				variant={share.state === 'ready' ? undefined : 'warn'}
 				onClick={() => void handleCopy()}
 			/>

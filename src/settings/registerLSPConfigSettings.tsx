@@ -144,7 +144,6 @@ export function useRegisterLSPConfigSettings() {
 			label: t('LSP Recipes'),
 			description: (
 				<>
-					{t('Stored LSP server recipes (JSON array)')} <br />
 					<a
 						href='https://texlyre.org/docs/lsp-with-texlyre'
 						target='_blank'

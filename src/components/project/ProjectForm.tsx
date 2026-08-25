@@ -250,7 +250,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 											value={`${source}:${option.projectType}`}
 											disabled={'unavailable' in option}
 										>
-											{option.label}
+											{t(option.label)}
 										</option>
 									))}
 								</optgroup>

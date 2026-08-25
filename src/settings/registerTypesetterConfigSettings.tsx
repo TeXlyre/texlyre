@@ -175,7 +175,6 @@ export function useRegisterTypesetterConfigSettings() {
 			subcategory: t('Generic Typesetter'),
 			type: 'custom',
 			label: t('Typesetter Recipes'),
-			description: t('Stored remote typesetter recipes (JSON array)'),
 			defaultValue: readStoredValue(TYPESETTER_CONFIGS_SETTING),
 			liveUpdate: true,
 			render: () => <ToolConfigCards kind={typesetterKind} />,

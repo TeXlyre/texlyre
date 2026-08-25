@@ -23,7 +23,7 @@ interface LocalStorageDataSectionProps {
 	onSuccess: (message: string) => void;
 }
 
-const CLEAR_CONFIRMATIONS: Record<ClearType, IconButtonConfirm> = {
+const getClearConfirmations = (): Record<ClearType, IconButtonConfirm> => ({
 	settings: {
 		title: t('Clear Settings'),
 		message: t(
@@ -87,7 +87,7 @@ const CLEAR_CONFIRMATIONS: Record<ClearType, IconButtonConfirm> = {
 		],
 		confirmLabel: t('Clear all'),
 	},
-};
+});
 
 const STORES: Array<{
 	type: Exclude<ClearType, 'all'>;
@@ -96,23 +96,23 @@ const STORES: Array<{
 }> = [
 	{
 		type: 'settings',
-		title: t('Settings'),
-		description: t('All your application settings and preferences'),
+		title: 'Settings',
+		description: 'All your application settings and preferences',
 	},
 	{
 		type: 'properties',
-		title: t('Properties'),
-		description: t('All stored property values'),
+		title: 'Properties',
+		description: 'All stored property values',
 	},
 	{
 		type: 'secrets',
-		title: t('Encrypted Secrets'),
-		description: t('All saved API keys and encrypted credentials'),
+		title: 'Encrypted Secrets',
+		description: 'All saved API keys and encrypted credentials',
 	},
 	{
 		type: 'records',
-		title: t('Records and Logs'),
-		description: t('All records, logs, and notifications'),
+		title: 'Records and Logs',
+		description: 'All records, logs, and notifications',
 	},
 ];
 
@@ -127,13 +127,15 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 		null,
 	);
 
+	const clearConfirmations = getClearConfirmations();
+
 	const handleDownloadData = async (type: UserDataType) => {
 		try {
 			await downloadUserData(user.id, type);
 			onSuccess(
 				type === 'all'
 					? t('Downloaded all data')
-					: t('Downloaded {type}', { type }),
+					: t('Downloaded {type}', { type: t(type) }),
 			);
 		} catch (error) {
 			onError(
@@ -149,7 +151,7 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 			onSuccess(
 				type === 'all'
 					? t('Successfully cleared all data')
-					: t('Successfully cleared {type}', { type }),
+					: t('Successfully cleared {type}', { type: t(type) }),
 			);
 			setTimeout(() => {
 				window.location.reload();
@@ -209,22 +211,26 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 				{STORES.map(({ type, title, description }) => (
 					<div className='storage-action-group' key={type}>
 						<div className='storage-action-info'>
-							<strong>{title}</strong>
-							<p>{description}</p>
+							<strong>{t(title)}</strong>
+							<p>{t(description)}</p>
 						</div>
 						<div className='storage-action-buttons'>
 							<IconButton
 								icon={<DownloadIcon />}
-								label={t('Download {type} data', { type })}
+								label={t('Download {type} data', {
+									type: t(type),
+								})}
 								disabled={isSubmitting}
 								onClick={() => void handleDownloadData(type)}
 							/>
 							<IconButton
 								icon={<TrashIcon />}
-								label={t('Clear {type}', { type })}
+								label={t('Clear {type}', {
+									type: t(type),
+								})}
 								variant='danger'
 								disabled={isSubmitting}
-								confirm={CLEAR_CONFIRMATIONS[type]}
+								confirm={clearConfirmations[type]}
 								onClick={() => void handleClearData(type)}
 							/>
 						</div>
@@ -267,7 +273,7 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 							label={t('Clear all data')}
 							variant='danger'
 							disabled={isSubmitting}
-							confirm={CLEAR_CONFIRMATIONS.all}
+							confirm={clearConfirmations.all}
 							onClick={() => void handleClearData('all')}
 						/>
 					</div>

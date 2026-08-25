@@ -216,7 +216,7 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 
 				<label
 					className='checkbox-control shared-tool-toggle'
-					title={!canAdvertise ? share.message : undefined}
+					title={!canAdvertise && share.message ? t(share.message) : undefined}
 				>
 					<input
 						type='checkbox'

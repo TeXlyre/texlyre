@@ -43,7 +43,12 @@ const InfoTooltip: React.FC<InfoTooltipProps> = ({
 				onMouseLeave={() => setShowTooltip(false)}
 			>
 				{title && <h4 className='info-tooltip-title'>{title}</h4>}
-				<div className='info-tooltip-content'>{content}</div>
+				<div
+					className='info-tooltip-content'
+					onMouseDown={(event) => event.stopPropagation()}
+				>
+					{content}
+				</div>
 			</Popover>
 		</>
 	);
