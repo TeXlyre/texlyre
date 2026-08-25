@@ -1,11 +1,19 @@
 // scripts/translate-pages.cjs
+const path = require('node:path');
 const { extractTranslations } = require('./i18n/extract-translations.cjs');
 const { processDirectory } = require('./i18n/apply-translations.cjs');
 const { detectDynamicContent } = require('./i18n/detect-dynamic-content.cjs');
 const { detectMissingKeys } = require('./i18n/detect-missing-keys.cjs');
 const {
+	detectMissingPluralizations,
+} = require('./i18n/detect-missing-plurals.cjs');
+const {
 	processDirectory: processSettingsDirectory,
 } = require('./i18n/apply-settings-translations.cjs');
+
+function inferLanguage(localeFile) {
+	return path.basename(localeFile, path.extname(localeFile));
+}
 
 function main() {
 	const args = process.argv.slice(2);
@@ -21,9 +29,33 @@ function main() {
 		const sourceDir = args[1] || './src';
 		const localeFile = args[2] || './translations/locales/en.json';
 		const outputFile = args[3] || './translations/missing-keys.json';
+		const language = args[4] || inferLanguage(localeFile);
+		const pluralOutputFile =
+			args[5] || `./translations/missing-plurals-${language}.json`;
 
-		console.log('=== Detecting missing translation keys ===\n');
-		detectMissingKeys(sourceDir, localeFile, outputFile);
+		console.log('=== Detecting missing translation keys ===');
+		console.log(`Locale: ${language}`);
+		console.log(`Plural patch: ${pluralOutputFile}\n`);
+
+		detectMissingKeys(
+			sourceDir,
+			localeFile,
+			outputFile,
+			language,
+			pluralOutputFile,
+		);
+	} else if (command === 'plurals') {
+		const localeFile = args[1] || './translations/locales/en.json';
+		const language = args[2] || inferLanguage(localeFile);
+		const outputFile =
+			args[3] || `./translations/missing-plurals-${language}.json`;
+		const apply = args.includes('--apply');
+
+		console.log('=== Detecting missing pluralizations ===');
+		console.log(`Locale: ${language}`);
+		console.log(`Mode: ${apply ? 'GENERATE + APPLY' : 'GENERATE PATCH'}\n`);
+
+		detectMissingPluralizations(localeFile, language, outputFile, { apply });
 	} else if (command === 'extract') {
 		const sourceDir = args[1] || './src';
 		const outputFile = args[2] || './translations/locales/en.json';
@@ -93,9 +125,16 @@ Usage:
     Detect dynamic content (counts, variables) that should be converted to i18n
     This will generate translations/dynamic-patterns.json which can be viewed for hints of possible modifications
 
-  node scripts/translate-pages.cjs missing [sourceDir] [localeFile] [outputFile]
+  node scripts/translate-pages.cjs missing [sourceDir] [localeFile] [outputFile] [language] [pluralOutputFile]
     Report t() keys used in the source that have no entry in the locale file
-    This will generate translations/missing-keys.json
+    Also detect pluralized t() calls and generate all missing plural forms supported by the locale
+    Language defaults to the locale filename (for example en.json -> en)
+    Plural output defaults to translations/missing-plurals-<language>.json
+
+  node scripts/translate-pages.cjs plurals [localeFile] [language] [outputFile] [--apply]
+    Audit a locale JSON for incomplete plural families using Intl.PluralRules/CLDR
+    Generate only plural categories supported by the specified locale
+    --apply merges generated seed entries into the locale file; review them linguistically afterwards
 
   node scripts/translate-pages.cjs extract [sourceDir] [outputFile]
     Extract all translatable strings to a JSON file
@@ -107,12 +146,17 @@ Usage:
     Apply t() function calls to registerSetting() calls
     
 Options:
+  --apply      Apply generated plural seed entries to the locale file (plurals command only)
   --dry-run    Preview changes without modifying files
   --no-backup  Don't create .bak backup files
 
 Examples:
   node scripts/translate-pages.cjs detect ./src ./translations/dynamic-patterns.json
   node scripts/translate-pages.cjs missing ./src ./translations/locales/en.json
+  node scripts/translate-pages.cjs missing ./src ./translations/locales/ar.json ./translations/missing-keys-ar.json ar
+  node scripts/translate-pages.cjs plurals ./translations/locales/ar.json ar
+  node scripts/translate-pages.cjs plurals ./translations/locales/it.json it ./translations/missing-plurals-it.json
+  node scripts/translate-pages.cjs plurals ./translations/locales/de.json de ./translations/missing-plurals-de.json --apply
   node scripts/translate-pages.cjs extract ./src ./translations/locales/en.json
   node scripts/translate-pages.cjs apply ./src --dry-run
   node scripts/translate-pages.cjs apply ./src

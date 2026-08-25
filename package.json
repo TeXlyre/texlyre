@@ -54,7 +54,7 @@
 		"i18n:coverage": "node scripts/i18n/calculate-coverage.cjs",
 		"i18n:detect": "node scripts/translate-pages.cjs detect ./src ./translations/dynamic-patterns.json",
 		"i18n:extract": "node scripts/translate-pages.cjs extract ./src ./translations/locales/en.json",
-		"i18n:missing": "node scripts/translate-pages.cjs missing ./src ./translations/locales/en.json ./translations/missing-keys.json",
+		"i18n:missing": "node scripts/translate-pages.cjs missing ./src ./translations/locales/en.json ./translations/logs/missing-keys.json en ./translations/logs/missing-plurals.json",
 		"i18n:preview": "node scripts/translate-pages.cjs apply ./src --dry-run",
 		"i18n:fix": "node scripts/translate-pages.cjs apply ./src",
 		"i18n:fix:no-backup": "node scripts/translate-pages.cjs apply ./src --no-backup",

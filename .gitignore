@@ -6,6 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+translations/logs/*
 
 node_modules
 dist
@@ -28,8 +29,6 @@ public/assets/grammars/**
 src/plugins/
 !src/plugins/PluginRegistry.ts
 !src/plugins/PluginInterface.ts
-
-translations/missing-keys.json
 
 # Editor directories and files
 .vscode/*
