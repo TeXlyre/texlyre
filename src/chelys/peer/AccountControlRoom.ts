@@ -44,11 +44,11 @@ export function getAccountControlUser(): RendezvousUser | undefined {
 
 	return state?.username
 		? {
-			id: state.id,
-			username: state.username,
-			name: state.name,
-			color: state.color,
-			colorLight: state.colorLight,
-		}
-		: localUser ?? undefined;
+				id: state.id,
+				username: state.username,
+				name: state.name,
+				color: state.color,
+				colorLight: state.colorLight,
+			}
+		: (localUser ?? undefined);
 }

@@ -1,9 +1,9 @@
 // src/contexts/ChelysContext.tsx
 import type React from 'react';
 import { type ReactNode, createContext, useEffect, useState } from 'react';
+import { setAccountControlUser } from '@chelys/peer/AccountControlRoom';
 
 import { t } from '@/i18n';
-import { setAccountControlUser } from '@chelys/peer/AccountControlRoom';
 import { chelysAccountSyncService } from '../services/ChelysAccountSyncService';
 import { chelysService } from '../services/ChelysService';
 import { useAuth } from '../hooks/useAuth';
@@ -74,8 +74,8 @@ export const ChelysContext = createContext<ChelysContextType>({
 		throw new Error('Not implemented');
 	},
 	submitPrfPassword: async () => false,
-	cancelPrfPrompt: () => { },
-	logoutChelys: () => { },
+	cancelPrfPrompt: () => {},
+	logoutChelys: () => {},
 	disconnect: async () => {
 		throw new Error('Not implemented');
 	},
@@ -101,12 +101,12 @@ export const ChelysProvider: React.FC<ChelysProviderProps> = ({ children }) => {
 		setAccountControlUser(
 			user
 				? {
-					id: user.id,
-					username: user.username,
-					name: user.name ?? user.username,
-					color: user.color,
-					colorLight: user.colorLight,
-				}
+						id: user.id,
+						username: user.username,
+						name: user.name ?? user.username,
+						color: user.color,
+						colorLight: user.colorLight,
+					}
 				: null,
 		);
 

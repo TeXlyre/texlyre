@@ -146,7 +146,9 @@ export function sharedToolIdentity(
 }
 
 export function projectSharingKey(value: string): string {
-	const fragment = value.includes('#') ? value.slice(value.indexOf('#') + 1) : value;
+	const fragment = value.includes('#')
+		? value.slice(value.indexOf('#') + 1)
+		: value;
 	try {
 		return decodeURIComponent(fragment);
 	} catch {
@@ -182,9 +184,10 @@ export function sharedToolRevision(config: ToolConfigBlock): string {
 	return hashString(JSON.stringify(config));
 }
 
-export function describeSharedToolAvailability(
-	config: ToolConfigBlock,
-): { shareable: boolean; message?: string } {
+export function describeSharedToolAvailability(config: ToolConfigBlock): {
+	shareable: boolean;
+	message?: string;
+} {
 	if (config.transportConfig.type === 'worker') {
 		return {
 			shareable: false,
@@ -326,7 +329,7 @@ export function classifySharedToolConflict(
 		return {
 			kind:
 				sharedToolConfigFingerprint(sameId) ===
-					sharedToolConfigFingerprint(tool.config)
+				sharedToolConfigFingerprint(tool.config)
 					? 'same-id-same-config'
 					: 'same-id-different-config',
 			localId: sameId.id,

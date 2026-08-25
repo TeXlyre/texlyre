@@ -154,7 +154,10 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 							checked={projectShareEnabled}
 							disabled={!hasProjectTools}
 							onChange={(event) =>
-								preferences.setShareProjectTools(projectKey, event.target.checked)
+								preferences.setShareProjectTools(
+									projectKey,
+									event.target.checked,
+								)
 							}
 						/>
 						<span>{t('Share tools used in this project')}</span>

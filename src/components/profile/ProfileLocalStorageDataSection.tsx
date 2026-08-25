@@ -10,9 +10,7 @@ import {
 	importFromFile,
 } from '../../utils/userDataUtils';
 import type { User } from '../../types/auth';
-import IconButton, {
-	type IconButtonConfirm,
-} from '../common/IconButton';
+import IconButton, { type IconButtonConfirm } from '../common/IconButton';
 import { TrashIcon, DownloadIcon, ImportIcon } from '../common/Icons';
 
 type ClearType = 'settings' | 'properties' | 'secrets' | 'records' | 'all';
@@ -35,7 +33,9 @@ const CLEAR_CONFIRMATIONS: Record<ClearType, IconButtonConfirm> = {
 			t('All application preferences'),
 			t('Editor configurations (font, saving interval, etc.)'),
 			t('UI customizations and theme preferences (layout, variant, etc.)'),
-			t('endpoints and server settings (links, connection configuration, etc.)'),
+			t(
+				'endpoints and server settings (links, connection configuration, etc.)',
+			),
 		],
 		confirmLabel: t('Clear'),
 	},
@@ -46,7 +46,9 @@ const CLEAR_CONFIRMATIONS: Record<ClearType, IconButtonConfirm> = {
 		),
 		items: [
 			t('All stored property values'),
-			t('Application state data (last opened file, current line in editor, etc.)'),
+			t(
+				'Application state data (last opened file, current line in editor, etc.)',
+			),
 			t('User-specific configurations (panel width, collapse, etc.)'),
 		],
 		confirmLabel: t('Clear'),

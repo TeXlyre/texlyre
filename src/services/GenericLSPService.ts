@@ -7,10 +7,7 @@ import {
 import type { TransportConfig } from '@chelys/types/transport';
 
 import { createNamedLogger } from '@/logging';
-import {
-	SEMANTIC_TOKEN_MODIFIERS,
-	SEMANTIC_TOKEN_TYPES,
-} from '../types/lsp';
+import { SEMANTIC_TOKEN_MODIFIERS, SEMANTIC_TOKEN_TYPES } from '../types/lsp';
 import {
 	ExternalServiceBase,
 	type ExternalServiceConfig,
@@ -185,7 +182,8 @@ class GenericLSPService extends ExternalServiceBase<LSPServerConfig> {
 	private readonly initializing = new Map<string, Promise<void>>();
 	private readonly diagnosticListeners = new Set<DiagnosticListener>();
 	private readonly applyEditListeners = new Set<ApplyEditListener>();
-	private readonly semanticTokensRefreshListeners = new Set<SemanticTokensRefreshListener>();
+	private readonly semanticTokensRefreshListeners =
+		new Set<SemanticTokensRefreshListener>();
 	private readonly lastDiagnostics = new Map<string, string>();
 
 	registerConfig(config: LSPServerConfig): void {
@@ -266,7 +264,7 @@ class GenericLSPService extends ExternalServiceBase<LSPServerConfig> {
 		const clientConfigChanged =
 			updates.clientConfig !== undefined &&
 			JSON.stringify(updates.clientConfig) !==
-			JSON.stringify(current.clientConfig);
+				JSON.stringify(current.clientConfig);
 
 		if (!updated.enabled) {
 			if (current.enabled) this.disconnectClient(configId);

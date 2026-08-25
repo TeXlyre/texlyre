@@ -24,7 +24,8 @@ const ToastContainer: React.FC = () => {
 
 	useEffect(() => {
 		const handleToastEvent = (event: CustomEvent) => {
-			const { type, message, operationId, duration, data, actions } = event.detail;
+			const { type, message, operationId, duration, data, actions } =
+				event.detail;
 
 			if (type === 'dismiss' && operationId) {
 				setNotifications((prev) =>

@@ -2,15 +2,42 @@
 import type { TransportConfig } from '@chelys/types/transport';
 
 export const SEMANTIC_TOKEN_TYPES = [
-	'namespace', 'type', 'class', 'enum', 'interface', 'struct', 'typeParameter',
-	'parameter', 'variable', 'property', 'enumMember', 'event', 'function',
-	'method', 'macro', 'keyword', 'modifier', 'comment', 'string', 'number',
-	'regexp', 'operator', 'decorator',
+	'namespace',
+	'type',
+	'class',
+	'enum',
+	'interface',
+	'struct',
+	'typeParameter',
+	'parameter',
+	'variable',
+	'property',
+	'enumMember',
+	'event',
+	'function',
+	'method',
+	'macro',
+	'keyword',
+	'modifier',
+	'comment',
+	'string',
+	'number',
+	'regexp',
+	'operator',
+	'decorator',
 ];
 
 export const SEMANTIC_TOKEN_MODIFIERS = [
-	'declaration', 'definition', 'readonly', 'static', 'deprecated', 'abstract',
-	'async', 'modification', 'documentation', 'defaultLibrary',
+	'declaration',
+	'definition',
+	'readonly',
+	'static',
+	'deprecated',
+	'abstract',
+	'async',
+	'modification',
+	'documentation',
+	'defaultLibrary',
 ];
 
 export interface LSPPosition {

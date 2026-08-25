@@ -104,9 +104,7 @@ const ToolConfigForm: React.FC<ToolConfigFormProps> = ({
 		const normalized = kind.normalize(candidate);
 
 		if (!normalized) {
-			setError(
-				t('The recipe is incomplete. Check the required fields.'),
-			);
+			setError(t('The recipe is incomplete. Check the required fields.'));
 			return;
 		}
 

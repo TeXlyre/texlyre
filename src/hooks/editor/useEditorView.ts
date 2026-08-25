@@ -659,9 +659,9 @@ export const useEditorView = (
 		const buildHighlightExtension = (): Extension =>
 			getSyntaxHighlightingEnabled()
 				? resolveHighlightTheme(
-					editorSettings.highlightTheme || 'auto',
-					currentVariant,
-				)
+						editorSettings.highlightTheme || 'auto',
+						currentVariant,
+					)
 				: [];
 
 		if (info.isLatex || info.isTypst) {
@@ -861,11 +861,11 @@ export const useEditorView = (
 		const toolbarExt: Extension[] =
 			info.hasToolbar && toolbarVisible
 				? [
-					(controller = createToolbarController(
-						info.fileType as ToolbarFileType,
-						undoManagerRef.current || undefined,
-					)).extension,
-				]
+						(controller = createToolbarController(
+							info.fileType as ToolbarFileType,
+							undoManagerRef.current || undefined,
+						)).extension,
+					]
 				: [];
 
 		view.dispatch({
@@ -875,9 +875,9 @@ export const useEditorView = (
 				highlight.reconfigure(
 					getSyntaxHighlightingEnabled()
 						? resolveHighlightTheme(
-							editorSettings.highlightTheme || 'auto',
-							currentVariant,
-						)
+								editorSettings.highlightTheme || 'auto',
+								currentVariant,
+							)
 						: [],
 				),
 				languageSpecific.reconfigure(
@@ -905,9 +905,9 @@ export const useEditorView = (
 			effects: compartmentsRef.current.highlight.reconfigure(
 				getSyntaxHighlightingEnabled()
 					? resolveHighlightTheme(
-						editorSettings.highlightTheme || 'auto',
-						currentVariant,
-					)
+							editorSettings.highlightTheme || 'auto',
+							currentVariant,
+						)
 					: [],
 			),
 		});

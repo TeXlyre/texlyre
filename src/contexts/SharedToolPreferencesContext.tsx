@@ -20,7 +20,11 @@ import {
 interface SharedToolPreferencesContextType {
 	preferences: SharedToolPreferences;
 	isSharedWithAll: (kind: SharedToolKind, id: string) => boolean;
-	setSharedWithAll: (kind: SharedToolKind, id: string, enabled: boolean) => void;
+	setSharedWithAll: (
+		kind: SharedToolKind,
+		id: string,
+		enabled: boolean,
+	) => void;
 	isShareProjectTools: (projectKey: string) => boolean;
 	setShareProjectTools: (projectKey: string, enabled: boolean) => void;
 	getOrigin: (kind: SharedToolKind, id: string) => SharedToolOrigin | undefined;
@@ -136,7 +140,8 @@ export const SharedToolPreferencesProvider: React.FC<
 						const origin = origins[key];
 						if (
 							origin &&
-							sharedToolIdentity(kind, origin.ownerId, origin.toolId) === identity
+							sharedToolIdentity(kind, origin.ownerId, origin.toolId) ===
+								identity
 						) {
 							delete origins[key];
 							delete shareWithAll[key];
@@ -170,7 +175,11 @@ export const SharedToolPreferencesProvider: React.FC<
 				delete origins[key];
 
 				if (origin) {
-					const identity = sharedToolIdentity(kind, origin.ownerId, origin.toolId);
+					const identity = sharedToolIdentity(
+						kind,
+						origin.ownerId,
+						origin.toolId,
+					);
 					const previous = decisions[identity];
 					if (previous) {
 						decisions[identity] = {
@@ -195,7 +204,8 @@ export const SharedToolPreferencesProvider: React.FC<
 			isShareProjectTools: (projectKey) =>
 				preferences.shareProjectTools[projectKey] === true,
 			setShareProjectTools,
-			getOrigin: (kind, id) => preferences.origins[localSharedToolKey(kind, id)],
+			getOrigin: (kind, id) =>
+				preferences.origins[localSharedToolKey(kind, id)],
 			getDecision: (identity) => preferences.decisions[identity],
 			recordAccepted,
 			recordIgnored,

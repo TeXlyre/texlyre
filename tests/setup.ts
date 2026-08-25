@@ -69,6 +69,14 @@ class MockBroadcastChannel {
 
 global.BroadcastChannel = MockBroadcastChannel as any;
 
+class MockResizeObserver {
+    observe = jest.fn();
+    unobserve = jest.fn();
+    disconnect = jest.fn();
+}
+
+global.ResizeObserver = MockResizeObserver as any;
+
 global.URL.createObjectURL = jest.fn(() => 'mock-url');
 global.URL.revokeObjectURL = jest.fn();
 

@@ -189,7 +189,11 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 					<button
 						className='button'
 						disabled={Boolean(origin)}
-						title={origin ? t('Shared recipes are managed by their owner.') : undefined}
+						title={
+							origin
+								? t('Shared recipes are managed by their owner.')
+								: undefined
+						}
 						onClick={() => setEditing(config)}
 					>
 						<EditIcon />

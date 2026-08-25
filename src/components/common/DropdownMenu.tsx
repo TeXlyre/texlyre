@@ -31,7 +31,11 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
 		axis={mode === 'submenu' ? 'inline' : 'block'}
 		align={mode === 'submenu' ? 'start' : 'end'}
 		clampHeight
-		style={{ zIndex: 1001, minWidth: `${width}px`, maxHeight: `${maxHeight}px` }}
+		style={{
+			zIndex: 1001,
+			minWidth: `${width}px`,
+			maxHeight: `${maxHeight}px`,
+		}}
 		onClose={onClose}
 	>
 		{children}

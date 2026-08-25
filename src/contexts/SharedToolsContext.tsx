@@ -52,7 +52,9 @@ interface SharedToolsContextType {
 	setProjectShareEnabled: (enabled: boolean) => void;
 }
 
-export const SharedToolsContext = createContext<SharedToolsContextType | null>(null);
+export const SharedToolsContext = createContext<SharedToolsContextType | null>(
+	null,
+);
 
 interface SharedToolsProviderProps {
 	children: ReactNode;
@@ -97,7 +99,10 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 	const tools = useMemo(() => {
 		const projectType = doc?.projectMetadata?.type ?? 'latex';
 		const compilerId = doc?.projectMetadata?.compilerId;
-		const providerConfig = typesetterRegistryService.resolve(projectType, compilerId);
+		const providerConfig = typesetterRegistryService.resolve(
+			projectType,
+			compilerId,
+		);
 		const usedTypesetterId =
 			providerConfig?.source === 'chelys' ? providerConfig.id : null;
 		const usedLspIds = new Set(
@@ -234,13 +239,26 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 	const offers = useMemo<SharedToolOffer[]>(
 		() =>
 			observed.map((tool) => {
-				const identity = sharedToolIdentity(tool.kind, tool.ownerId, tool.toolId);
-				const conflict = classifySharedToolConflict(tool, localConfigs(tool.kind));
+				const identity = sharedToolIdentity(
+					tool.kind,
+					tool.ownerId,
+					tool.toolId,
+				);
+				const conflict = classifySharedToolConflict(
+					tool,
+					localConfigs(tool.kind),
+				);
 				const decision = preferences.getDecision(identity);
 				const localId = decision?.localId ?? conflict.localId;
 
 				if (conflict.kind === 'same-id-same-config' && !decision) {
-					return { ...tool, identity, conflict, status: 'using-existing', localId };
+					return {
+						...tool,
+						identity,
+						conflict,
+						status: 'using-existing',
+						localId,
+					};
 				}
 				if (decision?.decision === 'ignored') {
 					return { ...tool, identity, conflict, status: 'ignored', localId };
@@ -271,9 +289,16 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 	const ignore = useCallback(
 		(offer: SharedToolOffer) => {
 			const previous = preferences.getDecision(offer.identity);
-			if (previous?.decision === 'accepted' && previous.imported && previous.localId) {
+			if (
+				previous?.decision === 'accepted' &&
+				previous.imported &&
+				previous.localId
+			) {
 				const origin = preferences.getOrigin(offer.kind, previous.localId);
-				if (origin?.ownerId === offer.ownerId && origin.toolId === offer.toolId) {
+				if (
+					origin?.ownerId === offer.ownerId &&
+					origin.toolId === offer.toolId
+				) {
 					removeConfig(offer.kind, previous.localId);
 				}
 			}
@@ -297,12 +322,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 				decision.revision !== offer.revision
 			) {
 				addConfig(offer.kind, offer.config);
-				preferences.recordAccepted(
-					offer.kind,
-					offer,
-					offer.toolId,
-					true,
-				);
+				preferences.recordAccepted(offer.kind, offer, offer.toolId, true);
 			}
 		}
 	}, [offers, addConfig, preferences.getDecision, preferences.recordAccepted]);
@@ -376,5 +396,9 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 		],
 	);
 
-	return <SharedToolsContext.Provider value={value}>{children}</SharedToolsContext.Provider>;
+	return (
+		<SharedToolsContext.Provider value={value}>
+			{children}
+		</SharedToolsContext.Provider>
+	);
 };

@@ -171,8 +171,8 @@ function executeCommand(
 						applyWorkspaceEdit(result, view, fileUri);
 					}
 				})
-				.catch(() => { });
-		} catch { }
+				.catch(() => {});
+		} catch {}
 	});
 }
 
@@ -296,7 +296,7 @@ export function createCodeActionsExtension(fileName: string): Extension {
 					}
 				});
 			}
-			update() { }
+			update() {}
 			destroy() {
 				this.unsubscribe();
 			}
@@ -308,7 +308,7 @@ export function createCodeActionsExtension(fileName: string): Extension {
 			private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 			private pendingRequest = 0;
 
-			constructor(private view: EditorView) { }
+			constructor(private view: EditorView) {}
 
 			update(update: any) {
 				if (update.docChanged) {

@@ -145,9 +145,7 @@ const ToolConfigImport: React.FC<ToolConfigImportProps> = ({
 
 			{source === 'url' && (
 				<div className='form-group'>
-					<label htmlFor='tool-config-import-url'>
-						{t('Recipe URL')}
-					</label>
+					<label htmlFor='tool-config-import-url'>{t('Recipe URL')}</label>
 					<input
 						id='tool-config-import-url'
 						type='text'

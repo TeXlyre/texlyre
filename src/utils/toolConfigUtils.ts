@@ -290,20 +290,20 @@ function normalizeUISchema(value: unknown): TypesetterUISchema | undefined {
 function normalizeTransportConfig(
 	config: StoredTypesetterConfig,
 ): TypesetterTransportConfig | null {
-	const hasBlock = isRecord(config.transportConfig);
-	const source = hasBlock
+	const block = isRecord(config.transportConfig)
 		? config.transportConfig
-		: {
-				type: config.transportType,
-				url: config.transportUrl,
-				roomId: config.transportRoomId,
-				signaling: undefined as unknown,
-			};
+		: null;
+	const source: Record<string, unknown> = block ?? {
+		type: config.transportType,
+		url: config.transportUrl,
+		roomId: config.transportRoomId,
+		signaling: undefined,
+	};
 	const { url, signaling, roomId } = source;
 	const type =
 		source.type === 'webrtc'
 			? 'webrtc'
-			: source.type === 'websocket' || !hasBlock
+			: source.type === 'websocket' || !block
 				? 'websocket'
 				: null;
 

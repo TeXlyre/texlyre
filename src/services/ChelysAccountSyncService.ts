@@ -483,9 +483,9 @@ class ChelysAccountSyncService {
 
 		const existingUser = connection.awareness.getLocalState()?.user as
 			| {
-				color?: string;
-				colorLight?: string;
-			}
+					color?: string;
+					colorLight?: string;
+			  }
 			| undefined;
 		const color = config.color ?? existingUser?.color;
 		const colorLight = config.colorLight ?? existingUser?.colorLight;

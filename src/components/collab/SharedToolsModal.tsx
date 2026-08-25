@@ -30,7 +30,8 @@ const statusLabel = (offer: SharedToolOffer): string => {
 };
 
 const acceptLabel = (offer: SharedToolOffer): string => {
-	if (offer.conflict.kind === 'same-id-different-config') return t('Replace mine');
+	if (offer.conflict.kind === 'same-id-different-config')
+		return t('Replace mine');
 	if (offer.conflict.kind === 'same-name') return t('Add shared');
 	return t('Use');
 };
