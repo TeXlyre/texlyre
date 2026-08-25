@@ -1,5 +1,6 @@
 const parser = require('@babel/parser');
 const fs = require('node:fs');
+const { parserPlugins } = require('./parser-options.cjs');
 
 function validateTransformedCode(originalCode, transformedCode, filePath) {
 	const errors = [];
@@ -7,7 +8,7 @@ function validateTransformedCode(originalCode, transformedCode, filePath) {
 	try {
 		parser.parse(transformedCode, {
 			sourceType: 'module',
-			plugins: ['jsx', 'typescript', 'decorators-legacy', 'classProperties'],
+			plugins: parserPlugins(filePath),
 			errorRecovery: true,
 		});
 	} catch (err) {

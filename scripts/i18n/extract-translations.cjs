@@ -5,6 +5,7 @@ const traverse = require('@babel/traverse').default;
 const t = require('@babel/types');
 const { sortLocales } = require('./sort-locales.cjs');
 const { generateBasePlurals } = require('./generate-base-plurals.cjs');
+const { parserPlugins } = require('./parser-options.cjs');
 
 const CONFIG = {
 	extensions: ['.tsx', '.jsx', '.ts'],
@@ -198,7 +199,7 @@ function extractTranslations(sourceDir, outputFile) {
 			const code = fs.readFileSync(filePath, 'utf8');
 			const ast = parser.parse(code, {
 				sourceType: 'module',
-				plugins: ['jsx', 'typescript', 'decorators-legacy', 'classProperties'],
+				plugins: parserPlugins(filePath),
 			});
 
 			const hasRegisterSetting = code.includes('registerSetting');

@@ -29,6 +29,8 @@ src/plugins/
 !src/plugins/PluginRegistry.ts
 !src/plugins/PluginInterface.ts
 
+translations/missing-keys.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

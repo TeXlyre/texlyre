@@ -1,6 +1,8 @@
+// scripts/translate-pages.cjs
 const { extractTranslations } = require('./i18n/extract-translations.cjs');
 const { processDirectory } = require('./i18n/apply-translations.cjs');
 const { detectDynamicContent } = require('./i18n/detect-dynamic-content.cjs');
+const { detectMissingKeys } = require('./i18n/detect-missing-keys.cjs');
 const {
 	processDirectory: processSettingsDirectory,
 } = require('./i18n/apply-settings-translations.cjs');
@@ -15,6 +17,13 @@ function main() {
 
 		console.log('=== Detecting dynamic content ===\n');
 		detectDynamicContent(sourceDir, outputFile);
+	} else if (command === 'missing') {
+		const sourceDir = args[1] || './src';
+		const localeFile = args[2] || './translations/locales/en.json';
+		const outputFile = args[3] || './translations/missing-keys.json';
+
+		console.log('=== Detecting missing translation keys ===\n');
+		detectMissingKeys(sourceDir, localeFile, outputFile);
 	} else if (command === 'extract') {
 		const sourceDir = args[1] || './src';
 		const outputFile = args[2] || './translations/locales/en.json';
@@ -83,7 +92,11 @@ Usage:
   node scripts/translate-pages.cjs detect [sourceDir] [outputFile]
     Detect dynamic content (counts, variables) that should be converted to i18n
     This will generate translations/dynamic-patterns.json which can be viewed for hints of possible modifications
-    
+
+  node scripts/translate-pages.cjs missing [sourceDir] [localeFile] [outputFile]
+    Report t() keys used in the source that have no entry in the locale file
+    This will generate translations/missing-keys.json
+
   node scripts/translate-pages.cjs extract [sourceDir] [outputFile]
     Extract all translatable strings to a JSON file
     
@@ -99,6 +112,7 @@ Options:
 
 Examples:
   node scripts/translate-pages.cjs detect ./src ./translations/dynamic-patterns.json
+  node scripts/translate-pages.cjs missing ./src ./translations/locales/en.json
   node scripts/translate-pages.cjs extract ./src ./translations/locales/en.json
   node scripts/translate-pages.cjs apply ./src --dry-run
   node scripts/translate-pages.cjs apply ./src

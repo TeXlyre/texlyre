@@ -29,8 +29,8 @@ import {
 	type DetailedStorageUsageSegment,
 	estimateDetailedStorageUsage,
 } from '../../utils/storageUsageUtils';
+import IconButton from '../common/IconButton';
 import InfoTooltip from '../common/InfoTooltip';
-import Modal from '../common/Modal';
 import { LockIcon, TrashIcon } from '../common/Icons';
 
 interface BrowserStorageSectionProps {
@@ -183,7 +183,6 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 	const [detailedSegments, setDetailedSegments] = useState<
 		DetailedStorageUsageSegment[]
 	>([]);
-	const [pendingKind, setPendingKind] = useState<ReclaimableKind | null>(null);
 	const [browserKey, setBrowserKey] = useState<BrowserKey>(detectBrowser);
 	const isStandalone = isStandaloneApp();
 	const persistenceRequestAvailable = canRequestPersistentStorage();
@@ -244,13 +243,11 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 	const groupOf = (kind: ReclaimableKind) =>
 		reclaimable.filter(({ kind: entryKind }) => entryKind === kind);
 
-	const handleConfirmClear = async () => {
-		if (!pendingKind) return;
-
+	const handleClear = async (kind: ReclaimableKind) => {
 		try {
 			setIsSubmitting(true);
-			await deleteDatabases(groupOf(pendingKind).map((entry) => entry.name));
-			if (pendingKind === 'typesetter-cache') {
+			await deleteDatabases(groupOf(kind).map((entry) => entry.name));
+			if (kind === 'typesetter-cache') {
 				const projects = await authService.getAllProjects();
 				await Promise.all([
 					deleteProjectTypesetterCaches(projects),
@@ -266,7 +263,6 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 			);
 		} finally {
 			setIsSubmitting(false);
-			setPendingKind(null);
 		}
 	};
 
@@ -352,10 +348,6 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 			),
 		},
 	];
-
-	const pendingGroup = reclaimableGroups.find(
-		(group) => group.kind === pendingKind,
-	);
 
 	return (
 		<>
@@ -500,58 +492,24 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 								<p>{group.description}</p>
 							</div>
 							<div className='storage-action-buttons'>
-								<button
-									type='button'
-									className='button danger smaller icon-only'
-									onClick={() => setPendingKind(group.kind)}
+								<IconButton
+									icon={<TrashIcon />}
+									label={t('Clear {name}', { name: group.title })}
+									tooltip={canClear ? group.description : t('Nothing to clear')}
+									variant='danger'
 									disabled={isSubmitting || !canClear}
-									title={
-										!canClear
-											? t('Nothing to clear')
-											: t('Clear {name}', { name: group.title })
-									}
-								>
-									<TrashIcon />
-								</button>
+									confirm={{
+										title: group.title,
+										message: group.description,
+										confirmLabel: t('Clear'),
+									}}
+									onClick={() => void handleClear(group.kind)}
+								/>
 							</div>
 						</div>
 					);
 				})}
 			</div>
-
-			<Modal
-				isOpen={pendingKind !== null}
-				onClose={() => setPendingKind(null)}
-				title={pendingGroup?.title ?? ''}
-				icon={TrashIcon}
-				size='medium'
-			>
-				<div className='clear-storage-modal'>
-					<div className='warning-message'>
-						<p>{t('This action cannot be undone.')}</p>
-						<p>{pendingGroup?.description}</p>
-					</div>
-
-					<div className='modal-actions'>
-						<button
-							type='button'
-							className='button secondary'
-							onClick={() => setPendingKind(null)}
-							disabled={isSubmitting}
-						>
-							{t('Cancel')}
-						</button>
-						<button
-							type='button'
-							className='button danger'
-							onClick={handleConfirmClear}
-							disabled={isSubmitting}
-						>
-							{isSubmitting ? t('Clearing...') : t('Clear')}
-						</button>
-					</div>
-				</div>
-			</Modal>
 		</>
 	);
 };

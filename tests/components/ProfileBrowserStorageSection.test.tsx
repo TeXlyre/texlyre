@@ -422,7 +422,7 @@ describe('ProfileBrowserStorageSection Component', () => {
         renderSection();
 
         expect(
-            await screen.findByTitle('Clear Typesetter cache'),
+            await screen.findByRole('button', { name: 'Clear Typesetter cache' }),
         ).toBeEnabled();
     });
 
@@ -431,7 +431,7 @@ describe('ProfileBrowserStorageSection Component', () => {
         renderSection();
 
         expect(
-            await screen.findByTitle('Clear Typesetter cache'),
+            await screen.findByRole('button', { name: 'Clear Typesetter cache' }),
         ).toBeEnabled();
     });
 
@@ -440,7 +440,7 @@ describe('ProfileBrowserStorageSection Component', () => {
         renderSection();
 
         expect(
-            await screen.findByTitle('Clear Typesetter cache'),
+            await screen.findByRole('button', { name: 'Clear Typesetter cache' }),
         ).toBeEnabled();
     });
 
@@ -486,8 +486,21 @@ describe('ProfileBrowserStorageSection Component', () => {
         mockedHasTypstPackageCache.mockResolvedValue(true);
         renderSection();
 
-        fireEvent.click(await screen.findByTitle('Clear Typesetter cache'));
-        fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+        const clearTypesetterCacheButton = screen.getByRole('button', {
+            name: 'Clear Typesetter cache',
+        });
+
+        await waitFor(() => {
+            expect(clearTypesetterCacheButton).toBeEnabled();
+        });
+
+        fireEvent.click(clearTypesetterCacheButton);
+
+        const confirmButton = await screen.findByRole('button', {
+            name: 'Clear',
+        });
+
+        fireEvent.click(confirmButton);
 
         await waitFor(() =>
             expect(mockedDeleteDatabases).toHaveBeenCalledWith([
