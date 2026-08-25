@@ -155,7 +155,7 @@ export default defineConfig({
 		alias: {
 			'@': path.resolve(__dirname, './src'),
 			'@src': path.resolve(__dirname, './src'),
-			'@chelys': path.resolve(__dirname, './chelys'),
+			'@chelys': path.resolve(__dirname, './src/chelys'),
 			'@tests': path.resolve(__dirname, './tests'),
 			'@codemirror/state': path.resolve('./node_modules/@codemirror/state'),
 			'@codemirror/view': path.resolve('./node_modules/@codemirror/view'),

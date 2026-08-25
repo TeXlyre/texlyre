@@ -18,7 +18,7 @@
                 "./src/*"
             ],
             "@chelys/*": [
-                "./chelys/*"
+                "./src/chelys/*"
             ],
             "@extras/*": [
                 "./extras/*"
@@ -32,7 +32,6 @@
         "extras/**/*",
         "tests/**/*",
         "src/**/*",
-        "chelys/**/*",
     ],
     "exclude": [
         "node_modules",

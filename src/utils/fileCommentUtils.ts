@@ -1,7 +1,6 @@
 // src/utils/fileCommentUtils.ts
 import type { FileNode } from '../types/files';
 import {
-	hasAnnotationTags,
 	stripAnnotationTagTokens,
 	stripAnnotationTags,
 } from './annotationTagUtils';
@@ -17,8 +16,55 @@ export interface ProcessorOptions {
 	inPlace?: boolean;
 }
 
+const COMMENT_DETECTION_REGEX = /<###(?:\s|%)*comment(?:\s|%)*id:/;
+const COMMENT_OPEN_MARKER = new TextEncoder().encode('<###');
+const COMMENT_WORD_MARKER = new TextEncoder().encode('comment');
+const COMMENT_ID_MARKER = new TextEncoder().encode('id:');
+
+function hasBinaryComments(view: Uint8Array): boolean {
+	const backtick = 0x60;
+	const percent = 0x25;
+	const whitespaceChars = [0x20, 0x09, 0x0a, 0x0d];
+
+	const isSeparator = (byte: number) =>
+		whitespaceChars.includes(byte) || byte === percent;
+
+	const matchAt = (pos: number, marker: Uint8Array): boolean => {
+		if (pos + marker.length > view.length) return false;
+		for (let j = 0; j < marker.length; j++) {
+			if (view[pos + j] !== marker[j]) return false;
+		}
+		return true;
+	};
+
+	const skipSeparators = (pos: number): number => {
+		while (pos < view.length && isSeparator(view[pos])) pos++;
+		return pos;
+	};
+
+	for (let i = 0; i < view.length; i++) {
+		let pos = i;
+		if (view[pos] === backtick) pos++;
+
+		if (!matchAt(pos, COMMENT_OPEN_MARKER)) continue;
+		pos += COMMENT_OPEN_MARKER.length;
+
+		pos = skipSeparators(pos);
+		if (!matchAt(pos, COMMENT_WORD_MARKER)) continue;
+		pos += COMMENT_WORD_MARKER.length;
+
+		pos = skipSeparators(pos);
+		if (matchAt(pos, COMMENT_ID_MARKER)) return true;
+	}
+
+	return false;
+}
+
 export function hasComments(content: string | ArrayBuffer): boolean {
-	return hasAnnotationTags(content);
+	if (typeof content !== 'string') {
+		return hasBinaryComments(new Uint8Array(content as ArrayBuffer));
+	}
+	return COMMENT_DETECTION_REGEX.test(content);
 }
 
 export function cleanText(text: string): string {
@@ -39,6 +85,22 @@ export function cleanContent(
 	}
 
 	return cleanText(content);
+}
+
+export function cleanBytes(
+	content: string | ArrayBuffer | Uint8Array,
+): Uint8Array {
+	if (typeof content === 'string') {
+		return new TextEncoder().encode(cleanText(content));
+	}
+
+	const bytes =
+		content instanceof Uint8Array ? content : new Uint8Array(content);
+	if (!hasBinaryComments(bytes)) {
+		return bytes;
+	}
+
+	return new TextEncoder().encode(cleanText(new TextDecoder().decode(bytes)));
 }
 
 export function processFile(

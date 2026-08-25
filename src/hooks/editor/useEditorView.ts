@@ -59,6 +59,7 @@ import {
 	getGenericLSPCompletionSources,
 } from '../../extensions/codemirror/GenericLSPExtension';
 import { createCodeActionsExtension } from '../../extensions/codemirror/CodeActionsLSPExtension';
+import { createSignatureHelpExtension } from '../../extensions/codemirror/SignatureHelpLSPExtension';
 import {
 	createToolbarController,
 	hasToolbarSupport,
@@ -658,9 +659,9 @@ export const useEditorView = (
 		const buildHighlightExtension = (): Extension =>
 			getSyntaxHighlightingEnabled()
 				? resolveHighlightTheme(
-						editorSettings.highlightTheme || 'auto',
-						currentVariant,
-					)
+					editorSettings.highlightTheme || 'auto',
+					currentVariant,
+				)
 				: [];
 
 		if (info.isLatex || info.isTypst) {
@@ -686,6 +687,7 @@ export const useEditorView = (
 			extensions.push(...getGenericLSPExtensionsForFile(fileName));
 			completionSources.push(...getGenericLSPCompletionSources(fileName));
 			extensions.push(createCodeActionsExtension(fileName));
+			extensions.push(createSignatureHelpExtension(fileName));
 		}
 
 		if (info.isLatex || info.isTypst || info.isBib) {
@@ -859,11 +861,11 @@ export const useEditorView = (
 		const toolbarExt: Extension[] =
 			info.hasToolbar && toolbarVisible
 				? [
-						(controller = createToolbarController(
-							info.fileType as ToolbarFileType,
-							undoManagerRef.current || undefined,
-						)).extension,
-					]
+					(controller = createToolbarController(
+						info.fileType as ToolbarFileType,
+						undoManagerRef.current || undefined,
+					)).extension,
+				]
 				: [];
 
 		view.dispatch({
@@ -873,9 +875,9 @@ export const useEditorView = (
 				highlight.reconfigure(
 					getSyntaxHighlightingEnabled()
 						? resolveHighlightTheme(
-								editorSettings.highlightTheme || 'auto',
-								currentVariant,
-							)
+							editorSettings.highlightTheme || 'auto',
+							currentVariant,
+						)
 						: [],
 				),
 				languageSpecific.reconfigure(
@@ -903,9 +905,9 @@ export const useEditorView = (
 			effects: compartmentsRef.current.highlight.reconfigure(
 				getSyntaxHighlightingEnabled()
 					? resolveHighlightTheme(
-							editorSettings.highlightTheme || 'auto',
-							currentVariant,
-						)
+						editorSettings.highlightTheme || 'auto',
+						currentVariant,
+					)
 					: [],
 			),
 		});

@@ -39,6 +39,6 @@ export interface CollabConnectOptions {
 	websocketServer?: string;
 	websocketParams?: Record<string, string>;
 	autoReconnect?: boolean;
-	awarenessTimeout?: number;
+	awarenessTimeout?: number | false;
 	password?: string;
 }

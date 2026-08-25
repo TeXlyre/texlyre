@@ -93,6 +93,14 @@ const SettingControl: React.FC<SettingControlProps> = ({
 					/>
 				);
 
+			case 'custom':
+				return setting.render?.({
+					setting,
+					value,
+					disabled,
+					onChange: handleChange,
+				});
+
 			case 'language-select':
 				return (
 					<SettingsLanguage setting={setting} onLocalUpdate={onLocalUpdate} />

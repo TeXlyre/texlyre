@@ -3,8 +3,8 @@ import type React from 'react';
 import { useState } from 'react';
 
 import { t } from '@/i18n';
-import { compilerRegistryService } from '../../services/CompilerRegistryService';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
+import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import type { Project } from '../../types/projects';
 import { formatLastModified } from '../../utils/dateUtils';
 import { ImportIcon, NewProjectIcon, StarIcon } from '../common/Icons';
@@ -119,13 +119,13 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 					<option value=''>{t('All types')}</option>
 					{availableTypes.map((type) => (
 						<option key={type} value={type}>
-							{compilerRegistryService.getForProjectType(type)?.label ?? type}
+							{typesetterRegistryService.getForProjectType(type)?.label ?? type}
 						</option>
 					))}
 				</select>
 				{/* <select value={selectedGroup} onChange={(event) => { setSelectedGroup(event.target.value); onFilterByGroup(event.target.value); }} className='type-filter'>
 					<option value=''>{t('All groups')}</option>
-					{availableGroups.map((group) => <option key={group} value={group}>{compilerRegistryService.getProjectGroupLabel(group)}</option>)}
+					{availableGroups.map((group) => <option key={group} value={group}>{typesetterRegistryService.getProjectGroupLabel(group)}</option>)}
 				</select> */}
 				{favoriteProjects.length > 0 && (
 					<div className='project-quick-list'>

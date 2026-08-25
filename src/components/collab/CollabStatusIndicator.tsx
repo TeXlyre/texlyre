@@ -3,21 +3,25 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
+import { SharedToolsProvider } from '../../contexts/SharedToolsContext';
 import { useCollab } from '../../hooks/useCollab';
 import { useFileSync } from '../../hooks/useFileSync';
 import { useOffline } from '../../hooks/useOffline';
+import { useSharedTools } from '../../hooks/useSharedTools';
 import { collabService } from '../../services/CollabService';
-import PositionedDropdown from '../common/PositionedDropdown';
-import CollabModal from './CollabModal';
-import FileSyncModal from './FileSyncModal';
 import {
 	ChevronDownIcon,
 	FileIcon,
+	OfflineIcon,
+	ShareIcon,
 	SyncIcon,
 	UsersIcon,
-	OfflineIcon,
 } from '../common/Icons';
-import { createNamedLogger } from '@/logging';
+import PositionedDropdown from '../common/PositionedDropdown';
+import CollabModal from './CollabModal';
+import FileSyncModal from './FileSyncModal';
+import SharedToolsModal from './SharedToolsModal';
 
 const moduleLog = createNamedLogger('CollabStatusIndicator');
 
@@ -26,7 +30,7 @@ interface CollabStatusIndicatorProps {
 	docUrl: string;
 }
 
-const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
+const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 	className = '',
 	docUrl,
 }) => {
@@ -34,13 +38,14 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 	const { isOfflineMode, isCollabOfflineMode } = useOffline();
 	const { isEnabled: isFileSyncEnabled, isSyncing: isFileSyncing } =
 		useFileSync();
+	const sharedTools = useSharedTools();
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const [showCollabModal, setShowCollabModal] = useState(false);
 	const [showFileSyncModal, setShowFileSyncModal] = useState(false);
+	const [showSharedToolsModal, setShowSharedToolsModal] = useState(false);
 	const [isSyncing, setIsSyncing] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
-	// Show offline mode if either network is offline OR collab connection failed
 	const showOffline = isCollabOfflineMode || !isCollabConnected;
 
 	useEffect(() => {
@@ -49,27 +54,19 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 
 			if (dropdownRef.current && !dropdownRef.current.contains(target)) {
 				const portaledDropdown = document.querySelector('.collab-dropdown');
-				if (portaledDropdown && portaledDropdown.contains(target)) {
-					return;
-				}
+				if (portaledDropdown && portaledDropdown.contains(target)) return;
 				setIsDropdownOpen(false);
 			}
 		};
 
 		document.addEventListener('mousedown', handleClickOutside);
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside);
-		};
+		return () => document.removeEventListener('mousedown', handleClickOutside);
 	}, []);
 
-	const getMainStatus = () => {
-		const hasConnectedService = isCollabConnected && !isCollabOfflineMode;
-		const isSyncingAny = isFileSyncing || isSyncing;
-
-		return { connected: hasConnectedService, syncing: isSyncingAny };
+	const mainStatus = {
+		connected: isCollabConnected && !isCollabOfflineMode,
+		syncing: isFileSyncing || isSyncing,
 	};
-
-	const mainStatus = getMainStatus();
 
 	const getStatusColor = () => {
 		if (showOffline) return '#666';
@@ -99,41 +96,20 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 	};
 
 	const handleMainButtonClick = () => {
-		if (showOffline) {
-			setShowCollabModal(true);
-		} else if (!isFileSyncEnabled) {
+		if (showOffline || !isFileSyncEnabled) {
 			setShowCollabModal(true);
 		} else {
 			setIsDropdownOpen(!isDropdownOpen);
 		}
 	};
 
-	const toggleDropdown = (e: React.MouseEvent) => {
-		e.stopPropagation();
-		setIsDropdownOpen(!isDropdownOpen);
-	};
-
-	const handleCollabClick = () => {
-		setShowCollabModal(true);
-		setIsDropdownOpen(false);
-	};
-
-	const handleFileSyncClick = () => {
-		if (isCollabConnected && !isCollabOfflineMode) {
-			setShowFileSyncModal(true);
-		}
-		setIsDropdownOpen(false);
-	};
-
 	const getServiceStatusIndicator = (serviceType: string) => {
 		if (serviceType === 'collab') {
 			return isCollabConnected && !isCollabOfflineMode ? '🟢' : '⚫';
 		}
-
 		if (serviceType === 'filesync') {
 			return isFileSyncEnabled && !isCollabOfflineMode ? '🟢' : '⚫';
 		}
-
 		return '';
 	};
 
@@ -157,7 +133,6 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 								animation: mainStatus.syncing ? 'pulse 1.5s infinite' : 'none',
 							}}
 						/>
-
 						{showOffline ? <OfflineIcon /> : <UsersIcon />}
 						<span className='collab-label'>
 							{showOffline ? t('Offline') : t('Collab')}
@@ -166,7 +141,10 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 
 					<button
 						className={`collab-dropdown-toggle ${showOffline ? 'offline' : mainStatus.connected ? 'connected' : 'disconnected'}`}
-						onClick={toggleDropdown}
+						onClick={(event) => {
+							event.stopPropagation();
+							setIsDropdownOpen(!isDropdownOpen);
+						}}
 						title={t('Collaboration Options')}
 						disabled={showOffline}
 					>
@@ -183,7 +161,13 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 					}
 					className='collab-dropdown'
 				>
-					<div className='collab-dropdown-item' onClick={handleCollabClick}>
+					<div
+						className='collab-dropdown-item'
+						onClick={() => {
+							setShowCollabModal(true);
+							setIsDropdownOpen(false);
+						}}
+					>
 						<span className='service-indicator'>
 							{getServiceStatusIndicator('collab')}
 						</span>
@@ -193,7 +177,12 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 
 					<div
 						className='collab-dropdown-item'
-						onClick={handleFileSyncClick}
+						onClick={() => {
+							if (isCollabConnected && !isCollabOfflineMode) {
+								setShowFileSyncModal(true);
+							}
+							setIsDropdownOpen(false);
+						}}
 						aria-disabled={!isCollabConnected || isCollabOfflineMode}
 					>
 						<span className='service-indicator'>
@@ -201,6 +190,23 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 						</span>
 						<FileIcon />
 						{t('Files')}
+					</div>
+
+					<div
+						className='collab-dropdown-item'
+						onClick={() => {
+							setShowSharedToolsModal(true);
+							setIsDropdownOpen(false);
+						}}
+					>
+						<span className='service-indicator' />
+						<ShareIcon />
+						{t('Tools')}
+						{sharedTools.pendingCount > 0 && (
+							<span className='coming-soon'>
+								{sharedTools.pendingCount} {t('new')}
+							</span>
+						)}
 					</div>
 				</PositionedDropdown>
 			</div>
@@ -218,8 +224,25 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 				isOpen={showFileSyncModal}
 				onClose={() => setShowFileSyncModal(false)}
 			/>
+
+			<SharedToolsModal
+				isOpen={showSharedToolsModal}
+				onClose={() => setShowSharedToolsModal(false)}
+				offers={sharedTools.offers}
+				sharedByMe={sharedTools.sharedByMe}
+				projectShareEnabled={sharedTools.projectShareEnabled}
+				onProjectShareChange={sharedTools.setProjectShareEnabled}
+				onAccept={sharedTools.accept}
+				onIgnore={sharedTools.ignore}
+			/>
 		</>
 	);
 };
+
+const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = (props) => (
+	<SharedToolsProvider docUrl={props.docUrl}>
+		<CollabStatusIndicatorContent {...props} />
+	</SharedToolsProvider>
+);
 
 export default CollabStatusIndicator;

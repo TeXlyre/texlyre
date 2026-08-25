@@ -1,4 +1,6 @@
 // src/types/compilation.ts
+import type { TransportConfig } from '@chelys/types/transport';
+
 export interface CompilationOptions {
 	renderOutput?: boolean;
 	saveToStorage?: boolean;
@@ -11,7 +13,7 @@ export interface ExportOptions {
 	includeAuxiliaryFiles?: boolean;
 }
 
-export type CompilerSource = 'builtin' | 'chelys';
+export type TypesetterSource = 'builtin' | 'chelys';
 
 export interface CompileArtifact {
 	id: string;
@@ -27,21 +29,16 @@ export interface CompileResult {
 	artifacts?: CompileArtifact[];
 }
 
-export interface CompilerTransportConfig {
-	type: 'websocket' | 'webrtc';
-	url?: string;
-	signaling?: string[];
-	roomId?: string;
-}
+export type TypesetterTransportConfig = TransportConfig;
 
-export interface CompilerOutputFormat {
+export interface TypesetterOutputFormat {
 	id: string;
 	mimeType: string;
 	rendererPluginId?: string;
 	outputType?: string;
 }
 
-export interface CompilerCapabilities {
+export interface TypesetterCapabilities {
 	outline?: boolean;
 	formatter?: string;
 	toolbarId?: string;
@@ -52,73 +49,73 @@ export type TranslatableText =
 	| string
 	| { key: string; params?: Record<string, string> };
 
-export type CompilerFieldKind = 'select' | 'boolean' | 'text' | 'number';
+export type TypesetterFieldKind = 'select' | 'boolean' | 'text' | 'number';
 
-export interface CompilerUIFieldOption {
+export interface TypesetterUIFieldOption {
 	label: TranslatableText;
 	value: string;
 }
 
-export interface CompilerUIFieldCondition {
+export interface TypesetterUIFieldCondition {
 	field: string;
 	in: string[];
 }
 
-export interface CompilerUIField {
+export interface TypesetterUIField {
 	key: string;
 	label: TranslatableText;
-	kind: CompilerFieldKind;
+	kind: TypesetterFieldKind;
 	defaultValue?: string | number | boolean;
-	options?: CompilerUIFieldOption[];
+	options?: TypesetterUIFieldOption[];
 	help?: TranslatableText;
 	sendAs?: 'option' | 'format';
 	group?: string;
-	showWhen?: CompilerUIFieldCondition;
+	showWhen?: TypesetterUIFieldCondition;
 }
 
-export interface CompilerUISection {
+export interface TypesetterUISection {
 	label?: TranslatableText;
-	fields: CompilerUIField[];
+	fields: TypesetterUIField[];
 }
 
-export interface CompilerUIInfoRow {
+export interface TypesetterUIInfoRow {
 	label: TranslatableText;
 	value: TranslatableText;
 }
 
-export interface CompilerUIInfoSection {
+export interface TypesetterUIInfoSection {
 	title: TranslatableText;
-	rows: CompilerUIInfoRow[];
+	rows: TypesetterUIInfoRow[];
 }
 
-export interface CompilerUIRenderer {
+export interface TypesetterUIRenderer {
 	format: string;
 	label: TranslatableText;
 }
 
-export interface CompilerUISchema {
-	compile?: CompilerUISection;
-	export?: CompilerUISection;
-	info?: CompilerUIInfoSection;
-	renderers?: CompilerUIRenderer[];
+export interface TypesetterUISchema {
+	compile?: TypesetterUISection;
+	export?: TypesetterUISection;
+	info?: TypesetterUIInfoSection;
+	renderers?: TypesetterUIRenderer[];
 }
 
-export interface CompilerInputFile {
+export interface TypesetterInputFile {
 	extension: string;
 	label?: TranslatableText;
 	mimeType?: string;
 }
 
-export interface CompilerProvider {
+export interface TypesetterProvider {
 	id: string;
 	label: string;
-	source: CompilerSource;
+	source: TypesetterSource;
 	projectType: string;
 	projectGroup?: string;
 	inputExtensions: string[];
-	inputFiles?: CompilerInputFile[];
-	outputFormats: CompilerOutputFormat[];
-	transport?: CompilerTransportConfig;
-	capabilities: CompilerCapabilities;
-	ui?: CompilerUISchema;
+	inputFiles?: TypesetterInputFile[];
+	outputFormats: TypesetterOutputFormat[];
+	transport?: TypesetterTransportConfig;
+	capabilities: TypesetterCapabilities;
+	ui?: TypesetterUISchema;
 }

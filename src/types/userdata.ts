@@ -142,7 +142,6 @@ export interface UserDataSettings {
 	storageHideBanner?: any;
 	themePlugin?: any;
 	themeVariant?: any;
-	genericTypesetterConfigs?: any;
 	typstSourcemapEnable?: any;
 	typstAutoCompileOnOpen?: any;
 	typstAutoNavigateToMain?: any;

@@ -8,6 +8,10 @@ import {
 	useRef,
 } from 'react';
 
+import {
+	notifyUserDataChanged,
+	type UserDataMutation,
+} from '../utils/userDataUtils';
 import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('RecordsContext');
@@ -89,13 +93,25 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 		[],
 	);
 
-	const persist = useCallback(() => {
-		try {
-			localStorage.setItem(getStorageKey(), JSON.stringify(recordsRef.current));
-		} catch (error) {
-			moduleLog.error('Error saving records to localStorage:', error);
-		}
-	}, [getStorageKey]);
+	const persist = useCallback(
+		(mutations: UserDataMutation[]) => {
+			try {
+				localStorage.setItem(
+					getStorageKey(),
+					JSON.stringify(recordsRef.current),
+				);
+				const userId = getCurrentUserId();
+				if (userId) {
+					for (const mutation of mutations) {
+						notifyUserDataChanged(userId, 'records', mutation);
+					}
+				}
+			} catch (error) {
+				moduleLog.error('Error saving records to localStorage:', error);
+			}
+		},
+		[getStorageKey, getCurrentUserId],
+	);
 
 	const reload = useCallback(() => {
 		try {
@@ -155,7 +171,7 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 					: appended;
 
 			recordsRef.current[recordKey] = limited as RecordEntry[];
-			persist();
+			persist([{ key: recordKey, value: limited }]);
 			return entry;
 		},
 		[getRecordKey, persist, reload],
@@ -188,8 +204,9 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 			const entries = recordsRef.current[recordKey];
 			if (!entries) return;
 
-			recordsRef.current[recordKey] = entries.filter((e) => e.id !== recordId);
-			persist();
+			const next = entries.filter((e) => e.id !== recordId);
+			recordsRef.current[recordKey] = next;
+			persist([{ key: recordKey, value: next }]);
 		},
 		[getRecordKey, persist, reload],
 	);
@@ -202,7 +219,7 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 			reload();
 			const recordKey = getRecordKey(key, options?.scope, options?.projectId);
 			delete recordsRef.current[recordKey];
-			persist();
+			persist([{ key: recordKey, deleted: true }]);
 		},
 		[getRecordKey, persist, reload],
 	);
@@ -210,16 +227,12 @@ export const RecordsProvider: React.FC<RecordsProviderProps> = ({
 	const clearAllRecords = useCallback(
 		(keyPrefix?: string): void => {
 			reload();
-			if (!keyPrefix) {
-				recordsRef.current = {};
-			} else {
-				for (const recordKey of Object.keys(recordsRef.current)) {
-					if (recordKey.startsWith(keyPrefix)) {
-						delete recordsRef.current[recordKey];
-					}
-				}
-			}
-			persist();
+			const removedKeys = Object.keys(recordsRef.current).filter((recordKey) =>
+				keyPrefix ? recordKey.startsWith(keyPrefix) : true,
+			);
+			if (removedKeys.length === 0) return;
+			for (const recordKey of removedKeys) delete recordsRef.current[recordKey];
+			persist(removedKeys.map((key) => ({ key, deleted: true })));
 		},
 		[persist, reload],
 	);

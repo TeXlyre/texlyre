@@ -1,7 +1,7 @@
 // src/components/common/PositionedDropdown.tsx
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+
+import Popover from './Popover';
 
 interface PositionedDropdownProps {
 	children: React.ReactNode;
@@ -23,122 +23,20 @@ const PositionedDropdown: React.FC<PositionedDropdownProps> = ({
 	padding = 8,
 	align = 'right',
 	onClose,
-}) => {
-	const [position, setPosition] = useState({ top: 0, left: 0, maxHeight: 0 });
-	const [isPositioned, setIsPositioned] = useState(false);
-	const dropdownRef = useRef<HTMLDivElement>(null);
-
-	useEffect(() => {
-		if (!isOpen || !triggerElement || !dropdownRef.current) return;
-
-		const updatePosition = () => {
-			if (!triggerElement || !dropdownRef.current) return;
-
-			const triggerRect = triggerElement.getBoundingClientRect();
-			const dropdownRect = dropdownRef.current.getBoundingClientRect();
-			const naturalHeight = dropdownRef.current.scrollHeight;
-
-			const viewportWidth = window.innerWidth;
-			const viewportHeight = window.innerHeight;
-
-			let top = triggerRect.bottom + spacing;
-			let left =
-				align === 'right'
-					? triggerRect.right - dropdownRect.width
-					: triggerRect.left;
-
-			if (left + dropdownRect.width > viewportWidth - padding) {
-				left = viewportWidth - dropdownRect.width - padding;
-			}
-			if (left < padding) {
-				left = padding;
-			}
-
-			let maxHeight = 0;
-			if (top + naturalHeight > viewportHeight - padding) {
-				const flippedTop = triggerRect.top - naturalHeight - spacing;
-				if (flippedTop >= padding) {
-					top = flippedTop;
-				} else {
-					const spaceBelow = viewportHeight - top - padding;
-					const spaceAbove = triggerRect.top - spacing - padding;
-					if (spaceAbove > spaceBelow) {
-						top = padding;
-						maxHeight = spaceAbove;
-					} else {
-						maxHeight = spaceBelow;
-					}
-				}
-			}
-
-			setPosition({ top, left, maxHeight });
-			setIsPositioned(true);
-		};
-
-		updatePosition();
-
-		const handleScroll = (e: Event) => {
-			if (dropdownRef.current?.contains(e.target as Node)) return;
-			updatePosition();
-		};
-
-		const resizeObserver = new ResizeObserver(() => updatePosition());
-		resizeObserver.observe(dropdownRef.current);
-
-		window.addEventListener('scroll', handleScroll, true);
-		window.addEventListener('resize', updatePosition);
-
-		return () => {
-			resizeObserver.disconnect();
-			window.removeEventListener('scroll', handleScroll, true);
-			window.removeEventListener('resize', updatePosition);
-		};
-	}, [isOpen, triggerElement, spacing, padding, align]);
-
-	useEffect(() => {
-		if (!isOpen) {
-			setIsPositioned(false);
-			setPosition({ top: 0, left: 0, maxHeight: 0 });
-			return;
-		}
-
-		if (!onClose) return;
-
-		const handlePointerDown = (e: PointerEvent) => {
-			if (
-				dropdownRef.current &&
-				!dropdownRef.current.contains(e.target as Node) &&
-				!triggerElement?.contains(e.target as Node)
-			) {
-				onClose();
-			}
-		};
-
-		document.addEventListener('pointerdown', handlePointerDown);
-		return () => document.removeEventListener('pointerdown', handlePointerDown);
-	}, [isOpen, onClose, triggerElement]);
-
-	if (!isOpen) return null;
-
-	return createPortal(
-		<div
-			ref={dropdownRef}
-			className={className}
-			style={{
-				position: 'fixed',
-				top: `${position.top}px`,
-				left: `${position.left}px`,
-				zIndex: 1001,
-				width: 'max-content',
-				maxHeight: position.maxHeight ? `${position.maxHeight}px` : undefined,
-				overflowY: position.maxHeight ? 'auto' : undefined,
-				opacity: isPositioned ? 1 : 0,
-			}}
-		>
-			{children}
-		</div>,
-		document.body,
-	);
-};
+}) => (
+	<Popover
+		anchor={triggerElement}
+		open={isOpen}
+		className={className}
+		align={align === 'right' ? 'end' : 'start'}
+		spacing={spacing}
+		padding={padding}
+		clampHeight
+		style={{ zIndex: 1001, width: 'max-content' }}
+		onClose={onClose}
+	>
+		{children}
+	</Popover>
+);
 
 export default PositionedDropdown;

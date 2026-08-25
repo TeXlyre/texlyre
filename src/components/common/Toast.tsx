@@ -11,14 +11,21 @@ import {
 	SyncIcon,
 } from './Icons';
 
+export interface ToastAction {
+	label: string;
+	onClick: () => void;
+	variant?: 'primary' | 'secondary' | 'danger';
+}
+
 export interface ToastNotification {
 	id: string;
 	type: 'loading' | 'success' | 'error' | 'info' | 'sync';
 	message: string;
 	timestamp: number;
 	operationId?: string;
-	duration?: number; // Auto-dismiss duration in ms, null for persistent
+	duration?: number; // Auto-dismiss duration in ms, 0 for persistent
 	data?: Record<string, any>;
+	actions?: ToastAction[];
 }
 
 interface ToastProps {
@@ -83,7 +90,25 @@ const Toast: React.FC<ToastProps> = ({ notification, onDismiss }) => {
 			className={`toast ${getTypeClass()} ${isVisible ? 'toast-visible' : 'toast-hidden'}`}
 		>
 			<div className='toast-icon'>{getIcon()}</div>
-			<span className='toast-message'>{notification.message}</span>
+			<div className='toast-body'>
+				<span className='toast-message'>{notification.message}</span>
+				{notification.actions && notification.actions.length > 0 && (
+					<div className='toast-actions'>
+						{notification.actions.map((action) => (
+							<button
+								key={action.label}
+								className={`button smaller ${action.variant ?? 'secondary'}`}
+								onClick={() => {
+									action.onClick();
+									onDismiss(notification.id, notification.operationId);
+								}}
+							>
+								{action.label}
+							</button>
+						))}
+					</div>
+				)}
+			</div>
 			{notification.type !== 'loading' && (
 				<button
 					aria-label={t('Dismiss notification')}
