@@ -1,7 +1,7 @@
 import {
-    hasComments,
+    hasAnnotations,
     cleanText,
-    cleanContent,
+    stripAnnotations,
     processFile,
     processFilesWithStats,
 } from '@src/utils/fileCommentUtils';
@@ -23,45 +23,45 @@ const rawWrap = (id: string, text: string) =>
     `\`<### comment id: ${id}, user: tester, time: 1700000000000, content: 'a note', responses: [], resolved: false ###>\`${text}\`</### comment id: ${id} ###>\``;
 
 describe('File Comment Utils', () => {
-    describe('hasComments', () => {
+    describe('hasAnnotations', () => {
         it('should detect comments in a string', () => {
-            expect(hasComments(wrap('hello'))).toBe(true);
+            expect(hasAnnotations(wrap('hello'))).toBe(true);
         });
 
         it('should return false for plain text', () => {
-            expect(hasComments('just some text')).toBe(false);
+            expect(hasAnnotations('just some text')).toBe(false);
         });
 
         it('should detect comments in an ArrayBuffer', () => {
             const buffer = new TextEncoder().encode(wrap('hi')).buffer;
-            expect(hasComments(buffer)).toBe(true);
+            expect(hasAnnotations(buffer)).toBe(true);
         });
 
         it('should return false for a buffer without comments', () => {
             const buffer = new TextEncoder().encode('plain content').buffer;
-            expect(hasComments(buffer)).toBe(false);
+            expect(hasAnnotations(buffer)).toBe(false);
         });
 
         it('should detect comments whose id starts with a dash', () => {
-            expect(hasComments(rawWrap('-XyZ_09', 'hello'))).toBe(true);
+            expect(hasAnnotations(rawWrap('-XyZ_09', 'hello'))).toBe(true);
         });
 
         it('should detect tags wrapped across lines by a formatter', () => {
             const wrapped = `\`<### comment\nid: wrapped, user: tester, time: 1700000000000, content: 'a note', responses: [], resolved: false ###>\`kept\`</### comment id: wrapped ###>\``;
-            expect(hasComments(wrapped)).toBe(true);
+            expect(hasAnnotations(wrapped)).toBe(true);
         });
 
         it('should detect reviews in a string', () => {
-            expect(hasComments(reviewWrap('old', 'new'))).toBe(true);
+            expect(hasAnnotations(reviewWrap('old', 'new'))).toBe(true);
         });
 
         it('should detect reviews in an ArrayBuffer', () => {
             const buffer = new TextEncoder().encode(reviewWrap('old', 'new')).buffer;
-            expect(hasComments(buffer)).toBe(true);
+            expect(hasAnnotations(buffer)).toBe(true);
         });
 
         it('should not treat lookalike text as a comment', () => {
-            expect(hasComments('a <### heading ###> b')).toBe(false);
+            expect(hasAnnotations('a <### heading ###> b')).toBe(false);
         });
     });
 
@@ -165,23 +165,23 @@ describe('File Comment Utils', () => {
         });
     });
 
-    describe('cleanContent', () => {
+    describe('stripAnnotations', () => {
         it('should clean review content', () => {
-            expect(cleanContent(reviewWrap('old', 'new'))).toBe('new');
+            expect(stripAnnotations(reviewWrap('old', 'new'))).toBe('new');
         });
 
         it('should clean string content', () => {
-            expect(cleanContent(wrap('kept'))).toBe('kept');
+            expect(stripAnnotations(wrap('kept'))).toBe('kept');
         });
 
         it('should return the same buffer when no comments present', () => {
             const buffer = new TextEncoder().encode('plain').buffer;
-            expect(cleanContent(buffer)).toBe(buffer);
+            expect(stripAnnotations(buffer)).toBe(buffer);
         });
 
         it('should clean buffer content and return a buffer', () => {
             const buffer = new TextEncoder().encode(wrap('kept')).buffer;
-            const result = cleanContent(buffer);
+            const result = stripAnnotations(buffer);
 
             expect(new TextDecoder().decode(result as ArrayBuffer)).toBe('kept');
         });

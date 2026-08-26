@@ -1,16 +1,16 @@
-// src/components/conflicts/ConflictResolutionModal.tsx
-// src/components/conflicts/ConflictResolutionModal.tsx
+// src/components/conflicts/MergeResolutionModal.tsx
+// src/components/conflicts/MergeResolutionModal.tsx
 import { useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import Modal from '../../components/common/Modal';
 import ResizablePanel from '../common/ResizablePanel';
 import {
-	conflictResolutionService,
+	mergeResolutionService,
 	type ConflictResolution,
 	type ConflictResolutionRequest,
 	type FileConflict,
-} from '../../services/ConflictResolutionService';
+} from '../../services/MergeResolutionService';
 import MergeEditor, { type MergeEditorHandle } from './MergeEditor';
 
 const toText = (content: string | ArrayBuffer): string =>
@@ -25,7 +25,7 @@ const DEFAULT_SIDEBAR_WIDTH = 240;
 const MIN_SIDEBAR_WIDTH = 160;
 const MAX_SIDEBAR_WIDTH = 400;
 
-const ConflictResolutionModal: React.FC = () => {
+const MergeResolutionModal: React.FC = () => {
 	const [request, setRequest] = useState<ConflictResolutionRequest | null>(
 		null,
 	);
@@ -36,14 +36,19 @@ const ConflictResolutionModal: React.FC = () => {
 	const [resetKeys, setResetKeys] = useState<Map<number, number>>(new Map());
 	const confirmedRef = useRef(false);
 	const mergeEditorRef = useRef<MergeEditorHandle>(null);
+	const [annotationStatus, setAnnotationStatus] = useState<{
+		surviving: number;
+		total: number;
+	} | null>(null);
 
 	useEffect(() => {
-		return conflictResolutionService.addListener((req) => {
+		return mergeResolutionService.addListener((req) => {
 			setRequest(req);
 			setSelectedIndex(0);
 			setStates(new Map());
 			setShowComplete(false);
 			setResetKeys(new Map());
+			setAnnotationStatus(null);
 			confirmedRef.current = false;
 		});
 	}, []);
@@ -51,6 +56,8 @@ const ConflictResolutionModal: React.FC = () => {
 	if (!request) return null;
 
 	const current: FileConflict = request.conflicts[selectedIndex];
+	const localView = toText(current.localViewContent ?? current.localContent);
+	const remoteView = toText(current.remoteViewContent ?? current.remoteContent);
 
 	const getState = (index: number): ResolutionState =>
 		states.get(index) ?? { resolution: null };
@@ -72,6 +79,7 @@ const ConflictResolutionModal: React.FC = () => {
 	const navigateTo = (index: number) => {
 		setSelectedIndex(index);
 		setShowComplete(false);
+		setAnnotationStatus(null);
 	};
 
 	const handleCancel = () => {
@@ -96,9 +104,9 @@ const ConflictResolutionModal: React.FC = () => {
 	const handleResolutionAction = (resolution: ConflictResolution) => {
 		const initialMerged =
 			resolution.action === 'keep-local'
-				? toText(current.localContent)
+				? localView
 				: resolution.action === 'keep-remote'
-					? toText(current.remoteContent)
+					? remoteView
 					: undefined;
 
 		updateState(selectedIndex, { resolution, initialMerged });
@@ -117,6 +125,7 @@ const ConflictResolutionModal: React.FC = () => {
 			setShowComplete(true);
 		} else if (nextUnresolved !== -1) {
 			setSelectedIndex(nextUnresolved);
+			setAnnotationStatus(null);
 		}
 	};
 
@@ -255,19 +264,39 @@ const ConflictResolutionModal: React.FC = () => {
 								<MergeEditor
 									ref={mergeEditorRef}
 									key={`${selectedIndex}-${resetKeys.get(selectedIndex) ?? 0}`}
-									local={toText(current.localContent)}
-									remote={toText(current.remoteContent)}
+									local={localView}
+									remote={remoteView}
 									initialMerged={
 										currentState.initialMerged ??
 										(currentState.resolution?.action === 'merged'
 											? toText(currentState.resolution.content)
 											: undefined)
 									}
+									localAnnotationSpans={current.localAnnotationSpans}
+									annotationSpans={current.annotationSpans}
 									onMergedChange={handleMergedChange}
+									onAnnotationsChange={(surviving, total) =>
+										setAnnotationStatus({ surviving, total })
+									}
 								/>
 							)}
 						</>
 					)}
+
+					{annotationStatus && annotationStatus.total > 0 ? (
+						<div
+							className={`conflict-annotation-status ${
+								annotationStatus.surviving < annotationStatus.total
+									? 'losing'
+									: ''
+							}`}
+						>
+							{t('{kept} of {total} comments will be kept', {
+								kept: annotationStatus.surviving,
+								total: annotationStatus.total,
+							})}
+						</div>
+					) : null}
 
 					<div className='conflict-actions'>
 						<div className='conflict-actions-nav'>
@@ -344,4 +373,4 @@ const ConflictResolutionModal: React.FC = () => {
 	);
 };
 
-export default ConflictResolutionModal;
+export default MergeResolutionModal;

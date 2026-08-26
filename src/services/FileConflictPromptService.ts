@@ -1,4 +1,4 @@
-// src/services/FileConflictService.ts
+// src/services/FileConflictPromptService.ts
 import { t } from '@/i18n';
 import type { FileNode } from '../types/files';
 
@@ -35,6 +35,7 @@ interface FileConflictEvent {
 		| 'delete'
 		| 'link'
 		| 'unlink'
+		| 'disk-disconnect'
 		| 'linked-file-action'
 		| 'batch-conflict'
 		| 'batch-delete'
@@ -59,7 +60,7 @@ interface FileConflictEvent {
 	reject: () => void;
 }
 
-class FileConflictService {
+class FileConflictPromptService {
 	private listeners: Array<(event: FileConflictEvent) => void> = [];
 
 	async resolveConflict(
@@ -106,6 +107,18 @@ class FileConflictService {
 		return new Promise((resolve, reject) => {
 			const event: FileConflictEvent = {
 				type: 'unlink',
+				existingFile: file,
+				resolve: (resolution) => resolve(resolution as UnlinkConfirmation),
+				reject: () => reject(new FileOperationCancelledError()),
+			};
+			this.notifyListeners(event);
+		});
+	}
+
+	async confirmDiskDisconnect(file: FileNode): Promise<UnlinkConfirmation> {
+		return new Promise((resolve, reject) => {
+			const event: FileConflictEvent = {
+				type: 'disk-disconnect',
 				existingFile: file,
 				resolve: (resolution) => resolve(resolution as UnlinkConfirmation),
 				reject: () => reject(new FileOperationCancelledError()),
@@ -192,4 +205,4 @@ class FileConflictService {
 	}
 }
 
-export const fileConflictService = new FileConflictService();
+export const fileConflictPromptService = new FileConflictPromptService();

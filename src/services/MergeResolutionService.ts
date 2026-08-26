@@ -1,8 +1,7 @@
-// src/services/ConflictResolutionService.ts
-import * as Y from 'yjs';
-
-import { toArrayBuffer } from '../utils/fileUtils';
+// src/services/MergeResolutionService.ts
+import { mergeAnnotatedSources } from '../utils/annotationMerge';
 import { threeWayMerge } from '../utils/textDiffUtils';
+import { yjsStateFromText } from '../utils/yjsUtils';
 
 const FILES_METADATA = '.texlyre_metadata.json';
 
@@ -12,7 +11,11 @@ export interface FileConflict {
 	baseContent?: string;
 	localContent: string | ArrayBuffer;
 	remoteContent: string | ArrayBuffer;
+	localViewContent?: string;
+	remoteViewContent?: string;
 	previousRef?: string;
+	localAnnotationSpans?: Array<{ from: number; to: number }>;
+	annotationSpans?: Array<{ from: number; to: number }>;
 }
 
 export type ConflictResolution =
@@ -30,7 +33,7 @@ export type AutoMergeResult =
 	| { resolved: true; content: string; unchanged?: boolean }
 	| { resolved: false };
 
-class ConflictResolutionService {
+class MergeResolutionService {
 	private listeners: Array<(request: ConflictResolutionRequest) => void> = [];
 
 	tryAutoMerge(
@@ -113,6 +116,7 @@ class ConflictResolutionService {
 						resolve(null);
 						return;
 					}
+					this.restoreMergedAnnotations(realConflicts, resolutions);
 					await derive(resolutions);
 					resolve(resolutions);
 				},
@@ -130,6 +134,38 @@ class ConflictResolutionService {
 		return () => {
 			this.listeners = this.listeners.filter((l) => l !== callback);
 		};
+	}
+
+	private restoreMergedAnnotations(
+		conflicts: FileConflict[],
+		resolutions: Map<string, ConflictResolution>,
+	): void {
+		for (const conflict of conflicts) {
+			if (
+				conflict.isBinary ||
+				(!conflict.localAnnotationSpans?.length &&
+					!conflict.annotationSpans?.length)
+			) {
+				continue;
+			}
+
+			const resolution = resolutions.get(conflict.path);
+			if (resolution?.action !== 'merged') continue;
+
+			const merged = this.toText(resolution.content);
+			const restored = mergeAnnotatedSources(
+				[
+					this.toText(conflict.localContent),
+					this.toText(conflict.remoteContent),
+				],
+				merged,
+			);
+
+			resolutions.set(conflict.path, {
+				action: 'merged',
+				content: restored.content,
+			});
+		}
 	}
 
 	private extractDocumentIdToPaths(
@@ -314,18 +350,10 @@ class ConflictResolutionService {
 				const mergedText = this.toText(txtResolution.content);
 				resolutions.set(conflict.path, {
 					action: 'merged',
-					content: this.yjsStateFromText(mergedText),
+					content: yjsStateFromText(mergedText),
 				});
 			}
 		}
-	}
-
-	private yjsStateFromText(text: string): ArrayBuffer {
-		const doc = new Y.Doc();
-		doc.getText('codemirror').insert(0, text);
-		const state = Y.encodeStateAsUpdate(doc);
-		doc.destroy();
-		return toArrayBuffer(state);
 	}
 
 	private parseMetadataArray(source: string | ArrayBuffer): any[] {
@@ -346,4 +374,4 @@ class ConflictResolutionService {
 	}
 }
 
-export const conflictResolutionService = new ConflictResolutionService();
+export const mergeResolutionService = new MergeResolutionService();
