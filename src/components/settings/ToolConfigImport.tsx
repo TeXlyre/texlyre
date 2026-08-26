@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import type { ToolConfigBlock, ToolConfigKind } from '../../types/toolConfig';
-import { FileIcon, ImportIcon, UrlIcon } from '../common/Icons';
+import { FileIcon, UploadIcon, UrlIcon } from '../common/Icons';
 import { ToolConfigJsonEditor } from './ToolConfigForm';
 
 interface ToolConfigImportProps {
@@ -104,7 +104,7 @@ const ToolConfigImport: React.FC<ToolConfigImportProps> = ({
 		>
 			<div className='tool-config-import-options'>
 				<label className='import-option-button'>
-					<ImportIcon />
+					<UploadIcon />
 					<div>
 						<strong>{t('From file')}</strong>
 						<p>{t('Select or drop a JSON recipe file')}</p>

@@ -1,26 +1,26 @@
 /* extras/themes/texlyre_slim/styles/variants/tritanopia.css */
 [data-theme="tritanopia"][data-theme-plugin="texlyre-slim"] {
-	--accent-background: #f7f3f2;
-	--accent-border: #ded5d3;
+	--accent-background: #f6f7f8;
+	--accent-border: #d9dee3;
 	--editor-background: #ffffff;
 	--editor-text: #1b1f24;
-	--sidebar-background: #f7f3f2;
-	--sidebar-border: #ded5d3;
+	--sidebar-background: #f6f7f8;
+	--sidebar-border: #d9dee3;
 	--text-color: #1b1f24;
 
-	--pico-primary-rgb: 204, 51, 17;
-	--pico-secondary-rgb: 111, 106, 106;
+	--pico-primary-rgb: 0, 68, 136;
+	--pico-secondary-rgb: 170, 51, 119;
 
-	--color-error: #cc3311;
-	--color-success: #009e73;
-	--color-warning: #ee7733;
-	--color-info: #882255;
+	--color-error: #c62828;
+	--color-success: #007a5e;
+	--color-warning: #9c6b00;
+	--color-info: #6f42c1;
 
-	--color-storage-projects: #cc3311;
-	--color-storage-typesetter: #ee7733;
-	--color-storage-leftover: #882255;
-	--color-storage-app: #009e73;
-	--color-storage-offline: #005f4b;
-	--color-storage-overhead: #9a9a9a;
-	--color-storage-other: #5c5c5c;
+	--color-storage-projects: #c62828;
+	--color-storage-typesetter: #ddaa33;
+	--color-storage-leftover: #aa3377;
+	--color-storage-app: #007a5e;
+	--color-storage-offline: #004488;
+	--color-storage-overhead: #b8b8b8;
+	--color-storage-other: #4a4a4a;
 }

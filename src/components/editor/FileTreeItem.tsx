@@ -75,6 +75,9 @@ interface FileTreeItemProps {
 	menuRefs: React.RefObject<Map<string, HTMLDivElement>>;
 	collabProjectId?: string;
 	docsWithPeers?: Set<string>;
+	selectionMode?: boolean;
+	selectedNodeIds?: Set<string>;
+	onToggleSelection?: (node: FileNode) => void;
 }
 
 const FileTreeItem: React.FC<FileTreeItemProps> = ({
@@ -124,6 +127,9 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 	menuRefs,
 	collabProjectId,
 	docsWithPeers,
+	selectionMode = false,
+	selectedNodeIds,
+	onToggleSelection,
 }) => {
 	const { getAwareness } = useCollab();
 
@@ -222,6 +228,16 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 					}
 				}}
 			>
+				{selectionMode && (
+					<input
+						type='checkbox'
+						className='file-select-checkbox'
+						checked={selectedNodeIds?.has(node.id) ?? false}
+						onClick={(e) => e.stopPropagation()}
+						onChange={() => onToggleSelection?.(node)}
+					/>
+				)}
+
 				<span
 					className={`file-icon ${isTemporaryFile(node.path) ? 'temp-file-icon' : ''}`}
 				>
@@ -633,6 +649,9 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							menuRefs={menuRefs}
 							collabProjectId={collabProjectId}
 							docsWithPeers={docsWithPeers}
+							selectionMode={selectionMode}
+							selectedNodeIds={selectedNodeIds}
+							onToggleSelection={onToggleSelection}
 						/>
 					))}
 				</div>

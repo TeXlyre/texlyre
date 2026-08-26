@@ -53,7 +53,11 @@ export interface FileTreeContextType {
 	enableInternalDragDrop: boolean;
 	batchDeleteFiles: (fileIds: string[]) => Promise<void>;
 	batchMoveFiles: (
-		moveOperations: Array<{ fileId: string; targetPath: string }>,
+		moveOperations: Array<{
+			fileId: string;
+			targetPath: string;
+			newName?: string;
+		}>,
 	) => Promise<string[]>;
 	batchUnlinkFiles: (fileIds: string[]) => Promise<void>;
 	clearSelectedFile: () => void;

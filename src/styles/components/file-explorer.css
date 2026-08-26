@@ -48,6 +48,118 @@
 	gap: var(--space-sm);
 }
 
+.file-selection-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-sm);
+	padding: var(--space-xs) var(--space-sm);
+	border-bottom: 1px solid var(--accent-border);
+	font-size: 0.85rem;
+	color: var(--text-secondary-color);
+}
+
+.file-selection-actions {
+	display: flex;
+	gap: var(--space-sm);
+}
+
+.file-selection-actions .action-btn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.file-select-checkbox {
+	align-self: center;
+	margin: 0;
+	width: 0.8rem;
+	height: 0.8rem;
+	flex: 0 0 0.8rem;
+	cursor: pointer;
+}
+
+.file-toolbar-dropdown {
+	min-width: 200px;
+	padding: var(--space-sm);
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-md);
+}
+
+.file-toolbar-content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.file-toolbar-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.file-toolbar-section + .file-toolbar-section {
+	border-top: 1px solid var(--accent-border);
+	padding-top: var(--space-sm);
+}
+
+.file-toolbar-label {
+	font-size: 0.7rem;
+	font-weight: 600;
+	color: var(--pico-secondary);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.file-toolbar-select {
+	width: 100%;
+	margin: 0;
+	padding: var(--space-xs) var(--space-ss);
+	font-size: var(--space-sd);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	background: var(--pico-secondary-background);
+	color: var(--text-color);
+}
+
+.file-toolbar-sort-row {
+	display: flex;
+	gap: var(--space-xs);
+}
+
+.file-toolbar-sort-field {
+	flex: 1;
+}
+
+.file-sort-order-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	align-self: stretch;
+	box-sizing: border-box;
+	height: auto;
+	margin: 0;
+	padding: 0 var(--space-sm);
+	line-height: 1;
+	font-size: var(--space-sd);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	background: var(--pico-secondary-background);
+	color: var(--text-color);
+	cursor: pointer;
+	flex-shrink: 0;
+	transition: background-color var(--transition-normal);
+}
+
+.file-sort-order-toggle:hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.file-sort-order-toggle.desc {
+	color: var(--pico-primary);
+}
+
 .file-explorer.dragging {
 	background-color: var(--pico-primary-focus);
 	outline: 2px dashed var(--pico-primary);
@@ -82,6 +194,11 @@
 
 .action-btn:hover {
 	opacity: 1;
+}
+
+.action-btn.active {
+	opacity: 1;
+	color: var(--pico-primary);
 }
 
 .action-menu {

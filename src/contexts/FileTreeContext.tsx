@@ -539,7 +539,13 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 	);
 
 	const batchMoveFiles = useCallback(
-		async (moveOperations: Array<{ fileId: string; targetPath: string }>) => {
+		async (
+			moveOperations: Array<{
+				fileId: string;
+				targetPath: string;
+				newName?: string;
+			}>,
+		) => {
 			try {
 				const operationId = `batch-move-${Date.now()}`;
 
