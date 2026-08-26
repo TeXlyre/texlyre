@@ -1,0 +1,90 @@
+.icon-button-wrapper {
+	position: relative;
+	display: inline-flex;
+}
+
+.icon-button-wrapper .button.icon-only {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-xs);
+	border-radius: var(--radius-sm);
+}
+
+.icon-button-wrapper .button.icon-only:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.icon-button-tooltip {
+	position: fixed;
+	z-index: 10050;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	width: max-content;
+	max-width: 260px;
+	padding: var(--space-sm);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	background-color: var(--pico-background);
+	box-shadow: var(--shadow-md);
+	font-size: 0.75rem;
+	line-height: 1.4;
+	color: var(--text-color);
+	text-align: left;
+	white-space: normal;
+	pointer-events: none;
+}
+
+.icon-button-tooltip strong {
+	font-size: 0.8rem;
+	color: var(--pico-primary);
+}
+
+.icon-button-confirm {
+	position: fixed;
+	z-index: 10060;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	width: 280px;
+	max-height: calc(100vh - 32px);
+	overflow-y: auto;
+	padding: var(--space-sm);
+	border: 1px solid var(--color-error);
+	border-radius: var(--radius-md);
+	background-color: var(--pico-background);
+	box-shadow: var(--shadow-md);
+	font-size: 0.75rem;
+	line-height: 1.4;
+	color: var(--text-color);
+	text-align: left;
+	white-space: normal;
+}
+
+.icon-button-confirm-title {
+	font-size: 0.8rem;
+	color: var(--color-error);
+}
+
+.icon-button-confirm p {
+	margin: 0;
+}
+
+.icon-button-confirm ul {
+	margin: 0;
+	padding-left: var(--space-lg);
+	color: var(--pico-secondary);
+}
+
+.icon-button-confirm-warning {
+	font-weight: 600;
+}
+
+.icon-button-confirm-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-xs);
+	margin-top: var(--space-xs);
+}

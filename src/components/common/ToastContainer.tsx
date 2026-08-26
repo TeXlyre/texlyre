@@ -24,7 +24,8 @@ const ToastContainer: React.FC = () => {
 
 	useEffect(() => {
 		const handleToastEvent = (event: CustomEvent) => {
-			const { type, message, operationId, duration, data } = event.detail;
+			const { type, message, operationId, duration, data, actions } =
+				event.detail;
 
 			if (type === 'dismiss' && operationId) {
 				setNotifications((prev) =>
@@ -41,6 +42,7 @@ const ToastContainer: React.FC = () => {
 				timestamp: Date.now(),
 				duration: duration !== undefined ? duration : getDefaultDuration(type),
 				data,
+				actions,
 			};
 
 			setNotifications((prev) => {

@@ -1,6 +1,7 @@
 // src/contexts/ChelysContext.tsx
 import type React from 'react';
 import { type ReactNode, createContext, useEffect, useState } from 'react';
+import { setAccountControlUser } from '@chelys/peer/AccountControlRoom';
 
 import { t } from '@/i18n';
 import { chelysAccountSyncService } from '../services/ChelysAccountSyncService';
@@ -97,10 +98,28 @@ export const ChelysProvider: React.FC<ChelysProviderProps> = ({ children }) => {
 	const isEnrolled = !isGuestUser(user) && chelysService.isEnrolled(user);
 
 	useEffect(() => {
+		setAccountControlUser(
+			user
+				? {
+						id: user.id,
+						username: user.username,
+						name: user.name ?? user.username,
+						color: user.color,
+						colorLight: user.colorLight,
+					}
+				: null,
+		);
+
+		return () => setAccountControlUser(null);
+	}, [user]);
+
+	useEffect(() => {
 		if (!user || isGuestUser(user)) {
+			chelysAccountSyncService.stop();
 			setIsLoggedIn(false);
 			return;
 		}
+
 		const keys = chelysService.getRoomKeys(user.id);
 		setIsLoggedIn(keys !== null);
 		if (keys) {
@@ -109,7 +128,11 @@ export const ChelysProvider: React.FC<ChelysProviderProps> = ({ children }) => {
 				keys.roomKey,
 				user.id,
 				user.username,
+				user.color,
+				user.colorLight,
 			);
+		} else {
+			chelysAccountSyncService.stop();
 		}
 		if (getTempPrf()) setIsPrfPromptOpen(true);
 	}, [user, isGuestUser]);

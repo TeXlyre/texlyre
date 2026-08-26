@@ -9,10 +9,32 @@ export interface FileNode {
 	documentId?: string;
 	isBinary?: boolean;
 	mimeType?: string;
+	createdAt?: number;
 	lastModified: number;
 	size?: number;
 	isDeleted?: boolean;
 	excludeFromSync?: boolean;
+}
+
+export interface DirectorySummary {
+	files: number;
+	directories: number;
+	size: number;
+}
+
+export interface FilePropertiesInfo {
+	name: string;
+	path: string;
+	type: string;
+	size?: number;
+	mimeType?: string;
+	isBinary: boolean;
+	documentId?: string;
+	createdAt?: number;
+	lastModified?: number;
+	lineCount?: number;
+	characterCount?: number;
+	directorySummary?: DirectorySummary;
 }
 
 export interface FilePathCache {
@@ -53,7 +75,11 @@ export interface FileTreeContextType {
 	enableInternalDragDrop: boolean;
 	batchDeleteFiles: (fileIds: string[]) => Promise<void>;
 	batchMoveFiles: (
-		moveOperations: Array<{ fileId: string; targetPath: string }>,
+		moveOperations: Array<{
+			fileId: string;
+			targetPath: string;
+			newName?: string;
+		}>,
 	) => Promise<string[]>;
 	batchUnlinkFiles: (fileIds: string[]) => Promise<void>;
 	clearSelectedFile: () => void;

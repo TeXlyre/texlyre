@@ -218,6 +218,7 @@ header {
 }
 
 .header-center {
+	padding-left: var(--space-sm);
 	display: flex;
 	align-items: center;
 	justify-content: center;

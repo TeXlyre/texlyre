@@ -9,7 +9,10 @@ import {
 	type FileConflict,
 	conflictResolutionService,
 } from './ConflictResolutionService';
-import { fileConflictService } from './FileConflictService';
+import {
+	FileOperationCancelledError,
+	fileConflictService,
+} from './FileConflictService';
 import {
 	isQuotaExceededError,
 	storageQuotaService,
@@ -233,7 +236,7 @@ class FileStorageService {
 			);
 
 			if (confirmation === 'cancel') {
-				throw new Error(t('File operation cancelled by user'));
+				throw new FileOperationCancelledError();
 			}
 
 			if (confirmation === 'show-unlink-dialog') {
@@ -244,7 +247,7 @@ class FileStorageService {
 					await this.storeFile(file, { showConflictDialog: false });
 					return true;
 				}
-				throw new Error(t('File operation cancelled by user'));
+				throw new FileOperationCancelledError();
 			}
 		}
 
@@ -349,6 +352,9 @@ class FileStorageService {
 
 		const existingFile = await this.getFileByPath(file.path, true);
 
+		file.createdAt =
+			existingFile?.createdAt ?? file.createdAt ?? file.lastModified;
+
 		if (showDialog) {
 			if (
 				existingFile &&
@@ -367,7 +373,7 @@ class FileStorageService {
 
 				switch (resolution) {
 					case 'cancel':
-						throw new Error(t('File operation cancelled by user'));
+						throw new FileOperationCancelledError();
 
 					case 'keep-both':
 						file = await this.createUniqueFile(file);
@@ -376,7 +382,7 @@ class FileStorageService {
 					case 'merge': {
 						const merged = await this.resolveMerge(existingFile, file);
 						if (!merged) {
-							throw new Error(t('File operation cancelled by user'));
+							throw new FileOperationCancelledError();
 						}
 						file = merged;
 						await this.db?.delete(this.FILES_STORE, existingFile.id);
@@ -499,6 +505,9 @@ class FileStorageService {
 			}
 
 			const existingFile = await this.getFileByPath(file.path, true);
+
+			file.createdAt =
+				existingFile?.createdAt ?? file.createdAt ?? file.lastModified;
 
 			if (existingFile) {
 				if (
@@ -1121,6 +1130,7 @@ class FileStorageService {
 			...file,
 			name: newName,
 			path: newPath,
+			createdAt: file.lastModified,
 		};
 	}
 
@@ -1214,6 +1224,7 @@ class FileStorageService {
 				path: file.path,
 				type: file.type,
 				documentId: file.documentId,
+				createdAt: file.createdAt,
 				lastModified: file.lastModified,
 				size: file.size,
 				isBinary: file.isBinary,

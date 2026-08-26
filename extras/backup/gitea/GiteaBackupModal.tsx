@@ -507,7 +507,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
 							)}
 							{connectionStep === 'repo' && (
 								<div>
-									<label>{t('Repository:')}</label>
+									<label>{t('Repository: ')}</label>
 									<input
 										type='text'
 										value={repoInput}

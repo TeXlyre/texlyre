@@ -14,7 +14,7 @@ interface WebrtcProviderOptions {
 class WebrtcProviderRegistry {
 	private providers: Map<
 		string,
-		{ provider: WebrtcProvider; refCount: number }
+		{ provider: WebrtcProvider; refCount: number; password?: string }
 	> = new Map();
 	getProvider(
 		roomName: string,
@@ -24,6 +24,11 @@ class WebrtcProviderRegistry {
 		// console.log('[CollabWebrtc] getProvider', roomName, this.providers.has(roomName), this.getRefCount(roomName));
 		if (this.providers.has(roomName)) {
 			const entry = this.providers.get(roomName)!;
+			if (entry.password !== options?.password) {
+				throw new Error(
+					`Provider for room ${roomName} already exists with different credentials`,
+				);
+			}
 			entry.refCount += 1;
 			return entry.provider;
 		}
@@ -31,11 +36,13 @@ class WebrtcProviderRegistry {
 		try {
 			const provider = new WebrtcProvider(roomName, doc, {
 				signaling: options?.signaling ?? [],
+				password: options?.password,
 			});
 
 			this.providers.set(roomName, {
 				provider,
 				refCount: 1,
+				password: options?.password,
 			});
 
 			return provider;

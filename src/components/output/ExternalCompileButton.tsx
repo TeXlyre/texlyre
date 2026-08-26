@@ -5,14 +5,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { t } from '@/i18n';
 import PositionedDropdown from '../common/PositionedDropdown';
 import PopoutViewerToggleButton from './PopoutViewerToggleButton';
-import { useExternalCompiler } from '../../hooks/useExternalCompiler';
+import { useExternalTypesetter } from '../../hooks/useExternalTypesetter';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';
 import { fileStorageService } from '../../services/FileStorageService';
 import { genericTypesetterService } from '../../services/GenericTypesetterService';
 import type {
-	CompilerProvider,
-	CompilerUIField,
+	TypesetterProvider,
+	TypesetterUIField,
 	TranslatableText,
 } from '../../types/compilation';
 import {
@@ -33,7 +33,7 @@ import {
 } from '../../utils/compilerUtils';
 
 interface ExternalCompileButtonProps {
-	provider: CompilerProvider;
+	provider: TypesetterProvider;
 	className?: string;
 	onExpandExternalOutput?: () => void;
 	linkedFileInfo?: {
@@ -51,7 +51,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 	useSharedSettings = false,
 }) => {
 	const { isCompiling, isExporting, compileDocument, clearCache } =
-		useExternalCompiler();
+		useExternalTypesetter();
 	const { selectedFileId, getFile, fileTree } = useFileTree();
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -231,7 +231,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 	const isDisabled = isCompiling || isExporting || !effectiveMainFile;
 
 	const isFieldVisible = useCallback(
-		(field: CompilerUIField): boolean => {
+		(field: TypesetterUIField): boolean => {
 			if (!field.showWhen) return true;
 			const dep = fields.find((f) => f.key === field.showWhen?.field);
 			if (!dep) return true;
@@ -255,7 +255,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 		? `${groupKey.toUpperCase()} Options`
 		: 'Options';
 
-	const renderField = (field: CompilerUIField) => {
+	const renderField = (field: TypesetterUIField) => {
 		const stored = readValue(field.key);
 		const value = stored === undefined ? fieldDefault(field) : stored;
 

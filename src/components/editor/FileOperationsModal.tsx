@@ -2,20 +2,11 @@
 import type React from 'react';
 
 import { t } from '@/i18n';
-import type { FileNode } from '../../types/files';
+import type { FileNode, FilePropertiesInfo } from '../../types/files';
+import { formatDate } from '../../utils/dateUtils';
 import { formatFileSize, isTemporaryFile } from '../../utils/fileUtils';
 import { FolderIcon, TempFileIcon } from '../common/Icons';
 import Modal from '../common/Modal';
-
-interface FilePropertiesInfo {
-	name: string;
-	path: string;
-	type: string;
-	size?: number;
-	mimeType?: string;
-	isBinary: boolean;
-	documentId?: string;
-}
 
 interface FileOperationsModalProps {
 	showPropertiesModal: boolean;
@@ -24,6 +15,7 @@ interface FileOperationsModalProps {
 	showMoveDialog: boolean;
 	onCloseMoveDialog: () => void;
 	fileToMove: FileNode | null;
+	moveSelection?: FileNode[];
 	selectedTargetPath: string;
 	onSetSelectedTargetPath: (path: string) => void;
 	onConfirmMove: () => void;
@@ -42,6 +34,7 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 	showMoveDialog,
 	onCloseMoveDialog,
 	fileToMove,
+	moveSelection,
 	selectedTargetPath,
 	onSetSelectedTargetPath,
 	onConfirmMove,
@@ -52,13 +45,30 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 	dragDropTargetPath,
 	onConfirmDragDrop,
 }) => {
+	const moveNodes = fileToMove ? [fileToMove] : (moveSelection ?? []);
+	const moveDirectoryOptions = getDirectoryOptions(fileToMove).filter(
+		(dir) =>
+			!moveNodes.some(
+				(node) =>
+					node.type === 'directory' &&
+					(dir.path === node.path || dir.path.startsWith(`${node.path}/`)),
+			),
+	);
+	const isMoveDisabled = moveNodes.every(
+		(node) =>
+			(node.path.substring(0, node.path.lastIndexOf('/')) || '/') ===
+			selectedTargetPath,
+	);
+
 	const getTemporaryFileWarning = (
 		operation: string,
 		targetPath?: string,
 	): string | null => {
-		if (!fileToMove) return null;
+		if (moveNodes.length === 0) return null;
 
-		const isSourceTemporary = isTemporaryFile(fileToMove.path);
+		const isSourceTemporary = moveNodes.some((node) =>
+			isTemporaryFile(node.path),
+		);
 		const isTargetTemporary = targetPath ? isTemporaryFile(targetPath) : false;
 
 		if (operation === 'move') {
@@ -135,9 +145,44 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 								{formatFileSize(propertiesInfo.size)}
 							</div>
 						)}
+						{propertiesInfo.directorySummary && (
+							<>
+								<div className='property-item'>
+									<strong>{t('Contents')}:</strong>{' '}
+									{t('{files} files, {directories} folders', {
+										files: propertiesInfo.directorySummary.files,
+										directories: propertiesInfo.directorySummary.directories,
+									})}
+								</div>
+								{propertiesInfo.directorySummary.size > 0 && (
+									<div className='property-item'>
+										<strong>{t('Total Size')}:</strong>{' '}
+										{formatFileSize(propertiesInfo.directorySummary.size)}
+									</div>
+								)}
+							</>
+						)}
 						{propertiesInfo.mimeType && (
 							<div className='property-item'>
 								<strong>{t('MIME Type')}:</strong> {propertiesInfo.mimeType}
+							</div>
+						)}
+						{propertiesInfo.createdAt !== undefined && (
+							<div className='property-item'>
+								<strong>{t('Created')}:</strong>{' '}
+								{formatDate(propertiesInfo.createdAt)}
+							</div>
+						)}
+						{propertiesInfo.lastModified !== undefined && (
+							<div className='property-item'>
+								<strong>{t('Modified')}:</strong>{' '}
+								{formatDate(propertiesInfo.lastModified)}
+							</div>
+						)}
+						{propertiesInfo.lineCount !== undefined && (
+							<div className='property-item'>
+								<strong>{t('Lines')}:</strong> {propertiesInfo.lineCount} (
+								{propertiesInfo.characterCount} {t('characters')})
 							</div>
 						)}
 						<div className='property-item'>
@@ -160,11 +205,15 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 				</Modal>
 			)}
 
-			{showMoveDialog && fileToMove && (
+			{showMoveDialog && moveNodes.length > 0 && (
 				<Modal
 					isOpen={showMoveDialog}
 					onClose={onCloseMoveDialog}
-					title={t('Move {name}', { name: fileToMove.name })}
+					title={
+						fileToMove
+							? t('Move {name}', { name: fileToMove.name })
+							: t('Move {count} items', { count: moveNodes.length })
+					}
 					size='medium'
 				>
 					<div className='move-dialog-content'>
@@ -179,7 +228,7 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 								<span>/</span>
 							</div>
 
-							{getDirectoryOptions(fileToMove).map((dir) => (
+							{moveDirectoryOptions.map((dir) => (
 								<div
 									key={dir.path}
 									className={`directory-option ${selectedTargetPath === dir.path ? 'selected' : ''}`}
@@ -217,15 +266,7 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 								type='button'
 								className='button primary'
 								onClick={onConfirmMove}
-								disabled={
-									selectedTargetPath ===
-										(fileToMove.path.substring(
-											0,
-											fileToMove.path.lastIndexOf('/'),
-										) || '/') ||
-									(fileToMove.type === 'directory' &&
-										selectedTargetPath.startsWith(`${fileToMove.path}/`))
-								}
+								disabled={isMoveDisabled}
 							>
 								{t('Move Here')}
 							</button>

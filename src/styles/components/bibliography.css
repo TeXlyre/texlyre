@@ -283,6 +283,7 @@
 
 .bib-toolbar-select {
 	width: 100%;
+	margin: 0;
 	padding: var(--space-xs) var(--space-ss);
 	font-size: var(--space-sd);
 	border: 1px solid var(--accent-border);
@@ -301,14 +302,23 @@
 }
 
 .bib-sort-order-toggle {
-	line-height: 1;
-	height: auto !important;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	align-self: stretch;
 	box-sizing: border-box;
-	margin-bottom: 1rem !important;
-	transition: background-color var(--transition-normal);
+	height: auto;
+	margin: 0;
+	padding: 0 var(--space-sm);
+	line-height: 1;
+	font-size: var(--space-sd);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	background: var(--pico-secondary-background);
+	color: var(--text-color);
+	cursor: pointer;
 	flex-shrink: 0;
-	padding: 0 var(--space-md);
+	transition: background-color var(--transition-normal);
 }
 
 .bib-sort-order-toggle:hover {

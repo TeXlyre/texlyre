@@ -739,6 +739,34 @@
 }
 
 /* ============================================================
+   Signature help tooltip
+   ============================================================ */
+
+.cm-signature-tooltip {
+	background-color: var(--pico-background);
+	border: 1px solid var(--pico-muted-border-color);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-lg);
+	color: var(--pico-color);
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 12px;
+	line-height: 1.4;
+	max-width: 500px;
+	padding: var(--space-sm);
+	white-space: pre-wrap;
+	z-index: var(--z-tooltip);
+}
+
+.cm-signature-active {
+	color: var(--pico-primary);
+	font-weight: 600;
+}
+
+.cm-signature-count {
+	color: var(--pico-muted-color);
+}
+
+/* ============================================================
    Math preview & editor overlays
    ============================================================ */
 

@@ -35,6 +35,7 @@ const Modal: React.FC<ModalProps> = ({
 	useEffect(() => {
 		const handleEscape = (event: KeyboardEvent) => {
 			if (event.key === 'Escape') {
+				if (document.querySelector('.popover-panel')) return;
 				onClose();
 			}
 		};
@@ -47,7 +48,9 @@ const Modal: React.FC<ModalProps> = ({
 				!modalRef.current.contains(event.target as Node)
 			) {
 				const clickedElement = event.target as Element;
-				const isInsideAnyModal = clickedElement.closest('.modal-container');
+				const isInsideAnyModal = clickedElement.closest(
+					'.modal-container, .popover-panel',
+				);
 
 				if (!isInsideAnyModal) {
 					onClose();

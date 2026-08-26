@@ -3,7 +3,7 @@ import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { t } from '@/i18n';
-import { compilerRegistryService } from '../../services/CompilerRegistryService';
+import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import type {
 	Project,
 	ProjectGroup,
@@ -42,7 +42,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 	const [type, setType] = useState<ProjectType>('latex');
 	const [compilerId, setCompilerId] = useState<string | undefined>();
 	const [registryVersion, setRegistryVersion] = useState(
-		compilerRegistryService.getVersion(),
+		typesetterRegistryService.getVersion(),
 	);
 	const [tags, setTags] = useState<string[]>([]);
 	const [docUrl, setDocUrl] = useState('');
@@ -51,23 +51,23 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 
 	useEffect(
 		() =>
-			compilerRegistryService.onChange(() =>
-				setRegistryVersion(compilerRegistryService.getVersion()),
+			typesetterRegistryService.onChange(() =>
+				setRegistryVersion(typesetterRegistryService.getVersion()),
 			),
 		[],
 	);
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: registryVersion invalidates the registry snapshot. */
 	const projectTypeOptions = useMemo(
-		() => compilerRegistryService.listProjectTypes(),
+		() => typesetterRegistryService.listProjectTypes(),
 		[registryVersion],
 	);
 
 	const selectedProvider = compilerId
-		? compilerRegistryService.get(compilerId)
-		: compilerRegistryService.getForProjectType(type);
+		? typesetterRegistryService.get(compilerId)
+		: typesetterRegistryService.getForProjectType(type);
 	const selectedGroup = selectedProvider
-		? compilerRegistryService.getProjectGroup(selectedProvider)
+		? typesetterRegistryService.getProjectGroup(selectedProvider)
 		: type;
 	const selectedSource =
 		selectedProvider?.source ??
@@ -89,30 +89,30 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 			];
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: registryVersion invalidates the registry snapshot. */
-	const compilerOptions = useMemo(
-		() => compilerRegistryService.listForProjectGroup(selectedGroup),
+	const typesetterOptions = useMemo(
+		() => typesetterRegistryService.listForProjectGroup(selectedGroup),
 		[selectedGroup, registryVersion],
 	);
 
-	const internalCompilerOptions = compilerOptions.filter(
+	const internalTypesetterOptions = typesetterOptions.filter(
 		({ source }) => source === 'builtin',
 	);
-	const externalCompilerOptions = compilerOptions.filter(
+	const externalTypesetterOptions = typesetterOptions.filter(
 		({ source }) => source !== 'builtin',
 	);
 
 	useEffect(() => {
 		if (
-			!compilerOptions.length ||
-			(compilerId && compilerOptions.some(({ id }) => id === compilerId))
+			!typesetterOptions.length ||
+			(compilerId && typesetterOptions.some(({ id }) => id === compilerId))
 		) {
 			return;
 		}
 
-		const provider = compilerOptions[0];
+		const provider = typesetterOptions[0];
 		setCompilerId(provider.id);
 		setType(provider.projectType as ProjectType);
-	}, [compilerOptions, compilerId]);
+	}, [typesetterOptions, compilerId]);
 
 	useEffect(() => {
 		if (!project) {
@@ -224,7 +224,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 									`${source}:${projectType}` === e.target.value,
 							);
 							const provider = option
-								? compilerRegistryService.get(option.compilerId)
+								? typesetterRegistryService.get(option.compilerId)
 								: undefined;
 
 							if (!provider) return;
@@ -250,7 +250,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 											value={`${source}:${option.projectType}`}
 											disabled={'unavailable' in option}
 										>
-											{option.label}
+											{t(option.label)}
 										</option>
 									))}
 								</optgroup>
@@ -267,8 +267,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 					{disableNameAndDescription ? (
 						<div className='disabled-field'>
 							<span>
-								{compilerOptions.find(({ id }) => id === compilerId)?.label ??
-									compilerOptions[0]?.label}
+								{typesetterOptions.find(({ id }) => id === compilerId)?.label ??
+									typesetterOptions[0]?.label}
 							</span>
 							<div className='field-note'>
 								{t('Open the project to edit its compiler')}
@@ -279,7 +279,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 							id='project-compiler'
 							value={compilerId ?? ''}
 							onChange={(e) => {
-								const provider = compilerRegistryService.get(e.target.value);
+								const provider = typesetterRegistryService.get(e.target.value);
 								if (!provider) return;
 
 								setType(provider.projectType as ProjectType);
@@ -287,18 +287,18 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 							}}
 							disabled={isSubmitting}
 						>
-							{internalCompilerOptions.length > 0 && (
+							{internalTypesetterOptions.length > 0 && (
 								<optgroup label={t('Internal')}>
-									{internalCompilerOptions.map((provider) => (
+									{internalTypesetterOptions.map((provider) => (
 										<option key={provider.id} value={provider.id}>
 											{provider.label}
 										</option>
 									))}
 								</optgroup>
 							)}
-							{externalCompilerOptions.length > 0 && (
+							{externalTypesetterOptions.length > 0 && (
 								<optgroup label={t('External')}>
-									{externalCompilerOptions.map((provider) => (
+									{externalTypesetterOptions.map((provider) => (
 										<option key={provider.id} value={provider.id}>
 											{provider.label}
 										</option>

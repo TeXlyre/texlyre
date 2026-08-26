@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.10.21",
+	"version": "0.11.0",
 	"description": "A local-first LaTeX & Typst collaborative web editor ",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -54,6 +54,7 @@
 		"i18n:coverage": "node scripts/i18n/calculate-coverage.cjs",
 		"i18n:detect": "node scripts/translate-pages.cjs detect ./src ./translations/dynamic-patterns.json",
 		"i18n:extract": "node scripts/translate-pages.cjs extract ./src ./translations/locales/en.json",
+		"i18n:missing": "node scripts/translate-pages.cjs missing ./src ./translations/locales/en.json ./translations/logs/missing-keys.json en ./translations/logs/missing-plurals.json",
 		"i18n:preview": "node scripts/translate-pages.cjs apply ./src --dry-run",
 		"i18n:fix": "node scripts/translate-pages.cjs apply ./src",
 		"i18n:fix:no-backup": "node scripts/translate-pages.cjs apply ./src --no-backup",

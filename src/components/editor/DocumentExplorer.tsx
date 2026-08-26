@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
+import { filePathCacheService } from '../../services/FilePathCacheService';
 import { useCollab } from '../../hooks/useCollab';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
 import CollaboratorAvatars from '../common/CollaboratorAvatars';
@@ -20,6 +21,7 @@ import {
 } from '../common/Icons';
 import Modal from '../common/Modal';
 import DropdownMenu from '../common/DropdownMenu';
+import { formatDate } from '../../utils/dateUtils';
 import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('DocumentExplorer');
@@ -41,7 +43,10 @@ interface FileViewerProps {
 interface DocumentPropertiesInfo {
 	name: string;
 	contentLength: number;
-	lastModified?: Date;
+	lineCount: number;
+	createdAt?: number;
+	linkedFilePath?: string;
+	lastModified?: number;
 }
 
 const DocumentExplorer: React.FC<FileViewerProps> = ({
@@ -129,11 +134,15 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 		if (!doc) return;
 
 		const docContent = await getDocumentContent(docUrl, docId);
-		const contentLength = docContent.length;
+		const linkedFile = await filePathCacheService.getLinkedFile(docId);
 
 		const info: DocumentPropertiesInfo = {
 			name: doc.name,
-			contentLength: contentLength,
+			contentLength: docContent.length,
+			lineCount: docContent.split('\n').length,
+			createdAt: doc.createdAt,
+			linkedFilePath: linkedFile?.path,
+			lastModified: linkedFile?.lastModified,
 		};
 
 		setPropertiesInfo(info);
@@ -359,6 +368,27 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 							<strong>{t('Content Length:')}</strong>{' '}
 							{propertiesInfo.contentLength} {t('characters')}
 						</div>
+						<div className='property-item'>
+							<strong>{t('Lines')}:</strong> {propertiesInfo.lineCount}
+						</div>
+						{propertiesInfo.createdAt !== undefined && (
+							<div className='property-item'>
+								<strong>{t('Created')}:</strong>{' '}
+								{formatDate(propertiesInfo.createdAt)}
+							</div>
+						)}
+						{propertiesInfo.lastModified !== undefined && (
+							<div className='property-item'>
+								<strong>{t('Modified')}:</strong>{' '}
+								{formatDate(propertiesInfo.lastModified)}
+							</div>
+						)}
+						{propertiesInfo.linkedFilePath && (
+							<div className='property-item'>
+								<strong>{t('Linked File')}:</strong>{' '}
+								{propertiesInfo.linkedFilePath}
+							</div>
+						)}
 					</div>
 				</Modal>
 			)}

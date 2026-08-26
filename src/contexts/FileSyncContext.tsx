@@ -217,7 +217,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 			addNotification({
 				type: 'sync_error',
 				message: `Failed to update file map: ${
-					error instanceof Error ? error.message : 'unknown error'
+					error instanceof Error ? error.message : 'Unknown error'
 				}`,
 			});
 			return null;
@@ -290,12 +290,16 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		const awareness = collabService.getAwareness(projectId, 'file_sync');
 		if (!awareness) return;
 
-		const connectedPeers = new Set(Array.from(awareness.getStates().keys()));
+		const connectedPeers = new Set(
+			Array.from(awareness.getStates().values())
+				.map((state) => state.user?.id)
+				.filter(Boolean),
+		);
 		const fileSyncMap = ydocRef.current.getMap('fileSync');
 
 		const disconnectedPeers: string[] = [];
 		fileSyncMap.forEach((_, peerId) => {
-			if (peerId !== user?.id && !connectedPeers.has(Number.parseInt(peerId))) {
+			if (peerId !== user?.id && !connectedPeers.has(peerId)) {
 				disconnectedPeers.push(peerId);
 			}
 		});
@@ -433,7 +437,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				addNotification({
 					type: 'sync_error',
 					message: `Error during file check: ${
-						error instanceof Error ? error.message : 'unknown error'
+						error instanceof Error ? error.message : 'Unknown error'
 					}`,
 				});
 			}
@@ -495,7 +499,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
 				fileSyncService.showErrorNotification(
 					`Failed to prepare files: ${
-						error instanceof Error ? error.message : 'unknown error'
+						error instanceof Error ? error.message : 'Unknown error'
 					}`,
 					{ operationId },
 				);
@@ -607,7 +611,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				moduleLog.error('Error downloading files:', error);
 
 				const message =
-					error instanceof Error ? error.message : 'unknown error';
+					error instanceof Error ? error.message : 'Unknown error';
 				const isDisabled = fileSyncService.trackSyncFailure(request.providerId);
 
 				updateRequest(request.id, {
@@ -683,7 +687,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 					verification.status === 'success'
 						? `Sync completed successfully with ${verification.verifierUsername}`
 						: `Sync failed with ${verification.verifierUsername}: ${
-								verification.message || 'unknown error'
+								verification.message || 'Unknown error'
 							}`,
 				data: { verificationId: verification.id, status: verification.status },
 			});
@@ -832,6 +836,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				awarenessTimeout: (awarenessTimeoutSetting.value as number) * 1000,
 			});
 
+			collabService.setUserInfo(projectId, 'file_sync', user);
+
 			ydocRef.current = doc;
 			initializedProjectIdRef.current = projectId;
 
@@ -970,7 +976,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		} catch (error) {
 			fileSyncService.showErrorNotification(
 				t('Manual sync failed: ') +
-					`${error instanceof Error ? error.message : t('unknown error')}`,
+					`${error instanceof Error ? error.message : t('Unknown error')}`,
 				{ operationId },
 			);
 		} finally {

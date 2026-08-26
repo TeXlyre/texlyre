@@ -8,6 +8,7 @@ export interface Document {
 	id: string;
 	content: string;
 	name: string;
+	createdAt?: number;
 }
 
 export interface DocumentList {

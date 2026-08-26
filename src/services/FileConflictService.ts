@@ -1,5 +1,13 @@
 // src/services/FileConflictService.ts
+import { t } from '@/i18n';
 import type { FileNode } from '../types/files';
+
+export class FileOperationCancelledError extends Error {
+	constructor(message = t('File operation cancelled by user')) {
+		super(message);
+		this.name = 'FileOperationCancelledError';
+	}
+}
 
 export type ConflictResolution = 'overwrite' | 'merge' | 'keep-both' | 'cancel';
 export type BatchConflictResolution =
@@ -64,7 +72,7 @@ class FileConflictService {
 				existingFile,
 				newFile,
 				resolve: (resolution) => resolve(resolution as ConflictResolution),
-				reject,
+				reject: () => reject(new FileOperationCancelledError()),
 			};
 			this.notifyListeners(event);
 		});
@@ -76,7 +84,7 @@ class FileConflictService {
 				type: 'delete',
 				existingFile: file,
 				resolve: (resolution) => resolve(resolution as DeleteConfirmation),
-				reject,
+				reject: () => reject(new FileOperationCancelledError()),
 			};
 			this.notifyListeners(event);
 		});
@@ -88,7 +96,7 @@ class FileConflictService {
 				type: 'link',
 				existingFile: file,
 				resolve: (resolution) => resolve(resolution as LinkConfirmation),
-				reject,
+				reject: () => reject(new FileOperationCancelledError()),
 			};
 			this.notifyListeners(event);
 		});
@@ -100,7 +108,7 @@ class FileConflictService {
 				type: 'unlink',
 				existingFile: file,
 				resolve: (resolution) => resolve(resolution as UnlinkConfirmation),
-				reject,
+				reject: () => reject(new FileOperationCancelledError()),
 			};
 			this.notifyListeners(event);
 		});
@@ -116,7 +124,7 @@ class FileConflictService {
 				existingFile: file,
 				action,
 				resolve: (resolution) => resolve(resolution as LinkedFileConfirmation),
-				reject,
+				reject: () => reject(new FileOperationCancelledError()),
 			};
 			this.notifyListeners(event);
 		});
@@ -136,7 +144,7 @@ class FileConflictService {
 				conflictCount,
 				currentIndex,
 				resolve: (resolution) => resolve(resolution as BatchConflictResolution),
-				reject,
+				reject: () => reject(new FileOperationCancelledError()),
 			};
 			this.notifyListeners(event);
 		});
@@ -150,7 +158,7 @@ class FileConflictService {
 				type: 'batch-delete',
 				files,
 				resolve: (resolution) => resolve(resolution as BatchDeleteConfirmation),
-				reject,
+				reject: () => reject(new FileOperationCancelledError()),
 			};
 			this.notifyListeners(event);
 		});
@@ -164,7 +172,7 @@ class FileConflictService {
 				type: 'batch-unlink',
 				files,
 				resolve: (resolution) => resolve(resolution as BatchUnlinkConfirmation),
-				reject,
+				reject: () => reject(new FileOperationCancelledError()),
 			};
 			this.notifyListeners(event);
 		});

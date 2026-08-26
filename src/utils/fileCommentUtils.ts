@@ -41,6 +41,23 @@ export function cleanContent(
 	return cleanText(content);
 }
 
+export function cleanBytes(
+	content: string | ArrayBuffer | Uint8Array,
+): Uint8Array {
+	if (typeof content === 'string') {
+		return new TextEncoder().encode(cleanText(content));
+	}
+
+	const bytes =
+		content instanceof Uint8Array ? content : new Uint8Array(content);
+	const text = new TextDecoder().decode(bytes);
+	if (!hasComments(text)) {
+		return bytes;
+	}
+
+	return new TextEncoder().encode(cleanText(text));
+}
+
 export function processFile(
 	fileNode: FileNode,
 	options: ProcessorOptions = {},

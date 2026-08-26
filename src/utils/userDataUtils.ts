@@ -7,40 +7,64 @@ export type UserDataType =
 	| 'records'
 	| 'all';
 
+export type ConcreteUserDataType = Exclude<UserDataType, 'all'>;
+
+export interface UserDataMutation {
+	key: string;
+	value?: unknown;
+	deleted?: boolean;
+}
+
+export interface UserDataChangedDetail {
+	userId: string;
+	type: ConcreteUserDataType;
+	mutation?: UserDataMutation;
+}
+
+export const USER_DATA_CHANGED = 'texlyre-user-data-changed';
+
 export function getUserDataKey(
 	userId: string,
-	type: Exclude<UserDataType, 'all'>,
+	type: ConcreteUserDataType,
 ): string {
 	return `texlyre-user-${userId}-${type}`;
 }
 
 export function getUserData<T = any>(
 	userId: string,
-	type: Exclude<UserDataType, 'all'>,
+	type: ConcreteUserDataType,
 ): T | null {
-	const key = getUserDataKey(userId, type);
-	const data = localStorage.getItem(key);
+	const data = localStorage.getItem(getUserDataKey(userId, type));
 	return data ? JSON.parse(data) : null;
 }
 
+export const notifyUserDataChanged = (
+	userId: string,
+	type: ConcreteUserDataType,
+	mutation?: UserDataMutation,
+): void => {
+	window.dispatchEvent(
+		new CustomEvent<UserDataChangedDetail>(USER_DATA_CHANGED, {
+			detail: { userId, type, mutation },
+		}),
+	);
+};
+
 export function setUserData(
 	userId: string,
-	type: Exclude<UserDataType, 'all'>,
+	type: ConcreteUserDataType,
 	data: any,
 ): void {
-	const key = getUserDataKey(userId, type);
-	localStorage.setItem(key, JSON.stringify(data));
+	localStorage.setItem(getUserDataKey(userId, type), JSON.stringify(data));
+	notifyUserDataChanged(userId, type);
 }
 
 export function clearUserData(userId: string, type: UserDataType): void {
-	if (type === 'all') {
-		['settings', 'properties', 'secrets', 'records'].forEach((t) => {
-			localStorage.removeItem(
-				getUserDataKey(userId, t as Exclude<UserDataType, 'all'>),
-			);
-		});
-	} else {
-		localStorage.removeItem(getUserDataKey(userId, type));
+	const types: ConcreteUserDataType[] =
+		type === 'all' ? ['settings', 'properties', 'secrets', 'records'] : [type];
+	for (const current of types) {
+		localStorage.removeItem(getUserDataKey(userId, current));
+		notifyUserDataChanged(userId, current);
 	}
 }
 
@@ -57,18 +81,10 @@ export function exportUserData(userId: string, type: UserDataType): any {
 }
 
 export function importUserData(userId: string, data: any): void {
-	if (data.settings) {
-		setUserData(userId, 'settings', data.settings);
-	}
-	if (data.properties) {
-		setUserData(userId, 'properties', data.properties);
-	}
-	if (data.secrets) {
-		setUserData(userId, 'secrets', data.secrets);
-	}
-	if (data.records) {
-		setUserData(userId, 'records', data.records);
-	}
+	if (data.settings) setUserData(userId, 'settings', data.settings);
+	if (data.properties) setUserData(userId, 'properties', data.properties);
+	if (data.secrets) setUserData(userId, 'secrets', data.secrets);
+	if (data.records) setUserData(userId, 'records', data.records);
 }
 
 export async function downloadUserData(
@@ -93,7 +109,5 @@ export async function importFromFile(
 	userId: string,
 	file: File,
 ): Promise<void> {
-	const text = await file.text();
-	const data = JSON.parse(text);
-	importUserData(userId, data);
+	importUserData(userId, JSON.parse(await file.text()));
 }

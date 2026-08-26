@@ -8,6 +8,7 @@ const {
 	hasTranslationImport,
 	injectImportIntoCode,
 } = require('./import-manager.cjs');
+const { parserPlugins } = require('./parser-options.cjs');
 
 const CONFIG = {
 	extensions: ['.tsx', '.ts'],
@@ -56,7 +57,7 @@ function applySettingsTranslations(filePath, options = {}) {
 
 		const ast = parser.parse(code, {
 			sourceType: 'module',
-			plugins: ['jsx', 'typescript', 'decorators-legacy', 'classProperties'],
+			plugins: parserPlugins(filePath),
 		});
 
 		const hadImport = hasTranslationImport(ast);

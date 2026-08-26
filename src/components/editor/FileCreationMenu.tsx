@@ -5,7 +5,7 @@ import { useRef } from 'react';
 import { t } from '@/i18n';
 import type { ProjectType } from '../../types/projects';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
-import { compilerRegistryService } from '../../services/CompilerRegistryService';
+import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import { resolveLabel } from '../../utils/compilerUtils';
 import { FilePlusIcon } from '../common/Icons';
 import DropdownMenu from '../common/DropdownMenu';
@@ -43,7 +43,7 @@ const FileCreationMenu: React.FC<FileCreationMenuProps> = ({
 	}
 
 	const projectInputFiles =
-		compilerRegistryService.getInputFilesForProjectType(projectType);
+		typesetterRegistryService.getInputFilesForProjectType(projectType);
 
 	const fileTemplates: FileTemplate[] = [
 		...projectInputFiles.map((input) => ({

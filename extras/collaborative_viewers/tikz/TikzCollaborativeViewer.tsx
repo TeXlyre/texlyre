@@ -16,6 +16,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { useTheme } from '@/hooks/useTheme';
 import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
 import { collabService } from '@/services/CollabService';
+import { FileOperationCancelledError } from '@/services/FileConflictService';
 import { fileStorageService } from '@/services/FileStorageService';
 import type { FileNode } from '@/types/files';
 import { formatFileSize } from '@/utils/fileUtils';
@@ -578,6 +579,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			await fileStorageService.storeFile(makeSvgFile(fileName, svgContent));
 			flashSavedIndicator();
 		} catch (error) {
+			if (error instanceof FileOperationCancelledError) return;
 			moduleLog.error('Error saving SVG:', error);
 			setError(error instanceof Error ? error.message : String(error));
 		}

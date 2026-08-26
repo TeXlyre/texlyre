@@ -4,34 +4,51 @@ import {
 	type LSPClientConfig,
 	type Transport,
 } from '@codemirror/lsp-client';
+import type { TransportConfig } from '@chelys/types/transport';
 
 import { createNamedLogger } from '@/logging';
+import { SEMANTIC_TOKEN_MODIFIERS, SEMANTIC_TOKEN_TYPES } from '../types/lsp';
+import {
+	ExternalServiceBase,
+	type ExternalServiceConfig,
+} from './ExternalServiceBase';
 
 const moduleLog = createNamedLogger('GenericLSPService');
+const HANDSHAKE_INIT_ID = -10001;
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 
-type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
-type StatusListener = (configId: string, status: ConnectionStatus) => void;
 type DiagnosticListener = (configId: string, params: any) => void;
 type ApplyEditListener = (configId: string, edit: any) => void;
+type SemanticTokensRefreshListener = (configId: string) => void;
+type JsonRecord = Record<string, any>;
 
-interface LSPServerConfig {
-	id: string;
-	name: string;
-	enabled: boolean;
+interface ExtendedClientConfig extends LSPClientConfig {
+	capabilities?: JsonRecord;
+	rootUri?: string | null;
+	workspaceFolders?: unknown[];
+	initializationOptions?: unknown;
+}
+
+interface ConfigurationItem {
+	section?: string;
+}
+
+interface JsonRpcMessage extends JsonRecord {
+	id?: string | number;
+	method?: string;
+	params?: JsonRecord;
+	result?: JsonRecord;
+}
+
+export interface LSPServerConfig extends ExternalServiceConfig {
 	fileExtensions: string[];
 	languageIdMap?: Record<string, string>;
-	transportConfig: {
-		type: 'websocket' | 'worker';
-		url?: string;
-		workerPath?: string;
-		contentLength?: boolean;
-	};
+	transportConfig: TransportConfig;
 	clientConfig: LSPClientConfig;
 }
 
-const HANDSHAKE_INIT_ID = -10001;
-
-const defaultClientCapabilities = {
+const defaultClientCapabilities: JsonRecord = {
 	textDocument: {
 		synchronization: {
 			didSave: true,
@@ -40,58 +57,148 @@ const defaultClientCapabilities = {
 		},
 		publishDiagnostics: { relatedInformation: true },
 		hover: { contentFormat: ['markdown', 'plaintext'] },
-		completion: { completionItem: { snippetSupport: false } },
+		completion: {
+			completionItem: {
+				snippetSupport: false,
+				documentationFormat: ['markdown', 'plaintext'],
+			},
+		},
+		signatureHelp: {
+			dynamicRegistration: false,
+			contextSupport: false,
+			signatureInformation: {
+				documentationFormat: ['plaintext'],
+				parameterInformation: { labelOffsetSupport: true },
+				activeParameterSupport: true,
+			},
+		},
 		codeAction: {
-			codeActionLiteralSupport: { codeActionKind: { valueSet: ['quickfix'] } },
+			codeActionLiteralSupport: {
+				codeActionKind: { valueSet: ['quickfix'] },
+			},
+		},
+		semanticTokens: {
+			dynamicRegistration: false,
+			requests: { full: true, range: false },
+			tokenTypes: SEMANTIC_TOKEN_TYPES,
+			tokenModifiers: SEMANTIC_TOKEN_MODIFIERS,
+			formats: ['relative'],
+			overlappingTokenSupport: false,
+			multilineTokenSupport: false,
+			augmentsSyntaxTokens: true,
 		},
 	},
 	workspace: { workspaceFolders: true, configuration: true, applyEdit: true },
 	window: { workDoneProgress: false },
 };
 
-class GenericLSPService {
-	private clients: Map<string, LSPClient> = new Map();
-	private configs: Map<string, LSPServerConfig> = new Map();
-	private connectionStatuses: Map<string, ConnectionStatus> = new Map();
-	private statusListeners: Set<StatusListener> = new Set();
-	private diagnosticListeners: Set<DiagnosticListener> = new Set();
-	private applyEditListeners: Set<ApplyEditListener> = new Set();
-	private lastDiagnostics: Map<string, string> = new Map();
+function isRecord(value: unknown): value is JsonRecord {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
-	registerConfig(config: LSPServerConfig) {
+function parseMessage(message: string): JsonRpcMessage | null {
+	try {
+		const parsed: unknown = JSON.parse(message);
+		return isRecord(parsed) ? parsed : null;
+	} catch {
+		return null;
+	}
+}
+
+function mergeRecords(
+	defaults: JsonRecord,
+	overrides?: JsonRecord,
+): JsonRecord {
+	if (!overrides) return defaults;
+
+	const result: JsonRecord = { ...defaults };
+	for (const [key, value] of Object.entries(overrides)) {
+		const current = result[key];
+		result[key] =
+			isRecord(current) && isRecord(value)
+				? mergeRecords(current, value)
+				: value;
+	}
+	return result;
+}
+
+function resolveConfigurationSection(
+	settings: unknown,
+	section?: string,
+): unknown {
+	if (!isRecord(settings)) return {};
+	if (!section) return settings;
+	if (Object.hasOwn(settings, section)) return settings[section];
+
+	let nested: unknown = settings;
+	for (const key of section.split('.')) {
+		nested = isRecord(nested) ? nested[key] : undefined;
+	}
+	if (nested !== undefined) return nested;
+
+	const prefix = `${section}.`;
+	const collected: JsonRecord = {};
+	let found = false;
+	for (const [key, value] of Object.entries(settings)) {
+		if (!key.startsWith(prefix)) continue;
+		const parts = key.slice(prefix.length).split('.');
+		let cursor = collected;
+		for (let index = 0; index < parts.length - 1; index++) {
+			const part = parts[index];
+			if (!isRecord(cursor[part])) cursor[part] = {};
+			cursor = cursor[part];
+		}
+		cursor[parts.at(-1)!] = value;
+		found = true;
+	}
+	return found ? collected : {};
+}
+
+function logServerMessage(configId: string, params?: JsonRecord): void {
+	const text = typeof params?.message === 'string' ? params.message : '';
+	if (!text) return;
+
+	const label = `[${configId}] ${text}`;
+	switch (params?.type) {
+		case 1:
+			moduleLog.error(label);
+			break;
+		case 2:
+			moduleLog.warn(label);
+			break;
+		case 3:
+			moduleLog.info(label);
+			break;
+		default:
+			moduleLog.debug(label);
+	}
+}
+
+class GenericLSPService extends ExternalServiceBase<LSPServerConfig> {
+	protected readonly transportLabel = 'lsp';
+
+	private readonly clients = new Map<string, LSPClient>();
+	private readonly clientIds = new WeakMap<LSPClient, string>();
+	private readonly initializing = new Map<string, Promise<void>>();
+	private readonly diagnosticListeners = new Set<DiagnosticListener>();
+	private readonly applyEditListeners = new Set<ApplyEditListener>();
+	private readonly semanticTokensRefreshListeners =
+		new Set<SemanticTokensRefreshListener>();
+	private readonly lastDiagnostics = new Map<string, string>();
+
+	registerConfig(config: LSPServerConfig): void {
 		this.configs.set(config.id, config);
 		this.setConnectionStatus(config.id, 'disconnected');
-
 		if (config.enabled && config.clientConfig) {
 			moduleLog.info(`Registering LSP server: ${config.name} (${config.id})`);
-			this.initializeClient(config);
+			void this.initializeClient(config);
 		}
 	}
 
-	unregisterConfig(configId: string) {
+	unregisterConfig(configId: string): void {
 		this.disconnectClient(configId);
 		this.configs.delete(configId);
-		this.connectionStatuses.delete(configId);
-	}
-
-	private setConnectionStatus(configId: string, status: ConnectionStatus) {
-		this.connectionStatuses.set(configId, status);
-		this.statusListeners.forEach((listener) => {
-			try {
-				listener(configId, status);
-			} catch (error) {
-				moduleLog.error('Status listener error:', error);
-			}
-		});
-	}
-
-	getConnectionStatus(configId: string): ConnectionStatus {
-		return this.connectionStatuses.get(configId) ?? 'disconnected';
-	}
-
-	onStatusChange(listener: StatusListener): () => void {
-		this.statusListeners.add(listener);
-		return () => this.statusListeners.delete(listener);
+		this.clearConnectionStatus(configId);
 	}
 
 	onDiagnostics(listener: DiagnosticListener): () => void {
@@ -104,179 +211,155 @@ class GenericLSPService {
 		return () => this.applyEditListeners.delete(listener);
 	}
 
+	onSemanticTokensRefresh(listener: SemanticTokensRefreshListener): () => void {
+		this.semanticTokensRefreshListeners.add(listener);
+		return () => this.semanticTokensRefreshListeners.delete(listener);
+	}
+
 	getLanguageIdMap(configId: string): Record<string, string> | undefined {
 		return this.configs.get(configId)?.languageIdMap;
 	}
 
 	getConfigId(client: LSPClient): string | undefined {
-		for (const [configId, c] of this.clients.entries()) {
-			if (c === client) return configId;
-		}
-		return undefined;
-	}
-
-	getConfigName(configId: string): string | undefined {
-		return this.configs.get(configId)?.name;
+		return this.clientIds.get(client);
 	}
 
 	getClient(configId: string): LSPClient | null {
 		return this.clients.get(configId) ?? null;
 	}
 
-	private async initializeClient(config: LSPServerConfig) {
-		this.setConnectionStatus(config.id, 'connecting');
+	reconnect(configId: string): void {
+		const config = this.configs.get(configId);
+		if (!config) return;
+		this.disconnectClient(configId);
+		if (config.enabled && config.clientConfig) {
+			void this.initializeClient(config);
+		}
+	}
 
-		try {
-			const { capabilities: userCapabilities, ...restClientConfig } =
-				config.clientConfig as LSPClientConfig & {
-					capabilities?: Record<string, any>;
-				};
+	getAllClientsForFile(fileName: string): LSPClient[] {
+		const extension = fileName.split('.').pop()?.toLowerCase();
+		if (!extension) return [];
 
-			const client = new LSPClient({
-				...restClientConfig,
-				extensions: [],
-			});
-
-			const transport = this.createTransport(config);
-			if (!transport) {
-				this.setConnectionStatus(config.id, 'error');
-				return;
+		const clients: LSPClient[] = [];
+		for (const [configId, config] of this.configs) {
+			if (!config.enabled || !config.fileExtensions.includes(extension)) {
+				continue;
 			}
+			const client = this.clients.get(configId);
+			if (client) clients.push(client);
+		}
+		return clients;
+	}
 
-			const wrappedTransport = this.wrapTransport(
-				config.id,
-				transport,
-				userCapabilities,
-				restClientConfig as LSPClientConfig,
+	updateConfig(configId: string, updates: Partial<LSPServerConfig>): void {
+		const current = this.configs.get(configId);
+		if (!current) return;
+
+		const updated = { ...current, ...updates };
+		this.configs.set(configId, updated);
+		const transportChanged =
+			updates.transportConfig !== undefined &&
+			this.transportChanged(current.transportConfig, updates.transportConfig);
+		const clientConfigChanged =
+			updates.clientConfig !== undefined &&
+			JSON.stringify(updates.clientConfig) !==
+				JSON.stringify(current.clientConfig);
+
+		if (!updated.enabled) {
+			if (current.enabled) this.disconnectClient(configId);
+			return;
+		}
+		if (!current.enabled || transportChanged || clientConfigChanged) {
+			if (current.enabled) this.disconnectClient(configId);
+			if (updated.clientConfig) void this.initializeClient(updated);
+		}
+	}
+
+	cleanup(): void {
+		moduleLog.info(`Cleaning up ${this.clients.size} LSP connections`);
+		for (const configId of Array.from(this.clients.keys())) {
+			this.disconnectClient(configId);
+		}
+		this.cleanupTransports();
+		this.diagnosticListeners.clear();
+		this.applyEditListeners.clear();
+		this.semanticTokensRefreshListeners.clear();
+		this.lastDiagnostics.clear();
+	}
+
+	private async initializeClient(config: LSPServerConfig): Promise<void> {
+		const pending = this.initializing.get(config.id);
+		if (pending) return pending;
+
+		const attempt = this.doInitializeClient(config);
+		this.initializing.set(config.id, attempt);
+		try {
+			await attempt;
+		} finally {
+			if (this.initializing.get(config.id) === attempt) {
+				this.initializing.delete(config.id);
+			}
+		}
+	}
+
+	private async doInitializeClient(config: LSPServerConfig): Promise<void> {
+		try {
+			const clientConfig = config.clientConfig as ExtendedClientConfig;
+			const { capabilities, ...rest } = clientConfig;
+			const client = new LSPClient({ ...rest, extensions: [] });
+			const transport = await this.createTransport(config);
+			client.connect(
+				this.wrapTransport(config.id, transport, capabilities, rest),
 			);
-			client.connect(wrappedTransport);
 			this.clients.set(config.id, client);
-			this.setConnectionStatus(config.id, 'connected');
+			this.clientIds.set(client, config.id);
 			moduleLog.info(`Connected to LSP server: ${config.name}`);
 		} catch (error) {
 			moduleLog.error(`Failed to connect to ${config.name}:`, error);
+			this.closeTransport(config.id);
 			this.setConnectionStatus(config.id, 'error');
 		}
-	}
-
-	private resolveConfigurationSection(
-		settings: any,
-		section: string | undefined,
-	): any {
-		if (!settings || typeof settings !== 'object') return {};
-		if (!section) return settings;
-
-		if (Object.hasOwn(settings, section)) {
-			return settings[section];
-		}
-
-		const nested = section
-			.split('.')
-			.reduce<any>(
-				(acc, key) => (acc && typeof acc === 'object' ? acc[key] : undefined),
-				settings,
-			);
-		if (nested !== undefined) return nested;
-
-		const prefix = `${section}.`;
-		const collected: Record<string, any> = {};
-		let found = false;
-		for (const key of Object.keys(settings)) {
-			if (key.startsWith(prefix)) {
-				const subKey = key.slice(prefix.length);
-				const parts = subKey.split('.');
-				let cursor = collected;
-				for (let i = 0; i < parts.length - 1; i++) {
-					cursor[parts[i]] = cursor[parts[i]] ?? {};
-					cursor = cursor[parts[i]];
-				}
-				cursor[parts[parts.length - 1]] = settings[key];
-				found = true;
-			}
-		}
-		return found ? collected : {};
-	}
-
-	private mergeCapabilities(defaults: any, overrides: any): any {
-		if (!overrides) return defaults;
-		if (!defaults) return overrides;
-
-		const result: Record<string, any> = { ...defaults };
-		for (const key of Object.keys(overrides)) {
-			const a = result[key];
-			const b = overrides[key];
-			if (
-				a &&
-				b &&
-				typeof a === 'object' &&
-				typeof b === 'object' &&
-				!Array.isArray(a) &&
-				!Array.isArray(b)
-			) {
-				result[key] = this.mergeCapabilities(a, b);
-			} else {
-				result[key] = b;
-			}
-		}
-		return result;
 	}
 
 	private wrapTransport(
 		configId: string,
 		transport: Transport,
-		userCapabilities: Record<string, any> | undefined,
-		clientConfig: LSPClientConfig,
+		userCapabilities: JsonRecord | undefined,
+		clientConfig: ExtendedClientConfig,
 	): Transport {
 		let handshakeComplete = false;
-		const outgoingQueue: string[] = [];
 		let downstreamHandler: ((value: string) => void) | null = null;
+		const outgoingQueue: string[] = [];
+		const capabilities = mergeRecords(
+			defaultClientCapabilities,
+			userCapabilities,
+		);
 
-		const sendInitialize = () => {
-			const initParams: any = {
-				processId: null,
-				clientInfo: { name: 'TeXlyre' },
-				rootUri: (clientConfig as any).rootUri ?? null,
-				workspaceFolders: (clientConfig as any).workspaceFolders ?? [],
-				capabilities: this.mergeCapabilities(
-					defaultClientCapabilities,
-					userCapabilities,
-				),
-				initializationOptions: (clientConfig as any).initializationOptions,
-			};
+		const completeHandshake = (serverCapabilities: unknown): void => {
 			transport.send(
 				JSON.stringify({
 					jsonrpc: '2.0',
-					id: HANDSHAKE_INIT_ID,
-					method: 'initialize',
-					params: initParams,
+					method: 'initialized',
+					params: {},
 				}),
-			);
-		};
-
-		const completeHandshake = (capabilities: any) => {
-			transport.send(
-				JSON.stringify({ jsonrpc: '2.0', method: 'initialized', params: {} }),
 			);
 			handshakeComplete = true;
 
-			// Patch the LSP client with the real server capabilities. The client received
-			// synthetic capabilities earlier to avoid timing out; this overwrite happens
-			// before any user-driven feature request reads serverCapabilities.
 			const client = this.clients.get(configId);
 			if (client) {
-				(client as any).serverCapabilities = capabilities ?? {};
+				(
+					client as LSPClient & { serverCapabilities?: unknown }
+				).serverCapabilities = serverCapabilities ?? {};
 			}
-
-			while (outgoingQueue.length > 0) {
-				const queued = outgoingQueue.shift();
-				if (queued) transport.send(queued);
+			for (const message of outgoingQueue.splice(0)) {
+				transport.send(message);
 			}
 		};
 
 		transport.subscribe((message: string) => {
-			try {
-				const parsed = JSON.parse(message);
-
+			const parsed = parseMessage(message);
+			if (parsed) {
 				if (
 					!handshakeComplete &&
 					parsed.id === HANDSHAKE_INIT_ID &&
@@ -290,10 +373,14 @@ class GenericLSPService {
 					parsed.method === 'workspace/configuration' &&
 					parsed.id !== undefined
 				) {
-					const items = parsed.params?.items || [];
-					const settings = (clientConfig as any).initializationOptions;
-					const result = items.map((item: any) =>
-						this.resolveConfigurationSection(settings, item?.section),
+					const items = Array.isArray(parsed.params?.items)
+						? (parsed.params.items as ConfigurationItem[])
+						: [];
+					const result = items.map((item) =>
+						resolveConfigurationSection(
+							clientConfig.initializationOptions,
+							item.section,
+						),
 					);
 					transport.send(
 						JSON.stringify({ jsonrpc: '2.0', id: parsed.id, result }),
@@ -301,73 +388,43 @@ class GenericLSPService {
 					return;
 				}
 
-				if (
-					parsed.method === 'textDocument/publishDiagnostics' &&
-					parsed.params
-				) {
-					const fingerprintKey = `${configId}:${parsed.params.uri}`;
-					const fingerprint = JSON.stringify(parsed.params.diagnostics ?? []);
-					if (this.lastDiagnostics.get(fingerprintKey) === fingerprint) {
-						return;
-					}
-					this.lastDiagnostics.set(fingerprintKey, fingerprint);
-
-					this.diagnosticListeners.forEach((listener) => {
-						try {
-							listener(configId, parsed.params);
-						} catch (error) {
-							moduleLog.error('Diagnostic listener error:', error);
-						}
-					});
-				}
-
-				if (
-					parsed.method === 'workspace/applyEdit' &&
-					parsed.id !== undefined
-				) {
-					this.handleApplyEditRequest(
-						configId,
-						parsed.id,
-						parsed.params,
-						transport,
-					);
-				}
-			} catch {}
-
-			if (downstreamHandler) downstreamHandler(message);
+				this.handleServerNotification(configId, parsed, transport);
+			}
+			downstreamHandler?.(message);
 		});
 
-		sendInitialize();
+		transport.send(
+			JSON.stringify({
+				jsonrpc: '2.0',
+				id: HANDSHAKE_INIT_ID,
+				method: 'initialize',
+				params: {
+					processId: null,
+					clientInfo: { name: 'TeXlyre' },
+					rootUri: clientConfig.rootUri ?? null,
+					workspaceFolders: clientConfig.workspaceFolders ?? [],
+					capabilities,
+					initializationOptions: clientConfig.initializationOptions,
+				},
+			}),
+		);
 
 		return {
 			send: (message: string) => {
-				try {
-					const parsed = JSON.parse(message);
-					if (parsed.method === 'initialize' && parsed.id !== undefined) {
-						const fakeResponse = JSON.stringify({
-							jsonrpc: '2.0',
-							id: parsed.id,
-							result: {
-								capabilities: this.mergeCapabilities(
-									defaultClientCapabilities,
-									userCapabilities,
-								),
-							},
-						});
-						// Defer so the LSP client's subscribe() runs first.
-						setTimeout(() => downstreamHandler?.(fakeResponse), 0);
-						return;
-					}
-					if (parsed.method === 'initialized') {
-						return;
-					}
-				} catch {}
-
-				if (handshakeComplete) {
-					transport.send(message);
-				} else {
-					outgoingQueue.push(message);
+				const parsed = parseMessage(message);
+				if (parsed?.method === 'initialize' && parsed.id !== undefined) {
+					const response = JSON.stringify({
+						jsonrpc: '2.0',
+						id: parsed.id,
+						result: { capabilities },
+					});
+					setTimeout(() => downstreamHandler?.(response), 0);
+					return;
 				}
+				if (parsed?.method === 'initialized') return;
+
+				if (handshakeComplete) transport.send(message);
+				else outgoingQueue.push(message);
 			},
 			subscribe: (handler: (value: string) => void) => {
 				downstreamHandler = handler;
@@ -378,132 +435,138 @@ class GenericLSPService {
 		};
 	}
 
-	private handleApplyEditRequest(
+	private handleServerNotification(
 		configId: string,
-		requestId: number,
-		params: any,
+		message: JsonRpcMessage,
 		transport: Transport,
-	) {
-		this.applyEditListeners.forEach((listener) => {
-			try {
-				listener(configId, params?.edit);
-			} catch (error) {
-				moduleLog.error('Apply edit listener error:', error);
-			}
-		});
-
-		const response = JSON.stringify({
-			jsonrpc: '2.0',
-			id: requestId,
-			result: { applied: true },
-		});
-		transport.send(response);
-	}
-
-	private createTransport(config: LSPServerConfig): Transport | null {
+	): void {
 		if (
-			config.transportConfig.type === 'websocket' &&
-			config.transportConfig.url
+			message.method === 'textDocument/publishDiagnostics' &&
+			message.params
 		) {
-			return this.createWebSocketTransport(config);
+			const key = `${configId}:${String(message.params.uri)}`;
+			const fingerprint = JSON.stringify(message.params.diagnostics ?? []);
+			if (this.lastDiagnostics.get(key) !== fingerprint) {
+				this.lastDiagnostics.set(key, fingerprint);
+				for (const listener of this.diagnosticListeners) {
+					try {
+						listener(configId, message.params);
+					} catch (error) {
+						moduleLog.error('Diagnostic listener error:', error);
+					}
+				}
+			}
 		}
-		return null;
+
+		if (message.method === 'workspace/applyEdit' && message.id !== undefined) {
+			for (const listener of this.applyEditListeners) {
+				try {
+					listener(configId, message.params?.edit);
+				} catch (error) {
+					moduleLog.error('Apply edit listener error:', error);
+				}
+			}
+			transport.send(
+				JSON.stringify({
+					jsonrpc: '2.0',
+					id: message.id,
+					result: { applied: true },
+				}),
+			);
+		}
+
+		if (
+			message.method === 'workspace/semanticTokens/refresh' &&
+			message.id !== undefined
+		) {
+			for (const listener of this.semanticTokensRefreshListeners) {
+				try {
+					listener(configId);
+				} catch (error) {
+					moduleLog.error('Semantic tokens listener error:', error);
+				}
+			}
+			transport.send(
+				JSON.stringify({ jsonrpc: '2.0', id: message.id, result: null }),
+			);
+		}
+
+		if (
+			message.method === 'window/logMessage' ||
+			message.method === 'window/showMessage'
+		) {
+			logServerMessage(configId, message.params);
+		}
+
+		if (
+			message.method === 'window/showMessageRequest' &&
+			message.id !== undefined
+		) {
+			logServerMessage(configId, message.params);
+			transport.send(
+				JSON.stringify({ jsonrpc: '2.0', id: message.id, result: null }),
+			);
+		}
 	}
 
-	private createWebSocketTransport(config: LSPServerConfig): Transport {
-		const url = config.transportConfig.url!;
-		const ws = new WebSocket(url);
+	private async createTransport(config: LSPServerConfig): Promise<Transport> {
+		const transport = await this.openTransport(config);
 		const handlers = new Set<(value: string) => void>();
-		const messageQueue: string[] = [];
 		const pendingMessages: string[] = [];
-		let isOpen = false;
 		const useContentLength = config.transportConfig.contentLength ?? false;
 		let buffer = '';
 
-		const dispatchMessage = (message: string) => {
+		const dispatch = (message: string): void => {
 			if (handlers.size === 0) {
 				pendingMessages.push(message);
 				return;
 			}
-			handlers.forEach((handler) => {
-				handler(message);
-			});
+			for (const handler of handlers) handler(message);
 		};
 
-		const processBuffer = () => {
+		const processBuffer = (): void => {
 			while (buffer.length > 0) {
 				const headerEnd = buffer.indexOf('\r\n\r\n');
-				if (headerEnd === -1) break;
+				if (headerEnd === -1) return;
+				const match = buffer
+					.slice(0, headerEnd)
+					.match(/Content-Length:\s*(\d+)/i);
+				if (!match) return;
 
-				const header = buffer.substring(0, headerEnd);
-				const match = header.match(/Content-Length:\s*(\d+)/i);
-				if (!match) break;
-
-				const contentLength = parseInt(match[1], 10);
+				const contentLength = Number.parseInt(match[1], 10);
 				const bodyStart = headerEnd + 4;
+				if (buffer.length < bodyStart + contentLength) return;
 
-				if (buffer.length < bodyStart + contentLength) break;
-
-				const body = buffer.substring(bodyStart, bodyStart + contentLength);
-				buffer = buffer.substring(bodyStart + contentLength);
-				dispatchMessage(body);
+				dispatch(buffer.slice(bodyStart, bodyStart + contentLength));
+				buffer = buffer.slice(bodyStart + contentLength);
 			}
 		};
 
-		const wrapWithContentLength = (message: string): string => {
-			const byteLength = new TextEncoder().encode(message).length;
-			return `Content-Length: ${byteLength}\r\n\r\n${message}`;
-		};
-
-		ws.onopen = () => {
-			isOpen = true;
-			while (messageQueue.length > 0) {
-				const message = messageQueue.shift();
-				if (message) ws.send(message);
+		transport.onMessage((payload) => {
+			const data =
+				typeof payload === 'string' ? payload : textDecoder.decode(payload);
+			if (!useContentLength) {
+				dispatch(data);
+				return;
 			}
-		};
-
-		ws.onmessage = (event) => {
-			const data = typeof event.data === 'string' ? event.data : '';
-
-			if (useContentLength) {
-				buffer += data;
-				processBuffer();
-			} else {
-				dispatchMessage(data);
-			}
-		};
-
-		ws.onerror = (error) => {
-			moduleLog.error('WebSocket error:', error);
-			this.setConnectionStatus(config.id, 'error');
-		};
-
-		ws.onclose = () => {
-			isOpen = false;
+			buffer += data;
+			processBuffer();
+		});
+		transport.onClose(() => {
 			buffer = '';
-			this.setConnectionStatus(config.id, 'disconnected');
-		};
+		});
 
 		return {
 			send: (message: string) => {
-				const payload = useContentLength
-					? wrapWithContentLength(message)
-					: message;
-				if (isOpen && ws.readyState === WebSocket.OPEN) {
-					ws.send(payload);
-				} else {
-					messageQueue.push(payload);
-				}
+				transport.send(
+					useContentLength
+						? `Content-Length: ${textEncoder.encode(message).byteLength}\r\n\r\n${message}`
+						: message,
+				);
 			},
 			subscribe: (handler: (value: string) => void) => {
 				handlers.add(handler);
-				if (pendingMessages.length > 0) {
-					const queued = pendingMessages.splice(0);
-					queued.forEach((msg) => {
-						handler(msg);
-					});
-				}
+				for (const message of pendingMessages.splice(0)) handler(message);
 			},
 			unsubscribe: (handler: (value: string) => void) => {
 				handlers.delete(handler);
@@ -511,16 +574,8 @@ class GenericLSPService {
 		};
 	}
 
-	private clearDiagnosticsCacheForConfig(configId: string) {
-		const prefix = `${configId}:`;
-		for (const key of this.lastDiagnostics.keys()) {
-			if (key.startsWith(prefix)) {
-				this.lastDiagnostics.delete(key);
-			}
-		}
-	}
-
-	private disconnectClient(configId: string) {
+	private disconnectClient(configId: string): void {
+		this.initializing.delete(configId);
 		const client = this.clients.get(configId);
 		if (client) {
 			try {
@@ -531,87 +586,29 @@ class GenericLSPService {
 			}
 			this.clients.delete(configId);
 		}
-		this.clearDiagnosticsCacheForConfig(configId);
+		this.closeTransport(configId);
+		this.clearDiagnostics(configId);
 		this.setConnectionStatus(configId, 'disconnected');
 	}
 
-	reconnect(configId: string) {
-		const config = this.configs.get(configId);
-		if (!config) return;
-
-		this.disconnectClient(configId);
-		if (config.enabled && config.clientConfig) {
-			void this.initializeClient(config);
+	protected handleTransportClose(configId: string): void {
+		const client = this.clients.get(configId);
+		if (client) {
+			try {
+				client.disconnect();
+			} catch (error) {
+				moduleLog.error(`Error disconnecting LSP client ${configId}:`, error);
+			}
+			this.clients.delete(configId);
 		}
+		this.clearDiagnostics(configId);
 	}
 
-	getAllClientsForFile(fileName: string): LSPClient[] {
-		const ext = fileName.split('.').pop()?.toLowerCase();
-		if (!ext) return [];
-
-		const clients: LSPClient[] = [];
-		for (const [configId, config] of this.configs.entries()) {
-			if (config.enabled && config.fileExtensions.includes(ext)) {
-				const client = this.clients.get(configId);
-				if (client) {
-					clients.push(client);
-				}
-			}
+	private clearDiagnostics(configId: string): void {
+		const prefix = `${configId}:`;
+		for (const key of this.lastDiagnostics.keys()) {
+			if (key.startsWith(prefix)) this.lastDiagnostics.delete(key);
 		}
-		return clients;
-	}
-
-	updateConfig(configId: string, updates: Partial<LSPServerConfig>) {
-		const config = this.configs.get(configId);
-		if (!config) return;
-
-		const wasEnabled = config.enabled;
-		const updated = { ...config, ...updates };
-		this.configs.set(configId, updated);
-
-		const transportChanged =
-			updates.transportConfig !== undefined &&
-			JSON.stringify(updates.transportConfig) !==
-				JSON.stringify(config.transportConfig);
-		const clientConfigChanged =
-			updates.clientConfig !== undefined &&
-			JSON.stringify(updates.clientConfig) !==
-				JSON.stringify(config.clientConfig);
-		const hasConnectionChanges = transportChanged || clientConfigChanged;
-
-		if (!updated.enabled) {
-			if (wasEnabled) {
-				this.disconnectClient(configId);
-			}
-			return;
-		}
-
-		if (!wasEnabled && updated.enabled) {
-			if (updated.clientConfig) {
-				void this.initializeClient(updated);
-			}
-			return;
-		}
-
-		if (hasConnectionChanges) {
-			this.disconnectClient(configId);
-			if (updated.clientConfig) {
-				void this.initializeClient(updated);
-			}
-		}
-	}
-
-	cleanup() {
-		moduleLog.info(`Cleaning up ${this.clients.size} LSP connections`);
-		this.clients.forEach((_, configId) => {
-			this.disconnectClient(configId);
-		});
-		this.configs.clear();
-		this.connectionStatuses.clear();
-		this.statusListeners.clear();
-		this.diagnosticListeners.clear();
-		this.applyEditListeners.clear();
-		this.lastDiagnostics.clear();
 	}
 }
 

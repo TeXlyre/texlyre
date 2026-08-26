@@ -9,7 +9,7 @@ import { FileSyncProvider } from '../../contexts/FileSyncContext';
 import { FileTreeProvider } from '../../contexts/FileTreeContext';
 import { LaTeXProvider } from '../../contexts/LaTeXContext';
 import { TypstProvider } from '../../contexts/TypstContext';
-import { ExternalCompilerProvider } from '../../contexts/ExternalCompilerContext';
+import { ExternalTypesetterProvider } from '../../contexts/ExternalTypesetterContext';
 import { SourceMapProvider } from '../../contexts/SourceMapContext';
 import { ContentFormatterProvider } from '../../contexts/ContentFormatterContext';
 import { useAuth } from '../../hooks/useAuth';
@@ -21,7 +21,7 @@ import { useGlobalKeyboard } from '../../hooks/useGlobalKeyboard';
 import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
 import { useOffline } from '../../hooks/useOffline';
 import { fileStorageService } from '../../services/FileStorageService';
-import { compilerRegistryService } from '../../services/CompilerRegistryService';
+import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import { popoutViewerService } from '../../services/PopoutViewerService';
 import type { DocumentList } from '../../types/documents';
 import type { YjsDocUrl } from '../../types/yjs';
@@ -122,6 +122,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		name: '',
 		description: '',
 		type: 'latex' as ProjectType,
+		group: undefined as ProjectGroup | undefined,
 		compilerId: undefined as string | undefined,
 		mainFile: undefined as string | undefined,
 		latexEngine: undefined as LaTeXEngine | undefined,
@@ -145,7 +146,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const projectType = doc?.projectMetadata?.type || 'latex';
 	const projectTypeKnown = doc?.projectMetadata?.type !== undefined;
 	const projectCompilerId = doc?.projectMetadata?.compilerId;
-	const activeCompilerProvider = compilerRegistryService.resolve(
+	const activeTypesetterProvider = typesetterRegistryService.resolve(
 		projectType,
 		projectCompilerId,
 	);
@@ -182,6 +183,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				id: newDocId,
 				name: newDocName,
 				content: '',
+				createdAt: Date.now(),
 			});
 			d.currentDocId = newDocId;
 		});
@@ -209,7 +211,80 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		});
 	};
 
-	const handleUpdateProjectMetadata = (projectData: {
+	const persistProjectMetadata = useCallback(
+		async (metadata: {
+			name?: string;
+			description?: string;
+			type?: ProjectType;
+			group?: ProjectGroup;
+			compilerId?: string;
+			mainFile?: string;
+			latexEngine?: LaTeXEngine;
+			typstEngine?: string;
+			typstOutputFormat?: TypstOutputFormat;
+		}) => {
+			const projectId = sessionStorage.getItem('currentProjectId');
+			const name = metadata.name;
+
+			if (
+				!name ||
+				name === 'Untitled Project' ||
+				name === 'Shared Project' ||
+				!projectId
+			) {
+				return;
+			}
+
+			const next = {
+				name,
+				description: metadata.description || '',
+				type: metadata.type || ('latex' as ProjectType),
+				group: metadata.group,
+				compilerId: metadata.compilerId,
+				mainFile: metadata.mainFile,
+				latexEngine: metadata.latexEngine,
+				typstEngine: metadata.typstEngine,
+				typstOutputFormat: metadata.typstOutputFormat,
+			};
+			const previous = lastSyncedMetadata.current;
+
+			if (
+				previous.name === next.name &&
+				previous.description === next.description &&
+				previous.type === next.type &&
+				previous.group === next.group &&
+				previous.compilerId === next.compilerId &&
+				previous.mainFile === next.mainFile &&
+				previous.latexEngine === next.latexEngine &&
+				previous.typstEngine === next.typstEngine &&
+				previous.typstOutputFormat === next.typstOutputFormat
+			) {
+				return;
+			}
+
+			lastSyncedMetadata.current = next;
+
+			try {
+				const project = await getProjectById(projectId);
+				if (project) {
+					await updateProject({
+						...project,
+						name: next.name,
+						description: next.description,
+						type: next.type,
+						group: next.group ?? project.group,
+						compilerId: next.compilerId,
+					});
+					document.dispatchEvent(new CustomEvent('project-metadata-updated'));
+				}
+			} catch (error) {
+				moduleLog.error('Failed to sync project metadata:', error);
+			}
+		},
+		[getProjectById, updateProject],
+	);
+
+	const handleUpdateProjectMetadata = async (projectData: {
 		name: string;
 		description: string;
 		type?: ProjectType;
@@ -233,6 +308,10 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				d.projectMetadata.group = projectData.group;
 				d.projectMetadata.compilerId = projectData.compilerId;
 			}
+		});
+		await persistProjectMetadata({
+			...doc?.projectMetadata,
+			...projectData,
 		});
 		setIsSubmitting(false);
 		setIsEditingMetadata(false);
@@ -384,68 +463,9 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 	useEffect(() => {
 		if (doc?.projectMetadata) {
-			const {
-				name,
-				description,
-				type,
-				compilerId,
-				mainFile,
-				latexEngine,
-				typstEngine,
-				typstOutputFormat,
-			} = doc.projectMetadata;
-			const projectId = sessionStorage.getItem('currentProjectId');
-
-			if (
-				name &&
-				name !== 'Untitled Project' &&
-				name !== 'Shared Project' &&
-				projectId
-			) {
-				if (
-					lastSyncedMetadata.current.name !== name ||
-					lastSyncedMetadata.current.description !== description ||
-					lastSyncedMetadata.current.type !== type ||
-					lastSyncedMetadata.current.compilerId !== compilerId ||
-					lastSyncedMetadata.current.mainFile !== mainFile ||
-					lastSyncedMetadata.current.latexEngine !== latexEngine ||
-					lastSyncedMetadata.current.typstEngine !== typstEngine ||
-					lastSyncedMetadata.current.typstOutputFormat !== typstOutputFormat
-				) {
-					lastSyncedMetadata.current = {
-						name,
-						description: description || '',
-						type: type || 'latex',
-						compilerId,
-						mainFile,
-						latexEngine,
-						typstEngine,
-						typstOutputFormat,
-					};
-					const syncProjectMetadata = async () => {
-						try {
-							const project = await getProjectById(projectId);
-							if (project) {
-								await updateProject({
-									...project,
-									name,
-									description: description || '',
-									type: type || 'latex',
-									compilerId,
-								});
-								document.dispatchEvent(
-									new CustomEvent('project-metadata-updated'),
-								);
-							}
-						} catch (error) {
-							moduleLog.error('Failed to sync project metadata:', error);
-						}
-					};
-					syncProjectMetadata();
-				}
-			}
+			persistProjectMetadata(doc.projectMetadata);
 		}
-	}, [doc?.projectMetadata, updateProject, getProjectById]);
+	}, [doc?.projectMetadata, persistProjectMetadata]);
 
 	useEffect(() => {
 		if (targetDocId) return;
@@ -550,18 +570,18 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			/>,
 		];
 
-		if (activeCompilerProvider?.source === 'chelys') {
+		if (activeTypesetterProvider?.source === 'chelys') {
 			return (
 				<>
 					<ExternalCompileButton
-						provider={activeCompilerProvider}
+						provider={activeTypesetterProvider}
 						className='header-compile-button'
 						onExpandExternalOutput={handleExpandExternalOutput}
 						linkedFileInfo={linkedFileInfo}
 						useSharedSettings={true}
 					/>
 					<ExternalExportButton
-						provider={activeCompilerProvider}
+						provider={activeTypesetterProvider}
 						className='output-export-button'
 						linkedFileInfo={linkedFileInfo}
 					/>
@@ -700,7 +720,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					{t('Typesetter: ')}{' '}
 					<TypesetterInfo
 						type={projectType}
-						provider={activeCompilerProvider}
+						provider={activeTypesetterProvider}
 					/>
 				</div>
 
@@ -833,13 +853,13 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 					<FileSyncProvider docUrl={props.docUrl}>
 						<LaTeXProvider>
 							<TypstProvider>
-								<ExternalCompilerProvider>
+								<ExternalTypesetterProvider>
 									<SourceMapProvider>
 										<ContentFormatterProvider>
 											<EditorAppView {...props} />
 										</ContentFormatterProvider>
 									</SourceMapProvider>
-								</ExternalCompilerProvider>
+								</ExternalTypesetterProvider>
 							</TypstProvider>
 						</LaTeXProvider>
 					</FileSyncProvider>

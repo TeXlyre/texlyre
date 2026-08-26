@@ -11,7 +11,7 @@ const DRAWIO_MIMETYPES = [
 	'application/xml',
 ];
 
-export const PLUGIN_NAME = `${t('Draw.io Collaborative Editor')} (draw.io 31.1.5)`;
+export const PLUGIN_NAME = `${t('Draw.io Collaborative Editor')} (draw.io 31.3.2)`;
 export const PLUGIN_VERSION = '0.1.2';
 
 const drawioCollaborativeViewerPlugin: CollaborativeViewerPlugin = {

@@ -59,6 +59,7 @@ import {
 	getGenericLSPCompletionSources,
 } from '../../extensions/codemirror/GenericLSPExtension';
 import { createCodeActionsExtension } from '../../extensions/codemirror/CodeActionsLSPExtension';
+import { createSignatureHelpExtension } from '../../extensions/codemirror/SignatureHelpLSPExtension';
 import {
 	createToolbarController,
 	hasToolbarSupport,
@@ -686,6 +687,7 @@ export const useEditorView = (
 			extensions.push(...getGenericLSPExtensionsForFile(fileName));
 			completionSources.push(...getGenericLSPCompletionSources(fileName));
 			extensions.push(createCodeActionsExtension(fileName));
+			extensions.push(createSignatureHelpExtension(fileName));
 		}
 
 		if (info.isLatex || info.isTypst || info.isBib) {

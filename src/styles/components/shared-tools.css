@@ -1,0 +1,144 @@
+.shared-tool-toggle,
+.shared-project-tools-toggle {
+	margin: 0;
+	font-size: 0.85rem;
+}
+
+.shared-tool-note,
+.shared-tools-empty {
+	margin: 0;
+	color: var(--pico-secondary);
+	font-size: 0.8rem;
+}
+
+.share-tools-section,
+.shared-tools-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	background-color: var(--pico-secondary-background);
+}
+
+.share-tools-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	font-size: 0.85rem;
+}
+
+.share-tools-group strong,
+.shared-tools-section h4 {
+	margin: 0;
+	color: var(--text-color);
+}
+
+.share-tools-group ul {
+	margin: 0;
+	padding-left: var(--space-lg);
+}
+
+.share-tools-group.unavailable {
+	color: var(--pico-secondary);
+}
+
+.shared-tools-modal {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-lg);
+}
+
+.shared-tools-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.shared-tool-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-md);
+	padding: var(--space-sm);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	background-color: var(--pico-background);
+}
+
+.shared-tool-row.compact {
+	padding: var(--space-xs) var(--space-sm);
+}
+
+.shared-tool-info {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 0.1rem;
+}
+
+.shared-tool-info span,
+.shared-tool-scope {
+	color: var(--pico-secondary);
+	font-size: 0.75rem;
+}
+
+.shared-tool-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--space-xs);
+	flex-wrap: wrap;
+}
+
+.shared-tool-status {
+	font-size: 0.7rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.shared-tool-status.accepted,
+.shared-tool-status.using-existing {
+	color: var(--color-success);
+}
+
+.shared-tool-status.ignored {
+	color: var(--pico-secondary);
+}
+
+.shared-tool-status.new,
+.shared-tool-status.update {
+	color: var(--color-warning);
+}
+
+.toast-body {
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.toast-actions {
+	display: flex;
+	gap: var(--space-xs);
+	flex-wrap: wrap;
+}
+
+.toast-actions .button {
+	margin: 0;
+	padding: var(--space-xs) var(--space-sm);
+	font-size: 0.75rem;
+}
+
+@media (max-width: 600px) {
+	.shared-tool-row {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.shared-tool-actions {
+		justify-content: flex-start;
+	}
+}

@@ -1,13 +1,22 @@
 // src/components/editor/FileExplorer.tsx
 import type React from 'react';
-import { type DragEvent, useEffect, useRef, useState } from 'react';
+import { type DragEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useFileTree } from '../../hooks/useFileTree';
+import { useProperties } from '../../hooks/useProperties';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
-import type { FileNode } from '../../types/files';
+import type { FileNode, FilePropertiesInfo } from '../../types/files';
 import type { ProjectType } from '../../types/projects';
-import { validateFileName } from '../../utils/fileUtils';
+import {
+	type FileSortDirection,
+	type FileSortField,
+	arrayBufferToString,
+	filterTemporaryFiles,
+	sortFileTree,
+	summarizeDirectory,
+	validateFileName,
+} from '../../utils/fileUtils';
 import {
 	buildUrlWithFragments,
 	parseUrlFragments,
@@ -16,19 +25,27 @@ import {
 import { cleanContent } from '../../utils/fileCommentUtils';
 import { createZipFromFolder, downloadZipFile } from '../../utils/zipUtils';
 import {
+	CheckIcon,
+	CloseIcon,
 	ExportIcon,
 	FilePlusIcon,
 	FolderPlusIcon,
+	MoveIcon,
+	OptionsIcon,
 	RefreshIcon,
+	TrashIcon,
 	UploadIcon,
 } from '../common/Icons';
 import FileCreationMenu from './FileCreationMenu';
+import FileExplorerOptionsMenu from './FileExplorerOptionsMenu';
 import FileOperationsModal from './FileOperationsModal';
 import FileTreeItem from './FileTreeItem';
 import ZipHandlingModal from './ZipHandlingModal';
 import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('FileExplorer');
+
+const TEXT_METRICS_SIZE_LIMIT = 2 * 1024 * 1024;
 
 interface FileExplorerProps {
 	onFileSelect: (
@@ -43,16 +60,6 @@ interface FileExplorerProps {
 	projectType?: ProjectType;
 	collabProjectId?: string;
 	docsWithPeers?: Set<string>;
-}
-
-interface FilePropertiesInfo {
-	name: string;
-	path: string;
-	type: string;
-	size?: number;
-	mimeType?: string;
-	isBinary: boolean;
-	documentId?: string;
 }
 
 const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -83,7 +90,22 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		enableFileSystemDragDrop,
 		enableInternalDragDrop,
 		refreshFileTree,
+		batchDeleteFiles,
+		batchMoveFiles,
 	} = useFileTree();
+
+	const { getProperty, setProperty, registerProperty } = useProperties();
+	const propertiesRegistered = useRef(false);
+	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
+	const [sortField, setSortField] = useState<FileSortField>('name');
+	const [sortDirection, setSortDirection] = useState<FileSortDirection>('asc');
+	const [showTemporaryFiles, setShowTemporaryFiles] = useState(true);
+	const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+	const optionsButtonRef = useRef<HTMLDivElement>(null);
+	const [selectionMode, setSelectionMode] = useState(false);
+	const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(
+		new Set(),
+	);
 
 	const [currentPath, _setCurrentPath] = useState('/');
 	const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
@@ -133,6 +155,71 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	} | null>(null);
 	const [newItemName, setNewItemName] = useState('');
 	const isEditingFileName = !!creatingNewItem || !!renamingFileId;
+
+	useEffect(() => {
+		if (propertiesRegistered.current) return;
+		propertiesRegistered.current = true;
+
+		registerProperty({
+			id: 'file-explorer-sort-field',
+			category: 'UI',
+			subcategory: 'File Explorer',
+			defaultValue: 'name',
+		});
+
+		registerProperty({
+			id: 'file-explorer-sort-direction',
+			category: 'UI',
+			subcategory: 'File Explorer',
+			defaultValue: 'asc',
+		});
+
+		registerProperty({
+			id: 'file-explorer-show-temporary',
+			category: 'UI',
+			subcategory: 'File Explorer',
+			defaultValue: true,
+		});
+	}, [registerProperty]);
+
+	useEffect(() => {
+		if (propertiesLoaded) return;
+
+		const storedSortField = getProperty('file-explorer-sort-field');
+		const storedSortDirection = getProperty('file-explorer-sort-direction');
+
+		if (storedSortField !== undefined) {
+			setSortField(storedSortField as FileSortField);
+		}
+
+		if (storedSortDirection !== undefined) {
+			setSortDirection(storedSortDirection as FileSortDirection);
+		}
+
+		const storedShowTemporary = getProperty('file-explorer-show-temporary');
+
+		if (storedShowTemporary !== undefined) {
+			setShowTemporaryFiles(Boolean(storedShowTemporary));
+		}
+
+		setPropertiesLoaded(true);
+	}, [getProperty, propertiesLoaded]);
+
+	const sortedFileTree = useMemo(() => {
+		const visible = showTemporaryFiles
+			? fileTree
+			: filterTemporaryFiles(fileTree);
+		return sortFileTree(visible, sortField, sortDirection);
+	}, [fileTree, showTemporaryFiles, sortField, sortDirection]);
+
+	const selectedNodes = useMemo(() => {
+		const collect = (nodes: FileNode[]): FileNode[] =>
+			nodes.flatMap((node) => [
+				...(selectedNodeIds.has(node.id) ? [node] : []),
+				...(node.children ? collect(node.children) : []),
+			]);
+		return collect(sortedFileTree);
+	}, [sortedFileTree, selectedNodeIds]);
 
 	useEffect(() => {
 		const handleRefreshEvent = () => {
@@ -471,26 +558,95 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		setActiveMenu(null);
 	};
 
-	const handleConfirmMove = async () => {
-		if (fileToMove) {
-			const newFullPath =
-				selectedTargetPath === '/'
-					? `/${fileToMove.name}`
-					: `${selectedTargetPath}/${fileToMove.name}`;
+	const handleToggleSelectionMode = () => {
+		setSelectionMode((previous) => !previous);
+		setSelectedNodeIds(new Set());
+	};
 
-			if (fileToMove.path === newFullPath) {
-				setShowMoveDialog(false);
-				setFileToMove(null);
-				return;
+	const handleToggleSelection = (node: FileNode) => {
+		setSelectedNodeIds((previous) => {
+			const next = new Set(previous);
+			if (next.has(node.id)) {
+				next.delete(node.id);
+			} else {
+				next.add(node.id);
 			}
+			return next;
+		});
+	};
+
+	const handleSortFieldChange = (field: FileSortField) => {
+		setSortField(field);
+		setProperty('file-explorer-sort-field', field);
+	};
+
+	const handleSortDirectionChange = (direction: FileSortDirection) => {
+		setSortDirection(direction);
+		setProperty('file-explorer-sort-direction', direction);
+	};
+
+	const handleShowTemporaryFilesChange = (show: boolean) => {
+		setShowTemporaryFiles(show);
+		setProperty('file-explorer-show-temporary', show);
+	};
+
+	const handleMoveSelected = () => {
+		setFileToMove(null);
+		setSelectedTargetPath('/');
+		setShowMoveDialog(true);
+	};
+
+	const handleDeleteSelected = async () => {
+		await batchDeleteFiles(selectedNodes.map((node) => node.id));
+		setSelectedNodeIds(new Set());
+	};
+
+	const handleConfirmMove = async () => {
+		if (!fileToMove) {
+			if (selectedNodes.length === 0) return;
+
+			const nodesToMove = selectedNodes.filter(
+				(node) =>
+					!selectedNodes.some(
+						(other) =>
+							other.type === 'directory' &&
+							node.path.startsWith(`${other.path}/`),
+					),
+			);
 
 			try {
-				await renameFile(fileToMove.id, newFullPath);
+				await batchMoveFiles(
+					nodesToMove.map((node) => ({
+						fileId: node.id,
+						targetPath: selectedTargetPath,
+						newName: node.name,
+					})),
+				);
 				setShowMoveDialog(false);
-				setFileToMove(null);
+				setSelectedNodeIds(new Set());
 			} catch (error) {
-				moduleLog.error('Error moving file:', error);
+				moduleLog.error('Error moving files:', error);
 			}
+			return;
+		}
+
+		const newFullPath =
+			selectedTargetPath === '/'
+				? `/${fileToMove.name}`
+				: `${selectedTargetPath}/${fileToMove.name}`;
+
+		if (fileToMove.path === newFullPath) {
+			setShowMoveDialog(false);
+			setFileToMove(null);
+			return;
+		}
+
+		try {
+			await renameFile(fileToMove.id, newFullPath);
+			setShowMoveDialog(false);
+			setFileToMove(null);
+		} catch (error) {
+			moduleLog.error('Error moving file:', error);
 		}
 	};
 
@@ -573,13 +729,32 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			type: node.type,
 			isBinary: node.isBinary,
 			documentId: node.documentId,
+			createdAt: node.createdAt ?? node.lastModified,
+			lastModified: node.lastModified,
 		};
 
-		if (node.type === 'file') {
+		if (node.type === 'directory') {
+			info.directorySummary = summarizeDirectory(node);
+		} else {
 			const file = await getFile(node.id);
 			if (file) {
 				info.size = file.size;
 				info.mimeType = file.mimeType;
+				info.createdAt = file.createdAt ?? file.lastModified;
+				info.lastModified = file.lastModified;
+
+				if (
+					!file.isBinary &&
+					file.content !== undefined &&
+					(file.size ?? 0) <= TEXT_METRICS_SIZE_LIMIT
+				) {
+					const text =
+						typeof file.content === 'string'
+							? file.content
+							: arrayBufferToString(file.content);
+					info.characterCount = text.length;
+					info.lineCount = text.split('\n').length;
+				}
 			}
 		}
 
@@ -923,7 +1098,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			return directories;
 		};
 
-		return collectDirectories(fileTree);
+		return collectDirectories(sortedFileTree);
 	};
 
 	if (isLoading) {
@@ -938,6 +1113,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				onDragEnter={handleDragEnter}
 				onDragOver={(e) => handleDragOver(e)}
 				onDragLeave={handleDragLeave}
+				onDragEnd={() => {
+					setDragOverTarget(null);
+					setIsDragging(false);
+				}}
 				onDrop={(e) => handleDropOnRoot(e)}
 			>
 				<div className='file-explorer-header'>
@@ -952,6 +1131,24 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 							onClick={() => refreshFileTree()}
 						>
 							<RefreshIcon />
+						</button>
+
+						<div ref={optionsButtonRef}>
+							<button
+								className={`action-btn ${showOptionsMenu ? 'active' : ''}`}
+								title={t('Options')}
+								onClick={() => setShowOptionsMenu(!showOptionsMenu)}
+							>
+								<OptionsIcon />
+							</button>
+						</div>
+
+						<button
+							className={`action-btn ${selectionMode ? 'active' : ''}`}
+							title={t('Multi-select')}
+							onClick={handleToggleSelectionMode}
+						>
+							<CheckIcon />
 						</button>
 
 						<div className='action-separator'></div>
@@ -999,6 +1196,18 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 						</button>
 					</div>
 
+					<FileExplorerOptionsMenu
+						isOpen={showOptionsMenu}
+						onClose={() => setShowOptionsMenu(false)}
+						triggerElement={optionsButtonRef.current}
+						sortField={sortField}
+						sortDirection={sortDirection}
+						onSortFieldChange={handleSortFieldChange}
+						onSortDirectionChange={handleSortDirectionChange}
+						showTemporaryFiles={showTemporaryFiles}
+						onShowTemporaryFilesChange={handleShowTemporaryFilesChange}
+					/>
+
 					<FileCreationMenu
 						isOpen={showFileCreationMenu}
 						onClose={() => setShowFileCreationMenu(false)}
@@ -1009,6 +1218,39 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 						mode='dropdown'
 					/>
 				</div>
+
+				{selectionMode && (
+					<div className='file-selection-bar'>
+						<span>
+							{t('{count} selected', { count: selectedNodeIds.size })}
+						</span>
+						<div className='file-selection-actions'>
+							<button
+								className='action-btn'
+								title={t('Move Selected')}
+								disabled={selectedNodeIds.size === 0}
+								onClick={handleMoveSelected}
+							>
+								<MoveIcon />
+							</button>
+							<button
+								className='action-btn'
+								title={t('Delete Selected')}
+								disabled={selectedNodeIds.size === 0}
+								onClick={handleDeleteSelected}
+							>
+								<TrashIcon />
+							</button>
+							<button
+								className='action-btn'
+								title={t('Exit selection mode')}
+								onClick={handleToggleSelectionMode}
+							>
+								<CloseIcon />
+							</button>
+						</div>
+					</div>
+				)}
 
 				<div className='file-tree'>
 					{creatingNewItem && creatingNewItem.parentPath === '/' && (
@@ -1053,9 +1295,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 						</div>
 					)}
 
-					{fileTree.length > 0 ? (
+					{sortedFileTree.length > 0 ? (
 						<div className='file-tree-content'>
-							{fileTree.map((node) => (
+							{sortedFileTree.map((node) => (
 								<FileTreeItem
 									key={node.path}
 									node={node}
@@ -1108,6 +1350,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 									menuRefs={menuRefs}
 									collabProjectId={collabProjectId}
 									docsWithPeers={docsWithPeers}
+									selectionMode={selectionMode}
+									selectedNodeIds={selectedNodeIds}
+									onToggleSelection={handleToggleSelection}
 								/>
 							))}
 
@@ -1134,6 +1379,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				showMoveDialog={showMoveDialog}
 				onCloseMoveDialog={() => setShowMoveDialog(false)}
 				fileToMove={fileToMove}
+				moveSelection={selectedNodes}
 				selectedTargetPath={selectedTargetPath}
 				onSetSelectedTargetPath={setSelectedTargetPath}
 				onConfirmMove={handleConfirmMove}

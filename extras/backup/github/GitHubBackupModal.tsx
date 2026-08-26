@@ -515,7 +515,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
 							)}
 							{connectionStep === 'repo' && (
 								<div>
-									<label>{t('Repository:')}</label>
+									<label>{t('Repository: ')}</label>
 									<input
 										type='text'
 										value={repoInput}

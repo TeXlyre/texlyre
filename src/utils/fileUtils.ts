@@ -3,6 +3,7 @@
 import mime from 'mime';
 
 import { t } from '@/i18n';
+import type { DirectorySummary, FileNode } from '../types/files';
 
 export function arrayBufferToString(buffer: ArrayBuffer | Uint8Array): string {
 	return new TextDecoder().decode(buffer);
@@ -913,3 +914,80 @@ export const detectFileType = (
 	}
 	return 'unknown';
 };
+
+export type FileSortField = 'name' | 'modified' | 'size' | 'type';
+export type FileSortDirection = 'asc' | 'desc';
+
+const nameExtension = (name: string): string =>
+	name.includes('.') ? name.split('.').pop()!.toLowerCase() : '';
+
+const compareByName = (a: FileNode, b: FileNode): number =>
+	a.name.localeCompare(b.name, undefined, {
+		numeric: true,
+		sensitivity: 'base',
+	});
+
+const compareNodes = (
+	a: FileNode,
+	b: FileNode,
+	field: FileSortField,
+): number => {
+	switch (field) {
+		case 'modified':
+			return (
+				(a.lastModified ?? 0) - (b.lastModified ?? 0) || compareByName(a, b)
+			);
+		case 'size':
+			return (a.size ?? 0) - (b.size ?? 0) || compareByName(a, b);
+		case 'type':
+			return (
+				nameExtension(a.name).localeCompare(nameExtension(b.name)) ||
+				compareByName(a, b)
+			);
+		default:
+			return compareByName(a, b);
+	}
+};
+
+export const sortFileTree = (
+	nodes: FileNode[],
+	field: FileSortField,
+	direction: FileSortDirection,
+): FileNode[] =>
+	nodes
+		.map((node) =>
+			node.children
+				? { ...node, children: sortFileTree(node.children, field, direction) }
+				: node,
+		)
+		.sort((a, b) => {
+			if (a.type !== b.type) return a.type === 'directory' ? -1 : 1;
+			const result = compareNodes(a, b, field);
+			return direction === 'asc' ? result : -result;
+		});
+
+export const summarizeDirectory = (node: FileNode): DirectorySummary =>
+	(node.children ?? []).reduce<DirectorySummary>(
+		(summary, child) => {
+			if (child.type === 'directory') {
+				const nested = summarizeDirectory(child);
+				summary.directories += nested.directories + 1;
+				summary.files += nested.files;
+				summary.size += nested.size;
+			} else {
+				summary.files += 1;
+				summary.size += child.size ?? 0;
+			}
+			return summary;
+		},
+		{ files: 0, directories: 0, size: 0 },
+	);
+
+export const filterTemporaryFiles = (nodes: FileNode[]): FileNode[] =>
+	nodes
+		.filter((node) => !isTemporaryFile(node.path))
+		.map((node) =>
+			node.children
+				? { ...node, children: filterTemporaryFiles(node.children) }
+				: node,
+		);

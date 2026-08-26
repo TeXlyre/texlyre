@@ -1,4 +1,4 @@
-// src/components/profile/LocalStorageDataSection.tsx
+// src/components/profile/ProfileLocalStorageDataSection.tsx
 import type React from 'react';
 import { useState } from 'react';
 
@@ -10,7 +10,7 @@ import {
 	importFromFile,
 } from '../../utils/userDataUtils';
 import type { User } from '../../types/auth';
-import Modal from '../common/Modal';
+import IconButton, { type IconButtonConfirm } from '../common/IconButton';
 import { TrashIcon, DownloadIcon, ImportIcon } from '../common/Icons';
 
 type ClearType = 'settings' | 'properties' | 'secrets' | 'records' | 'all';
@@ -23,6 +23,99 @@ interface LocalStorageDataSectionProps {
 	onSuccess: (message: string) => void;
 }
 
+const getClearConfirmations = (): Record<ClearType, IconButtonConfirm> => ({
+	settings: {
+		title: t('Clear Settings'),
+		message: t(
+			'Are you sure you want to clear all your settings? This will reset all preferences to defaults.',
+		),
+		items: [
+			t('All application preferences'),
+			t('Editor configurations (font, saving interval, etc.)'),
+			t('UI customizations and theme preferences (layout, variant, etc.)'),
+			t(
+				'endpoints and server settings (links, connection configuration, etc.)',
+			),
+		],
+		confirmLabel: t('Clear'),
+	},
+	properties: {
+		title: t('Clear Properties'),
+		message: t(
+			'Are you sure you want to clear all your properties? This will remove all stored property values.',
+		),
+		items: [
+			t('All stored property values'),
+			t(
+				'Application state data (last opened file, current line in editor, etc.)',
+			),
+			t('User-specific configurations (panel width, collapse, etc.)'),
+		],
+		confirmLabel: t('Clear'),
+	},
+	secrets: {
+		title: t('Clear Encrypted Secrets'),
+		message: t(
+			'Are you sure you want to clear all your encrypted secrets? This will permanently delete all saved API keys and credentials.',
+		),
+		items: [
+			t('All API keys'),
+			t('Encrypted credentials'),
+			t('Authentication tokens (GitHub API key)'),
+		],
+		confirmLabel: t('Clear'),
+	},
+	records: {
+		title: t('Clear Records and Logs'),
+		message: t(
+			'Are you sure you want to clear all your records and logs? This will remove action log history, notifications, and record data.',
+		),
+		items: [t('Git action history'), t('Other logs and notifications')],
+		confirmLabel: t('Clear'),
+	},
+	all: {
+		title: t('Clear All Local Storage'),
+		message: t(
+			'Are you sure you want to clear ALL local storage data? This will remove settings, properties, secrets, records, and logs permanently.',
+		),
+		items: [
+			t('All application settings'),
+			t('All stored properties'),
+			t('All encrypted secrets'),
+			t('All records and logs'),
+			t('All cached data'),
+		],
+		confirmLabel: t('Clear all'),
+	},
+});
+
+const STORES: Array<{
+	type: Exclude<ClearType, 'all'>;
+	title: string;
+	description: string;
+}> = [
+	{
+		type: 'settings',
+		title: 'Settings',
+		description: 'All your application settings and preferences',
+	},
+	{
+		type: 'properties',
+		title: 'Properties',
+		description: 'All stored property values',
+	},
+	{
+		type: 'secrets',
+		title: 'Encrypted Secrets',
+		description: 'All saved API keys and encrypted credentials',
+	},
+	{
+		type: 'records',
+		title: 'Records and Logs',
+		description: 'All records, logs, and notifications',
+	},
+];
+
 const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 	user,
 	isSubmitting,
@@ -30,11 +123,11 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 	onError,
 	onSuccess,
 }) => {
-	const [showDeleteModal, setShowDeleteModal] = useState(false);
-	const [deleteType, setDeleteType] = useState<ClearType | null>(null);
 	const [fileInputRef, setFileInputRef] = useState<HTMLInputElement | null>(
 		null,
 	);
+
+	const clearConfirmations = getClearConfirmations();
 
 	const handleDownloadData = async (type: UserDataType) => {
 		try {
@@ -42,7 +135,7 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 			onSuccess(
 				type === 'all'
 					? t('Downloaded all data')
-					: t('Downloaded {type}', { type }),
+					: t('Downloaded {type}', { type: t(type) }),
 			);
 		} catch (error) {
 			onError(
@@ -51,28 +144,15 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 		}
 	};
 
-	const handleOpenDeleteModal = (type: ClearType) => {
-		setDeleteType(type);
-		setShowDeleteModal(true);
-	};
-
-	const handleCloseDeleteModal = () => {
-		setShowDeleteModal(false);
-		setDeleteType(null);
-	};
-
-	const handleConfirmDelete = async () => {
-		if (!deleteType) return;
-
+	const handleClearData = async (type: ClearType) => {
 		try {
 			setIsSubmitting(true);
-			await clearUserData(user.id, deleteType);
+			await clearUserData(user.id, type);
 			onSuccess(
-				deleteType === 'all'
+				type === 'all'
 					? t('Successfully cleared all data')
-					: t('Successfully cleared {type}', { type: deleteType }),
+					: t('Successfully cleared {type}', { type: t(type) }),
 			);
-			handleCloseDeleteModal();
 			setTimeout(() => {
 				window.location.reload();
 			}, 1500);
@@ -111,75 +191,6 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 		}
 	};
 
-	const getDeleteModalContent = () => {
-		if (!deleteType) return { title: '', message: '', items: [] };
-
-		const content = {
-			settings: {
-				title: t('Clear Settings'),
-				message: t(
-					'Are you sure you want to clear all your settings? This will reset all preferences to defaults.',
-				),
-				items: [
-					t('All application preferences'),
-					t('Editor configurations (font, saving interval, etc.)'),
-					t('UI customizations and theme preferences (layout, variant, etc.)'),
-					t(
-						'endpoints and server settings (links, connection configuration, etc.)',
-					),
-				],
-			},
-			properties: {
-				title: t('Clear Properties'),
-				message: t(
-					'Are you sure you want to clear all your properties? This will remove all stored property values.',
-				),
-				items: [
-					t('All stored property values'),
-					t(
-						'Application state data (last opened file, current line in editor, etc.)',
-					),
-					t('User-specific configurations (panel width, collapse, etc.)'),
-				],
-			},
-			secrets: {
-				title: t('Clear Encrypted Secrets'),
-				message: t(
-					'Are you sure you want to clear all your encrypted secrets? This will permanently delete all saved API keys and credentials.',
-				),
-				items: [
-					t('All API keys'),
-					t('Encrypted credentials'),
-					t('Authentication tokens (GitHub API key)'),
-				],
-			},
-			records: {
-				title: t('Clear Records and Logs'),
-				message: t(
-					'Are you sure you want to clear all your records and logs? This will remove action log history, notifications, and record data.',
-				),
-				items: [t('Git action history'), t('Other logs and notifications')],
-			},
-			all: {
-				title: t('Clear All Local Storage'),
-				message: t(
-					'Are you sure you want to clear ALL local storage data? This will remove settings, properties, secrets, records, and logs permanently.',
-				),
-				items: [
-					t('All application settings'),
-					t('All stored properties'),
-					t('All encrypted secrets'),
-					t('All records and logs'),
-					t('All cached data'),
-				],
-			},
-		};
-
-		return content[deleteType];
-	};
-
-	const modalContent = getDeleteModalContent();
-
 	return (
 		<>
 			<h3 style={{ paddingTop: '1rem' }}>{t('Local Storage Data')}</h3>
@@ -197,113 +208,34 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 			</div>
 
 			<div className='local-storage-actions'>
-				<div className='storage-action-group'>
-					<div className='storage-action-info'>
-						<strong>{t('Settings')}</strong>
-						<p>{t('All your application settings and preferences')}</p>
+				{STORES.map(({ type, title, description }) => (
+					<div className='storage-action-group' key={type}>
+						<div className='storage-action-info'>
+							<strong>{t(title)}</strong>
+							<p>{t(description)}</p>
+						</div>
+						<div className='storage-action-buttons'>
+							<IconButton
+								icon={<DownloadIcon />}
+								label={t('Download {type} data', {
+									type: t(type),
+								})}
+								disabled={isSubmitting}
+								onClick={() => void handleDownloadData(type)}
+							/>
+							<IconButton
+								icon={<TrashIcon />}
+								label={t('Clear {type}', {
+									type: t(type),
+								})}
+								variant='danger'
+								disabled={isSubmitting}
+								confirm={clearConfirmations[type]}
+								onClick={() => void handleClearData(type)}
+							/>
+						</div>
 					</div>
-					<div className='storage-action-buttons'>
-						<button
-							type='button'
-							className='button secondary smaller icon-only'
-							onClick={() => handleDownloadData('settings')}
-							disabled={isSubmitting}
-							title={t('Download settings data')}
-						>
-							<DownloadIcon />
-						</button>
-						<button
-							type='button'
-							className='button danger smaller icon-only'
-							onClick={() => handleOpenDeleteModal('settings')}
-							disabled={isSubmitting}
-							title={t('Clear settings')}
-						>
-							<TrashIcon />
-						</button>
-					</div>
-				</div>
-
-				<div className='storage-action-group'>
-					<div className='storage-action-info'>
-						<strong>{t('Properties')}</strong>
-						<p>{t('All stored property values')}</p>
-					</div>
-					<div className='storage-action-buttons'>
-						<button
-							type='button'
-							className='button secondary smaller icon-only'
-							onClick={() => handleDownloadData('properties')}
-							disabled={isSubmitting}
-							title={t('Download properties data')}
-						>
-							<DownloadIcon />
-						</button>
-						<button
-							type='button'
-							className='button danger smaller icon-only'
-							onClick={() => handleOpenDeleteModal('properties')}
-							disabled={isSubmitting}
-							title={t('Clear properties')}
-						>
-							<TrashIcon />
-						</button>
-					</div>
-				</div>
-
-				<div className='storage-action-group'>
-					<div className='storage-action-info'>
-						<strong>{t('Encrypted Secrets')}</strong>
-						<p>{t('All saved API keys and encrypted credentials')}</p>
-					</div>
-					<div className='storage-action-buttons'>
-						<button
-							type='button'
-							className='button secondary smaller icon-only'
-							onClick={() => handleDownloadData('secrets')}
-							disabled={isSubmitting}
-							title={t('Download secrets data')}
-						>
-							<DownloadIcon />
-						</button>
-						<button
-							type='button'
-							className='button danger smaller icon-only'
-							onClick={() => handleOpenDeleteModal('secrets')}
-							disabled={isSubmitting}
-							title={t('Clear secrets')}
-						>
-							<TrashIcon />
-						</button>
-					</div>
-				</div>
-
-				<div className='storage-action-group'>
-					<div className='storage-action-info'>
-						<strong>{t('Records and Logs')}</strong>
-						<p>{t('All records, logs, and notifications')}</p>
-					</div>
-					<div className='storage-action-buttons'>
-						<button
-							type='button'
-							className='button secondary smaller icon-only'
-							onClick={() => handleDownloadData('records')}
-							disabled={isSubmitting}
-							title={t('Download records data')}
-						>
-							<DownloadIcon />
-						</button>
-						<button
-							type='button'
-							className='button danger smaller icon-only'
-							onClick={() => handleOpenDeleteModal('records')}
-							disabled={isSubmitting}
-							title={t('Clear records')}
-						>
-							<TrashIcon />
-						</button>
-					</div>
-				</div>
+				))}
 
 				<div className='storage-action-group danger-zone'>
 					<div className='storage-action-info'>
@@ -315,15 +247,13 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 						</p>
 					</div>
 					<div className='storage-action-buttons'>
-						<button
-							type='button'
-							className='button primary smaller icon-only'
-							onClick={() => fileInputRef?.click()}
+						<IconButton
+							icon={<ImportIcon />}
+							label={t('Import all data')}
+							variant='primary'
 							disabled={isSubmitting}
-							title={t('Import all data')}
-						>
-							<ImportIcon />
-						</button>
+							onClick={() => fileInputRef?.click()}
+						/>
 						<input
 							ref={setFileInputRef}
 							type='file'
@@ -332,74 +262,23 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 							style={{ display: 'none' }}
 							disabled={isSubmitting}
 						/>
-
-						<button
-							type='button'
-							className='button secondary smaller icon-only'
-							onClick={() => handleDownloadData('all')}
+						<IconButton
+							icon={<DownloadIcon />}
+							label={t('Download all data')}
 							disabled={isSubmitting}
-							title={t('Download all data')}
-						>
-							<DownloadIcon />
-						</button>
-						<button
-							type='button'
-							className='button danger icon-only'
-							onClick={() => handleOpenDeleteModal('all')}
+							onClick={() => void handleDownloadData('all')}
+						/>
+						<IconButton
+							icon={<TrashIcon />}
+							label={t('Clear all data')}
+							variant='danger'
 							disabled={isSubmitting}
-							title={t('Clear all data')}
-						>
-							<TrashIcon />
-						</button>
+							confirm={clearConfirmations.all}
+							onClick={() => void handleClearData('all')}
+						/>
 					</div>
 				</div>
 			</div>
-
-			<Modal
-				isOpen={showDeleteModal}
-				onClose={handleCloseDeleteModal}
-				title={modalContent.title}
-				icon={TrashIcon}
-				size='medium'
-			>
-				<div className='clear-storage-modal'>
-					<div className='items-to-clear'>
-						<h4>{t('The following will be permanently removed:')}</h4>
-						<ul>
-							{modalContent.items.map((item, index) => (
-								<li key={index}>{item}</li>
-							))}
-						</ul>
-					</div>
-					<div className='warning-message'>
-						<p>{t('This action cannot be undone.')}</p>
-						<p>{modalContent.message}</p>
-					</div>
-
-					<div className='modal-actions'>
-						<button
-							type='button'
-							className='button secondary'
-							onClick={handleCloseDeleteModal}
-							disabled={isSubmitting}
-						>
-							{t('Cancel')}
-						</button>
-						<button
-							type='button'
-							className='button danger'
-							onClick={handleConfirmDelete}
-							disabled={isSubmitting}
-						>
-							{isSubmitting
-								? t('Clearing...')
-								: t('Clear {data}', {
-										data: deleteType === 'all' ? t('All Data') : t(deleteType),
-									})}
-						</button>
-					</div>
-				</div>
-			</Modal>
 		</>
 	);
 };

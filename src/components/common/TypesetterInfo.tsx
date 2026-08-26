@@ -1,18 +1,18 @@
 // src/components/common/TypesetterInfo.tsx
 import type React from 'react';
-import { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useRef } from 'react';
 
 import { t } from '@/i18n';
-import { compilerRegistryService } from '../../services/CompilerRegistryService';
-import type { CompilerProvider } from '../../types/compilation';
+import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
+import type { TypesetterProvider } from '../../types/compilation';
 import type { ProjectType } from '../../types/projects';
 import { resolveLabel } from '../../utils/compilerUtils';
 import { GlobeIcon } from './Icons';
+import Popover from './Popover';
 
 interface TypesetterInfoProps {
 	type: ProjectType;
-	provider?: CompilerProvider | null;
+	provider?: TypesetterProvider | null;
 }
 
 const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
@@ -20,74 +20,10 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 	provider: providerProp,
 }) => {
 	const provider =
-		providerProp ?? compilerRegistryService.getForProjectType(type);
+		providerProp ?? typesetterRegistryService.getForProjectType(type);
 	const [showTooltip, setShowTooltip] = useState(false);
-	const [position, setPosition] = useState({ top: 0, left: 0 });
 	const buttonRef = useRef<HTMLButtonElement>(null);
-	const tooltipRef = useRef<HTMLDivElement>(null);
 	const isExternal = provider?.source === 'chelys';
-
-	useEffect(() => {
-		if (!showTooltip || !buttonRef.current || !tooltipRef.current) return;
-
-		const updatePosition = () => {
-			if (!buttonRef.current || !tooltipRef.current) return;
-
-			const buttonRect = buttonRef.current.getBoundingClientRect();
-			const tooltipRect = tooltipRef.current.getBoundingClientRect();
-			const spacing = 12;
-			const padding = 8;
-
-			const viewportWidth = window.innerWidth;
-			const viewportHeight = window.innerHeight;
-
-			const spaceRight = viewportWidth - buttonRect.right;
-			const spaceLeft = buttonRect.left;
-			const spaceBelow = viewportHeight - buttonRect.bottom;
-			const spaceAbove = buttonRect.top;
-
-			let top = 0;
-			let left = 0;
-
-			if (spaceRight >= tooltipRect.width + spacing) {
-				left = buttonRect.right + spacing;
-				top = buttonRect.top + buttonRect.height / 2 - tooltipRect.height / 2;
-			} else if (spaceLeft >= tooltipRect.width + spacing) {
-				left = buttonRect.left - tooltipRect.width - spacing;
-				top = buttonRect.top + buttonRect.height / 2 - tooltipRect.height / 2;
-			} else if (spaceBelow >= tooltipRect.height + spacing) {
-				top = buttonRect.bottom + spacing;
-				left = buttonRect.left + buttonRect.width / 2 - tooltipRect.width / 2;
-			} else if (spaceAbove >= tooltipRect.height + spacing) {
-				top = buttonRect.top - tooltipRect.height - spacing;
-				left = buttonRect.left + buttonRect.width / 2 - tooltipRect.width / 2;
-			} else {
-				left = buttonRect.right + spacing;
-				top = buttonRect.top + buttonRect.height / 2 - tooltipRect.height / 2;
-			}
-
-			top = Math.max(
-				padding,
-				Math.min(top, viewportHeight - tooltipRect.height - padding),
-			);
-			left = Math.max(
-				padding,
-				Math.min(left, viewportWidth - tooltipRect.width - padding),
-			);
-
-			setPosition({ top, left });
-		};
-
-		updatePosition();
-
-		window.addEventListener('scroll', updatePosition, true);
-		window.addEventListener('resize', updatePosition);
-
-		return () => {
-			window.removeEventListener('scroll', updatePosition, true);
-			window.removeEventListener('resize', updatePosition);
-		};
-	}, [showTooltip]);
 
 	const externalInfo = provider?.ui?.info;
 	const isInternalLatex = provider?.id === 'internal:latex';
@@ -230,22 +166,19 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 					</span>
 				)}
 			</button>
-			{showTooltip &&
-				createPortal(
-					<div
-						className='typesetter-tooltip'
-						ref={tooltipRef}
-						style={{
-							top: `${position.top}px`,
-							left: `${position.left}px`,
-						}}
-						onMouseEnter={() => setShowTooltip(true)}
-						onMouseLeave={() => setShowTooltip(false)}
-					>
-						{getTooltipContent()}
-					</div>,
-					document.body,
-				)}
+			<Popover
+				anchor={buttonRef}
+				open={showTooltip}
+				className='typesetter-tooltip'
+				axis='inline'
+				align='center'
+				spacing={12}
+				clampHeight
+				onMouseEnter={() => setShowTooltip(true)}
+				onMouseLeave={() => setShowTooltip(false)}
+			>
+				{getTooltipContent()}
+			</Popover>
 		</>
 	);
 };

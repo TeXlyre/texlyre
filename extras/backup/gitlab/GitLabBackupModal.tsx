@@ -497,7 +497,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
 							)}
 							{connectionStep === 'project' && (
 								<div>
-									<label>{t('Project:')}</label>
+									<label>{t('Project: ')}</label>
 									<input
 										type='text'
 										value={projectInput}

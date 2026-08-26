@@ -746,6 +746,7 @@ export class GitBackupService<TTarget> {
 			const documentsMetadata = documents.documents.map((doc) => ({
 				id: doc.id,
 				name: doc.name,
+				createdAt: doc.createdAt,
 				lastModified: doc.lastModified,
 				hasYjsState: doc.hasYjsState,
 				hasReadableContent: doc.hasReadableContent,
@@ -1337,6 +1338,7 @@ export class GitBackupService<TTarget> {
 						name: fileMetadata.name,
 						path: fileMetadata.path,
 						type: fileMetadata.type as 'file' | 'directory',
+						createdAt: fileMetadata.createdAt,
 						lastModified: fileMetadata.lastModified || Date.now(),
 						size: 0,
 						mimeType: fileMetadata.mimeType,
@@ -1403,6 +1405,7 @@ export class GitBackupService<TTarget> {
 					name: remoteMetadata.name,
 					path: remoteMetadata.path,
 					type: remoteMetadata.type as 'file' | 'directory',
+					createdAt: remoteMetadata.createdAt,
 					lastModified: remoteMetadata.lastModified || Date.now(),
 					size: remoteMetadata.size || fileSize,
 					mimeType: remoteMetadata.mimeType,
