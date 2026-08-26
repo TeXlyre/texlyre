@@ -6,13 +6,15 @@ import { t } from '@/i18n';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
-import type { FileNode } from '../../types/files';
+import type { FileNode, FilePropertiesInfo } from '../../types/files';
 import type { ProjectType } from '../../types/projects';
 import {
 	type FileSortDirection,
 	type FileSortField,
+	arrayBufferToString,
 	filterTemporaryFiles,
 	sortFileTree,
+	summarizeDirectory,
 	validateFileName,
 } from '../../utils/fileUtils';
 import {
@@ -43,6 +45,8 @@ import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('FileExplorer');
 
+const TEXT_METRICS_SIZE_LIMIT = 2 * 1024 * 1024;
+
 interface FileExplorerProps {
 	onFileSelect: (
 		fileId: string,
@@ -56,16 +60,6 @@ interface FileExplorerProps {
 	projectType?: ProjectType;
 	collabProjectId?: string;
 	docsWithPeers?: Set<string>;
-}
-
-interface FilePropertiesInfo {
-	name: string;
-	path: string;
-	type: string;
-	size?: number;
-	mimeType?: string;
-	isBinary: boolean;
-	documentId?: string;
 }
 
 const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -735,13 +729,32 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			type: node.type,
 			isBinary: node.isBinary,
 			documentId: node.documentId,
+			createdAt: node.createdAt ?? node.lastModified,
+			lastModified: node.lastModified,
 		};
 
-		if (node.type === 'file') {
+		if (node.type === 'directory') {
+			info.directorySummary = summarizeDirectory(node);
+		} else {
 			const file = await getFile(node.id);
 			if (file) {
 				info.size = file.size;
 				info.mimeType = file.mimeType;
+				info.createdAt = file.createdAt ?? file.lastModified;
+				info.lastModified = file.lastModified;
+
+				if (
+					!file.isBinary &&
+					file.content !== undefined &&
+					(file.size ?? 0) <= TEXT_METRICS_SIZE_LIMIT
+				) {
+					const text =
+						typeof file.content === 'string'
+							? file.content
+							: arrayBufferToString(file.content);
+					info.characterCount = text.length;
+					info.lineCount = text.split('\n').length;
+				}
 			}
 		}
 

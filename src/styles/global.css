@@ -218,6 +218,7 @@ header {
 }
 
 .header-center {
+	padding-left: var(--space-sm);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -297,10 +298,8 @@ footer {
 
 .loading-spinner.has-progress {
 	border: none;
-	background: conic-gradient(
-		var(--pico-primary) calc(var(--progress) * 1%),
-		rgba(0, 0, 0, 0.1) 0
-	);
+	background: conic-gradient(var(--pico-primary) calc(var(--progress) * 1%),
+			rgba(0, 0, 0, 0.1) 0);
 	animation: none;
 	display: flex;
 	align-items: center;
@@ -540,8 +539,7 @@ footer {
 	z-index: 100 !important;
 	animation:
 		saveIndicatorFadeIn var(--mobile-transition-normal, 0.25s) ease-out,
-		saveIndicatorFadeOut var(--mobile-transition-normal, 0.25s) ease-out 1.2s
-		forwards !important;
+		saveIndicatorFadeOut var(--mobile-transition-normal, 0.25s) ease-out 1.2s forwards !important;
 	pointer-events: none !important;
 }
 
