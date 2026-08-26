@@ -3,7 +3,7 @@ import type React from 'react';
 import { useState } from 'react';
 
 import { t } from '@/i18n';
-import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
+import { useDiskBackup } from '../../hooks/useDiskBackup';
 import { ExportIcon, ImportIcon } from '../common/Icons';
 
 interface ProjectBackupControlsProps {
@@ -16,7 +16,7 @@ const ProjectBackupControls: React.FC<ProjectBackupControlsProps> = ({
 	className = '',
 }) => {
 	const { status, synchronize, exportToFileSystem, importChanges } =
-		useFileSystemBackup();
+		useDiskBackup();
 	const [isProjectSyncing, setIsProjectSyncing] = useState(false);
 
 	const handleExport = async () => {

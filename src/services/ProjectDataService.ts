@@ -3,19 +3,21 @@ import { openDB } from 'idb';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
+import { createNamedLogger } from '@/logging';
 import type { User } from '../types/auth';
 import type { FileNode } from '../types/files';
 import type { Project, ProjectType, ProjectGroup } from '../types/projects';
 import { getMimeType, isBinaryFile } from '../utils/fileUtils';
+import { textFromYjsState } from '../utils/yjsUtils';
 import { authService } from './AuthService';
 import {
-	type DataStructureService,
+	type BackupLayoutService,
 	type DocumentMetadata,
 	type FileMetadata,
 	type ProjectMetadata,
 	UnifiedDataStructureService,
-} from './DataStructureService';
-import { createNamedLogger } from '@/logging';
+} from './BackupLayoutService';
+import { collabService } from './CollabService';
 
 const moduleLog = createNamedLogger('ProjectDataService');
 
@@ -183,17 +185,17 @@ export class ProjectDataService {
 			return { files, fileContents, deletedFiles };
 		}
 
-		const { fileStorageService } = await import('./FileStorageService');
+		const { fileStoreService } = await import('./FileStoreService');
 		const actualProjectId = project.docUrl.startsWith('yjs:')
 			? project.docUrl.slice(4)
 			: project.docUrl;
 
-		if (!fileStorageService.isConnectedToProject(actualProjectId)) {
-			await fileStorageService.initialize(`yjs:${actualProjectId}`);
+		if (!fileStoreService.isConnectedToProject(actualProjectId)) {
+			await fileStoreService.initialize(`yjs:${actualProjectId}`);
 		}
 
 		try {
-			let allFiles = await fileStorageService.getAllFiles(includeDeleted);
+			let allFiles = await fileStoreService.getAllFiles(includeDeleted);
 
 			if (!includeTemporaryFiles) {
 				const { isTemporaryFile } = await import('../utils/fileUtils');
@@ -220,7 +222,7 @@ export class ProjectDataService {
 	}
 
 	async deserializeToIndexedDB(
-		data: DataStructureService,
+		data: BackupLayoutService,
 		newProjectId?: string,
 		newDocUrl?: string,
 	): Promise<void> {
@@ -244,6 +246,11 @@ export class ProjectDataService {
 
 			moduleLog.info(`  - Using project ID for DB: ${actualProjectId}`);
 
+			await this.deserializeProjectFilesSafely(
+				actualProjectId,
+				projectData.files,
+				projectData.fileContents,
+			);
 			await this.deserializeProjectDocuments(
 				actualProjectId,
 				projectData.documents,
@@ -251,11 +258,6 @@ export class ProjectDataService {
 				projectData.metadata.name,
 				projectData.metadata.description,
 				projectData.metadata.type,
-			);
-			await this.deserializeProjectFilesSafely(
-				actualProjectId,
-				projectData.files,
-				projectData.fileContents,
 			);
 		}
 
@@ -282,17 +284,30 @@ export class ProjectDataService {
 		);
 
 		try {
-			for (const doc of documents) {
-				const docContent = documentContents.get(doc.id);
-				if (docContent?.yjsState) {
-					const docCollection = `${dbName}-yjs_${doc.id}`;
-					moduleLog.info(
-						`Restoring document ${doc.id} to collection ${docCollection}`,
-					);
+			const linkedContents = await this.getLinkedDocumentContents(projectId);
 
-					await this.restoreYjsDocument(docCollection, docContent.yjsState);
-				}
+			for (const doc of documents) {
+				const docContent = documentContents.get(doc.id) ?? {};
+				documentContents.set(doc.id, docContent);
+
+				const incoming =
+					linkedContents.get(doc.id) ??
+					docContent.readableContent ??
+					(docContent.yjsState
+						? textFromYjsState(docContent.yjsState)
+						: undefined);
+
+				if (incoming === undefined) continue;
+
+				docContent.readableContent = incoming;
+
+				await collabService.updateDocumentContent(
+					projectId,
+					doc.id,
+					() => incoming,
+				);
 			}
+
 			await this.createMetadataDocument(
 				metadataCollection,
 				documents,
@@ -308,44 +323,46 @@ export class ProjectDataService {
 			);
 		} catch (error) {
 			moduleLog.error('Error deserializing project documents:', error);
+			throw error;
 		}
 	}
 
-	private async restoreYjsDocument(
-		collection: string,
-		yjsState: Uint8Array,
-	): Promise<void> {
-		const docYDoc = new Y.Doc();
-		const docPersistence = new IndexeddbPersistence(collection, docYDoc);
+	private async getLinkedDocumentContents(
+		projectId: string,
+	): Promise<Map<string, string>> {
+		const { fileStoreService } = await import('./FileStoreService');
 
-		await new Promise<void>((resolve) => {
-			docPersistence.once('synced', resolve);
-		});
+		if (!fileStoreService.isConnectedToProject(projectId)) {
+			await fileStoreService.initialize(`yjs:${projectId}`);
+		}
 
-		await docPersistence.clearData();
-		docPersistence.destroy();
-		docYDoc.destroy();
+		const linkedContents = new Map<string, string>();
+		const files = await fileStoreService.getAllFiles(false, false, false);
 
-		await new Promise<void>((resolve) => setTimeout(resolve, 100));
-
-		return new Promise<void>((resolve, reject) => {
-			try {
-				const freshDoc = new Y.Doc();
-				const freshPersistence = new IndexeddbPersistence(collection, freshDoc);
-
-				freshPersistence.once('synced', () => {
-					Y.applyUpdate(freshDoc, yjsState);
-
-					setTimeout(() => {
-						freshPersistence.destroy();
-						freshDoc.destroy();
-						resolve();
-					}, 500);
-				});
-			} catch (error) {
-				reject(error);
+		for (const file of files) {
+			if (
+				file.type !== 'file' ||
+				!file.documentId ||
+				file.content === undefined ||
+				file.isBinary ||
+				isBinaryFile(file.path)
+			) {
+				continue;
 			}
-		});
+
+			const content =
+				typeof file.content === 'string'
+					? file.content
+					: file.content instanceof ArrayBuffer
+						? new TextDecoder().decode(file.content)
+						: undefined;
+
+			if (content !== undefined) {
+				linkedContents.set(file.documentId, content);
+			}
+		}
+
+		return linkedContents;
 	}
 
 	private async createMetadataDocument(
@@ -417,10 +434,10 @@ export class ProjectDataService {
 
 		try {
 			// Import the file storage service
-			const { fileStorageService } = await import('./FileStorageService');
+			const { fileStoreService } = await import('./FileStoreService');
 
 			// Initialize the service for this project
-			await fileStorageService.initialize(`yjs:${docId}`);
+			await fileStoreService.initialize(`yjs:${docId}`);
 
 			const filesToStore = files.map((file) => {
 				const content =
@@ -442,22 +459,22 @@ export class ProjectDataService {
 				};
 			});
 
-			await fileStorageService.batchStoreFiles(filesToStore, {
+			await fileStoreService.batchStoreFiles(filesToStore, {
 				showConflictDialog: false,
 				preserveTimestamp: true,
 				preserveDeletionStatus: false,
 			});
 
 			moduleLog.info(
-				`Successfully imported ${files.length} files for project ${projectId} using fileStorageService`,
+				`Successfully imported ${files.length} files for project ${projectId} using fileStoreService`,
 			);
 		} catch (error) {
 			moduleLog.error(
-				'Error importing files via fileStorageService, falling back to direct DB access:',
+				'Error importing files via fileStoreService, falling back to direct DB access:',
 				error,
 			);
 
-			// Fallback to direct database access if fileStorageService fails
+			// Fallback to direct database access if fileStoreService fails
 			const dbName = `texlyre-project-${docId}`;
 			const db = await openDB(dbName, 1, {
 				upgrade(db) {
@@ -508,9 +525,9 @@ export class ProjectDataService {
 	): Promise<void> {
 		if (files.length === 0) return;
 
-		const { fileStorageService } = await import('./FileStorageService');
+		const { fileStoreService } = await import('./FileStoreService');
 
-		await fileStorageService.initialize(`yjs:${projectId}`);
+		await fileStoreService.initialize(`yjs:${projectId}`);
 
 		const filesToStore: FileNode[] = files.map((file) => {
 			const content =
@@ -532,7 +549,7 @@ export class ProjectDataService {
 			};
 		});
 
-		await fileStorageService.batchStoreFiles(filesToStore, {
+		await fileStoreService.batchStoreFiles(filesToStore, {
 			showConflictDialog: false,
 			preserveTimestamp: true,
 			preserveDeletionStatus: false,
