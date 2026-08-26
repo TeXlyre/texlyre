@@ -355,13 +355,13 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			const buttonSelectors =
 				projectType === 'typst'
 					? [
-						'.header-typst-compile-button .compile-button',
-						'.header-compile-button .compile-button',
-					]
+							'.header-typst-compile-button .compile-button',
+							'.header-compile-button .compile-button',
+						]
 					: [
-						'.header-compile-button .compile-button',
-						'.header-typst-compile-button .compile-button',
-					];
+							'.header-compile-button .compile-button',
+							'.header-typst-compile-button .compile-button',
+						];
 
 			clickWhenReady(buttonSelectors);
 		};
