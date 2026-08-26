@@ -47,3 +47,51 @@
 	font-size: 0.75rem;
 	white-space: nowrap;
 }
+
+[data-layout="texlyre-wide"] footer .footer-links-toggle {
+	display: none;
+}
+
+@media (max-width: 1280px) {
+	[data-layout="texlyre-wide"] footer:has(.footer-chat) .texlyre-info {
+		position: relative;
+		width: fit-content;
+		justify-content: center;
+	}
+
+	[data-layout="texlyre-wide"] footer:has(.footer-chat) .footer-links-toggle {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		height: 1.2em;
+		padding: 0;
+		margin: 0;
+		background: none;
+		border: 0;
+		color: var(--text-secondary);
+		font: inherit;
+		line-height: 1;
+		cursor: pointer;
+	}
+
+	[data-layout="texlyre-wide"] footer:has(.footer-chat) .footer-links {
+		display: none;
+	}
+
+	[data-layout="texlyre-wide"] footer:has(.footer-chat) .footer-links.open {
+		position: absolute;
+		bottom: calc(100% + var(--texlyre-spacing-xs));
+		left: 50%;
+		translate: -50% 0;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--texlyre-spacing-xs);
+		width: max-content;
+		padding: var(--texlyre-spacing-sm);
+		background-color: var(--pico-background);
+		border: 1px solid var(--accent-border);
+		border-radius: var(--radius-sm);
+		box-shadow: var(--shadow-md);
+		z-index: var(--z-dropdown);
+	}
+}

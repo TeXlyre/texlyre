@@ -1,5 +1,6 @@
 // src/components/common/FooterLinks.tsx
 import type React from 'react';
+import { useState } from 'react';
 
 import { t } from '@/i18n';
 import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
@@ -15,11 +16,24 @@ const FooterLinks: React.FC<FooterLinksProps> = ({
 	onShowShortcuts,
 }) => {
 	const { getSetting } = useSettings();
+	const [showLinks, setShowLinks] = useState(false);
 	const statusPageUrl = (getSetting('status-page-url')?.value as string) ?? '';
 
 	return (
 		<p className='texlyre-info'>
-			<span className='footer-links'>
+			<button
+				type='button'
+				className='footer-links-toggle'
+				onClick={() => setShowLinks((open) => !open)}
+				aria-expanded={showLinks}
+				aria-label={t('Options')}
+			>
+				⋯
+			</button>
+			<span
+				className={`footer-links ${showLinks ? 'open' : ''}`}
+				onClick={() => setShowLinks(false)}
+			>
 				{onShowShortcuts ? (
 					<>
 						<button

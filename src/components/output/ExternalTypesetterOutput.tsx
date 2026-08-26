@@ -5,6 +5,7 @@ import { createElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { t } from '@/i18n';
 import { fileStorageService } from '../../services/FileStorageService';
 import { useExternalTypesetter } from '../../hooks/useExternalTypesetter';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';
 import { useSourceMap } from '../../hooks/useSourceMap';
@@ -70,6 +71,7 @@ const ExternalTypesetterOutput: React.FC<ExternalTypesetterOutputProps> = ({
 	const rendererControllerRef = useRef<RendererController | null>(null);
 	const clickCountRef = useRef(0);
 	const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const outputTabsRef = useWheelScroll<HTMLDivElement>();
 
 	const tabs = useMemo(() => {
 		if (provider.ui?.renderers?.length) {
@@ -236,7 +238,7 @@ const ExternalTypesetterOutput: React.FC<ExternalTypesetterOutputProps> = ({
 			style={{ position: 'relative' }}
 		>
 			<div className='output-header'>
-				<div className='view-tabs'>
+				<div className='view-tabs scroll-x' ref={outputTabsRef}>
 					<button
 						className={`tab-button ${currentView === 'log' ? 'active' : ''}`}
 						onClick={() => currentView !== 'log' && toggleOutputView()}

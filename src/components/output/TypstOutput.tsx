@@ -6,6 +6,7 @@ import { t } from '@/i18n';
 import { fileStorageService } from '../../services/FileStorageService';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useTypst } from '../../hooks/useTypst';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { useSourceMap } from '../../hooks/useSourceMap';
 import { useProperties } from '../../hooks/useProperties';
 import { useSettings } from '../../hooks/useSettings';
@@ -65,6 +66,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 	const { getSetting } = useSettings();
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const propertiesRegistered = useRef(false);
+	const outputTabsRef = useWheelScroll<HTMLDivElement>();
 
 	const [visualizerHeight, setVisualizerHeight] = useState(300);
 	const [visualizerCollapsed, setVisualizerCollapsed] = useState(false);
@@ -434,7 +436,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 	return (
 		<div className={`typst-output ${className}`}>
 			<div className='output-header'>
-				<div className='view-tabs'>
+				<div className='view-tabs scroll-x' ref={outputTabsRef}>
 					<button
 						className={`tab-button ${currentView === 'log' ? 'active' : ''}`}
 						onClick={() => currentView !== 'log' && toggleOutputView()}

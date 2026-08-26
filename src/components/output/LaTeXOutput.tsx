@@ -11,6 +11,7 @@ import { t } from '@/i18n';
 import { fileStorageService } from '../../services/FileStorageService';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useLaTeX } from '../../hooks/useLaTeX';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { useSourceMap } from '../../hooks/useSourceMap';
 import { useProperties } from '../../hooks/useProperties';
 import { useSettings } from '../../hooks/useSettings';
@@ -78,6 +79,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 	const { getSetting } = useSettings();
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const propertiesRegistered = useRef(false);
+	const outputTabsRef = useWheelScroll<HTMLDivElement>();
 
 	const projectId = fileStorageService.getCurrentProjectId() || undefined;
 
@@ -451,7 +453,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 			style={{ position: 'relative' }}
 		>
 			<div className='output-header'>
-				<div className='view-tabs'>
+				<div className='view-tabs scroll-x' ref={outputTabsRef}>
 					<button
 						className={`tab-button ${currentView === 'log' ? 'active' : ''}`}
 						onClick={() => currentView !== 'log' && toggleOutputView()}
