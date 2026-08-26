@@ -82,6 +82,9 @@ const Popover: React.FC<PopoverProps> = ({
 	const panelRef = useRef<HTMLDivElement>(null);
 	const [placement, setPlacement] = useState<Placement | null>(null);
 
+	const parsedMaxHeight = Number.parseFloat(String(style?.maxHeight ?? ''));
+	const heightLimit = Number.isFinite(parsedMaxHeight) ? parsedMaxHeight : 0;
+
 	const measure = useCallback(() => {
 		const panel = panelRef.current;
 		if (!panel) return;
@@ -94,7 +97,10 @@ const Popover: React.FC<PopoverProps> = ({
 
 		const rect = anchorEl.getBoundingClientRect();
 		const width = panel.offsetWidth;
-		const height = panel.scrollHeight;
+		const height =
+			heightLimit > 0
+				? Math.min(panel.scrollHeight, heightLimit)
+				: panel.scrollHeight;
 		const viewportWidth = window.innerWidth;
 		const viewportHeight = window.innerHeight;
 
@@ -163,7 +169,7 @@ const Popover: React.FC<PopoverProps> = ({
 		setPlacement((current) =>
 			samePlacement(current, blockPlacement) ? current : blockPlacement,
 		);
-	}, [anchor, axis, side, align, spacing, padding, clampHeight]);
+	}, [anchor, axis, side, align, spacing, padding, clampHeight, heightLimit]);
 
 	useLayoutEffect(() => {
 		if (!open) {
@@ -177,12 +183,17 @@ const Popover: React.FC<PopoverProps> = ({
 		const observer = panel ? new ResizeObserver(() => measure()) : null;
 		if (panel && observer) observer.observe(panel);
 
-		window.addEventListener('scroll', measure, true);
+		const handleScroll = (event: Event) => {
+			if (panelRef.current?.contains(event.target as Node)) return;
+			measure();
+		};
+
+		window.addEventListener('scroll', handleScroll, true);
 		window.addEventListener('resize', measure);
 
 		return () => {
 			observer?.disconnect();
-			window.removeEventListener('scroll', measure, true);
+			window.removeEventListener('scroll', handleScroll, true);
 			window.removeEventListener('resize', measure);
 		};
 	}, [open, measure]);
@@ -222,6 +233,7 @@ const Popover: React.FC<PopoverProps> = ({
 				left: `${placement?.left ?? 0}px`,
 				right: 'auto',
 				bottom: 'auto',
+				overscrollBehavior: 'contain',
 				...(placement?.maxHeight !== undefined
 					? { maxHeight: `${placement.maxHeight}px`, overflowY: 'auto' }
 					: {}),
