@@ -298,6 +298,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 								id: newDocId,
 								name: file.path,
 								content: '',
+								createdAt: Date.now(),
 							});
 							d.currentDocId = newDocId;
 							createdDocId = newDocId;

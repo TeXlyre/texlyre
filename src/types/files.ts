@@ -9,10 +9,32 @@ export interface FileNode {
 	documentId?: string;
 	isBinary?: boolean;
 	mimeType?: string;
+	createdAt?: number;
 	lastModified: number;
 	size?: number;
 	isDeleted?: boolean;
 	excludeFromSync?: boolean;
+}
+
+export interface DirectorySummary {
+	files: number;
+	directories: number;
+	size: number;
+}
+
+export interface FilePropertiesInfo {
+	name: string;
+	path: string;
+	type: string;
+	size?: number;
+	mimeType?: string;
+	isBinary: boolean;
+	documentId?: string;
+	createdAt?: number;
+	lastModified?: number;
+	lineCount?: number;
+	characterCount?: number;
+	directorySummary?: DirectorySummary;
 }
 
 export interface FilePathCache {

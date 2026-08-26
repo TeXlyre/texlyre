@@ -352,6 +352,9 @@ class FileStorageService {
 
 		const existingFile = await this.getFileByPath(file.path, true);
 
+		file.createdAt =
+			existingFile?.createdAt ?? file.createdAt ?? file.lastModified;
+
 		if (showDialog) {
 			if (
 				existingFile &&
@@ -502,6 +505,9 @@ class FileStorageService {
 			}
 
 			const existingFile = await this.getFileByPath(file.path, true);
+
+			file.createdAt =
+				existingFile?.createdAt ?? file.createdAt ?? file.lastModified;
 
 			if (existingFile) {
 				if (
@@ -1124,6 +1130,7 @@ class FileStorageService {
 			...file,
 			name: newName,
 			path: newPath,
+			createdAt: file.lastModified,
 		};
 	}
 
@@ -1217,6 +1224,7 @@ class FileStorageService {
 				path: file.path,
 				type: file.type,
 				documentId: file.documentId,
+				createdAt: file.createdAt,
 				lastModified: file.lastModified,
 				size: file.size,
 				isBinary: file.isBinary,

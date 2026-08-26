@@ -2,20 +2,11 @@
 import type React from 'react';
 
 import { t } from '@/i18n';
-import type { FileNode } from '../../types/files';
+import type { FileNode, FilePropertiesInfo } from '../../types/files';
+import { formatDate } from '../../utils/dateUtils';
 import { formatFileSize, isTemporaryFile } from '../../utils/fileUtils';
 import { FolderIcon, TempFileIcon } from '../common/Icons';
 import Modal from '../common/Modal';
-
-interface FilePropertiesInfo {
-	name: string;
-	path: string;
-	type: string;
-	size?: number;
-	mimeType?: string;
-	isBinary: boolean;
-	documentId?: string;
-}
 
 interface FileOperationsModalProps {
 	showPropertiesModal: boolean;
@@ -154,9 +145,44 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 								{formatFileSize(propertiesInfo.size)}
 							</div>
 						)}
+						{propertiesInfo.directorySummary && (
+							<>
+								<div className='property-item'>
+									<strong>{t('Contents')}:</strong>{' '}
+									{t('{files} files, {directories} folders', {
+										files: propertiesInfo.directorySummary.files,
+										directories: propertiesInfo.directorySummary.directories,
+									})}
+								</div>
+								{propertiesInfo.directorySummary.size > 0 && (
+									<div className='property-item'>
+										<strong>{t('Total Size')}:</strong>{' '}
+										{formatFileSize(propertiesInfo.directorySummary.size)}
+									</div>
+								)}
+							</>
+						)}
 						{propertiesInfo.mimeType && (
 							<div className='property-item'>
 								<strong>{t('MIME Type')}:</strong> {propertiesInfo.mimeType}
+							</div>
+						)}
+						{propertiesInfo.createdAt !== undefined && (
+							<div className='property-item'>
+								<strong>{t('Created')}:</strong>{' '}
+								{formatDate(propertiesInfo.createdAt)}
+							</div>
+						)}
+						{propertiesInfo.lastModified !== undefined && (
+							<div className='property-item'>
+								<strong>{t('Modified')}:</strong>{' '}
+								{formatDate(propertiesInfo.lastModified)}
+							</div>
+						)}
+						{propertiesInfo.lineCount !== undefined && (
+							<div className='property-item'>
+								<strong>{t('Lines')}:</strong> {propertiesInfo.lineCount} (
+								{propertiesInfo.characterCount} {t('characters')})
 							</div>
 						)}
 						<div className='property-item'>

@@ -36,6 +36,7 @@ export interface ProjectMetadata {
 export interface DocumentMetadata {
 	id: string;
 	name: string;
+	createdAt?: number;
 	lastModified: number;
 	hasYjsState: boolean;
 	hasReadableContent: boolean;
@@ -46,6 +47,7 @@ export interface FileMetadata {
 	name: string;
 	path: string;
 	type: 'file' | 'directory';
+	createdAt?: number;
 	lastModified: number;
 	size?: number;
 	mimeType?: string;
@@ -170,6 +172,7 @@ export class UnifiedDataStructureService {
 			name: file.name,
 			path: file.path,
 			type: file.type,
+			createdAt: file.createdAt,
 			lastModified: file.lastModified,
 			size: file.size,
 			mimeType: file.mimeType,

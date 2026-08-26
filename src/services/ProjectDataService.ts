@@ -117,6 +117,7 @@ export class ProjectDataService {
 					const docMetadata: DocumentMetadata = {
 						id: doc.id,
 						name: doc.name || `Document ${doc.id}`,
+						createdAt: doc.createdAt,
 						lastModified: Date.now(),
 						hasYjsState: true,
 						hasReadableContent: true,
@@ -375,6 +376,7 @@ export class ProjectDataService {
 							id: doc.id,
 							name: doc.name,
 							content: documentContents.get(doc.id)?.readableContent || '',
+							createdAt: doc.createdAt,
 						}));
 
 						dataMap.set('documents', docsArray);
@@ -429,6 +431,7 @@ export class ProjectDataService {
 					name: file.name,
 					path: file.path,
 					type: file.type as 'file' | 'directory',
+					createdAt: file.createdAt,
 					lastModified: file.lastModified,
 					size: file.size,
 					mimeType: file.mimeType,
@@ -474,6 +477,7 @@ export class ProjectDataService {
 					name: file.name,
 					path: file.path,
 					type: file.type,
+					createdAt: file.createdAt ?? file.lastModified,
 					lastModified: file.lastModified,
 					size: file.size,
 					mimeType: file.mimeType,
@@ -517,6 +521,7 @@ export class ProjectDataService {
 				name: file.name,
 				path: file.path,
 				type: file.type,
+				createdAt: file.createdAt,
 				lastModified: file.lastModified,
 				size: file.size || 0,
 				mimeType: file.mimeType,

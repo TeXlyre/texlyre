@@ -136,12 +136,15 @@ class FilePathCacheService {
 		);
 	}
 
-	async getLinkedFilePath(documentId: string): Promise<string> {
+	async getLinkedFile(documentId: string): Promise<FileNode | undefined> {
 		const cachedFiles = await this.getCachedFiles();
-		const linkedFile = this.flattenFiles(cachedFiles).find(
+		return this.flattenFiles(cachedFiles).find(
 			(file) => file.documentId === documentId,
 		);
-		return linkedFile?.path || '';
+	}
+
+	async getLinkedFilePath(documentId: string): Promise<string> {
+		return (await this.getLinkedFile(documentId))?.path || '';
 	}
 
 	updateCurrentFilePath(filePath: string, documentId?: string) {

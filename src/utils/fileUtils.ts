@@ -3,7 +3,7 @@
 import mime from 'mime';
 
 import { t } from '@/i18n';
-import type { FileNode } from '../types/files';
+import type { DirectorySummary, FileNode } from '../types/files';
 
 export function arrayBufferToString(buffer: ArrayBuffer | Uint8Array): string {
 	return new TextDecoder().decode(buffer);
@@ -965,6 +965,23 @@ export const sortFileTree = (
 			const result = compareNodes(a, b, field);
 			return direction === 'asc' ? result : -result;
 		});
+
+export const summarizeDirectory = (node: FileNode): DirectorySummary =>
+	(node.children ?? []).reduce<DirectorySummary>(
+		(summary, child) => {
+			if (child.type === 'directory') {
+				const nested = summarizeDirectory(child);
+				summary.directories += nested.directories + 1;
+				summary.files += nested.files;
+				summary.size += nested.size;
+			} else {
+				summary.files += 1;
+				summary.size += child.size ?? 0;
+			}
+			return summary;
+		},
+		{ files: 0, directories: 0, size: 0 },
+	);
 
 export const filterTemporaryFiles = (nodes: FileNode[]): FileNode[] =>
 	nodes
