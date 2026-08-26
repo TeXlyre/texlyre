@@ -48,6 +48,14 @@
 	flex-shrink: 0;
 }
 
+.output-header .view-tabs {
+	min-width: 0;
+}
+
+.output-header .tab-button {
+	white-space: nowrap;
+}
+
 .output-content {
 	flex: 1;
 	display: flex;

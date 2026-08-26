@@ -201,6 +201,12 @@
 	color: var(--pico-primary);
 }
 
+.file-explorer-actions > .action-btn.active {
+	background: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+	border-radius: var(--radius-sm);
+}
+
 .action-menu {
 	position: relative;
 	display: none;

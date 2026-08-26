@@ -14,7 +14,7 @@ const createTeXlyreWideTheme = (): ThemePlugin => {
 		id: 'texlyre-wide',
 		name: 'TeXlyre Wide Theme',
 		containerClass: 'texlyre-wide',
-		defaultFileExplorerWidth: 320,
+		defaultFileExplorerWidth: 400,
 		minFileExplorerWidth: 250,
 		maxFileExplorerWidth: 1250,
 		stylesheetPath: './styles/layout.css',

@@ -1396,7 +1396,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					<ResizablePanel
 						direction='horizontal'
 						width={latexOutputWidth}
-						minWidth={540}
+						minWidth={300}
 						maxWidth='80%'
 						alignment='start'
 						onResize={handleLatexOutputWidthResize}
@@ -1422,7 +1422,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					<ResizablePanel
 						direction='horizontal'
 						width={typstOutputWidth}
-						minWidth={540}
+						minWidth={300}
 						maxWidth='80%'
 						alignment='start'
 						onResize={handleTypstOutputWidthResize}
@@ -1447,7 +1447,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					<ResizablePanel
 						direction='horizontal'
 						width={externalOutputWidth}
-						minWidth={540}
+						minWidth={300}
 						maxWidth='80%'
 						alignment='start'
 						onResize={handleExternalOutputWidthResize}

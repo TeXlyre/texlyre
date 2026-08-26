@@ -4,6 +4,10 @@
 	border-top: solid 1px var(--pico-background);
 }
 
+.footer-links-toggle {
+	display: none;
+}
+
 .footer-links a {
 	color: var(--text-secondary);
 	text-decoration: none;
