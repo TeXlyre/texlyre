@@ -290,12 +290,16 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		const awareness = collabService.getAwareness(projectId, 'file_sync');
 		if (!awareness) return;
 
-		const connectedPeers = new Set(Array.from(awareness.getStates().keys()));
+		const connectedPeers = new Set(
+			Array.from(awareness.getStates().values())
+				.map((state) => state.user?.id)
+				.filter(Boolean),
+		);
 		const fileSyncMap = ydocRef.current.getMap('fileSync');
 
 		const disconnectedPeers: string[] = [];
 		fileSyncMap.forEach((_, peerId) => {
-			if (peerId !== user?.id && !connectedPeers.has(Number.parseInt(peerId))) {
+			if (peerId !== user?.id && !connectedPeers.has(peerId)) {
 				disconnectedPeers.push(peerId);
 			}
 		});
@@ -831,6 +835,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				autoReconnect: autoReconnectSetting.value as boolean,
 				awarenessTimeout: (awarenessTimeoutSetting.value as number) * 1000,
 			});
+
+			collabService.setUserInfo(projectId, 'file_sync', user);
 
 			ydocRef.current = doc;
 			initializedProjectIdRef.current = projectId;
