@@ -1,0 +1,13 @@
+{
+	"id": "org",
+	"scopeName": "source.org",
+	"extensions": [".org"],
+	"grammars": [{ "scopeName": "source.org", "file": "org.tmLanguage.json" }],
+	"languageData": {
+		"commentTokens": {
+			"line": "#",
+			"block": { "open": "#+BEGIN_COMMENT\n", "close": "\n#+END_COMMENT" }
+		},
+		"closeBrackets": { "brackets": ["{", "[", "(", "\""] }
+	}
+}

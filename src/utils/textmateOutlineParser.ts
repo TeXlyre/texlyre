@@ -41,7 +41,7 @@ const TYPE_BY_LEVEL = [
 function levelForToken(scopes: string[], line: string): number {
 	for (const scope of scopes) {
 		const match = LEVEL_IN_SCOPE.exec(scope);
-		if (match) return Number(match[1]);
+		if (match) return Math.max(Number(match[1]) - 1, 0);
 	}
 
 	const command = /\\(\w+)/.exec(line);
@@ -62,6 +62,21 @@ function headingForLine(
 	stack: ReturnType<IGrammar['tokenizeLine']>['ruleStack'],
 ) {
 	const result = grammar.tokenizeLine(line, stack);
+	const orgHeading = /^\s*(\*+)\s+(.+?)\s*$/.exec(line);
+
+	if (
+		orgHeading &&
+		result.tokens.some((token) => token.scopes.includes('source.org'))
+	) {
+		return {
+			stack: result.ruleStack,
+			heading: {
+				title: orgHeading[2].trim(),
+				level: orgHeading[1].length - 1,
+			},
+		};
+	}
+
 	const parts: string[] = [];
 	let level: number | null = null;
 
