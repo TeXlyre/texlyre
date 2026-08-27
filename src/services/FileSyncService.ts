@@ -1,5 +1,10 @@
 // src/services/FileSyncService.ts
-import { FilePizzaDownloader, FilePizzaUploader } from 'filepizza-client';
+import {
+	type CompletedFile,
+	type FileInfo,
+	FilePizzaDownloader,
+	FilePizzaUploader,
+} from 'filepizza-client';
 import { nanoid } from 'nanoid';
 
 import { t } from '@/i18n';
@@ -696,7 +701,7 @@ class FileSyncService {
 						);
 					});
 
-					downloader.on('info', (filesInfo) => {
+					downloader.on('info', (filesInfo: FileInfo[]) => {
 						moduleLog.info(
 							`Received file info, ${filesInfo.length} files available`,
 						);
@@ -724,7 +729,7 @@ class FileSyncService {
 						checkIfAllFilesReceived();
 					});
 
-					downloader.on('complete', (files) => {
+					downloader.on('complete', (files: CompletedFile[]) => {
 						moduleLog.info(
 							`Download complete event, files array length: ${files.length}`,
 						);

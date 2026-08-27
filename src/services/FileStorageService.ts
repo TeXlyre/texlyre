@@ -54,6 +54,13 @@ class FileStorageService {
 		return this.projectId;
 	}
 
+	private requireDb(): IDBPDatabase {
+		if (!this.db) {
+			throw new Error(t('File storage is not initialized'));
+		}
+		return this.db;
+	}
+
 	setProjectId(projectId: string): void {
 		this.projectId = projectId;
 	}
@@ -157,7 +164,7 @@ class FileStorageService {
 		let removedCount = 0;
 		let keptCount = 0;
 
-		const tx = this.db?.transaction(this.FILES_STORE, 'readwrite');
+		const tx = this.requireDb().transaction(this.FILES_STORE, 'readwrite');
 		const store = tx.objectStore(this.FILES_STORE);
 
 		try {
@@ -603,7 +610,7 @@ class FileStorageService {
 
 		if (filesToStore.length > 0) {
 			await this.guardWrite(async () => {
-				const tx = this.db?.transaction(this.FILES_STORE, 'readwrite');
+				const tx = this.requireDb().transaction(this.FILES_STORE, 'readwrite');
 				const store = tx.objectStore(this.FILES_STORE);
 
 				for (const file of filesToStore) {
@@ -666,7 +673,7 @@ class FileStorageService {
 		}
 
 		if (hardDelete) {
-			const tx = this.db?.transaction(this.FILES_STORE, 'readwrite');
+			const tx = this.requireDb().transaction(this.FILES_STORE, 'readwrite');
 			const store = tx.objectStore(this.FILES_STORE);
 
 			for (const file of filesToDelete) {
@@ -684,7 +691,7 @@ class FileStorageService {
 				documentId: allowLinkedFileDelete ? file.documentId : undefined,
 			}));
 
-			const tx = this.db?.transaction(this.FILES_STORE, 'readwrite');
+			const tx = this.requireDb().transaction(this.FILES_STORE, 'readwrite');
 			const store = tx.objectStore(this.FILES_STORE);
 			for (const file of filesToUpdate) {
 				await store.put(file);
@@ -865,7 +872,7 @@ class FileStorageService {
 
 		filesToDelete.push(sourceFile.id);
 
-		const tx = this.db?.transaction(this.FILES_STORE, 'readwrite');
+		const tx = this.requireDb().transaction(this.FILES_STORE, 'readwrite');
 		const store = tx.objectStore(this.FILES_STORE);
 
 		try {
@@ -924,7 +931,7 @@ class FileStorageService {
 			}
 		}
 
-		const tx = this.db?.transaction(this.FILES_STORE, 'readwrite');
+		const tx = this.requireDb().transaction(this.FILES_STORE, 'readwrite');
 		const store = tx.objectStore(this.FILES_STORE);
 
 		for (const file of filesToUnlink) {
@@ -959,7 +966,9 @@ class FileStorageService {
 		includeDeleted = false,
 	): Promise<FileNode | undefined> {
 		if (!this.db) await this.initialize();
-		const index = this.db?.transaction(this.FILES_STORE).store.index('path');
+		const index = this.requireDb()
+			.transaction(this.FILES_STORE)
+			.store.index('path');
 		let cursor = await index.openCursor(IDBKeyRange.only(path));
 
 		while (cursor) {
@@ -983,7 +992,7 @@ class FileStorageService {
 	): Promise<FileNode[]> {
 		if (!this.db) await this.initialize();
 
-		const tx = this.db?.transaction(this.FILES_STORE);
+		const tx = this.requireDb().transaction(this.FILES_STORE);
 		const index = tx.store.index('path');
 		const files: FileNode[] = [];
 
@@ -1020,7 +1029,7 @@ class FileStorageService {
 	async getChildrenByPath(path: string): Promise<FileNode[]> {
 		if (!this.db) await this.initialize();
 
-		const tx = this.db?.transaction(this.FILES_STORE);
+		const tx = this.requireDb().transaction(this.FILES_STORE);
 		const index = tx.store.index('path');
 		const files: FileNode[] = [];
 
@@ -1049,7 +1058,7 @@ class FileStorageService {
 		includeContent = true,
 	): Promise<FileNode[]> {
 		if (!this.db) await this.initialize();
-		const allFiles = await this.db?.getAll(this.FILES_STORE);
+		const allFiles = await this.requireDb().getAll(this.FILES_STORE);
 
 		let filteredFiles = allFiles;
 
