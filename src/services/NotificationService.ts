@@ -16,7 +16,7 @@ export interface NotificationOptions<F extends string = string> {
 class NotificationService {
 	private activeOperations = new Map<
 		string,
-		{ type: string; message: string; timeoutId?: NodeJS.Timeout }
+		{ type: string; message: string; timeoutId?: ReturnType<typeof setTimeout> }
 	>();
 
 	show(

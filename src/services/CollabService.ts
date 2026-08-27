@@ -383,7 +383,7 @@ class CollabService {
 		string,
 		{
 			connections: Array<{ docId: string; collectionName: string }>;
-			timeoutId: NodeJS.Timeout;
+			timeoutId: ReturnType<typeof setTimeout>;
 		}
 	> = new Map();
 
@@ -546,24 +546,25 @@ class CollabService {
 		let container: AnyDocContainer | undefined;
 
 		if (!wasConnected) {
-			const { doc, provider } = this.connect(projectId, collectionName);
+			const { provider } = this.connect(projectId, collectionName);
 			container = this.getDocContainer(projectId, collectionName);
 
-			if (container?.persistence) {
+			const persistence = container?.persistence;
+			if (persistence) {
 				await new Promise<void>((resolve) => {
 					const timeout = setTimeout(resolve, 2000);
 
 					const handleSynced = () => {
 						clearTimeout(timeout);
-						container!.persistence.off('synced', handleSynced);
+						persistence.off('synced', handleSynced);
 						resolve();
 					};
 
-					container.persistence.on('synced', handleSynced);
+					persistence.on('synced', handleSynced);
 
-					if (container.persistence.synced) {
+					if (persistence.synced) {
 						clearTimeout(timeout);
-						container.persistence.off('synced', handleSynced);
+						persistence.off('synced', handleSynced);
 						resolve();
 					}
 				});

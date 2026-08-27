@@ -85,9 +85,7 @@ class WebrtcProviderRegistry {
 	}
 
 	getRefCount(roomName: string): number {
-		return this.providers.has(roomName)
-			? this.providers.get(roomName)?.refCount
-			: 0;
+		return this.providers.get(roomName)?.refCount ?? 0;
 	}
 }
 
