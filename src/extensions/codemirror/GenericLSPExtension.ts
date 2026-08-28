@@ -18,6 +18,11 @@ import { genericLSPService } from '../../services/GenericLSPService';
 import { maskAnnotationText } from './annotations/annotationMasking';
 import { createSemanticTokensExtension } from './SemanticTokensLSPExtension';
 
+export interface LSPDiagnostic extends Diagnostic {
+	code?: string | number;
+	data?: unknown;
+}
+
 function detectLanguageId(fileName: string, client?: LSPClient): string {
 	const ext = fileName.split('.').pop()?.toLowerCase() || '';
 
@@ -76,8 +81,8 @@ function sendNotification(client: LSPClient, method: string, params: any) {
 
 function createLSPDiagnosticsExtension(fileName: string): Extension {
 	const fileUri = `file:///${fileName}`;
-	const diagnosticsByConfig = new Map<string, Diagnostic[]>();
-	let mergedDiagnostics: Diagnostic[] = [];
+	const diagnosticsByConfig = new Map<string, LSPDiagnostic[]>();
+	let mergedDiagnostics: LSPDiagnostic[] = [];
 
 	const diagnosticsPlugin = ViewPlugin.fromClass(
 		class {
@@ -95,7 +100,7 @@ function createLSPDiagnosticsExtension(fileName: string): Extension {
 						if (normalize(params.uri) !== normalize(fileUri)) return;
 
 						const doc = this.view.state.doc;
-						const mapped: Diagnostic[] = (params.diagnostics || []).map(
+						const mapped: LSPDiagnostic[] = (params.diagnostics || []).map(
 							(d: any) => {
 								const fromLine = Math.min(d.range.start.line, doc.lines - 1);
 								const toLine = Math.min(d.range.end.line, doc.lines - 1);
@@ -119,7 +124,9 @@ function createLSPDiagnosticsExtension(fileName: string): Extension {
 										d.source ||
 										genericLSPService.getConfigName(configId) ||
 										configId,
-								} satisfies Diagnostic;
+									...(d.code !== undefined ? { code: d.code } : {}),
+									...(d.data !== undefined ? { data: d.data } : {}),
+								} satisfies LSPDiagnostic;
 							},
 						);
 
@@ -133,7 +140,7 @@ function createLSPDiagnosticsExtension(fileName: string): Extension {
 								mergedDiagnostics.map((d) => d.source).filter(Boolean),
 							);
 
-							const preserved: Diagnostic[] = [];
+							const preserved: LSPDiagnostic[] = [];
 							forEachDiagnostic(this.view.state, (d, from, to) => {
 								if (!lspSources.has(d.source ?? '')) {
 									preserved.push({ ...d, from, to });
