@@ -265,6 +265,8 @@ TeXlyre builds upon several key technologies:
 - **[WebPerl](https://github.com/haukex/webperl)** - Perl interpreter compiled to WebAssembly
 - **[wasm-bindgen](https://github.com/wasm-bindgen/wasm-bindgen)** - Rust/Wasm interoperability
 
+Third-party logo and icon attributions: http://texlyre.org/docs/attributions.
+
 Development of TeXlyre was assisted by **Anthropic Claude** for debugging and architectural guidance.
 
 

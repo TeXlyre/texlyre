@@ -1,4 +1,5 @@
 // extras/viewers/milkdown/Icon.tsx
+// Official Milkdown artwork. Attribution: http://texlyre.org/docs/attributions
 import type React from 'react';
 
 // export const MilkdownIcon: React.FC = () => (

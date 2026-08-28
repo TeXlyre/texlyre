@@ -1,4 +1,5 @@
 // extras/viewers/drawio/Icon.tsx
+// Official draw.io artwork. Attribution: http://texlyre.org/docs/attributions
 import type React from 'react';
 
 // export const DrawioIcon: React.FC = () => (
