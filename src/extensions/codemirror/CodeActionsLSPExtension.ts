@@ -13,6 +13,7 @@ import {
 import type { LSPClient } from '@codemirror/lsp-client';
 
 import { genericLSPService } from '../../services/GenericLSPService';
+import type { LSPDiagnostic } from './GenericLSPExtension';
 
 interface WorkspaceEdit {
 	changes?: Record<string, TextEdit[]>;
@@ -50,6 +51,8 @@ interface LspDiagnostic {
 	message: string;
 	severity?: number;
 	source?: string;
+	code?: string | number;
+	data?: unknown;
 }
 
 interface ResolvedAction {
@@ -97,6 +100,7 @@ function getDiagnosticsAtPosition(state: any, pos: number): LspDiagnostic[] {
 	const doc = state.doc;
 	cmForEachDiagnostic(state, (d, from, to) => {
 		if (pos >= from && pos <= to) {
+			const lsp = d as LSPDiagnostic;
 			results.push({
 				range: {
 					start: offsetToPos(doc, from),
@@ -105,6 +109,8 @@ function getDiagnosticsAtPosition(state: any, pos: number): LspDiagnostic[] {
 				message: d.message,
 				severity: d.severity === 'error' ? 1 : d.severity === 'warning' ? 2 : 3,
 				source: d.source,
+				...(lsp.code !== undefined ? { code: lsp.code } : {}),
+				...(lsp.data !== undefined ? { data: lsp.data } : {}),
 			});
 		}
 	});
