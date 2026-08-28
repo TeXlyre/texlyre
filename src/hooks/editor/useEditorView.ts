@@ -58,8 +58,6 @@ import {
 	getGenericLSPExtensionsForFile,
 	getGenericLSPCompletionSources,
 } from '../../extensions/codemirror/GenericLSPExtension';
-import { createCodeActionsExtension } from '../../extensions/codemirror/CodeActionsLSPExtension';
-import { createSignatureHelpExtension } from '../../extensions/codemirror/SignatureHelpLSPExtension';
 import {
 	createToolbarController,
 	hasToolbarSupport,
@@ -393,11 +391,25 @@ export const useEditorView = (
 	const buildLanguageExtension = (info: FileTypeInfo): Extension[] => {
 		if (!getSyntaxHighlightingEnabled()) return [];
 
+		const { builtinDiagnostics, builtinTooltips } =
+			editorSettings.languageFeatures;
+
 		return createLanguageExtension(info.fileType, {
 			fileName,
 			detectedByContent: info.detectedByContent,
+			enableLinting: builtinDiagnostics,
+			enableTooltips: builtinTooltips,
 		});
 	};
+
+	const buildHighlightExtension = (): Extension =>
+		getSyntaxHighlightingEnabled() ||
+		editorSettings.languageFeatures.lspHighlighting
+			? resolveHighlightTheme(
+					editorSettings.highlightTheme || 'auto',
+					currentVariant,
+				)
+			: [];
 
 	const buildLanguageSpecificExtensions = (
 		info: FileTypeInfo,
@@ -408,6 +420,7 @@ export const useEditorView = (
 
 		if (!info.isStructured) return extensions;
 
+		const { builtinCompletion } = editorSettings.languageFeatures;
 		extensions.push(createLinkNavigationExtension(fileName, content));
 
 		if (info.isLatex || info.isTypst || info.isMarkdown) {
@@ -429,20 +442,25 @@ export const useEditorView = (
 				}
 			}
 
-			completionSources.push(enhancedCompletionSource);
+			if (builtinCompletion) {
+				completionSources.push(enhancedCompletionSource);
 
-			if (info.isLatex) {
-				completionSources.push(latexCompletionSource(true));
-			} else if (info.isTypst) {
-				completionSources.push(typstCompletionSource);
+				if (info.isLatex) {
+					completionSources.push(latexCompletionSource(true));
+				} else if (info.isTypst) {
+					completionSources.push(typstCompletionSource);
+				}
 			}
 		} else if (info.isBib) {
 			const [stateExtensions, filePathPlugin, enhancedCompletionSource] =
 				createFilePathAutocompleteExtension('');
 
 			extensions.push(stateExtensions, filePathPlugin);
-			completionSources.push(enhancedCompletionSource);
-			completionSources.push(bibtexCompletionSource);
+
+			if (builtinCompletion) {
+				completionSources.push(enhancedCompletionSource);
+				completionSources.push(bibtexCompletionSource);
+			}
 		}
 
 		return extensions;
@@ -656,14 +674,6 @@ export const useEditorView = (
 			toolbar: toolbarComp,
 		} = compartmentsRef.current;
 
-		const buildHighlightExtension = (): Extension =>
-			getSyntaxHighlightingEnabled()
-				? resolveHighlightTheme(
-						editorSettings.highlightTheme || 'auto',
-						currentVariant,
-					)
-				: [];
-
 		if (info.isLatex || info.isTypst) {
 			extensions.push(
 				createListingsExtension(info.fileType as 'latex' | 'typst'),
@@ -684,10 +694,18 @@ export const useEditorView = (
 		);
 
 		if (fileName) {
-			extensions.push(...getGenericLSPExtensionsForFile(fileName));
-			completionSources.push(...getGenericLSPCompletionSources(fileName));
-			extensions.push(createCodeActionsExtension(fileName));
-			extensions.push(createSignatureHelpExtension(fileName));
+			extensions.push(
+				...getGenericLSPExtensionsForFile(
+					fileName,
+					editorSettings.languageFeatures,
+				),
+			);
+			completionSources.push(
+				...getGenericLSPCompletionSources(
+					fileName,
+					editorSettings.languageFeatures,
+				),
+			);
 		}
 
 		if (info.isLatex || info.isTypst || info.isBib) {
@@ -713,8 +731,7 @@ export const useEditorView = (
 		if (info.isStructured) {
 			extensions.push(
 				autocompletion({
-					override:
-						completionSources.length > 0 ? completionSources : undefined,
+					override: completionSources,
 					maxRenderedOptions: 20,
 					closeOnBlur: false,
 				}),
@@ -872,14 +889,7 @@ export const useEditorView = (
 			effects: [
 				base.reconfigure(buildBaseExtensions()),
 				language.reconfigure(buildLanguageExtension(info)),
-				highlight.reconfigure(
-					getSyntaxHighlightingEnabled()
-						? resolveHighlightTheme(
-								editorSettings.highlightTheme || 'auto',
-								currentVariant,
-							)
-						: [],
-				),
+				highlight.reconfigure(buildHighlightExtension()),
 				languageSpecific.reconfigure(
 					buildLanguageSpecificExtensions(
 						info,
@@ -903,17 +913,13 @@ export const useEditorView = (
 
 		view.dispatch({
 			effects: compartmentsRef.current.highlight.reconfigure(
-				getSyntaxHighlightingEnabled()
-					? resolveHighlightTheme(
-							editorSettings.highlightTheme || 'auto',
-							currentVariant,
-						)
-					: [],
+				buildHighlightExtension(),
 			),
 		});
 	}, [
 		currentVariant,
 		editorSettings.highlightTheme,
+		editorSettings.languageFeatures.lspHighlighting,
 		getSyntaxHighlightingEnabled,
 	]);
 
