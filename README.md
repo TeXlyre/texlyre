@@ -267,6 +267,12 @@ TeXlyre builds upon several key technologies:
 
 Development of TeXlyre was assisted by **Anthropic Claude** for debugging and architectural guidance.
 
+
+## Contributing 
+[Get started with TeXlyre](https://texlyre.org/texlyre/) 
+**or** 
+[contribute to the project with bug fixes, new features, plugins, and translations](CONTRIBUTING.md).
+
 ## License
 
 TeXlyre is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
@@ -283,7 +289,3 @@ See [LICENSE](LICENSE) for the complete license text.
 
 ---
 
-**Ready to start collaborating?** 
-[Get started with TeXlyre](https://texlyre.org/texlyre/) 
-**or** 
-[contribute to the project with bug fixes, new features, plugins, and translations](CONTRIBUTING.md).
