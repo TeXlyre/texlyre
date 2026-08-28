@@ -1,5 +1,6 @@
 .external-outline,
 .latex-outline,
+.lsp-outline,
 .textmate-outline,
 .typst-outline {
 	border-top: 1px solid var(--accent-border);
@@ -15,6 +16,7 @@
 
 .external-outline-header,
 .latex-outline-header,
+.lsp-outline-header,
 .textmate-outline-header,
 .typst-outline-header {
 	display: flex;
