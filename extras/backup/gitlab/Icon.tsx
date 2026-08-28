@@ -6,13 +6,20 @@ export const GitLabIcon: React.FC = () => (
 		xmlns='http://www.w3.org/2000/svg'
 		width='16'
 		height='16'
-		viewBox='0 0 24 24'
+		viewBox='0 0 16 16'
 		fill='none'
 		stroke='currentColor'
-		strokeWidth='2'
+		strokeWidth='1.5'
 		strokeLinecap='round'
 		strokeLinejoin='round'
+		aria-hidden='true'
+		focusable='false'
 	>
-		<path d='m22 13.29-3.33-10a.42.42 0 0 0-.14-.18.38.38 0 0 0-.22-.07.42.42 0 0 0-.23.07.42.42 0 0 0-.14.18l-2.26 6.67H8.32L6.1 3.26a.42.42 0 0 0-.1-.18.38.38 0 0 0-.26-.07.39.39 0 0 0-.23.07.42.42 0 0 0-.14.18L2 13.29a.74.74 0 0 0 .27.83L12 21l9.69-6.88a.71.71 0 0 0 .31-.83Z' />
+		<path d='M2.25 4.75v6.5A1.75 1.75 0 0 0 4 13h8a1.75 1.75 0 0 0 1.75-1.75V6.5A1.75 1.75 0 0 0 12 4.75H8L6.5 3.25H4A1.75 1.75 0 0 0 2.25 5' />
+		<circle cx='5.25' cy='7.15' r='.65' />
+		<circle cx='5.25' cy='10.65' r='.65' />
+		<circle cx='10.25' cy='8.15' r='.65' />
+		<path d='M5.25 7.8V10' />
+		<path d='M5.25 9.15h1.35c1.55 0 2.15-1 3-1' />
 	</svg>
 );

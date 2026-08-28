@@ -1,4 +1,5 @@
 // extras/viewers/tikz/Icon.tsx
+// Official TikZ Editor artwork. Attribution: http://texlyre.org/docs/attributions
 import type React from 'react';
 
 export const TikzIcon: React.FC<{ className?: string }> = ({ className }) => (

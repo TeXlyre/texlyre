@@ -1,4 +1,5 @@
 // extras/bibliography/jabref/Icon.tsx
+// Official JabRef artwork. Attribution: http://texlyre.org/docs/attributions
 import type React from 'react';
 
 export const JabRefIcon: React.FC = () => (

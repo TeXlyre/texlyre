@@ -284,6 +284,14 @@ footer {
 	filter: drop-shadow(0 0 2em var(--pico-primary-focus));
 }
 
+.brand-icon--monochrome {
+	color: #000;
+}
+
+[data-theme-mode="dark"] .brand-icon--monochrome {
+	color: #fff;
+}
+
 .loading-spinner {
 	position: relative;
 	border: 4px solid rgba(0, 0, 0, 0.1);

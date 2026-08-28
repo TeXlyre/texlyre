@@ -1,4 +1,5 @@
 // extras/bibliography/zotero/Icons.tsx
+// Official Zotero artwork. Attribution: http://texlyre.org/docs/attributions
 import type React from 'react';
 
 export const ZoteroIcon: React.FC = () => (
@@ -7,6 +8,7 @@ export const ZoteroIcon: React.FC = () => (
 		width='16'
 		height='16'
 		viewBox='0 0 30 24'
+		className='brand-icon--monochrome'
 		fill='currentColor'
 	>
 		<path d='M21.231 2.462 7.18 20.923h14.564V24H2.256v-2.462L16.308 3.076H2.975V0h18.256v2.462z' />
