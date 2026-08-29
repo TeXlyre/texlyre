@@ -154,7 +154,11 @@ function patchAnnotationRanges(parser: RangedParser): void {
 	patchedParsers.add(key);
 }
 
-export function safeTypst(): LanguageSupport {
+export interface SafeTypstOptions {
+	enableLinting?: boolean;
+}
+
+export function safeTypst(options: SafeTypstOptions = {}): LanguageSupport {
 	const support = typst_lezer();
 
 	patchAnnotationRanges(support.language.parser as unknown as RangedParser);
@@ -163,6 +167,6 @@ export function safeTypst(): LanguageSupport {
 		typstLezerIndentService,
 		typstLezerListKeymap,
 		typstLezerFoldService,
-		typstLezerLinter,
+		...(options.enableLinting === false ? [] : [typstLezerLinter]),
 	]);
 }

@@ -4,6 +4,7 @@ import type React from 'react';
 import { useRegisterLanguageSettings } from '../../settings/registerLocaleSettings';
 import { useRegisterThemeSettings } from '../../settings/registerThemeSettings';
 import { useRegisterEditorSettings } from '../../settings/registerEditorSettings';
+import { useRegisterLanguageFeatureSettings } from '../../settings/registerLanguageFeatureSettings';
 import { useRegisterCollabSettings } from '../../settings/registerCollabSettings';
 import { useRegisterContentFormatterSettings } from '../../settings/registerContentFormatterSettings';
 import { useRegisterFileSyncSettings } from '../../settings/registerFileSyncSettings';
@@ -19,6 +20,7 @@ import { useRegisterStorageSettings } from '../../settings/registerStorageSettin
 
 const AppBootstrap: React.FC = () => {
 	useRegisterEditorSettings();
+	useRegisterLanguageFeatureSettings();
 	useRegisterCollabSettings();
 	useRegisterContentFormatterSettings();
 	useRegisterFileSyncSettings();

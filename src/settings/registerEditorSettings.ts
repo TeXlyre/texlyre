@@ -10,11 +10,7 @@ import {
 	resolveFontSize,
 } from '../contexts/EditorContext';
 import { useSettings } from '../hooks/useSettings';
-import type {
-	EditorKeymapMode,
-	FontFamily,
-	HighlightTheme,
-} from '../types/editor';
+import type { EditorKeymapMode, FontFamily } from '../types/editor';
 
 export function useRegisterEditorSettings() {
 	const { batchGetSettings, registerSetting } = useSettings();
@@ -28,8 +24,6 @@ export function useRegisterEditorSettings() {
 			'editor-font-family',
 			'editor-font-size',
 			'editor-show-line-numbers',
-			'editor-syntax-highlighting',
-			'editor-theme-highlights',
 			'editor-auto-save-enable',
 			'editor-auto-save-delay',
 			'editor-keymap-mode',
@@ -48,12 +42,6 @@ export function useRegisterEditorSettings() {
 		const initialShowLineNumbers =
 			(batchedSettings['editor-show-line-numbers'] as boolean) ??
 			defaultEditorSettings.showLineNumbers;
-		const initialSyntaxHighlighting =
-			(batchedSettings['editor-syntax-highlighting'] as boolean) ??
-			defaultEditorSettings.syntaxHighlighting;
-		const initialHighlightTheme =
-			(batchedSettings['editor-theme-highlights'] as HighlightTheme) ??
-			defaultEditorSettings.highlightTheme;
 		const initialTextDirection =
 			(batchedSettings['editor-text-direction'] as 'auto' | 'ltr' | 'rtl') ??
 			defaultEditorSettings.textDirection;
@@ -140,75 +128,6 @@ export function useRegisterEditorSettings() {
 			label: t('Show line numbers'),
 			description: t('Show line numbers in the editor'),
 			defaultValue: initialShowLineNumbers,
-		});
-
-		registerSetting({
-			id: 'editor-syntax-highlighting',
-			category: t('Appearance'),
-			subcategory: t('Text Editor'),
-			type: 'checkbox',
-			label: t('Show syntax highlighting'),
-			description: t(
-				'Show syntax highlighting in the editor including tooltip and linting (LaTeX, Typst, BibTeX, and markdown)',
-			),
-			defaultValue: initialSyntaxHighlighting,
-		});
-
-		registerSetting({
-			id: 'editor-theme-highlights',
-			category: t('Appearance'),
-			subcategory: t('Text Editor'),
-			type: 'select',
-			label: t('Syntax highlighting theme'),
-			description: t('Choose the color theme for syntax highlighting'),
-			defaultValue: initialHighlightTheme,
-			options: [
-				{ label: t('Auto (follows app theme)'), value: 'auto' },
-				{ label: t('Light'), value: 'light' },
-				{ label: t('Dark (One Dark)'), value: 'dark' },
-				{ label: 'Abcdef', value: 'abcdef' },
-				{ label: 'Abyss', value: 'abyss' },
-				{ label: 'Android Studio', value: 'androidstudio' },
-				{ label: 'Andromeda', value: 'andromeda' },
-				{ label: 'Atom One', value: 'atomone' },
-				{ label: 'Aura', value: 'aura' },
-				{ label: 'Basic Light', value: 'basicLight' },
-				{ label: 'Basic Dark', value: 'basicDark' },
-				{ label: 'BBEdit', value: 'bbedit' },
-				{ label: 'Bespin', value: 'bespin' },
-				{ label: 'Copilot', value: 'copilot' },
-				{ label: 'Darcula', value: 'darcula' },
-				{ label: 'Dracula', value: 'dracula' },
-				{ label: 'Duotone Dark', value: 'duotoneDark' },
-				{ label: 'Duotone Light', value: 'duotoneLight' },
-				{ label: 'Eclipse', value: 'eclipse' },
-				{ label: 'GitHub Light', value: 'githubLight' },
-				{ label: 'GitHub Dark', value: 'githubDark' },
-				{ label: 'Gruvbox Dark', value: 'gruvboxDark' },
-				{ label: 'Kimbie', value: 'kimbie' },
-				{ label: 'Material Dark', value: 'materialDark' },
-				{ label: 'Material Light', value: 'materialLight' },
-				{ label: 'Monokai', value: 'monokai' },
-				{ label: 'Monokai Dimmed', value: 'monokaiDimmed' },
-				{ label: 'Noctis Lilac', value: 'noctisLilac' },
-				{ label: 'Nord', value: 'nord' },
-				{ label: 'Okaidia', value: 'okaidia' },
-				{ label: 'Quiet Light', value: 'quietlight' },
-				{ label: 'Red', value: 'red' },
-				{ label: 'Solarized Light', value: 'solarizedLight' },
-				{ label: 'Solarized Dark', value: 'solarizedDark' },
-				{ label: 'Sublime', value: 'sublime' },
-				{ label: 'Tokyo Night', value: 'tokyoNight' },
-				{ label: 'Tokyo Night Storm', value: 'tokyoNightStorm' },
-				{ label: 'Tokyo Night Day', value: 'tokyoNightDay' },
-				{ label: 'Tomorrow Night Blue', value: 'tomorrowNightBlue' },
-				{ label: 'VS Code Dark', value: 'vscodeDark' },
-				{ label: 'VS Code Light', value: 'vscodeLight' },
-				{ label: 'White Light', value: 'whiteLight' },
-				{ label: 'White Dark', value: 'whiteDark' },
-				{ label: 'XCode Dark', value: 'xcodeDark' },
-				{ label: 'XCode Light', value: 'xcodeLight' },
-			],
 		});
 
 		registerSetting({
