@@ -2,6 +2,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 import {
+	getSupportedLSPNavigationKinds,
 	goToLSPDefinition,
 	goToLSPLocation,
 	type LSPNavigationKind,
@@ -37,6 +38,26 @@ function createClient(
 }
 
 describe('LSP location navigation', () => {
+	it('reports only navigation capabilities provided by connected servers', () => {
+		jest.spyOn(genericLSPService, 'getAllClientsForFile').mockReturnValue([
+			{
+				serverCapabilities: {
+					definitionProvider: true,
+					implementationProvider: true,
+				},
+			} as any,
+			{
+				serverCapabilities: { declarationProvider: true },
+			} as any,
+		]);
+
+		expect(getSupportedLSPNavigationKinds('test.tex')).toEqual([
+			'definition',
+			'declaration',
+			'implementation',
+		]);
+	});
+
 	it('moves the cursor for a definition in the current file', async () => {
 		const client = createClient({
 			uri: 'file:///test.tex',

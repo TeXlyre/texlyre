@@ -1,5 +1,4 @@
-import type { Extension } from '@codemirror/state';
-import { EditorView, keymap } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 import type { LSPClient } from '@codemirror/lsp-client';
 
 import { genericLSPService } from '../../services/GenericLSPService';
@@ -31,6 +30,13 @@ export type LSPNavigationKind =
 	| 'definition'
 	| 'typeDefinition'
 	| 'implementation';
+
+const navigationKinds: readonly LSPNavigationKind[] = [
+	'definition',
+	'declaration',
+	'typeDefinition',
+	'implementation',
+];
 
 const providerKeys: Record<LSPNavigationKind, string> = {
 	declaration: 'declarationProvider',
@@ -72,6 +78,16 @@ function normalizeFileUri(uri: string): string {
 
 function supportsNavigation(client: LSPClient, kind: LSPNavigationKind): boolean {
 	return Boolean((client as any).serverCapabilities?.[providerKeys[kind]]);
+}
+
+export function getSupportedLSPNavigationKinds(
+	fileName: string,
+): LSPNavigationKind[] {
+	if (!fileName) return [];
+	const clients = genericLSPService.getAllClientsForFile(fileName);
+	return navigationKinds.filter((kind) =>
+		clients.some((client) => supportsNavigation(client, kind)),
+	);
 }
 
 export async function goToLSPLocation(
@@ -147,21 +163,4 @@ export function goToLSPImplementation(
 	fileName: string,
 ): Promise<boolean> {
 	return goToLSPLocation(view, fileName, 'implementation');
-}
-
-export function createLSPNavigationExtension(fileName: string): Extension {
-	return keymap.of([
-		{
-			key: 'F12',
-			preventDefault: true,
-			run: (view) => {
-				const supported = genericLSPService
-					.getAllClientsForFile(fileName)
-					.some((client) => supportsNavigation(client, 'definition'));
-				if (!supported) return false;
-				void goToLSPDefinition(view, fileName);
-				return true;
-			},
-		},
-	]);
 }
