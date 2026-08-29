@@ -15,10 +15,12 @@ import { usePeerDocumentTracking } from '../../hooks/usePeerDocumentTracking';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { fileStorageService } from '../../services/FileStorageService';
+import { genericLSPService } from '../../services/GenericLSPService';
 import { popoutViewerService } from '../../services/PopoutViewerService';
 import type { Document } from '../../types/documents';
 import type { FileNode } from '../../types/files';
 import type { Project, ProjectType } from '../../types/projects';
+import { hasLSPDocumentSymbolProvider } from '../../extensions/codemirror/DocumentSymbolLSPExtension';
 import {
 	getTextMateLanguageForFile,
 	whenGrammarsReady,
@@ -38,6 +40,7 @@ import { EditorTabsProvider } from '../../contexts/EditorTabsContext';
 import { SearchProvider } from '../../contexts/SearchContext';
 import ResizablePanel from '../common/ResizablePanel';
 import EditorTabs from './EditorTabs';
+import LSPOutline from './LSPOutline';
 import LaTeXOutline from './LaTeXOutline';
 import TextMateOutline from './TextMateOutline';
 import TypstOutline from './TypstOutline';
@@ -200,6 +203,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	const [linkedDocumentId, setLinkedDocumentId] = useState<string | null>(null);
 	const [linkedFileInfo, setLinkedFileInfo] = useState<LinkedFileInfoState>({});
 	const [currentLine, setCurrentLine] = useState(1);
+	const [lspCapabilitiesVersion, setLspCapabilitiesVersion] = useState(0);
 
 	const [sidebarWidth, setSidebarWidth] = useState(
 		currentLayout?.defaultFileExplorerWidth || 250,
@@ -469,8 +473,8 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		}
 	};
 
-	const handleOutlineSectionClick = (line: number) => {
-		gotoEditor(null, { line });
+	const handleOutlineSectionClick = (line: number, column?: number) => {
+		gotoEditor(null, { line, column });
 	};
 
 	const handleOutlineRefresh = async () => {
@@ -814,6 +818,20 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	}, []);
 
 	useEffect(() => {
+		const refreshLSPCapabilities = () => {
+			setLspCapabilitiesVersion((version) => version + 1);
+		};
+		const unsubscribeCapabilities =
+			genericLSPService.onCapabilitiesChange(refreshLSPCapabilities);
+		const unsubscribeStatus =
+			genericLSPService.onStatusChange(refreshLSPCapabilities);
+		return () => {
+			unsubscribeCapabilities();
+			unsubscribeStatus();
+		};
+	}, []);
+
+	useEffect(() => {
 		const buildDocToFileMap = async () => {
 			const allFiles = await fileStorageService.getAllFiles(
 				false,
@@ -1085,13 +1103,13 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			!linkedFileInfo?.fileName &&
 			content &&
 			isTypstContent(content);
+		const outlineFileName = isEditingFile ? fileName : linkedFileInfo?.fileName;
+		const hasLSPOutline = Boolean(
+			outlineFileName && hasLSPDocumentSymbolProvider(outlineFileName),
+		);
 		const hasTextMateOutline =
 			textMateRegistryReady &&
-			Boolean(
-				getTextMateLanguageForFile(
-					isEditingFile ? fileName : linkedFileInfo?.fileName,
-				),
-			);
+			Boolean(getTextMateLanguageForFile(outlineFileName));
 
 		setShowOutline(
 			Boolean(
@@ -1101,6 +1119,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					isDocumentLinkedToTyp ||
 					hasLatexContent ||
 					hasTypstContent ||
+					hasLSPOutline ||
 					hasTextMateOutline,
 			),
 		);
@@ -1110,6 +1129,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		linkedFileInfo?.fileName,
 		content,
 		textMateRegistryReady,
+		lspCapabilitiesVersion,
 	]);
 
 	useEffect(() => {
@@ -1307,15 +1327,30 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 							);
 						}
 
-						const textMateFileName = isEditingFile
+						const outlineFileName = isEditingFile
 							? fileName
 							: linkedFileInfo?.fileName;
 
-						if (getTextMateLanguageForFile(textMateFileName)) {
+						if (
+							outlineFileName &&
+							hasLSPDocumentSymbolProvider(outlineFileName)
+						) {
+							return (
+								<LSPOutline
+									fileName={outlineFileName}
+									content={currentEditorContent}
+									currentLine={currentLine}
+									onSectionClick={handleOutlineSectionClick}
+									onRefresh={handleOutlineRefresh}
+								/>
+							);
+						}
+
+						if (getTextMateLanguageForFile(outlineFileName)) {
 							return (
 								<TextMateOutline
 									content={currentEditorContent}
-									fileName={textMateFileName ?? ''}
+									fileName={outlineFileName ?? ''}
 									currentLine={currentLine}
 									onSectionClick={handleOutlineSectionClick}
 									onRefresh={handleOutlineRefresh}

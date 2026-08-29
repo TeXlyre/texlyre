@@ -119,6 +119,40 @@ describe('LSP document symbols', () => {
 		expect(sections[1].detail).toBe('module');
 	});
 
+	it('tries the next capable LSP when an earlier server returns no symbols', async () => {
+		const firstRequest = jest.fn().mockResolvedValue([]);
+		const secondRequest = jest.fn().mockResolvedValue([
+			{
+				name: 'fallback',
+				kind: 12,
+				range: {
+					start: { line: 0, character: 0 },
+					end: { line: 0, character: 8 },
+				},
+				selectionRange: {
+					start: { line: 0, character: 0 },
+					end: { line: 0, character: 8 },
+				},
+			},
+		]);
+		jest.spyOn(genericLSPService, 'getAllClientsForFile').mockReturnValue([
+			{
+				serverCapabilities: { documentSymbolProvider: true },
+				request: firstRequest,
+			} as any,
+			{
+				serverCapabilities: { documentSymbolProvider: true },
+				request: secondRequest,
+			} as any,
+		]);
+
+		const sections = await requestLSPDocumentSymbols('src/test.ts');
+
+		expect(firstRequest).toHaveBeenCalledTimes(1);
+		expect(secondRequest).toHaveBeenCalledTimes(1);
+		expect(sections.map((section) => section.title)).toEqual(['fallback']);
+	});
+
 	it('reports capability availability and avoids unsupported requests', async () => {
 		const request = jest.fn();
 		jest.spyOn(genericLSPService, 'getAllClientsForFile').mockReturnValue([

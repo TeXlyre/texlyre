@@ -162,7 +162,9 @@ export async function requestLSPDocumentSymbols(
 				'textDocument/documentSymbol',
 				{ textDocument: { uri: `file:///${fileName}` } },
 			);
-			if (Array.isArray(response)) return normalizeSymbols(response, fileName);
+			if (!Array.isArray(response)) continue;
+			const sections = normalizeSymbols(response, fileName);
+			if (sections.length > 0) return sections;
 		} catch {}
 	}
 
