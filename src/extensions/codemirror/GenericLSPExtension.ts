@@ -250,6 +250,7 @@ function createLSPDiagnosticsExtension(fileName: string): Extension {
 									...preserved,
 									...mergedDiagnostics,
 								]),
+							);
 						});
 					},
 				);
