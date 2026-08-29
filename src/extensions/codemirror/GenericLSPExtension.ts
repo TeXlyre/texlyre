@@ -79,6 +79,104 @@ function sendNotification(client: LSPClient, method: string, params: any) {
 	} catch {}
 }
 
+function getTextDocumentSyncKind(client: LSPClient): number | undefined {
+	const sync = (client as any).serverCapabilities?.textDocumentSync;
+	return typeof sync === 'number' ? sync : sync?.change;
+}
+
+function offsetToPosition(doc: any, offset: number) {
+	const line = doc.lineAt(offset);
+	return { line: line.number - 1, character: offset - line.from };
+}
+
+function createIncrementalContentChanges(update: any, maskedText: string) {
+	const changes: Array<{
+		range: {
+			start: { line: number; character: number };
+			end: { line: number; character: number };
+		};
+		text: string;
+	}> = [];
+
+	update.changes.iterChanges(
+		(fromA: number, toA: number, fromB: number, toB: number) => {
+			changes.push({
+				range: {
+					start: offsetToPosition(update.startState.doc, fromA),
+					end: offsetToPosition(update.startState.doc, toA),
+				},
+				text: maskedText.slice(fromB, toB),
+			});
+		},
+	);
+
+	return changes;
+}
+
+function lspPositionToOffset(doc: any, position: any): number | null {
+	if (
+		!position ||
+		typeof position.line !== 'number' ||
+		typeof position.character !== 'number' ||
+		position.line < 0 ||
+		position.line >= doc.lines
+	) {
+		return null;
+	}
+
+	const line = doc.line(position.line + 1);
+	return Math.min(line.from + Math.max(0, position.character), line.to);
+}
+
+function lspRangeToOffsets(doc: any, range: any) {
+	const from = lspPositionToOffset(doc, range?.start);
+	const to = lspPositionToOffset(doc, range?.end);
+	return from === null || to === null ? null : { from, to };
+}
+
+function applyCompletionEdits(
+	view: EditorView,
+	insert: string,
+	range: any,
+	additionalTextEdits: any[],
+	fallbackFrom: number,
+	fallbackTo: number,
+) {
+	const doc = view.state.doc;
+	const main = range
+		? lspRangeToOffsets(doc, range)
+		: { from: fallbackFrom, to: fallbackTo };
+	if (!main) return;
+
+	const extra = additionalTextEdits
+		.map((edit) => {
+			const offsets = lspRangeToOffsets(doc, edit?.range);
+			return offsets
+				? { ...offsets, insert: typeof edit.newText === 'string' ? edit.newText : '' }
+				: null;
+		})
+		.filter(
+			(change): change is { from: number; to: number; insert: string } =>
+				change !== null,
+		);
+
+	const mainChange = { ...main, insert };
+	const changes = [...extra, mainChange].sort(
+		(a, b) => a.from - b.from || a.to - b.to,
+	);
+
+	try {
+		const changeSet = view.state.changes(changes);
+		const anchor = changeSet.mapPos(main.to, 1);
+		view.dispatch({ changes: changeSet, selection: { anchor } });
+	} catch {
+		view.dispatch({
+			changes: mainChange,
+			selection: { anchor: main.from + insert.length },
+		});
+	}
+}
+
 function createLSPDiagnosticsExtension(fileName: string): Extension {
 	const fileUri = `file:///${fileName}`;
 	const diagnosticsByConfig = new Map<string, LSPDiagnostic[]>();
@@ -178,7 +276,7 @@ function renderHoverContent(content: string): HTMLElement {
 		escapeHtml(t)
 			.replace(/`([^`]+)`/g, '<code>$1</code>')
 			.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-			.replace(/\*(.+?)\*/g, '<em>$1</em>')
+			.replace(/\*(.+?)\*\*/g, '<em>$1</em>')
 			.replace(
 				/\[([^\]]+)\]\(([^)]+)\)/g,
 				'<a href="$2" target="_blank" rel="noreferrer">$1</a>',
@@ -384,7 +482,7 @@ function createDocumentSyncExtension(fileName: string): Extension {
 			}
 
 			private notifySaved() {
-				const text = this.view.state.doc.toString();
+				const text = maskAnnotationText(this.view.state);
 				this.openedFor.forEach((client) => {
 					const save = (client as any).serverCapabilities?.textDocumentSync
 						?.save;
@@ -402,10 +500,25 @@ function createDocumentSyncExtension(fileName: string): Extension {
 				if (!update.docChanged) return;
 				version++;
 				const text = maskAnnotationText(update.state);
+				const canUseIncrementalChanges =
+					text.length === update.state.doc.length &&
+					maskAnnotationText(update.startState).length ===
+						update.startState.doc.length;
+				const incrementalChanges = canUseIncrementalChanges
+					? createIncrementalContentChanges(update, text)
+					: [];
+
 				this.openedFor.forEach((client) => {
+					const syncKind = getTextDocumentSyncKind(client);
+					if (syncKind === 0) return;
+					const contentChanges =
+						syncKind === 2 && incrementalChanges.length > 0
+							? incrementalChanges
+							: [{ text }];
+
 					sendNotification(client, 'textDocument/didChange', {
 						textDocument: { uri: fileUri, version },
-						contentChanges: [{ text }],
+						contentChanges,
 					});
 				});
 			}
@@ -487,38 +600,41 @@ export function getGenericLSPCompletionSources(fileName: string) {
 							position: { line: line.number - 1, character },
 						},
 					);
+					const items = Array.isArray(result) ? result : result?.items;
 
-					if (!result || !result.items || result.items.length === 0) {
+					if (!Array.isArray(items) || items.length === 0) {
 						continue;
 					}
 
-					const options = result.items.map((item: any) => {
+					const options = items.map((item: any) => {
 						const range = item.textEdit?.range;
 						const insert =
 							item.textEdit?.newText || item.insertText || item.label;
+						const additionalTextEdits = Array.isArray(item.additionalTextEdits)
+							? item.additionalTextEdits
+							: [];
 						return {
 							label: item.label,
 							type: item.kind === 1 ? 'text' : 'keyword',
 							detail: item.detail,
 							info: createCompletionInfo(client, item),
-							apply: range
-								? (view: EditorView) => {
-										const from = Math.min(
-											doc.line(Math.min(range.start.line + 1, doc.lines)).from +
-												range.start.character,
-											doc.length,
-										);
-										const to = Math.min(
-											doc.line(Math.min(range.end.line + 1, doc.lines)).from +
-												range.end.character,
-											doc.length,
-										);
-										view.dispatch({
-											changes: { from, to, insert },
-											selection: { anchor: from + insert.length },
-										});
-									}
-								: insert,
+							apply:
+								range || additionalTextEdits.length > 0
+									? (
+											view: EditorView,
+											_completion: unknown,
+											from: number,
+											to: number,
+										) =>
+											applyCompletionEdits(
+												view,
+												insert,
+												range,
+												additionalTextEdits,
+												from,
+												to,
+											)
+									: insert,
 						};
 					});
 
