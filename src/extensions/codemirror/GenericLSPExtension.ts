@@ -276,7 +276,7 @@ function renderHoverContent(content: string): HTMLElement {
 		escapeHtml(t)
 			.replace(/`([^`]+)`/g, '<code>$1</code>')
 			.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-			.replace(/\*(.+?)\*\*/g, '<em>$1</em>')
+			.replace(/\*(.+?)\*/g, '<em>$1</em>')
 			.replace(
 				/\[([^\]]+)\]\(([^)]+)\)/g,
 				'<a href="$2" target="_blank" rel="noreferrer">$1</a>',
@@ -411,7 +411,6 @@ function createAggregatedHoverExtension(fileName: string): Extension {
 				return { label, content: trimmed };
 			} catch {
 				return null;
-			}
 		});
 
 		const results = await Promise.all(hoverPromises);
