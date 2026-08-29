@@ -103,32 +103,52 @@ const LSPNavigationButton: React.FC<LSPNavigationButtonProps> = ({ fileName }) =
 	}, [fileName, getEditorView, supportedKinds]);
 
 	useEffect(() => {
-		const editor = getEditorElement();
-		if (!editor || supportedKinds.length === 0) {
+		if (supportedKinds.length === 0) {
 			setAvailableKinds([]);
 			return;
 		}
 
+		let editor: HTMLElement | null = null;
+
 		const handleEditorActivity = () => scheduleAvailabilityCheck();
 		const handleSelectionChange = () => {
-			if (editor.contains(document.activeElement)) scheduleAvailabilityCheck();
+			if (editor?.contains(document.activeElement)) scheduleAvailabilityCheck();
 		};
 
-		editor.addEventListener('keyup', handleEditorActivity);
-		editor.addEventListener('mouseup', handleEditorActivity);
-		editor.addEventListener('input', handleEditorActivity);
-		editor.addEventListener('focusin', handleEditorActivity);
-		document.addEventListener('selectionchange', handleSelectionChange);
-		document.addEventListener('editor-cursor-update', handleSelectionChange);
-		scheduleAvailabilityCheck();
-
-		return () => {
+		const detachEditor = () => {
+			if (!editor) return;
 			editor.removeEventListener('keyup', handleEditorActivity);
 			editor.removeEventListener('mouseup', handleEditorActivity);
 			editor.removeEventListener('input', handleEditorActivity);
 			editor.removeEventListener('focusin', handleEditorActivity);
+			editor = null;
+		};
+
+		const bindEditor = () => {
+			const nextEditor = getEditorElement();
+			if (!nextEditor || nextEditor === editor) return;
+
+			detachEditor();
+			editor = nextEditor;
+			editor.addEventListener('keyup', handleEditorActivity);
+			editor.addEventListener('mouseup', handleEditorActivity);
+			editor.addEventListener('input', handleEditorActivity);
+			editor.addEventListener('focusin', handleEditorActivity);
+			scheduleAvailabilityCheck();
+		};
+
+		document.addEventListener('editor-ready', bindEditor);
+		document.addEventListener('selectionchange', handleSelectionChange);
+		document.addEventListener('editor-cursor-update', handleSelectionChange);
+		bindEditor();
+
+		if (!editor) setAvailableKinds([]);
+
+		return () => {
+			document.removeEventListener('editor-ready', bindEditor);
 			document.removeEventListener('selectionchange', handleSelectionChange);
 			document.removeEventListener('editor-cursor-update', handleSelectionChange);
+			detachEditor();
 			if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
 		};
 	}, [getEditorElement, scheduleAvailabilityCheck, supportedKinds.length]);

@@ -81,6 +81,34 @@ describe('LSPNavigationButton', () => {
 		expect(screen.queryByText('Go to Type Definition')).not.toBeInTheDocument();
 	});
 
+	it('binds when CodeMirror becomes ready after the header mounts', async () => {
+		mockCapabilities({ definitionProvider: true });
+		const view = {} as EditorView;
+		jest.spyOn(EditorView, 'findFromDOM').mockReturnValue(view);
+		jest.mocked(hasLSPNavigationTarget).mockResolvedValue(true);
+
+		const { container } = render(
+			<div className='editor-container'>
+				<LSPNavigationButton fileName='test.tex' />
+			</div>,
+		);
+
+		const controls = screen.getAllByTitle('No navigation target at cursor');
+		expect(controls).toHaveLength(2);
+		controls.forEach((control) => expect(control).toBeDisabled());
+
+		const editor = document.createElement('div');
+		editor.className = 'cm-editor';
+		container.querySelector('.editor-container')?.appendChild(editor);
+
+		act(() => {
+			document.dispatchEvent(new CustomEvent('editor-ready'));
+		});
+		await flushAvailability();
+
+		expect(screen.getByTitle('Go to Definition')).toBeEnabled();
+	});
+
 	it('disables navigation when the provider has no target at the cursor', async () => {
 		mockCapabilities({ definitionProvider: true });
 		jest.spyOn(EditorView, 'findFromDOM').mockReturnValue({} as EditorView);
