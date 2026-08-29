@@ -1,7 +1,11 @@
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
-import { goToLSPDefinition } from '@src/extensions/codemirror/NavigationLSPExtension';
+import {
+	goToLSPDefinition,
+	goToLSPLocation,
+	type LSPNavigationKind,
+} from '@src/extensions/codemirror/NavigationLSPExtension';
 import { genericLSPService } from '@src/services/GenericLSPService';
 import { linkNavigationService } from '@src/services/LinkNavigationService';
 
@@ -22,14 +26,17 @@ function createView(doc = 'first\nsecond\nthird') {
 	return view;
 }
 
-function createClient(result: unknown) {
+function createClient(
+	result: unknown,
+	provider: string = 'definitionProvider',
+) {
 	return {
-		serverCapabilities: { definitionProvider: true },
+		serverCapabilities: { [provider]: true },
 		request: jest.fn().mockResolvedValue(result),
 	} as any;
 }
 
-describe('LSP definition navigation', () => {
+describe('LSP location navigation', () => {
 	it('moves the cursor for a definition in the current file', async () => {
 		const client = createClient({
 			uri: 'file:///test.tex',
@@ -46,6 +53,36 @@ describe('LSP definition navigation', () => {
 		expect(handled).toBe(true);
 		expect(view.state.selection.main.head).toBe(8);
 		expect(client.request).toHaveBeenCalledWith('textDocument/definition', {
+			textDocument: { uri: 'file:///test.tex' },
+			position: { line: 0, character: 0 },
+		});
+	});
+
+	it.each<[
+		LSPNavigationKind,
+		string,
+	]>([
+		['declaration', 'declarationProvider'],
+		['typeDefinition', 'typeDefinitionProvider'],
+		['implementation', 'implementationProvider'],
+	])('requests textDocument/%s when the server provides it', async (kind, provider) => {
+		const client = createClient(
+			{
+				uri: 'file:///test.tex',
+				range: {
+					start: { line: 1, character: 0 },
+					end: { line: 1, character: 1 },
+				},
+			},
+			provider,
+		);
+		jest.spyOn(genericLSPService, 'getAllClientsForFile').mockReturnValue([client]);
+		const view = createView();
+
+		const handled = await goToLSPLocation(view, 'test.tex', kind);
+
+		expect(handled).toBe(true);
+		expect(client.request).toHaveBeenCalledWith(`textDocument/${kind}`, {
 			textDocument: { uri: 'file:///test.tex' },
 			position: { line: 0, character: 0 },
 		});
@@ -93,7 +130,7 @@ describe('LSP definition navigation', () => {
 		expect(navigate).toHaveBeenCalledWith('chapters/intro.tex', 7);
 	});
 
-	it('returns false when no server provides definitions', async () => {
+	it('returns false when the requested provider is unavailable', async () => {
 		jest.spyOn(genericLSPService, 'getAllClientsForFile').mockReturnValue([
 			{ serverCapabilities: {}, request: jest.fn() } as any,
 		]);

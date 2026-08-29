@@ -18,6 +18,7 @@ import type { LSPClient } from '@codemirror/lsp-client';
 
 import { genericLSPService } from '../../services/GenericLSPService';
 import { maskAnnotationText } from './annotations/annotationMasking';
+import { createLSPDocumentHighlightExtension } from './DocumentHighlightLSPExtension';
 import { createSemanticTokensExtension } from './SemanticTokensLSPExtension';
 
 export interface LSPDiagnostic extends Diagnostic {
@@ -92,27 +93,32 @@ function offsetToPosition(doc: any, offset: number) {
 }
 
 function createIncrementalContentChanges(update: any, maskedText: string) {
-	const changes: Array<{
-		range: {
-			start: { line: number; character: number };
-			end: { line: number; character: number };
-		};
-		text: string;
-	}> = [];
+	let firstFromA: number | null = null;
+	let firstFromB: number | null = null;
+	let lastToA = 0;
+	let lastToB = 0;
 
 	update.changes.iterChanges(
 		(fromA: number, toA: number, fromB: number, toB: number) => {
-			changes.push({
-				range: {
-					start: offsetToPosition(update.startState.doc, fromA),
-					end: offsetToPosition(update.startState.doc, toA),
-				},
-				text: maskedText.slice(fromB, toB),
-			});
+			if (firstFromA === null) {
+				firstFromA = fromA;
+				firstFromB = fromB;
+			}
+			lastToA = toA;
+			lastToB = toB;
 		},
 	);
 
-	return changes;
+	if (firstFromA === null || firstFromB === null) return [];
+	return [
+		{
+			range: {
+				start: offsetToPosition(update.startState.doc, firstFromA),
+				end: offsetToPosition(update.startState.doc, lastToA),
+			},
+			text: maskedText.slice(firstFromB, lastToB),
+		},
+	];
 }
 
 function lspPositionToOffset(doc: any, position: any): number | null {
@@ -606,12 +612,15 @@ export function getGenericLSPExtensionsForFile(fileName: string): Extension[] {
 		createDocumentSyncExtension(fileName),
 		createAggregatedHoverExtension(fileName),
 		createLSPDiagnosticsExtension(fileName),
+		createLSPDocumentHighlightExtension(fileName),
 		createSemanticTokensExtension(fileName),
 	];
 }
 
 export function getGenericLSPCompletionSources(fileName: string) {
 	if (!fileName) return [];
+
+	const incompleteByClient = new WeakMap<LSPClient, boolean>();
 
 	return [
 		async (context: CompletionContext): Promise<CompletionResult | null> => {
@@ -620,32 +629,56 @@ export function getGenericLSPCompletionSources(fileName: string) {
 
 			for (const client of clients) {
 				const capabilities = (client as any).serverCapabilities;
-				if (capabilities && capabilities.completionProvider === undefined) {
-					continue;
-				}
+				const provider = capabilities?.completionProvider;
+				if (capabilities && provider === undefined) continue;
 
 				try {
 					const doc = context.state.doc;
 					const line = doc.lineAt(context.pos);
 					const character = context.pos - line.from;
+					const previousCharacter =
+						context.pos > 0
+							? doc.sliceString(context.pos - 1, context.pos)
+							: '';
+					const triggerCharacters = Array.isArray(provider?.triggerCharacters)
+						? provider.triggerCharacters
+						: [];
+
+					let completionContext: Record<string, unknown> = { triggerKind: 1 };
+					if (
+						!context.explicit &&
+						triggerCharacters.includes(previousCharacter)
+					) {
+						completionContext = {
+							triggerKind: 2,
+							triggerCharacter: previousCharacter,
+						};
+					} else if (!context.explicit && incompleteByClient.get(client)) {
+						completionContext = { triggerKind: 3 };
+					}
 
 					const result = await (client as any).request(
 						'textDocument/completion',
 						{
 							textDocument: { uri: `file:///${fileName}` },
 							position: { line: line.number - 1, character },
+							context: completionContext,
 						},
 					);
+
+					const isIncomplete =
+						!Array.isArray(result) && result?.isIncomplete === true;
+					incompleteByClient.set(client, isIncomplete);
 					const items = Array.isArray(result) ? result : result?.items;
 
-					if (!Array.isArray(items) || items.length === 0) {
-						continue;
-					}
+					if (!Array.isArray(items) || items.length === 0) continue;
 
 					const options = items.map((item: any) => {
-						const range = item.textEdit?.range;
+						const textEdit = item.textEdit;
+						const range =
+							textEdit?.range ?? textEdit?.replace ?? textEdit?.insert;
 						const insert =
-							item.textEdit?.newText || item.insertText || item.label;
+							textEdit?.newText ?? item.insertText ?? item.label ?? '';
 						const additionalTextEdits = Array.isArray(item.additionalTextEdits)
 							? item.additionalTextEdits
 							: [];
@@ -690,10 +723,7 @@ export function getGenericLSPCompletionSources(fileName: string) {
 						};
 					});
 
-					return {
-						from: context.pos,
-						options,
-					};
+					return { from: context.pos, options };
 				} catch {}
 			}
 

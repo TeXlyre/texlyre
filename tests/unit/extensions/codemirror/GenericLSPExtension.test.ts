@@ -68,6 +68,32 @@ describe('generic LSP document synchronization', () => {
 		});
 	});
 
+	it('collapses multiple transaction edits into one valid incremental change', () => {
+		const { client, sent } = createClient({
+			textDocumentSync: { change: 2 },
+		});
+		const view = createSyncView(client, 'one\ntwo\nthree');
+		sent.length = 0;
+
+		view.dispatch({
+			changes: [
+				{ from: 0, to: 3, insert: 'ONE\nEXTRA' },
+				{ from: 8, to: 13, insert: 'THREE' },
+			],
+		});
+
+		expect(sent).toHaveLength(1);
+		expect(sent[0].params.contentChanges).toEqual([
+			{
+				range: {
+					start: { line: 0, character: 0 },
+					end: { line: 2, character: 5 },
+				},
+				text: 'ONE\nEXTRA\ntwo\nTHREE',
+			},
+		]);
+	});
+
 	it('keeps full didChange for servers requesting full synchronization', () => {
 		const { client, sent } = createClient({
 			textDocumentSync: { change: 1 },
@@ -103,9 +129,100 @@ describe('generic LSP completion', () => {
 		const state = EditorState.create({ doc: 'a' });
 		const source = getGenericLSPCompletionSources('test.tex')[0];
 
-		const result = await source({ state, pos: 1 } as CompletionContext);
+		const result = await source({ state, pos: 1, explicit: true } as CompletionContext);
 
 		expect(result?.options.map((option) => option.label)).toEqual(['alpha']);
+		expect(request).toHaveBeenCalledWith('textDocument/completion', {
+			textDocument: { uri: 'file:///test.tex' },
+			position: { line: 0, character: 1 },
+			context: { triggerKind: 1 },
+		});
+	});
+
+	it('uses server trigger characters in CompletionContext', async () => {
+		const request = jest.fn().mockResolvedValue({
+			items: [{ label: 'member', insertText: 'member' }],
+		});
+		const { client } = createClient(
+			{ completionProvider: { triggerCharacters: ['.'] } },
+			request,
+		);
+		jest.spyOn(genericLSPService, 'getAllClientsForFile').mockReturnValue([client]);
+		const state = EditorState.create({ doc: 'foo.' });
+		const source = getGenericLSPCompletionSources('test.tex')[0];
+
+		await source({ state, pos: 4, explicit: false } as CompletionContext);
+
+		expect(request).toHaveBeenCalledWith('textDocument/completion',
+			expect.objectContaining({
+				context: { triggerKind: 2, triggerCharacter: '.' },
+			}),
+		);
+	});
+
+	it('retriggers incomplete completion lists as the user types', async () => {
+		const request = jest
+			.fn()
+			.mockResolvedValueOnce({
+				isIncomplete: true,
+				items: [{ label: 'alpha', insertText: 'alpha' }],
+			})
+			.mockResolvedValueOnce({
+				isIncomplete: false,
+				items: [{ label: 'about', insertText: 'about' }],
+			});
+		const { client } = createClient({ completionProvider: {} }, request);
+		jest.spyOn(genericLSPService, 'getAllClientsForFile').mockReturnValue([client]);
+		const source = getGenericLSPCompletionSources('test.tex')[0];
+
+		await source({
+			state: EditorState.create({ doc: 'a' }),
+			pos: 1,
+			explicit: false,
+		} as CompletionContext);
+		await source({
+			state: EditorState.create({ doc: 'ab' }),
+			pos: 2,
+			explicit: false,
+		} as CompletionContext);
+
+		expect(request.mock.calls[1][1].context).toEqual({ triggerKind: 3 });
+	});
+
+	it('applies InsertReplaceEdit using its replace range', async () => {
+		const request = jest.fn().mockResolvedValue({
+			items: [
+				{
+					label: 'bar',
+					textEdit: {
+						insert: {
+							start: { line: 0, character: 0 },
+							end: { line: 0, character: 3 },
+						},
+						replace: {
+							start: { line: 0, character: 0 },
+							end: { line: 0, character: 4 },
+						},
+						newText: 'bar',
+					},
+				},
+			],
+		});
+		const { client } = createClient({ completionProvider: {} }, request);
+		jest.spyOn(genericLSPService, 'getAllClientsForFile').mockReturnValue([client]);
+		const state = EditorState.create({ doc: 'fooz' });
+		const source = getGenericLSPCompletionSources('test.tex')[0];
+		const result = await source({ state, pos: 3, explicit: true } as CompletionContext);
+		const option = result!.options[0];
+		const view = new EditorView({ state, parent: document.body });
+		views.push(view);
+
+		expect(typeof option.apply).toBe('function');
+		if (typeof option.apply === 'function') {
+			option.apply(view, option, 0, 3);
+		}
+
+		expect(view.state.doc.toString()).toBe('bar');
 	});
 
 	it('applies additionalTextEdits together with the primary completion edit', async () => {
@@ -136,7 +253,7 @@ describe('generic LSP completion', () => {
 		jest.spyOn(genericLSPService, 'getAllClientsForFile').mockReturnValue([client]);
 		const state = EditorState.create({ doc: '\nbar' });
 		const source = getGenericLSPCompletionSources('test.tex')[0];
-		const result = await source({ state, pos: 4 } as CompletionContext);
+		const result = await source({ state, pos: 4, explicit: true } as CompletionContext);
 		const option = result!.options[0];
 		const view = new EditorView({ state, parent: document.body });
 		views.push(view);
@@ -163,7 +280,7 @@ describe('generic LSP completion', () => {
 		jest.spyOn(genericLSPService, 'getAllClientsForFile').mockReturnValue([client]);
 		const state = EditorState.create({ doc: '' });
 		const source = getGenericLSPCompletionSources('test.tex')[0];
-		const result = await source({ state, pos: 0 } as CompletionContext);
+		const result = await source({ state, pos: 0, explicit: true } as CompletionContext);
 		const option = result!.options[0];
 		const view = new EditorView({ state, parent: document.body });
 		views.push(view);
@@ -174,10 +291,12 @@ describe('generic LSP completion', () => {
 		}
 
 		expect(view.state.doc.toString()).toBe('fn(arg, )');
-		expect(view.state.sliceDoc(
-			view.state.selection.main.from,
-			view.state.selection.main.to,
-		)).toBe('arg');
+		expect(
+			view.state.sliceDoc(
+				view.state.selection.main.from,
+				view.state.selection.main.to,
+			),
+		).toBe('arg');
 	});
 
 	it('keeps snippet placeholders when applying additionalTextEdits', async () => {
@@ -209,7 +328,7 @@ describe('generic LSP completion', () => {
 		jest.spyOn(genericLSPService, 'getAllClientsForFile').mockReturnValue([client]);
 		const state = EditorState.create({ doc: '\nfo' });
 		const source = getGenericLSPCompletionSources('test.tex')[0];
-		const result = await source({ state, pos: 3 } as CompletionContext);
+		const result = await source({ state, pos: 3, explicit: true } as CompletionContext);
 		const option = result!.options[0];
 		const view = new EditorView({ state, parent: document.body });
 		views.push(view);
@@ -220,9 +339,11 @@ describe('generic LSP completion', () => {
 		}
 
 		expect(view.state.doc.toString()).toBe('import x\n\nfoo(x)');
-		expect(view.state.sliceDoc(
-			view.state.selection.main.from,
-			view.state.selection.main.to,
-		)).toBe('x');
+		expect(
+			view.state.sliceDoc(
+				view.state.selection.main.from,
+				view.state.selection.main.to,
+			),
+		).toBe('x');
 	});
 });

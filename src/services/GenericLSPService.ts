@@ -58,11 +58,18 @@ const defaultClientCapabilities: JsonRecord = {
 		publishDiagnostics: { relatedInformation: true },
 		hover: { contentFormat: ['markdown', 'plaintext'] },
 		completion: {
+			contextSupport: true,
 			completionItem: {
 				snippetSupport: true,
+				insertReplaceSupport: true,
 				documentationFormat: ['markdown', 'plaintext'],
 			},
 		},
+		declaration: { dynamicRegistration: false, linkSupport: true },
+		definition: { dynamicRegistration: false, linkSupport: true },
+		typeDefinition: { dynamicRegistration: false, linkSupport: true },
+		implementation: { dynamicRegistration: false, linkSupport: true },
+		documentHighlight: { dynamicRegistration: false },
 		signatureHelp: {
 			dynamicRegistration: false,
 			contextSupport: false,

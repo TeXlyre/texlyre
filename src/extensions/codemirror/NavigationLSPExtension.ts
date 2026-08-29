@@ -26,6 +26,19 @@ interface LocationLink {
 	targetSelectionRange?: LSPRange;
 }
 
+export type LSPNavigationKind =
+	| 'declaration'
+	| 'definition'
+	| 'typeDefinition'
+	| 'implementation';
+
+const providerKeys: Record<LSPNavigationKind, string> = {
+	declaration: 'declarationProvider',
+	definition: 'definitionProvider',
+	typeDefinition: 'typeDefinitionProvider',
+	implementation: 'implementationProvider',
+};
+
 function offsetToPosition(view: EditorView, offset: number): LSPPosition {
 	const line = view.state.doc.lineAt(offset);
 	return { line: line.number - 1, character: offset - line.from };
@@ -57,17 +70,18 @@ function normalizeFileUri(uri: string): string {
 	}
 }
 
-function supportsDefinition(client: LSPClient): boolean {
-	return Boolean((client as any).serverCapabilities?.definitionProvider);
+function supportsNavigation(client: LSPClient, kind: LSPNavigationKind): boolean {
+	return Boolean((client as any).serverCapabilities?.[providerKeys[kind]]);
 }
 
-export async function goToLSPDefinition(
+export async function goToLSPLocation(
 	view: EditorView,
 	fileName: string,
+	kind: LSPNavigationKind,
 ): Promise<boolean> {
 	const clients = genericLSPService
 		.getAllClientsForFile(fileName)
-		.filter(supportsDefinition);
+		.filter((client) => supportsNavigation(client, kind));
 	if (clients.length === 0) return false;
 
 	const head = view.state.selection.main.head;
@@ -76,7 +90,7 @@ export async function goToLSPDefinition(
 
 	for (const client of clients) {
 		try {
-			const response = await (client as any).request('textDocument/definition', {
+			const response = await (client as any).request(`textDocument/${kind}`, {
 				textDocument: { uri: currentUri },
 				position,
 			});
@@ -90,7 +104,7 @@ export async function goToLSPDefinition(
 				view.dispatch({
 					selection: { anchor: target },
 					effects: EditorView.scrollIntoView(target, { y: 'center' }),
-					userEvent: 'select.definition',
+					userEvent: `select.${kind}`,
 				});
 				view.focus();
 				return true;
@@ -107,6 +121,34 @@ export async function goToLSPDefinition(
 	return false;
 }
 
+export function goToLSPDeclaration(
+	view: EditorView,
+	fileName: string,
+): Promise<boolean> {
+	return goToLSPLocation(view, fileName, 'declaration');
+}
+
+export function goToLSPDefinition(
+	view: EditorView,
+	fileName: string,
+): Promise<boolean> {
+	return goToLSPLocation(view, fileName, 'definition');
+}
+
+export function goToLSPTypeDefinition(
+	view: EditorView,
+	fileName: string,
+): Promise<boolean> {
+	return goToLSPLocation(view, fileName, 'typeDefinition');
+}
+
+export function goToLSPImplementation(
+	view: EditorView,
+	fileName: string,
+): Promise<boolean> {
+	return goToLSPLocation(view, fileName, 'implementation');
+}
+
 export function createLSPNavigationExtension(fileName: string): Extension {
 	return keymap.of([
 		{
@@ -115,7 +157,7 @@ export function createLSPNavigationExtension(fileName: string): Extension {
 			run: (view) => {
 				const supported = genericLSPService
 					.getAllClientsForFile(fileName)
-					.some(supportsDefinition);
+					.some((client) => supportsNavigation(client, 'definition'));
 				if (!supported) return false;
 				void goToLSPDefinition(view, fileName);
 				return true;
