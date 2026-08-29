@@ -11,7 +11,6 @@ import type { Extension } from '@codemirror/state';
 
 import { LinkDetector, type DetectedLink } from './linkNavigation/LinkDetector';
 import { LinkNavigator } from './linkNavigation/LinkNavigator';
-import { createLSPNavigationExtension } from './NavigationLSPExtension';
 
 const setCurrentFilePath = StateEffect.define<string>();
 const setFileName = StateEffect.define<string>();
@@ -282,7 +281,6 @@ export function createLinkNavigationExtension(
 		fileNameField.init(() => initialFileName),
 		linkHighlightField,
 		plugin,
-		...(fileName ? [createLSPNavigationExtension(fileName)] : []),
 		EditorView.baseTheme({
 			'.cm-link-hover': {
 				cursor: 'pointer',
