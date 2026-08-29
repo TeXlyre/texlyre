@@ -250,7 +250,6 @@ function createLSPDiagnosticsExtension(fileName: string): Extension {
 									...preserved,
 									...mergedDiagnostics,
 								]),
-							);
 						});
 					},
 				);
@@ -411,6 +410,7 @@ function createAggregatedHoverExtension(fileName: string): Extension {
 				return { label, content: trimmed };
 			} catch {
 				return null;
+			}
 		});
 
 		const results = await Promise.all(hoverPromises);
