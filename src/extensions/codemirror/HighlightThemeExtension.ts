@@ -51,6 +51,7 @@ import {
 } from '@uiw/codemirror-themes-all';
 
 import type { HighlightTheme } from '../../types/editor';
+import { getEditorLanguageFeatures } from './EditorLanguageFeatures';
 
 const APP_THEME_MAP: Record<string, HighlightTheme> = {
 	dark: 'dark',
@@ -117,6 +118,8 @@ export function resolveHighlightTheme(
 	theme: HighlightTheme,
 	appVariant?: string,
 ): Extension {
+	if (!getEditorLanguageFeatures().syntaxHighlighting) return [];
+
 	if (theme === 'auto') {
 		const appTheme =
 			appVariant ?? document.documentElement.getAttribute('data-theme') ?? '';

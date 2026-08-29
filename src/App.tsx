@@ -24,6 +24,7 @@ import './styles/global.css';
 import './styles/components/editor.css';
 import './styles/components/editor-tabs.css';
 import './styles/components/codemirror.css';
+import './styles/components/editor-language-features.css';
 import './styles/components/conflicts.css';
 import './styles/components/file-explorer.css';
 import './styles/components/search.css';

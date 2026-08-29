@@ -9,6 +9,7 @@ import {
 	resolveFontFamily,
 	resolveFontSize,
 } from '../contexts/EditorContext';
+import { setEditorLanguageFeature } from '../extensions/codemirror/EditorLanguageFeatures';
 import { useSettings } from '../hooks/useSettings';
 import type {
 	EditorKeymapMode,
@@ -29,6 +30,9 @@ export function useRegisterEditorSettings() {
 			'editor-font-size',
 			'editor-show-line-numbers',
 			'editor-syntax-highlighting',
+			'editor-language-tooltips',
+			'editor-language-diagnostics',
+			'editor-language-symbol-highlights',
 			'editor-theme-highlights',
 			'editor-auto-save-enable',
 			'editor-auto-save-delay',
@@ -51,6 +55,15 @@ export function useRegisterEditorSettings() {
 		const initialSyntaxHighlighting =
 			(batchedSettings['editor-syntax-highlighting'] as boolean) ??
 			defaultEditorSettings.syntaxHighlighting;
+		const initialLanguageTooltips =
+			(batchedSettings['editor-language-tooltips'] as boolean) ??
+			defaultEditorSettings.languageTooltips;
+		const initialLanguageDiagnostics =
+			(batchedSettings['editor-language-diagnostics'] as boolean) ??
+			defaultEditorSettings.languageDiagnostics;
+		const initialLanguageSymbolHighlights =
+			(batchedSettings['editor-language-symbol-highlights'] as boolean) ??
+			defaultEditorSettings.languageSymbolHighlights;
 		const initialHighlightTheme =
 			(batchedSettings['editor-theme-highlights'] as HighlightTheme) ??
 			defaultEditorSettings.highlightTheme;
@@ -147,11 +160,55 @@ export function useRegisterEditorSettings() {
 			category: t('Appearance'),
 			subcategory: t('Text Editor'),
 			type: 'checkbox',
-			label: t('Show syntax highlighting'),
+			label: t('Syntax highlighting'),
 			description: t(
-				'Show syntax highlighting in the editor including tooltip and linting (LaTeX, Typst, BibTeX, and markdown)',
+				'Color language syntax without disabling parsing, folding, indentation, or other language tooling',
 			),
 			defaultValue: initialSyntaxHighlighting,
+			onChange: (value) =>
+				setEditorLanguageFeature('syntaxHighlighting', Boolean(value)),
+		});
+
+		registerSetting({
+			id: 'editor-language-tooltips',
+			category: t('Appearance'),
+			subcategory: t('Text Editor'),
+			type: 'checkbox',
+			label: t('Language tooltips'),
+			description: t(
+				'Show hover information and signature help from built-in language support and language servers',
+			),
+			defaultValue: initialLanguageTooltips,
+			onChange: (value) =>
+				setEditorLanguageFeature('tooltips', Boolean(value)),
+		});
+
+		registerSetting({
+			id: 'editor-language-diagnostics',
+			category: t('Appearance'),
+			subcategory: t('Text Editor'),
+			type: 'checkbox',
+			label: t('Language diagnostics'),
+			description: t(
+				'Show syntax and lint diagnostics from built-in language support and language servers',
+			),
+			defaultValue: initialLanguageDiagnostics,
+			onChange: (value) =>
+				setEditorLanguageFeature('diagnostics', Boolean(value)),
+		});
+
+		registerSetting({
+			id: 'editor-language-symbol-highlights',
+			category: t('Appearance'),
+			subcategory: t('Text Editor'),
+			type: 'checkbox',
+			label: t('Symbol occurrence highlights'),
+			description: t(
+				'Highlight related symbol occurrences when supported by the connected language server',
+			),
+			defaultValue: initialLanguageSymbolHighlights,
+			onChange: (value) =>
+				setEditorLanguageFeature('symbolHighlights', Boolean(value)),
 		});
 
 		registerSetting({
@@ -162,6 +219,8 @@ export function useRegisterEditorSettings() {
 			label: t('Syntax highlighting theme'),
 			description: t('Choose the color theme for syntax highlighting'),
 			defaultValue: initialHighlightTheme,
+			dependsOn: { id: 'editor-syntax-highlighting', value: true, nest: true },
+			disabledReason: t('Requires: Syntax highlighting'),
 			options: [
 				{ label: t('Auto (follows app theme)'), value: 'auto' },
 				{ label: t('Light'), value: 'light' },

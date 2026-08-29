@@ -67,6 +67,9 @@ export interface EditorSettings {
 	fontFamily: FontFamily;
 	showLineNumbers: boolean;
 	syntaxHighlighting: boolean;
+	languageTooltips: boolean;
+	languageDiagnostics: boolean;
+	languageSymbolHighlights: boolean;
 	autoSaveEnabled: boolean;
 	autoSaveDelay: number;
 	highlightTheme: HighlightTheme;

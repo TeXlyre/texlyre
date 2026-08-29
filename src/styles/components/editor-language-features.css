@@ -1,0 +1,44 @@
+/* Language feature visibility and bounded CodeMirror tooltip content. */
+
+.cm-tooltip:not(.cm-tooltip-autocomplete) {
+	max-height: min(70vh, 32rem);
+	max-width: min(90vw, 40rem);
+	overflow: auto;
+}
+
+.cm-tooltip :is(.cm-lsp-markdown, .cm-diagnostic, .cm-signature-tooltip) {
+	overflow-wrap: anywhere;
+}
+
+.cm-tooltip pre {
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+html[data-editor-language-tooltips='false']
+	.cm-tooltip:not(.cm-tooltip-autocomplete) {
+	display: none !important;
+}
+
+html[data-editor-language-diagnostics='false'] .cm-lintRange {
+	background-image: none !important;
+}
+
+html[data-editor-language-diagnostics='false'] .cm-lintPoint::after,
+html[data-editor-language-diagnostics='false']
+	:is(.cm-lint-marker, .cm-diagnostic, .cm-tooltip-lint, .cm-panel-lint) {
+	display: none !important;
+}
+
+html[data-editor-language-symbol-highlights='false'] .cm-lsp-document-highlight {
+	background: transparent !important;
+	text-decoration: none !important;
+}
+
+html[data-editor-syntax-highlighting='false'] .cm-lsp-semantic-token {
+	color: inherit !important;
+	background-color: transparent !important;
+	font-style: inherit !important;
+	font-weight: inherit !important;
+	text-decoration: none !important;
+}

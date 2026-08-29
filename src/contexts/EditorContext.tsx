@@ -1,8 +1,15 @@
 // src/contexts/EditorContext.tsx
 import type React from 'react';
-import { type ReactNode, createContext, useCallback, useMemo } from 'react';
+import {
+	type ReactNode,
+	createContext,
+	useCallback,
+	useLayoutEffect,
+	useMemo,
+} from 'react';
 
 import { pluginRegistry } from '../plugins/PluginRegistry';
+import { setEditorLanguageFeature } from '../extensions/codemirror/EditorLanguageFeatures';
 import { useSettings } from '../hooks/useSettings';
 import type {
 	EditorSettings,
@@ -58,6 +65,9 @@ export const defaultEditorSettings: EditorSettings = {
 	fontFamily: 'monospace',
 	showLineNumbers: true,
 	syntaxHighlighting: true,
+	languageTooltips: true,
+	languageDiagnostics: true,
+	languageSymbolHighlights: true,
 	autoSaveEnabled: false,
 	autoSaveDelay: 150,
 	highlightTheme: 'auto' as HighlightTheme,
@@ -122,6 +132,15 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 			syntaxHighlighting:
 				(getSetting('editor-syntax-highlighting')?.value as boolean) ??
 				defaultEditorSettings.syntaxHighlighting,
+			languageTooltips:
+				(getSetting('editor-language-tooltips')?.value as boolean) ??
+				defaultEditorSettings.languageTooltips,
+			languageDiagnostics:
+				(getSetting('editor-language-diagnostics')?.value as boolean) ??
+				defaultEditorSettings.languageDiagnostics,
+			languageSymbolHighlights:
+				(getSetting('editor-language-symbol-highlights')?.value as boolean) ??
+				defaultEditorSettings.languageSymbolHighlights,
 			autoSaveEnabled:
 				(getSetting('editor-auto-save-enable')?.value as boolean) ??
 				defaultEditorSettings.autoSaveEnabled,
@@ -154,6 +173,24 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		};
 	}, [getSetting]);
 
+	useLayoutEffect(() => {
+		setEditorLanguageFeature(
+			'syntaxHighlighting',
+			editorSettings.syntaxHighlighting,
+		);
+		setEditorLanguageFeature('tooltips', editorSettings.languageTooltips);
+		setEditorLanguageFeature('diagnostics', editorSettings.languageDiagnostics);
+		setEditorLanguageFeature(
+			'symbolHighlights',
+			editorSettings.languageSymbolHighlights,
+		);
+	}, [
+		editorSettings.syntaxHighlighting,
+		editorSettings.languageTooltips,
+		editorSettings.languageDiagnostics,
+		editorSettings.languageSymbolHighlights,
+	]);
+
 	const updateEditorSetting = useCallback(
 		<K extends keyof EditorSettings>(key: K, value: EditorSettings[K]) => {
 			const settingIdMap: Partial<Record<keyof EditorSettings, string>> = {
@@ -161,6 +198,9 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 				fontSize: 'editor-font-size',
 				showLineNumbers: 'editor-show-line-numbers',
 				syntaxHighlighting: 'editor-syntax-highlighting',
+				languageTooltips: 'editor-language-tooltips',
+				languageDiagnostics: 'editor-language-diagnostics',
+				languageSymbolHighlights: 'editor-language-symbol-highlights',
 				autoSaveEnabled: 'editor-auto-save-enable',
 				autoSaveDelay: 'editor-auto-save-delay',
 				highlightTheme: 'editor-theme-highlights',
@@ -185,10 +225,9 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		[editorSettings.showLineNumbers],
 	);
 
-	const getSyntaxHighlightingEnabled = useCallback(
-		() => editorSettings.syntaxHighlighting,
-		[editorSettings.syntaxHighlighting],
-	);
+	// Keep language parsers active for folding, indentation, navigation, and tooling.
+	// Visual syntax coloring is controlled independently by HighlightThemeExtension.
+	const getSyntaxHighlightingEnabled = useCallback(() => true, []);
 
 	const getEditorTextDirection = useCallback(
 		() => editorSettings.textDirection,

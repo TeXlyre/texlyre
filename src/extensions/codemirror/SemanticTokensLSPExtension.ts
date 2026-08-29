@@ -141,7 +141,9 @@ function buildDecorations(
 		ranges.push({
 			from,
 			to,
-			decoration: Decoration.mark({ class: className }),
+			decoration: Decoration.mark({
+				class: `${className} cm-lsp-semantic-token`,
+			}),
 		});
 	}
 
