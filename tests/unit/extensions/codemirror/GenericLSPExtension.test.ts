@@ -148,4 +148,81 @@ describe('generic LSP completion', () => {
 
 		expect(view.state.doc.toString()).toBe('import x\n\nfoo');
 	});
+
+	it('applies snippet completions and selects the first placeholder', async () => {
+		const request = jest.fn().mockResolvedValue({
+			items: [
+				{
+					label: 'fn',
+					insertText: 'fn(${1:arg}, $2)',
+					insertTextFormat: 2,
+				},
+			],
+		});
+		const { client } = createClient({ completionProvider: {} }, request);
+		jest.spyOn(genericLSPService, 'getAllClientsForFile').mockReturnValue([client]);
+		const state = EditorState.create({ doc: '' });
+		const source = getGenericLSPCompletionSources('test.tex')[0];
+		const result = await source({ state, pos: 0 } as CompletionContext);
+		const option = result!.options[0];
+		const view = new EditorView({ state, parent: document.body });
+		views.push(view);
+
+		expect(typeof option.apply).toBe('function');
+		if (typeof option.apply === 'function') {
+			option.apply(view, option, 0, 0);
+		}
+
+		expect(view.state.doc.toString()).toBe('fn(arg, )');
+		expect(view.state.sliceDoc(
+			view.state.selection.main.from,
+			view.state.selection.main.to,
+		)).toBe('arg');
+	});
+
+	it('keeps snippet placeholders when applying additionalTextEdits', async () => {
+		const request = jest.fn().mockResolvedValue({
+			items: [
+				{
+					label: 'foo',
+					textEdit: {
+						range: {
+							start: { line: 1, character: 0 },
+							end: { line: 1, character: 2 },
+						},
+						newText: 'foo(${1:x})',
+					},
+					insertTextFormat: 2,
+					additionalTextEdits: [
+						{
+							range: {
+								start: { line: 0, character: 0 },
+								end: { line: 0, character: 0 },
+							},
+							newText: 'import x\n',
+						},
+					],
+				},
+			],
+		});
+		const { client } = createClient({ completionProvider: {} }, request);
+		jest.spyOn(genericLSPService, 'getAllClientsForFile').mockReturnValue([client]);
+		const state = EditorState.create({ doc: '\nfo' });
+		const source = getGenericLSPCompletionSources('test.tex')[0];
+		const result = await source({ state, pos: 3 } as CompletionContext);
+		const option = result!.options[0];
+		const view = new EditorView({ state, parent: document.body });
+		views.push(view);
+
+		expect(typeof option.apply).toBe('function');
+		if (typeof option.apply === 'function') {
+			option.apply(view, option, 1, 3);
+		}
+
+		expect(view.state.doc.toString()).toBe('import x\n\nfoo(x)');
+		expect(view.state.sliceDoc(
+			view.state.selection.main.from,
+			view.state.selection.main.to,
+		)).toBe('x');
+	});
 });
