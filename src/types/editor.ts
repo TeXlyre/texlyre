@@ -62,14 +62,26 @@ export type HighlightTheme =
 	| 'xcodeDark'
 	| 'xcodeLight';
 
+export interface LanguageFeatureSettings {
+	builtinTooltips: boolean;
+	builtinDiagnostics: boolean;
+	builtinCompletion: boolean;
+	builtinOutline: boolean;
+	lspTooltips: boolean;
+	lspDiagnostics: boolean;
+	lspCompletion: boolean;
+	lspHighlighting: boolean;
+	lspOutline: boolean;
+	lspSymbolHighlights: boolean;
+	lspNavigation: boolean;
+}
+
 export interface EditorSettings {
 	fontSize: FontSize;
 	fontFamily: FontFamily;
 	showLineNumbers: boolean;
 	syntaxHighlighting: boolean;
-	languageTooltips: boolean;
-	languageDiagnostics: boolean;
-	languageSymbolHighlights: boolean;
+	languageFeatures: LanguageFeatureSettings;
 	autoSaveEnabled: boolean;
 	autoSaveDelay: number;
 	highlightTheme: HighlightTheme;

@@ -24,6 +24,8 @@ export type LanguageFileType = ReturnType<typeof detectFileType>;
 export interface LanguageExtensionOptions {
 	fileName?: string;
 	detectedByContent?: boolean;
+	enableLinting?: boolean;
+	enableTooltips?: boolean;
 }
 
 export const luaLanguage = StreamLanguage.define(lua);
@@ -39,6 +41,9 @@ export const createLanguageExtension = (
 	fileType: LanguageFileType,
 	options: LanguageExtensionOptions = {},
 ): Extension[] => {
+	const enableLinting = options.enableLinting ?? true;
+	const enableTooltips = options.enableTooltips ?? true;
+
 	switch (fileType) {
 		case 'latex':
 			return [
@@ -46,6 +51,8 @@ export const createLanguageExtension = (
 					latex({
 						autoCloseBrackets: false,
 						enableAutocomplete: false,
+						enableLinting,
+						enableTooltips,
 						fileName: options.fileName,
 						nestedEnvironments: latexNestedEnvironments,
 						linter: options.detectedByContent
@@ -55,11 +62,16 @@ export const createLanguageExtension = (
 				),
 			];
 		case 'typst':
-			return [withAnnotationMasking(typst())];
+			return [withAnnotationMasking(typst({ enableLinting }))];
 		case 'bib':
 			return [
 				withAnnotationMasking(
-					bibtex({ autoCloseBrackets: false, enableAutocomplete: false }),
+					bibtex({
+						autoCloseBrackets: false,
+						enableAutocomplete: false,
+						enableLinting,
+						enableTooltips,
+					}),
 				),
 			];
 		case 'markdown':

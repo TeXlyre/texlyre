@@ -1,13 +1,13 @@
 // src/components/editor/LSPOutline.tsx
 import type React from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { t } from '@/i18n';
 import {
 	getCurrentLSPOutlineSection,
 	requestLSPDocumentSymbols,
 	type LSPOutlineSection,
-} from '../../extensions/codemirror/DocumentSymbolLSPExtension';
+} from '../../extensions/codemirror/lsp/lspDocumentSymbols';
 import { useProperties } from '../../hooks/useProperties';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
 import {
@@ -15,85 +15,68 @@ import {
 	ChevronRightIcon,
 	RefreshIcon,
 } from '../common/Icons';
-import LSPOutlineItem from './LSPOutlineItem';
+import OutlineItem from './LSPOutlineItem';
 
 interface LSPOutlineProps {
-	fileName: string;
 	content: string;
+	fileName: string;
 	currentLine?: number;
 	onSectionClick: (line: number, column?: number) => void;
 	onRefresh?: () => Promise<void>;
 }
 
-function countSections(sections: LSPOutlineSection[]): number {
-	return sections.reduce(
-		(total, section) => total + 1 + countSections(section.children),
-		0,
-	);
-}
-
 const LSPOutline: React.FC<LSPOutlineProps> = ({
-	fileName,
 	content,
+	fileName,
 	currentLine = 1,
 	onSectionClick,
 	onRefresh,
 }) => {
-	const { getProperty, setProperty, registerProperty } = useProperties();
-	const propertiesRegistered = useRef(false);
+	const { getProperty, setProperty } = useProperties();
 	const headerRef = useWheelScroll<HTMLDivElement>();
-	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
-	const [isCollapsed, setIsCollapsed] = useState(true);
 	const [sections, setSections] = useState<LSPOutlineSection[]>([]);
 	const [refreshKey, setRefreshKey] = useState(0);
+	const [isCollapsed, setIsCollapsed] = useState(
+		Boolean(getProperty('lsp-outline-collapsed')),
+	);
 
-	useEffect(() => {
-		if (propertiesRegistered.current) return;
-		propertiesRegistered.current = true;
-		registerProperty({
-			id: 'lsp-outline-collapsed',
-			category: 'UI',
-			subcategory: 'Layout',
-			defaultValue: true,
-		});
-	}, [registerProperty]);
-
-	useEffect(() => {
-		if (propertiesLoaded) return;
-		const storedCollapsed = getProperty('lsp-outline-collapsed');
-		if (storedCollapsed !== undefined) {
-			setIsCollapsed(Boolean(storedCollapsed));
-		}
-		setPropertiesLoaded(true);
-	}, [getProperty, propertiesLoaded]);
-
+	/* biome-ignore lint/correctness/useExhaustiveDependencies(refreshKey): Manual refresh token intentionally retriggers the document symbol request. */
+	/* biome-ignore lint/correctness/useExhaustiveDependencies(content): Symbols are requested from the server, which tracks document changes. */
 	useEffect(() => {
 		let cancelled = false;
+
 		if (!fileName) {
 			setSections([]);
 			return;
 		}
-		void requestLSPDocumentSymbols(fileName).then((nextSections) => {
-			if (!cancelled) setSections(nextSections);
+
+		requestLSPDocumentSymbols(fileName).then((parsed) => {
+			if (!cancelled) {
+				setSections(parsed);
+			}
 		});
+
 		return () => {
 			cancelled = true;
 		};
-	}, [fileName, content, refreshKey]);
+	}, [content, fileName, refreshKey]);
 
 	const currentSection = useMemo(
 		() => getCurrentLSPOutlineSection(sections, currentLine),
 		[sections, currentLine],
 	);
-	const sectionCount = useMemo(() => countSections(sections), [sections]);
 
 	const handleRefresh = async () => {
-		if (onRefresh) await onRefresh();
+		if (onRefresh) {
+			await onRefresh();
+		}
+
 		setRefreshKey((previous) => previous + 1);
 	};
 
 	const handleToggleCollapse = () => {
 		const collapsed = !isCollapsed;
+
 		setIsCollapsed(collapsed);
 		setProperty('lsp-outline-collapsed', collapsed);
 	};
@@ -104,7 +87,9 @@ const LSPOutline: React.FC<LSPOutlineProps> = ({
 				<button className='outline-toggle-btn' onClick={handleToggleCollapse}>
 					{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
 				</button>
+
 				<span className='outline-header-title'>{t('OUTLINE')}</span>
+
 				<button
 					className='action-btn'
 					title={t('Refresh Outline')}
@@ -112,8 +97,9 @@ const LSPOutline: React.FC<LSPOutlineProps> = ({
 				>
 					<RefreshIcon />
 				</button>
-				{sectionCount > 0 && (
-					<span className='outline-section-count'>{sectionCount}</span>
+
+				{sections.length > 0 && (
+					<span className='outline-section-count'>{sections.length}</span>
 				)}
 			</div>
 
@@ -125,7 +111,7 @@ const LSPOutline: React.FC<LSPOutlineProps> = ({
 				) : (
 					<div className='outline-content'>
 						{sections.map((section) => (
-							<LSPOutlineItem
+							<OutlineItem
 								key={section.id}
 								section={section}
 								currentSection={currentSection}

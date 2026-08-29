@@ -274,6 +274,7 @@ export function createLinkNavigationExtension(
 	content?: string,
 ): Extension {
 	const plugin = ViewPlugin.fromClass(LinkNavigationPlugin);
+
 	const initialFileName = fileName || '';
 
 	return [

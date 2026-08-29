@@ -2,7 +2,7 @@
 import type React from 'react';
 import { useState } from 'react';
 
-import type { LSPOutlineSection } from '../../extensions/codemirror/DocumentSymbolLSPExtension';
+import type { LSPOutlineSection } from '../../extensions/codemirror/lsp/lspDocumentSymbols';
 import { ChevronDownIcon, ChevronRightIcon } from '../common/Icons';
 
 interface LSPOutlineItemProps {
@@ -29,9 +29,9 @@ const LSPOutlineItem: React.FC<LSPOutlineItemProps> = ({
 		onSectionClick(section.line, section.column);
 	};
 
-	const handleToggleExpand = (event: React.MouseEvent) => {
-		event.stopPropagation();
-		setIsExpanded((expanded) => !expanded);
+	const handleToggleExpand = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		setIsExpanded(!isExpanded);
 	};
 
 	return (
@@ -40,15 +40,13 @@ const LSPOutlineItem: React.FC<LSPOutlineItemProps> = ({
 				className={`outline-section ${isCurrentSection ? 'current' : ''}`}
 				onClick={handleClick}
 				style={{ paddingLeft: `${level * 12}px` }}
-				data-type={`lsp-kind-${section.kind}`}
 			>
-				{hasChildren ? (
+				{hasChildren && (
 					<button className='outline-expand-btn' onClick={handleToggleExpand}>
 						{isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
 					</button>
-				) : (
-					<div className='outline-spacer' />
 				)}
+				{!hasChildren && <div className='outline-spacer' />}
 
 				<span className='outline-icon'>▌</span>
 

@@ -583,9 +583,7 @@ const EditorContent: React.FC<{
 					</PluginControlGroup>
 				)}
 
-				<PluginControlGroup>
-					<LSPNavigationButton fileName={fileName} />
-				</PluginControlGroup>
+				<LSPNavigationButton fileName={fileName} />
 
 				<PluginControlGroup>
 					{!isViewOnly && onSave && (
@@ -683,9 +681,7 @@ const EditorContent: React.FC<{
 					)}
 
 				{linkedFileInfo.fileName && (
-					<PluginControlGroup>
-						<LSPNavigationButton fileName={linkedFileInfo.fileName} />
-					</PluginControlGroup>
+					<LSPNavigationButton fileName={linkedFileInfo.fileName} />
 				)}
 
 				<PluginControlGroup>

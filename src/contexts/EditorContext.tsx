@@ -1,21 +1,15 @@
 // src/contexts/EditorContext.tsx
 import type React from 'react';
-import {
-	type ReactNode,
-	createContext,
-	useCallback,
-	useLayoutEffect,
-	useMemo,
-} from 'react';
+import { type ReactNode, createContext, useCallback, useMemo } from 'react';
 
 import { pluginRegistry } from '../plugins/PluginRegistry';
-import { setEditorLanguageFeature } from '../extensions/codemirror/EditorLanguageFeatures';
 import { useSettings } from '../hooks/useSettings';
 import type {
 	EditorSettings,
 	FontFamily,
 	HighlightTheme,
 	EditorKeymapMode,
+	LanguageFeatureSettings,
 } from '../types/editor';
 import type { CollabConnectOptions, CollabProviderType } from '../types/collab';
 
@@ -60,14 +54,41 @@ export const resolveFontFamily = (value: unknown): string =>
 	fontFamilyMap[value as FontFamily] ??
 	fontFamilyMap[defaultEditorSettings.fontFamily];
 
+export const LANGUAGE_FEATURE_SETTING_IDS: Record<
+	keyof LanguageFeatureSettings,
+	string
+> = {
+	builtinTooltips: 'editor-language-tooltips',
+	builtinDiagnostics: 'editor-language-diagnostics',
+	builtinCompletion: 'editor-language-completion',
+	builtinOutline: 'editor-language-outline',
+	lspTooltips: 'editor-lsp-tooltips',
+	lspDiagnostics: 'editor-lsp-diagnostics',
+	lspCompletion: 'editor-lsp-completion',
+	lspHighlighting: 'editor-lsp-highlighting',
+	lspOutline: 'editor-lsp-outline',
+	lspSymbolHighlights: 'editor-lsp-symbol-highlights',
+	lspNavigation: 'editor-lsp-navigation',
+};
+
 export const defaultEditorSettings: EditorSettings = {
 	fontSize: 16,
 	fontFamily: 'monospace',
 	showLineNumbers: true,
 	syntaxHighlighting: true,
-	languageTooltips: true,
-	languageDiagnostics: true,
-	languageSymbolHighlights: true,
+	languageFeatures: {
+		builtinTooltips: true,
+		builtinDiagnostics: true,
+		builtinCompletion: true,
+		builtinOutline: true,
+		lspTooltips: true,
+		lspDiagnostics: true,
+		lspCompletion: true,
+		lspHighlighting: true,
+		lspOutline: true,
+		lspSymbolHighlights: true,
+		lspNavigation: true,
+	},
 	autoSaveEnabled: false,
 	autoSaveDelay: 150,
 	highlightTheme: 'auto' as HighlightTheme,
@@ -78,6 +99,22 @@ export const defaultEditorSettings: EditorSettings = {
 	language: 'en',
 	textDirection: 'auto',
 };
+
+function readLanguageFeatures(
+	getSetting: (id: string) => { value?: unknown } | undefined,
+): LanguageFeatureSettings {
+	const entries = Object.entries(LANGUAGE_FEATURE_SETTING_IDS) as [
+		keyof LanguageFeatureSettings,
+		string,
+	][];
+
+	return entries.reduce((features, [key, id]) => {
+		features[key] =
+			(getSetting(id)?.value as boolean) ??
+			defaultEditorSettings.languageFeatures[key];
+		return features;
+	}, {} as LanguageFeatureSettings);
+}
 
 interface EditorContextType {
 	editorSettings: EditorSettings;
@@ -132,15 +169,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 			syntaxHighlighting:
 				(getSetting('editor-syntax-highlighting')?.value as boolean) ??
 				defaultEditorSettings.syntaxHighlighting,
-			languageTooltips:
-				(getSetting('editor-language-tooltips')?.value as boolean) ??
-				defaultEditorSettings.languageTooltips,
-			languageDiagnostics:
-				(getSetting('editor-language-diagnostics')?.value as boolean) ??
-				defaultEditorSettings.languageDiagnostics,
-			languageSymbolHighlights:
-				(getSetting('editor-language-symbol-highlights')?.value as boolean) ??
-				defaultEditorSettings.languageSymbolHighlights,
+			languageFeatures: readLanguageFeatures(getSetting),
 			autoSaveEnabled:
 				(getSetting('editor-auto-save-enable')?.value as boolean) ??
 				defaultEditorSettings.autoSaveEnabled,
@@ -173,24 +202,6 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		};
 	}, [getSetting]);
 
-	useLayoutEffect(() => {
-		setEditorLanguageFeature(
-			'syntaxHighlighting',
-			editorSettings.syntaxHighlighting,
-		);
-		setEditorLanguageFeature('tooltips', editorSettings.languageTooltips);
-		setEditorLanguageFeature('diagnostics', editorSettings.languageDiagnostics);
-		setEditorLanguageFeature(
-			'symbolHighlights',
-			editorSettings.languageSymbolHighlights,
-		);
-	}, [
-		editorSettings.syntaxHighlighting,
-		editorSettings.languageTooltips,
-		editorSettings.languageDiagnostics,
-		editorSettings.languageSymbolHighlights,
-	]);
-
 	const updateEditorSetting = useCallback(
 		<K extends keyof EditorSettings>(key: K, value: EditorSettings[K]) => {
 			const settingIdMap: Partial<Record<keyof EditorSettings, string>> = {
@@ -198,9 +209,6 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 				fontSize: 'editor-font-size',
 				showLineNumbers: 'editor-show-line-numbers',
 				syntaxHighlighting: 'editor-syntax-highlighting',
-				languageTooltips: 'editor-language-tooltips',
-				languageDiagnostics: 'editor-language-diagnostics',
-				languageSymbolHighlights: 'editor-language-symbol-highlights',
 				autoSaveEnabled: 'editor-auto-save-enable',
 				autoSaveDelay: 'editor-auto-save-delay',
 				highlightTheme: 'editor-theme-highlights',
@@ -225,9 +233,10 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		[editorSettings.showLineNumbers],
 	);
 
-	// Keep language parsers active for folding, indentation, navigation, and tooling.
-	// Visual syntax coloring is controlled independently by HighlightThemeExtension.
-	const getSyntaxHighlightingEnabled = useCallback(() => true, []);
+	const getSyntaxHighlightingEnabled = useCallback(
+		() => editorSettings.syntaxHighlighting,
+		[editorSettings.syntaxHighlighting],
+	);
 
 	const getEditorTextDirection = useCallback(
 		() => editorSettings.textDirection,

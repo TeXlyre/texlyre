@@ -180,33 +180,17 @@
 	display: flex;
 }
 
-.lsp-navigation-group {
-	display: flex;
-	align-items: center;
-	border-radius: var(--radius-sm);
-	overflow: hidden;
+.lsp-navigation-container .control-button:not(:disabled) {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+	border-color: var(--pico-primary);
 }
 
-.lsp-navigation-group .lsp-navigation-primary {
-	border-top-right-radius: 0;
-	border-bottom-right-radius: 0;
-}
-
-.lsp-navigation-group .lsp-navigation-toggle {
-	border-top-left-radius: 0;
-	border-bottom-left-radius: 0;
-	min-width: 0 !important;
+.lsp-navigation-container .control-button:not(:disabled):hover {
+	background-color: var(--pico-primary-hover);
+	border-color: var(--pico-primary-hover);
 }
 
 .lsp-navigation-dropdown {
 	min-width: 220px;
-	padding: var(--space-xs);
-	background-color: var(--pico-background);
-	border: 1px solid var(--accent-border);
-	border-radius: var(--radius-sm);
-	box-shadow: var(--shadow-md);
-}
-
-.lsp-navigation-dropdown .dropdown-item {
-	justify-content: space-between;
 }
