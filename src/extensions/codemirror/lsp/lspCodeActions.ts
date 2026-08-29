@@ -1,10 +1,11 @@
-// src/extension/codemirror/CodeActionsLSPExtension.ts
+// src/extensions/codemirror/lsp/lspCodeActions.ts
 import { type Extension, StateField, StateEffect } from '@codemirror/state';
 import {
 	type EditorView,
 	ViewPlugin,
 	showTooltip,
 	type Tooltip,
+	type ViewUpdate,
 } from '@codemirror/view';
 import {
 	diagnosticCount,
@@ -12,8 +13,21 @@ import {
 } from '@codemirror/lint';
 import type { LSPClient } from '@codemirror/lsp-client';
 
-import { genericLSPService } from '../../services/GenericLSPService';
-import type { LSPDiagnostic } from './GenericLSPExtension';
+import { genericLSPService } from '../../../services/GenericLSPService';
+import { toLSPSeverity, type LSPDiagnostic } from './lspDiagnostics';
+import {
+	createDebouncer,
+	getClientLabel,
+	getClientsForFile,
+	getServerCapabilities,
+	offsetToPosition,
+	requestFrom,
+	textEditsToChanges,
+	toFileUri,
+	type LSPRange,
+} from './lspProtocol';
+
+const REQUEST_DELAY = 300;
 
 interface WorkspaceEdit {
 	changes?: Record<string, TextEdit[]>;
@@ -36,18 +50,12 @@ interface LspCommand {
 type CodeActionOrCommand = CodeAction | LspCommand;
 
 interface TextEdit {
-	range: {
-		start: { line: number; character: number };
-		end: { line: number; character: number };
-	};
+	range: LSPRange;
 	newText: string;
 }
 
 interface LspDiagnostic {
-	range: {
-		start: { line: number; character: number };
-		end: { line: number; character: number };
-	};
+	range: LSPRange;
 	message: string;
 	severity?: number;
 	source?: string;
@@ -76,23 +84,6 @@ function resolveAction(
 	return { title: item.title, edit: item.edit, command: item.command, client };
 }
 
-function posToOffset(
-	doc: any,
-	pos: { line: number; character: number },
-): number | null {
-	if (pos.line < 0 || pos.line >= doc.lines) return null;
-	const line = doc.line(pos.line + 1);
-	return Math.min(line.from + pos.character, line.to);
-}
-
-function offsetToPos(
-	doc: any,
-	offset: number,
-): { line: number; character: number } {
-	const line = doc.lineAt(offset);
-	return { line: line.number - 1, character: offset - line.from };
-}
-
 function getDiagnosticsAtPosition(state: any, pos: number): LspDiagnostic[] {
 	const results: LspDiagnostic[] = [];
 	if (diagnosticCount(state) === 0) return results;
@@ -103,8 +94,8 @@ function getDiagnosticsAtPosition(state: any, pos: number): LspDiagnostic[] {
 			const lsp = d as LSPDiagnostic;
 			results.push({
 				range: {
-					start: offsetToPos(doc, from),
-					end: offsetToPos(doc, to),
+					start: offsetToPosition(doc, from),
+					end: offsetToPosition(doc, to),
 				},
 				message: d.message,
 				severity: d.severity === 'error' ? 1 : d.severity === 'warning' ? 2 : 3,
@@ -119,18 +110,9 @@ function getDiagnosticsAtPosition(state: any, pos: number): LspDiagnostic[] {
 }
 
 function applyTextEdits(edits: TextEdit[], view: EditorView) {
-	const doc = view.state.doc;
-	const changes = edits
-		.map((edit) => {
-			const from = posToOffset(doc, edit.range.start);
-			const to = posToOffset(doc, edit.range.end);
-			if (from === null || to === null) return null;
-			return { from, to, insert: edit.newText };
-		})
-		.filter(
-			(c): c is { from: number; to: number; insert: string } => c !== null,
-		)
-		.sort((a, b) => b.from - a.from);
+	const changes = textEditsToChanges(view.state.doc, edits).sort(
+		(a, b) => b.from - a.from,
+	);
 
 	if (changes.length > 0) {
 		view.dispatch({ changes });
@@ -252,15 +234,9 @@ const codeActionField = StateField.define<CodeActionState | null>({
 						}
 						first = false;
 
-						const configId = genericLSPService.getConfigId(client);
-						const label =
-							(configId && genericLSPService.getConfigName(configId)) ||
-							configId ||
-							'LSP';
-
 						const header = document.createElement('div');
 						header.className = 'cm-code-actions-source';
-						header.textContent = label;
+						header.textContent = getClientLabel(client);
 						dom.appendChild(header);
 
 						const buttonRow = document.createElement('div');
@@ -289,20 +265,21 @@ const codeActionField = StateField.define<CodeActionState | null>({
 	},
 });
 
-export function createCodeActionsExtension(fileName: string): Extension {
-	const fileUri = `file:///${fileName}`;
+export function createLSPCodeActionsExtension(fileName: string): Extension {
+	if (!fileName) return [];
+
+	const fileUri = toFileUri(fileName);
 
 	const applyEditPlugin = ViewPlugin.fromClass(
 		class {
-			private unsubscribe: () => void;
-			constructor(private view: EditorView) {
+			private readonly unsubscribe: () => void;
+
+			constructor(private readonly view: EditorView) {
 				this.unsubscribe = genericLSPService.onApplyEdit((_configId, edit) => {
-					if (edit) {
-						applyWorkspaceEdit(edit, this.view, fileUri);
-					}
+					if (edit) applyWorkspaceEdit(edit, this.view, fileUri);
 				});
 			}
-			update() {}
+
 			destroy() {
 				this.unsubscribe();
 			}
@@ -311,50 +288,49 @@ export function createCodeActionsExtension(fileName: string): Extension {
 
 	const requestPlugin = ViewPlugin.fromClass(
 		class {
-			private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+			private readonly debouncer = createDebouncer(REQUEST_DELAY);
 			private pendingRequest = 0;
 
-			constructor(private view: EditorView) {}
-
-			update(update: any) {
+			update(update: ViewUpdate) {
 				if (update.docChanged) {
-					if (this.debounceTimer) clearTimeout(this.debounceTimer);
+					this.debouncer.cancel();
 					queueMicrotask(() => {
 						update.view.dispatch({ effects: setCodeActions.of(null) });
 					});
 					return;
 				}
+
 				if (update.selectionSet) {
-					if (this.debounceTimer) clearTimeout(this.debounceTimer);
-					this.debounceTimer = setTimeout(() => this.fetch(update.view), 300);
+					this.debouncer.schedule(() => void this.fetch(update.view));
 				}
 			}
 
 			destroy() {
-				if (this.debounceTimer) clearTimeout(this.debounceTimer);
+				this.debouncer.cancel();
 			}
 
 			private async fetch(view: EditorView) {
-				const clients = genericLSPService.getAllClientsForFile(fileName);
-				if (clients.length === 0) {
-					view.dispatch({ effects: setCodeActions.of(null) });
-					return;
-				}
-
-				const requestId = ++this.pendingRequest;
-				const pos = view.state.selection.main.head;
-				const diagnostics = getDiagnosticsAtPosition(view.state, pos);
+				const clients = getClientsForFile(fileName);
+				const diagnostics =
+					clients.length > 0
+						? getDiagnosticsAtPosition(
+								view.state,
+								view.state.selection.main.head,
+							)
+						: [];
 
 				if (diagnostics.length === 0) {
 					view.dispatch({ effects: setCodeActions.of(null) });
 					return;
 				}
 
-				const lspPos = offsetToPos(view.state.doc, pos);
+				const requestId = ++this.pendingRequest;
+				const pos = view.state.selection.main.head;
+				const lspPos = offsetToPosition(view.state.doc, pos);
 
-				const actionPromises = clients.map(async (client) => {
-					try {
-						const capabilities = (client as any).serverCapabilities;
+				const results = await Promise.all(
+					clients.map(async (client) => {
+						const capabilities = getServerCapabilities(client);
 						const provider = capabilities?.codeActionProvider;
 						if (capabilities && !provider) return [] as ResolvedAction[];
 
@@ -362,34 +338,26 @@ export function createCodeActionsExtension(fileName: string): Extension {
 							typeof provider === 'object'
 								? provider.codeActionKinds
 								: undefined;
-						const only =
-							advertisedKinds && advertisedKinds.length > 0
-								? advertisedKinds
-								: [];
 
-						const result = await (client as any).request(
+						const result = await requestFrom<CodeActionOrCommand[]>(
+							client,
 							'textDocument/codeAction',
 							{
 								textDocument: { uri: fileUri },
 								range: { start: lspPos, end: lspPos },
-								context: { diagnostics, only },
+								context: { diagnostics, only: advertisedKinds ?? [] },
 							},
 						);
 
-						return ((result || []) as CodeActionOrCommand[])
-							.filter((a) => a.title)
-							.map((a) => resolveAction(a, client));
-					} catch {
-						return [] as ResolvedAction[];
-					}
-				});
-
-				const results = await Promise.all(actionPromises);
+						return (result ?? [])
+							.filter((action) => action.title)
+							.map((action) => resolveAction(action, client));
+					}),
+				);
 				if (requestId !== this.pendingRequest) return;
 
-				const allActions = results.flat();
 				const seen = new Set<string>();
-				const uniqueActions = allActions.filter((action) => {
+				const actions = results.flat().filter((action) => {
 					const key = `${genericLSPService.getConfigId(action.client!) ?? ''}::${action.title}`;
 					if (seen.has(key)) return false;
 					seen.add(key);
@@ -397,12 +365,7 @@ export function createCodeActionsExtension(fileName: string): Extension {
 				});
 
 				view.dispatch({
-					effects: setCodeActions.of({
-						pos,
-						actions: uniqueActions,
-						fileUri,
-						clients,
-					}),
+					effects: setCodeActions.of({ pos, actions, fileUri, clients }),
 				});
 			}
 		},

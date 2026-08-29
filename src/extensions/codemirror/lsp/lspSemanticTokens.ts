@@ -1,4 +1,4 @@
-// src/extensions/codemirror/SemanticTokensLSPExtension.ts
+// src/extensions/codemirror/lsp/lspSemanticTokens.ts
 import { highlightingFor } from '@codemirror/language';
 import {
 	Prec,
@@ -16,7 +16,15 @@ import {
 import type { LSPClient } from '@codemirror/lsp-client';
 import { type Tag, tags } from '@lezer/highlight';
 
-import { genericLSPService } from '../../services/GenericLSPService';
+import {
+	createDebouncer,
+	createRequestGate,
+	getClientsForFile,
+	getServerCapabilities,
+	requestFrom,
+	toFileUri,
+} from './lspProtocol';
+import { genericLSPService } from '../../../services/GenericLSPService';
 
 const REQUEST_DELAY = 300;
 
@@ -64,8 +72,8 @@ const TOKEN_MODIFIER_TAGS: Record<string, (tag: Tag) => Tag> = {
 };
 
 function resolveTarget(fileName: string): SemanticTokensTarget | null {
-	for (const client of genericLSPService.getAllClientsForFile(fileName)) {
-		const provider = (client as any).serverCapabilities?.semanticTokensProvider;
+	for (const client of getClientsForFile(fileName, 'semanticTokensProvider')) {
+		const provider = getServerCapabilities(client)?.semanticTokensProvider;
 		const legend = provider?.legend;
 		if (provider?.full && Array.isArray(legend?.tokenTypes)) {
 			return {
@@ -141,7 +149,9 @@ function buildDecorations(
 		ranges.push({
 			from,
 			to,
-			decoration: Decoration.mark({ class: className }),
+			decoration: Decoration.mark({
+				class: `${className} cm-lsp-semantic-token`,
+			}),
 		});
 	}
 
@@ -153,10 +163,10 @@ function buildDecorations(
 	return builder.finish();
 }
 
-export function createSemanticTokensExtension(fileName: string): Extension {
+export function createLSPSemanticTokensExtension(fileName: string): Extension {
 	if (!fileName) return [];
 
-	const fileUri = `file:///${fileName}`;
+	const fileUri = toFileUri(fileName);
 
 	return Prec.highest(
 		ViewPlugin.fromClass(
@@ -164,8 +174,8 @@ export function createSemanticTokensExtension(fileName: string): Extension {
 				decorations: DecorationSet = Decoration.none;
 
 				private readonly unsubscribe: () => void;
-				private timer: ReturnType<typeof setTimeout> | null = null;
-				private generation = 0;
+				private readonly gate = createRequestGate();
+				private readonly debouncer = createDebouncer(REQUEST_DELAY);
 				private answered = false;
 
 				constructor(private readonly view: EditorView) {
@@ -173,7 +183,7 @@ export function createSemanticTokensExtension(fileName: string): Extension {
 						this.answered = false;
 						this.schedule(0);
 					});
-					this.schedule(REQUEST_DELAY);
+					this.schedule();
 				}
 
 				update(update: ViewUpdate) {
@@ -188,48 +198,42 @@ export function createSemanticTokensExtension(fileName: string): Extension {
 
 					if (update.docChanged) {
 						this.decorations = this.decorations.map(update.changes);
-						this.schedule(REQUEST_DELAY);
+						this.schedule();
 					} else if (!this.answered) {
-						this.schedule(REQUEST_DELAY);
+						this.schedule();
 					}
 				}
 
 				destroy() {
 					this.unsubscribe();
-					if (this.timer !== null) clearTimeout(this.timer);
+					this.debouncer.cancel();
 					this.decorations = Decoration.none;
 				}
 
-				private schedule(delay: number) {
-					if (this.timer !== null) clearTimeout(this.timer);
-					this.timer = setTimeout(() => {
-						this.timer = null;
-						void this.requestTokens();
-					}, delay);
+				private schedule(delay?: number) {
+					this.debouncer.schedule(() => void this.requestTokens(), delay);
 				}
 
 				private async requestTokens() {
 					const target = resolveTarget(fileName);
 					if (!target) return;
 
-					const generation = ++this.generation;
-					try {
-						const result = await (target.client as any).request(
-							'textDocument/semanticTokens/full',
-							{ textDocument: { uri: fileUri } },
-						);
-						if (generation !== this.generation || !this.view.dom.isConnected)
-							return;
-						if (!Array.isArray(result?.data)) return;
+					const token = this.gate.start();
+					const result = await requestFrom<{ data?: number[] }>(
+						target.client,
+						'textDocument/semanticTokens/full',
+						{ textDocument: { uri: fileUri } },
+					);
+					if (!this.gate.isCurrent(token) || !this.view.dom.isConnected) return;
+					if (!Array.isArray(result?.data)) return;
 
-						this.answered = true;
-						this.decorations = buildDecorations(
-							this.view,
-							result.data,
-							target.legend,
-						);
-						this.view.dispatch({});
-					} catch {}
+					this.answered = true;
+					this.decorations = buildDecorations(
+						this.view,
+						result.data,
+						target.legend,
+					);
+					this.view.dispatch({});
 				}
 			},
 			{ decorations: (plugin) => plugin.decorations },

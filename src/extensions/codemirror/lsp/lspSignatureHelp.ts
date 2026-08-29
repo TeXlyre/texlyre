@@ -1,4 +1,4 @@
-// src/extensions/codemirror/SignatureHelpLSPExtension.ts
+// src/extensions/codemirror/lsp/lspSignatureHelp.ts
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
 import {
 	EditorView,
@@ -8,7 +8,14 @@ import {
 } from '@codemirror/view';
 import type { LSPClient } from '@codemirror/lsp-client';
 
-import { genericLSPService } from '../../services/GenericLSPService';
+import {
+	createRequestGate,
+	getClientsForFile,
+	getServerCapabilities,
+	offsetToPosition,
+	requestFrom,
+	toFileUri,
+} from './lspProtocol';
 
 interface SignatureHelpState {
 	pos: number;
@@ -79,8 +86,8 @@ const signatureHelpField = StateField.define<SignatureHelpState | null>({
 });
 
 function resolveTarget(fileName: string): SignatureHelpTarget | null {
-	for (const client of genericLSPService.getAllClientsForFile(fileName)) {
-		const provider = (client as any).serverCapabilities?.signatureHelpProvider;
+	for (const client of getClientsForFile(fileName, 'signatureHelpProvider')) {
+		const provider = getServerCapabilities(client)?.signatureHelpProvider;
 		if (!provider) continue;
 		return {
 			client,
@@ -154,34 +161,31 @@ function toSignatureHelpState(
 	};
 }
 
-export function createSignatureHelpExtension(fileName: string): Extension {
+export function createLSPSignatureHelpExtension(fileName: string): Extension {
 	if (!fileName) return [];
 
-	const fileUri = `file:///${fileName}`;
-	let generation = 0;
+	const fileUri = toFileUri(fileName);
+	const gate = createRequestGate();
 
 	const requestSignatureHelp = async (
 		view: EditorView,
 		target: SignatureHelpTarget,
 	) => {
-		const current = ++generation;
+		const token = gate.start();
 		const pos = view.state.selection.main.head;
-		const line = view.state.doc.lineAt(pos);
+		const result = await requestFrom<any>(
+			target.client,
+			'textDocument/signatureHelp',
+			{
+				textDocument: { uri: fileUri },
+				position: offsetToPosition(view.state.doc, pos),
+			},
+		);
+		if (!gate.isCurrent(token) || !view.dom.isConnected) return;
 
-		try {
-			const result = await (target.client as any).request(
-				'textDocument/signatureHelp',
-				{
-					textDocument: { uri: fileUri },
-					position: { line: line.number - 1, character: pos - line.from },
-				},
-			);
-			if (current !== generation || !view.dom.isConnected) return;
-
-			view.dispatch({
-				effects: setSignatureHelp.of(toSignatureHelpState(result, pos)),
-			});
-		} catch {}
+		view.dispatch({
+			effects: setSignatureHelp.of(toSignatureHelpState(result, pos)),
+		});
 	};
 
 	const listener = EditorView.updateListener.of((update) => {
@@ -190,12 +194,12 @@ export function createSignatureHelpExtension(fileName: string): Extension {
 		const target = resolveTarget(fileName);
 		if (!target) return;
 
-		const isOpen = update.state.field(signatureHelpField) !== null;
-		if (!isOpen) {
+		if (update.state.field(signatureHelpField) === null) {
 			if (!update.docChanged) return;
 			const typed = insertedText(update);
-			if (!target.triggerCharacters.some((char) => typed.includes(char)))
+			if (!target.triggerCharacters.some((char) => typed.includes(char))) {
 				return;
+			}
 		}
 
 		void requestSignatureHelp(update.view, target);
