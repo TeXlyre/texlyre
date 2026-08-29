@@ -59,7 +59,7 @@ const defaultClientCapabilities: JsonRecord = {
 		hover: { contentFormat: ['markdown', 'plaintext'] },
 		completion: {
 			completionItem: {
-				snippetSupport: false,
+				snippetSupport: true,
 				documentationFormat: ['markdown', 'plaintext'],
 			},
 		},
