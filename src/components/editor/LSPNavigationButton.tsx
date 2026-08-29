@@ -1,9 +1,12 @@
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { EditorView } from '@codemirror/view';
 
 import { t } from '@/i18n';
 import {
 	getSupportedLSPNavigationKinds,
+	goToLSPLocation,
+	hasLSPNavigationTarget,
 	type LSPNavigationKind,
 } from '../../extensions/codemirror/NavigationLSPExtension';
 import { genericLSPService } from '../../services/GenericLSPService';
@@ -30,7 +33,10 @@ const getNavigationLabel = (kind: LSPNavigationKind): string => {
 const LSPNavigationButton: React.FC<LSPNavigationButtonProps> = ({ fileName }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [capabilitiesVersion, setCapabilitiesVersion] = useState(0);
+	const [availableKinds, setAvailableKinds] = useState<LSPNavigationKind[]>([]);
 	const triggerRef = useRef<HTMLDivElement>(null);
+	const requestIdRef = useRef(0);
+	const checkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useEffect(() => {
 		const refresh = () => setCapabilitiesVersion((version) => version + 1);
@@ -55,44 +61,83 @@ const LSPNavigationButton: React.FC<LSPNavigationButtonProps> = ({ fileName }) =
 		[],
 	);
 
+	const getEditorView = useCallback(() => {
+		const editor = getEditorElement();
+		return editor ? EditorView.findFromDOM(editor) : null;
+	}, [getEditorElement]);
+
 	const navigate = useCallback(
 		(kind: LSPNavigationKind) => {
+			if (!availableKinds.includes(kind)) return;
+			const view = getEditorView();
+			if (!view) return;
 			setIsOpen(false);
-			getEditorElement()?.dispatchEvent(
-				new CustomEvent('lsp-navigate', {
-					detail: { fileName, kind },
-				}),
-			);
+			void goToLSPLocation(view, fileName, kind);
 		},
-		[fileName, getEditorElement],
+		[fileName, availableKinds, getEditorView],
 	);
 
+	const scheduleAvailabilityCheck = useCallback(() => {
+		if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
+		setAvailableKinds([]);
+		const requestId = ++requestIdRef.current;
+
+		checkTimeoutRef.current = setTimeout(async () => {
+			const view = getEditorView();
+			if (!view || supportedKinds.length === 0) return;
+
+			const availability = await Promise.all(
+				supportedKinds.map(async (kind) => ({
+					kind,
+					available: await hasLSPNavigationTarget(view, fileName, kind),
+				})),
+			);
+			if (requestId !== requestIdRef.current) return;
+
+			setAvailableKinds(
+				availability
+					.filter(({ available }) => available)
+					.map(({ kind }) => kind),
+			);
+		}, 120);
+	}, [fileName, getEditorView, supportedKinds]);
+
 	useEffect(() => {
-		if (!supportedKinds.includes('definition')) return;
 		const editor = getEditorElement();
-		if (!editor) return;
+		if (!editor || supportedKinds.length === 0) {
+			setAvailableKinds([]);
+			return;
+		}
 
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (
-				event.key !== 'F12' ||
-				event.ctrlKey ||
-				event.metaKey ||
-				event.altKey ||
-				event.shiftKey
-			) {
-				return;
-			}
-
-			event.preventDefault();
-			navigate('definition');
+		const handleEditorActivity = () => scheduleAvailabilityCheck();
+		const handleSelectionChange = () => {
+			if (editor.contains(document.activeElement)) scheduleAvailabilityCheck();
 		};
 
-		editor.addEventListener('keydown', handleKeyDown);
-		return () => editor.removeEventListener('keydown', handleKeyDown);
-	}, [getEditorElement, navigate, supportedKinds]);
+		editor.addEventListener('keyup', handleEditorActivity);
+		editor.addEventListener('mouseup', handleEditorActivity);
+		editor.addEventListener('input', handleEditorActivity);
+		editor.addEventListener('focusin', handleEditorActivity);
+		document.addEventListener('selectionchange', handleSelectionChange);
+		document.addEventListener('editor-cursor-update', handleSelectionChange);
+		scheduleAvailabilityCheck();
+
+		return () => {
+			editor.removeEventListener('keyup', handleEditorActivity);
+			editor.removeEventListener('mouseup', handleEditorActivity);
+			editor.removeEventListener('input', handleEditorActivity);
+			editor.removeEventListener('focusin', handleEditorActivity);
+			document.removeEventListener('selectionchange', handleSelectionChange);
+			document.removeEventListener('editor-cursor-update', handleSelectionChange);
+			if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
+		};
+	}, [getEditorElement, scheduleAvailabilityCheck, supportedKinds.length]);
 
 	useEffect(() => {
-		if (supportedKinds.length === 0) setIsOpen(false);
+		if (supportedKinds.length === 0) {
+			setIsOpen(false);
+			setAvailableKinds([]);
+		}
 	}, [supportedKinds.length]);
 
 	if (supportedKinds.length === 0) return null;
@@ -101,6 +146,9 @@ const LSPNavigationButton: React.FC<LSPNavigationButtonProps> = ({ fileName }) =
 		? 'definition'
 		: supportedKinds[0];
 	const primaryLabel = getNavigationLabel(primaryKind);
+	const primaryAvailable = availableKinds.includes(primaryKind);
+	const hasAvailableNavigation = availableKinds.length > 0;
+	const noTargetLabel = t('No navigation target at cursor');
 
 	return (
 		<div className='lsp-navigation-container'>
@@ -108,16 +156,16 @@ const LSPNavigationButton: React.FC<LSPNavigationButtonProps> = ({ fileName }) =
 				<button
 					className='control-button lsp-navigation-primary'
 					onClick={() => navigate(primaryKind)}
-					title={
-						primaryKind === 'definition' ? `${primaryLabel} (F12)` : primaryLabel
-					}
+					disabled={!primaryAvailable}
+					title={primaryAvailable ? primaryLabel : noTargetLabel}
 				>
 					<LinkIcon />
 				</button>
 				<button
 					className='control-button dropdown-toggle lsp-navigation-toggle'
 					onClick={() => setIsOpen((open) => !open)}
-					title={t('Go to...')}
+					disabled={!hasAvailableNavigation}
+					title={hasAvailableNavigation ? t('Go to...') : noTargetLabel}
 					aria-expanded={isOpen}
 				>
 					<ChevronDownIcon />
@@ -136,11 +184,9 @@ const LSPNavigationButton: React.FC<LSPNavigationButtonProps> = ({ fileName }) =
 							key={kind}
 							className='dropdown-item'
 							onClick={() => navigate(kind)}
+							disabled={!availableKinds.includes(kind)}
 						>
 							<span className='dropdown-label'>{getNavigationLabel(kind)}</span>
-							{kind === 'definition' && (
-								<span className='dropdown-value'>F12</span>
-							)}
 						</button>
 					))}
 				</div>

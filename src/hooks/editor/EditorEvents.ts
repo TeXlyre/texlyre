@@ -10,10 +10,6 @@ import {
 	replaceReviewTags,
 	resolveAllReviews,
 } from '../../extensions/codemirror/ReviewExtension';
-import {
-	goToLSPLocation,
-	type LSPNavigationKind,
-} from '../../extensions/codemirror/NavigationLSPExtension';
 import { locateAnnotationTags } from '../../utils/annotationTagUtils';
 
 const moduleLog = createNamedLogger('EditorEvents');
@@ -45,7 +41,6 @@ export const registerEditorEventHandlers = (
 		saveDocumentToLinkedFile,
 		setShowSaveIndicator,
 	} = opts;
-	const editorDom = viewRef.current?.dom;
 
 	const locateCommentTags = (content: string, commentId: string) =>
 		locateAnnotationTags(content, 'comment', commentId);
@@ -344,17 +339,6 @@ export const registerEditorEventHandlers = (
 		}
 	};
 
-	const handleLSPNavigate = (event: Event) => {
-		const customEvent = event as CustomEvent<{
-			fileName?: string;
-			kind?: LSPNavigationKind;
-		}>;
-		const { fileName, kind } = customEvent.detail;
-		if (!viewRef.current || !fileName || !kind) return;
-
-		void goToLSPLocation(viewRef.current as CMEditorView, fileName, kind);
-	};
-
 	document.addEventListener(
 		'comment-response-added',
 		handleCommentResponseAdded,
@@ -370,7 +354,6 @@ export const registerEditorEventHandlers = (
 	document.addEventListener('codemirror-goto-char', handleGotoChar);
 	document.addEventListener('file-saved', handleFileSaved);
 	document.addEventListener('trigger-save', handleTriggerSave);
-	editorDom?.addEventListener('lsp-navigate', handleLSPNavigate);
 
 	return () => {
 		document.removeEventListener(
@@ -388,6 +371,5 @@ export const registerEditorEventHandlers = (
 		document.removeEventListener('codemirror-goto-char', handleGotoChar);
 		document.removeEventListener('file-saved', handleFileSaved);
 		document.removeEventListener('trigger-save', handleTriggerSave);
-		editorDom?.removeEventListener('lsp-navigate', handleLSPNavigate);
 	};
 };

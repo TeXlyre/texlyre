@@ -90,15 +90,15 @@ export function getSupportedLSPNavigationKinds(
 	);
 }
 
-export async function goToLSPLocation(
+export async function resolveLSPNavigationTarget(
 	view: EditorView,
 	fileName: string,
 	kind: LSPNavigationKind,
-): Promise<boolean> {
+): Promise<Location | null> {
 	const clients = genericLSPService
 		.getAllClientsForFile(fileName)
 		.filter((client) => supportsNavigation(client, kind));
-	if (clients.length === 0) return false;
+	if (clients.length === 0) return null;
 
 	const head = view.state.selection.main.head;
 	const position = offsetToPosition(view, head);
@@ -111,30 +111,47 @@ export async function goToLSPLocation(
 				position,
 			});
 			const first = Array.isArray(response) ? response[0] : response;
-			if (!first) continue;
-
-			const location = normalizeLocation(first);
-			if (normalizeFileUri(location.uri) === normalizeFileUri(currentUri)) {
-				const target = positionToOffset(view, location.range.start);
-				if (target === null) continue;
-				view.dispatch({
-					selection: { anchor: target },
-					effects: EditorView.scrollIntoView(target, { y: 'center' }),
-					userEvent: `select.${kind}`,
-				});
-				view.focus();
-				return true;
-			}
-
-			linkNavigationService.navigateToFileAndLine(
-				normalizeFileUri(location.uri),
-				location.range.start.line + 1,
-			);
-			return true;
+			if (first) return normalizeLocation(first);
 		} catch {}
 	}
 
-	return false;
+	return null;
+}
+
+export async function hasLSPNavigationTarget(
+	view: EditorView,
+	fileName: string,
+	kind: LSPNavigationKind,
+): Promise<boolean> {
+	return Boolean(await resolveLSPNavigationTarget(view, fileName, kind));
+}
+
+export async function goToLSPLocation(
+	view: EditorView,
+	fileName: string,
+	kind: LSPNavigationKind,
+): Promise<boolean> {
+	const location = await resolveLSPNavigationTarget(view, fileName, kind);
+	if (!location) return false;
+
+	const currentUri = `file:///${fileName}`;
+	if (normalizeFileUri(location.uri) === normalizeFileUri(currentUri)) {
+		const target = positionToOffset(view, location.range.start);
+		if (target === null) return false;
+		view.dispatch({
+			selection: { anchor: target },
+			effects: EditorView.scrollIntoView(target, { y: 'center' }),
+			userEvent: `select.${kind}`,
+		});
+		view.focus();
+		return true;
+	}
+
+	linkNavigationService.navigateToFileAndLine(
+		normalizeFileUri(location.uri),
+		location.range.start.line + 1,
+	);
+	return true;
 }
 
 export function goToLSPDeclaration(

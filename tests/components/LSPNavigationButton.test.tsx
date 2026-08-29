@@ -1,6 +1,11 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { EditorView } from '@codemirror/view';
 
 import LSPNavigationButton from '@src/components/editor/LSPNavigationButton';
+import {
+	goToLSPLocation,
+	hasLSPNavigationTarget,
+} from '@src/extensions/codemirror/NavigationLSPExtension';
 import { genericLSPService } from '@src/services/GenericLSPService';
 
 jest.mock('@src/components/common/PositionedDropdown', () => ({
@@ -9,8 +14,25 @@ jest.mock('@src/components/common/PositionedDropdown', () => ({
 		isOpen ? <div>{children}</div> : null,
 }));
 
+jest.mock('@src/extensions/codemirror/NavigationLSPExtension', () => {
+	const actual = jest.requireActual(
+		'@src/extensions/codemirror/NavigationLSPExtension',
+	);
+	return {
+		...actual,
+		hasLSPNavigationTarget: jest.fn(),
+		goToLSPLocation: jest.fn(),
+	};
+});
+
 describe('LSPNavigationButton', () => {
+	beforeEach(() => {
+		jest.clearAllMocks();
+		jest.useFakeTimers();
+	});
+
 	afterEach(() => {
+		jest.useRealTimers();
 		jest.restoreAllMocks();
 	});
 
@@ -24,23 +46,7 @@ describe('LSPNavigationButton', () => {
 		jest.spyOn(genericLSPService, 'onStatusChange').mockReturnValue(() => {});
 	};
 
-	it('shows only navigation actions supported by the connected LSP', () => {
-		mockCapabilities({
-			definitionProvider: true,
-			implementationProvider: true,
-		});
-
-		render(<LSPNavigationButton fileName='test.tex' />);
-		fireEvent.click(screen.getByTitle('Go to...'));
-
-		expect(screen.getByText('Go to Definition')).toBeInTheDocument();
-		expect(screen.getByText('Go to Implementation')).toBeInTheDocument();
-		expect(screen.queryByText('Go to Declaration')).not.toBeInTheDocument();
-		expect(screen.queryByText('Go to Type Definition')).not.toBeInTheDocument();
-	});
-
-	it('dispatches definition navigation from F12 only within its editor', () => {
-		mockCapabilities({ definitionProvider: true });
+	const renderInEditor = () =>
 		render(
 			<div className='editor-container'>
 				<LSPNavigationButton fileName='test.tex' />
@@ -50,16 +56,89 @@ describe('LSPNavigationButton', () => {
 			</div>,
 		);
 
-		const editor = screen.getByLabelText('editor').closest('.cm-editor')!;
-		const handler = jest.fn();
-		editor.addEventListener('lsp-navigate', handler);
-		fireEvent.keyDown(screen.getByLabelText('editor'), { key: 'F12' });
+	const flushAvailability = async () => {
+		await act(async () => {
+			jest.advanceTimersByTime(120);
+			await Promise.resolve();
+		});
+	};
 
-		expect(handler).toHaveBeenCalledTimes(1);
-		const event = handler.mock.calls[0][0] as CustomEvent;
-		expect(event.detail).toEqual({ fileName: 'test.tex', kind: 'definition' });
+	it('shows only navigation actions supported by the connected LSP', async () => {
+		mockCapabilities({
+			definitionProvider: true,
+			implementationProvider: true,
+		});
+		jest.spyOn(EditorView, 'findFromDOM').mockReturnValue({} as EditorView);
+		jest.mocked(hasLSPNavigationTarget).mockResolvedValue(true);
 
-		editor.removeEventListener('lsp-navigate', handler);
+		renderInEditor();
+		await flushAvailability();
+		fireEvent.click(screen.getByTitle('Go to...'));
+
+		expect(screen.getByText('Go to Definition')).toBeInTheDocument();
+		expect(screen.getByText('Go to Implementation')).toBeInTheDocument();
+		expect(screen.queryByText('Go to Declaration')).not.toBeInTheDocument();
+		expect(screen.queryByText('Go to Type Definition')).not.toBeInTheDocument();
+	});
+
+	it('disables navigation when the provider has no target at the cursor', async () => {
+		mockCapabilities({ definitionProvider: true });
+		jest.spyOn(EditorView, 'findFromDOM').mockReturnValue({} as EditorView);
+		jest.mocked(hasLSPNavigationTarget).mockResolvedValue(false);
+
+		renderInEditor();
+		await flushAvailability();
+
+		const controls = screen.getAllByTitle('No navigation target at cursor');
+		expect(controls).toHaveLength(2);
+		controls.forEach((control) => expect(control).toBeDisabled());
+	});
+
+	it('enables and invokes navigation when the cursor has a target', async () => {
+		mockCapabilities({ definitionProvider: true });
+		const view = {} as EditorView;
+		jest.spyOn(EditorView, 'findFromDOM').mockReturnValue(view);
+		jest.mocked(hasLSPNavigationTarget).mockResolvedValue(true);
+		jest.mocked(goToLSPLocation).mockResolvedValue(true);
+
+		renderInEditor();
+		await flushAvailability();
+
+		const button = screen.getByTitle('Go to Definition');
+		expect(button).toBeEnabled();
+		fireEvent.click(button);
+
+		expect(goToLSPLocation).toHaveBeenCalledWith(view, 'test.tex', 'definition');
+	});
+
+	it('keeps the dropdown usable when a non-primary action resolves', async () => {
+		mockCapabilities({
+			definitionProvider: true,
+			implementationProvider: true,
+		});
+		jest.spyOn(EditorView, 'findFromDOM').mockReturnValue({} as EditorView);
+		jest
+			.mocked(hasLSPNavigationTarget)
+			.mockImplementation(async (_view, _fileName, kind) => kind === 'implementation');
+
+		renderInEditor();
+		await flushAvailability();
+
+		expect(screen.getByTitle('No navigation target at cursor')).toBeDisabled();
+		expect(screen.getByTitle('Go to...')).toBeEnabled();
+	});
+
+	it('does not intercept F12', () => {
+		mockCapabilities({ definitionProvider: true });
+		jest.spyOn(EditorView, 'findFromDOM').mockReturnValue({} as EditorView);
+		jest.mocked(hasLSPNavigationTarget).mockResolvedValue(true);
+		renderInEditor();
+
+		const event = new KeyboardEvent('keydown', { key: 'F12', cancelable: true });
+		screen.getByLabelText('editor').dispatchEvent(event);
+
+		expect(event.defaultPrevented).toBe(false);
+		expect(goToLSPLocation).not.toHaveBeenCalled();
 	});
 
 	it('does not render without a supported navigation provider', () => {
