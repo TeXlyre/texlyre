@@ -1,8 +1,10 @@
 // src/extensions/codemirror/GenericLSPExtension.ts
 import type { Extension } from '@codemirror/state';
-import type {
-	CompletionContext,
-	CompletionResult,
+import {
+	snippet,
+	type Completion,
+	type CompletionContext,
+	type CompletionResult,
 } from '@codemirror/autocomplete';
 import { ViewPlugin, type EditorView, hoverTooltip } from '@codemirror/view';
 import type { Tooltip } from '@codemirror/view';
@@ -134,6 +136,20 @@ function lspRangeToOffsets(doc: any, range: any) {
 	return from === null || to === null ? null : { from, to };
 }
 
+function getAdditionalCompletionChanges(doc: any, additionalTextEdits: any[]) {
+	return additionalTextEdits
+		.map((edit) => {
+			const offsets = lspRangeToOffsets(doc, edit?.range);
+			return offsets
+				? { ...offsets, insert: typeof edit.newText === 'string' ? edit.newText : '' }
+				: null;
+		})
+		.filter(
+			(change): change is { from: number; to: number; insert: string } =>
+				change !== null,
+		);
+}
+
 function applyCompletionEdits(
 	view: EditorView,
 	insert: string,
@@ -148,18 +164,7 @@ function applyCompletionEdits(
 		: { from: fallbackFrom, to: fallbackTo };
 	if (!main) return;
 
-	const extra = additionalTextEdits
-		.map((edit) => {
-			const offsets = lspRangeToOffsets(doc, edit?.range);
-			return offsets
-				? { ...offsets, insert: typeof edit.newText === 'string' ? edit.newText : '' }
-				: null;
-		})
-		.filter(
-			(change): change is { from: number; to: number; insert: string } =>
-				change !== null,
-		);
-
+	const extra = getAdditionalCompletionChanges(doc, additionalTextEdits);
 	const mainChange = { ...main, insert };
 	const changes = [...extra, mainChange].sort(
 		(a, b) => a.from - b.from || a.to - b.to,
@@ -175,6 +180,37 @@ function applyCompletionEdits(
 			selection: { anchor: main.from + insert.length },
 		});
 	}
+}
+
+function applySnippetCompletion(
+	view: EditorView,
+	completion: Completion,
+	template: string,
+	range: any,
+	additionalTextEdits: any[],
+	fallbackFrom: number,
+	fallbackTo: number,
+) {
+	const doc = view.state.doc;
+	const main = range
+		? lspRangeToOffsets(doc, range)
+		: { from: fallbackFrom, to: fallbackTo };
+	if (!main) return;
+
+	let from = main.from;
+	let to = main.to;
+	const extra = getAdditionalCompletionChanges(doc, additionalTextEdits);
+	if (extra.length > 0) {
+		try {
+			const changeSet = view.state.changes(extra);
+			from = changeSet.mapPos(from, 1);
+			to = changeSet.mapPos(to, -1);
+			view.dispatch({ changes: changeSet });
+		} catch {}
+	}
+
+	const normalizedTemplate = template.replace(/\$(\d+)/g, '${$1}');
+	snippet(normalizedTemplate)(view, completion, from, to);
 }
 
 function createLSPDiagnosticsExtension(fileName: string): Extension {
@@ -613,16 +649,32 @@ export function getGenericLSPCompletionSources(fileName: string) {
 						const additionalTextEdits = Array.isArray(item.additionalTextEdits)
 							? item.additionalTextEdits
 							: [];
+						const isSnippet = item.insertTextFormat === 2;
 						return {
 							label: item.label,
 							type: item.kind === 1 ? 'text' : 'keyword',
 							detail: item.detail,
 							info: createCompletionInfo(client, item),
-							apply:
-								range || additionalTextEdits.length > 0
+							apply: isSnippet
+								? (
+										view: EditorView,
+										completion: Completion,
+										from: number,
+										to: number,
+									) =>
+										applySnippetCompletion(
+											view,
+											completion,
+											insert,
+											range,
+											additionalTextEdits,
+											from,
+											to,
+										)
+								: range || additionalTextEdits.length > 0
 									? (
 											view: EditorView,
-											_completion: unknown,
+											_completion: Completion,
 											from: number,
 											to: number,
 										) =>
