@@ -599,11 +599,11 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 					{ operationId },
 				);
 
-				addNotification({
-					type: 'sync_complete',
-					message: `Downloaded ${request.files.length} file(s) successfully`,
-					data: { requestId: request.id, fileCount: request.files.length },
-				});
+				// addNotification({
+				// 	type: 'sync_complete',
+				// 	message: `Downloaded ${request.files.length} file(s) successfully`,
+				// 	data: { requestId: request.id, fileCount: request.files.length },
+				// });
 
 				await refreshFileTree();
 				await updateLocalFileMap();
