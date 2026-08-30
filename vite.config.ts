@@ -30,7 +30,7 @@ export default defineConfig({
 		},
 		rollupOptions: {
 			input: {
-				main: path.resolve(__dirname, 'index.html'),
+				main: path.resolve(import.meta.dirname, 'index.html'),
 			},
 			output: {
 				manualChunks(id) {
@@ -153,10 +153,10 @@ export default defineConfig({
 
 	resolve: {
 		alias: {
-			'@': path.resolve(__dirname, './src'),
-			'@src': path.resolve(__dirname, './src'),
-			'@chelys': path.resolve(__dirname, './src/chelys'),
-			'@tests': path.resolve(__dirname, './tests'),
+			'@': path.resolve(import.meta.dirname, './src'),
+			'@src': path.resolve(import.meta.dirname, './src'),
+			'@chelys': path.resolve(import.meta.dirname, './src/chelys'),
+			'@tests': path.resolve(import.meta.dirname, './tests'),
 			'@codemirror/state': path.resolve('./node_modules/@codemirror/state'),
 			'@codemirror/view': path.resolve('./node_modules/@codemirror/view'),
 			yjs: path.resolve('./node_modules/yjs'),
@@ -169,6 +169,7 @@ export default defineConfig({
 			'y-codemirror.next',
 		],
 	},
+
 	optimizeDeps: {
 		include: [
 			'@codemirror/state',

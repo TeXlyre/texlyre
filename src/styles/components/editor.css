@@ -174,3 +174,23 @@
 .temp-file-icon {
 	opacity: 0.5;
 }
+
+.lsp-navigation-container {
+	position: relative;
+	display: flex;
+}
+
+.lsp-navigation-container .control-button:not(:disabled) {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+	border-color: var(--pico-primary);
+}
+
+.lsp-navigation-container .control-button:not(:disabled):hover {
+	background-color: var(--pico-primary-hover);
+	border-color: var(--pico-primary-hover);
+}
+
+.lsp-navigation-dropdown {
+	min-width: 220px;
+}

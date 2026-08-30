@@ -59,6 +59,7 @@ import LSPToggleButton from '../bibliography/LSPToggleButton';
 import BibliographyPanel from '../bibliography/BibliographyPanel';
 import CommentModal from '../comments/CommentModal';
 import ContentFormatterButton from './ContentFormatterButton';
+import LSPNavigationButton from './LSPNavigationButton';
 import SourceMapButton from './SourceMapButton';
 import {
 	CopyIcon,
@@ -582,6 +583,8 @@ const EditorContent: React.FC<{
 					</PluginControlGroup>
 				)}
 
+				<LSPNavigationButton fileName={fileName} />
+
 				<PluginControlGroup>
 					{!isViewOnly && onSave && (
 						<button
@@ -676,6 +679,11 @@ const EditorContent: React.FC<{
 							)}
 						</PluginControlGroup>
 					)}
+
+				{linkedFileInfo.fileName && (
+					<LSPNavigationButton fileName={linkedFileInfo.fileName} />
+				)}
+
 				<PluginControlGroup>
 					{onSaveDocument && (
 						<button

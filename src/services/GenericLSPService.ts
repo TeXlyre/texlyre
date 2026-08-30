@@ -21,6 +21,7 @@ const textDecoder = new TextDecoder();
 type DiagnosticListener = (configId: string, params: any) => void;
 type ApplyEditListener = (configId: string, edit: any) => void;
 type SemanticTokensRefreshListener = (configId: string) => void;
+type CapabilitiesListener = (configId: string) => void;
 type JsonRecord = Record<string, any>;
 
 interface ExtendedClientConfig extends LSPClientConfig {
@@ -58,10 +59,22 @@ const defaultClientCapabilities: JsonRecord = {
 		publishDiagnostics: { relatedInformation: true },
 		hover: { contentFormat: ['markdown', 'plaintext'] },
 		completion: {
+			contextSupport: true,
 			completionItem: {
-				snippetSupport: false,
+				snippetSupport: true,
+				insertReplaceSupport: true,
 				documentationFormat: ['markdown', 'plaintext'],
 			},
+		},
+		declaration: { dynamicRegistration: false, linkSupport: true },
+		definition: { dynamicRegistration: false, linkSupport: true },
+		typeDefinition: { dynamicRegistration: false, linkSupport: true },
+		implementation: { dynamicRegistration: false, linkSupport: true },
+		documentHighlight: { dynamicRegistration: false },
+		documentSymbol: {
+			dynamicRegistration: false,
+			hierarchicalDocumentSymbolSupport: true,
+			tagSupport: { valueSet: [1] },
 		},
 		signatureHelp: {
 			dynamicRegistration: false,
@@ -184,6 +197,7 @@ class GenericLSPService extends ExternalServiceBase<LSPServerConfig> {
 	private readonly applyEditListeners = new Set<ApplyEditListener>();
 	private readonly semanticTokensRefreshListeners =
 		new Set<SemanticTokensRefreshListener>();
+	private readonly capabilitiesListeners = new Set<CapabilitiesListener>();
 	private readonly lastDiagnostics = new Map<string, string>();
 
 	registerConfig(config: LSPServerConfig): void {
@@ -214,6 +228,11 @@ class GenericLSPService extends ExternalServiceBase<LSPServerConfig> {
 	onSemanticTokensRefresh(listener: SemanticTokensRefreshListener): () => void {
 		this.semanticTokensRefreshListeners.add(listener);
 		return () => this.semanticTokensRefreshListeners.delete(listener);
+	}
+
+	onCapabilitiesChange(listener: CapabilitiesListener): () => void {
+		this.capabilitiesListeners.add(listener);
+		return () => this.capabilitiesListeners.delete(listener);
 	}
 
 	getLanguageIdMap(configId: string): Record<string, string> | undefined {
@@ -285,6 +304,7 @@ class GenericLSPService extends ExternalServiceBase<LSPServerConfig> {
 		this.diagnosticListeners.clear();
 		this.applyEditListeners.clear();
 		this.semanticTokensRefreshListeners.clear();
+		this.capabilitiesListeners.clear();
 		this.lastDiagnostics.clear();
 	}
 
@@ -351,6 +371,13 @@ class GenericLSPService extends ExternalServiceBase<LSPServerConfig> {
 				(
 					client as LSPClient & { serverCapabilities?: unknown }
 				).serverCapabilities = serverCapabilities ?? {};
+			}
+			for (const listener of this.capabilitiesListeners) {
+				try {
+					listener(configId);
+				} catch (error) {
+					moduleLog.error('Capabilities listener error:', error);
+				}
 			}
 			for (const message of outgoingQueue.splice(0)) {
 				transport.send(message);

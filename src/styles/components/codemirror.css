@@ -114,7 +114,11 @@
 
 .codemirror-editor-container .cm-lineNumbers .cm-gutterElement {
 	/* color: var(--pico-muted-color, #6a737d); */
-	padding: 0 var(--space-xs) 0 var(--space-sm);
+	padding: 0 var(--space-xs) 0 var(--space-xs);
+}
+
+.codemirror-editor-container .cm-foldGutter {
+	min-width: 1em;
 }
 
 .codemirror-editor-container .cm-completionInfo {
@@ -439,6 +443,15 @@
 	font-weight: 600;
 }
 
+.codemirror-editor-container .cm-lsp-document-highlight {
+	background-color: var(--pico-primary-focus);
+	border-radius: var(--radius-xs);
+}
+
+.codemirror-editor-container .cm-lsp-document-highlight-write {
+	text-decoration: underline;
+}
+
 /* ============================================================
    Autocomplete
    ============================================================ */
@@ -448,6 +461,20 @@
 	border-radius: var(--radius-sm);
 	padding: var(--space-sm) !important;
 	background-color: var(--pico-secondary-background) !important;
+}
+
+.cm-tooltip.cm-tooltip-hover {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	max-height: min(45vh, 24rem);
+	overflow-y: auto;
+}
+
+.cm-tooltip.cm-tooltip-hover > .cm-tooltip-section {
+	flex: 0 0 auto;
+	max-height: none;
+	overflow-y: visible;
 }
 
 .codemirror-editor-container .cm-tooltip.cm-tooltip-autocomplete > ul {

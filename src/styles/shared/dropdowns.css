@@ -9,6 +9,24 @@
 	min-width: 180px;
 }
 
+.split-button-group {
+	display: flex;
+	align-items: center;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+}
+
+.split-button-group > .control-button:not(:last-child) {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+.split-button-group > .dropdown-toggle {
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+	min-width: 0 !important;
+}
+
 .dropdown-item {
 	display: flex !important;
 	align-items: center !important;

@@ -1,535 +1,57 @@
 // src/extensions/codemirror/GenericLSPExtension.ts
+import type { CompletionSource } from '@codemirror/autocomplete';
 import type { Extension } from '@codemirror/state';
-import type {
-	CompletionContext,
-	CompletionResult,
-} from '@codemirror/autocomplete';
-import { ViewPlugin, type EditorView, hoverTooltip } from '@codemirror/view';
-import type { Tooltip } from '@codemirror/view';
-import {
-	linter,
-	setDiagnostics,
-	forEachDiagnostic,
-	type Diagnostic,
-} from '@codemirror/lint';
-import type { LSPClient } from '@codemirror/lsp-client';
 
-import { genericLSPService } from '../../services/GenericLSPService';
-import { maskAnnotationText } from './annotations/annotationMasking';
-import { createSemanticTokensExtension } from './SemanticTokensLSPExtension';
+import type { LanguageFeatureSettings } from '../../types/editor';
+import { createLSPCodeActionsExtension } from './lsp/lspCodeActions';
+import { createLSPCompletionSource } from './lsp/lspCompletion';
+import { createLSPDiagnosticsExtension } from './lsp/lspDiagnostics';
+import { createLSPDocumentHighlightExtension } from './lsp/lspDocumentHighlight';
+import { createLSPDocumentSyncExtension } from './lsp/lspDocumentSync';
+import { createLSPHoverExtension } from './lsp/lspHover';
+import { createLSPSemanticTokensExtension } from './lsp/lspSemanticTokens';
+import { createLSPSignatureHelpExtension } from './lsp/lspSignatureHelp';
 
-export interface LSPDiagnostic extends Diagnostic {
-	code?: string | number;
-	data?: unknown;
-}
+export type { LSPDiagnostic } from './lsp/lspDiagnostics';
 
-function detectLanguageId(fileName: string, client?: LSPClient): string {
-	const ext = fileName.split('.').pop()?.toLowerCase() || '';
+export function getGenericLSPExtensionsForFile(
+	fileName: string,
+	features?: LanguageFeatureSettings,
+): Extension[] {
+	if (!fileName) return [];
 
-	if (client) {
-		const configId = genericLSPService.getConfigId(client);
-		if (configId) {
-			const langMap = genericLSPService.getLanguageIdMap(configId);
-			if (langMap && langMap[ext]) {
-				return langMap[ext];
-			}
-		}
-	}
+	const extensions: Extension[] = [createLSPDocumentSyncExtension(fileName)];
 
-	switch (ext) {
-		case 'tex':
-		case 'latex':
-			return 'latex';
-		case 'typ':
-			return 'typst';
-		case 'bib':
-			return 'bibtex';
-		case 'md':
-			return 'markdown';
-		case 'txt':
-			return 'plaintext';
-		default:
-			return 'plaintext';
-	}
-}
-
-function lspSeverityToCodeMirror(
-	severity?: number,
-): 'error' | 'warning' | 'info' | 'hint' {
-	switch (severity) {
-		case 1:
-			return 'error';
-		case 2:
-			return 'warning';
-		case 3:
-			return 'info';
-		case 4:
-			return 'hint';
-		default:
-			return 'warning';
-	}
-}
-
-function sendNotification(client: LSPClient, method: string, params: any) {
-	try {
-		const transport = (client as any).transport;
-		if (transport?.send) {
-			transport.send(JSON.stringify({ jsonrpc: '2.0', method, params }));
-		}
-	} catch {}
-}
-
-function createLSPDiagnosticsExtension(fileName: string): Extension {
-	const fileUri = `file:///${fileName}`;
-	const diagnosticsByConfig = new Map<string, LSPDiagnostic[]>();
-	let mergedDiagnostics: LSPDiagnostic[] = [];
-
-	const diagnosticsPlugin = ViewPlugin.fromClass(
-		class {
-			private unsubscribe: () => void;
-			private view: EditorView;
-
-			constructor(view: EditorView) {
-				this.view = view;
-				this.unsubscribe = genericLSPService.onDiagnostics(
-					(configId, params) => {
-						const normalize = (u: string) =>
-							decodeURIComponent(u || '')
-								.replace(/^file:\/+/, '')
-								.replace(/^\/+/, '');
-						if (normalize(params.uri) !== normalize(fileUri)) return;
-
-						const doc = this.view.state.doc;
-						const mapped: LSPDiagnostic[] = (params.diagnostics || []).map(
-							(d: any) => {
-								const fromLine = Math.min(d.range.start.line, doc.lines - 1);
-								const toLine = Math.min(d.range.end.line, doc.lines - 1);
-								const lineFrom = doc.line(fromLine + 1);
-								const lineTo = doc.line(toLine + 1);
-								const from = Math.min(
-									lineFrom.from + d.range.start.character,
-									lineFrom.to,
-								);
-								const to = Math.min(
-									lineTo.from + d.range.end.character,
-									lineTo.to,
-								);
-
-								return {
-									from: Math.max(0, from),
-									to: Math.max(from, to),
-									severity: lspSeverityToCodeMirror(d.severity),
-									message: d.message,
-									source:
-										d.source ||
-										genericLSPService.getConfigName(configId) ||
-										configId,
-									...(d.code !== undefined ? { code: d.code } : {}),
-									...(d.data !== undefined ? { data: d.data } : {}),
-								} satisfies LSPDiagnostic;
-							},
-						);
-
-						diagnosticsByConfig.set(configId, mapped);
-						mergedDiagnostics = Array.from(diagnosticsByConfig.values()).flat();
-
-						queueMicrotask(() => {
-							if (!this.view.dom.isConnected) return;
-
-							const lspSources = new Set(
-								mergedDiagnostics.map((d) => d.source).filter(Boolean),
-							);
-
-							const preserved: LSPDiagnostic[] = [];
-							forEachDiagnostic(this.view.state, (d, from, to) => {
-								if (!lspSources.has(d.source ?? '')) {
-									preserved.push({ ...d, from, to });
-								}
-							});
-
-							this.view.dispatch(
-								setDiagnostics(this.view.state, [
-									...preserved,
-									...mergedDiagnostics,
-								]),
-							);
-						});
-					},
-				);
-			}
-
-			destroy() {
-				this.unsubscribe();
-				diagnosticsByConfig.clear();
-				mergedDiagnostics = [];
-			}
-		},
-	);
-
-	const diagnosticsLinter = linter(() => mergedDiagnostics, { delay: 0 });
-
-	return [diagnosticsPlugin, diagnosticsLinter];
-}
-
-function renderHoverContent(content: string): HTMLElement {
-	const escapeHtml = (t: string) =>
-		t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-	const inline = (t: string) =>
-		escapeHtml(t)
-			.replace(/`([^`]+)`/g, '<code>$1</code>')
-			.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-			.replace(/\*(.+?)\*/g, '<em>$1</em>')
-			.replace(
-				/\[([^\]]+)\]\(([^)]+)\)/g,
-				'<a href="$2" target="_blank" rel="noreferrer">$1</a>',
-			);
-
-	const lines = content.split('\n');
-	const out: string[] = [];
-	let inCode = false;
-	let code: string[] = [];
-	let list = false;
-	let para: string[] = [];
-	const flushPara = () => {
-		if (para.length) {
-			out.push(`<p>${inline(para.join(' '))}</p>`);
-			para = [];
-		}
-	};
-	const closeList = () => {
-		if (list) {
-			out.push('</ul>');
-			list = false;
-		}
-	};
-
-	for (const line of lines) {
-		if (/^```/.test(line)) {
-			if (inCode) {
-				out.push(`<pre><code>${escapeHtml(code.join('\n'))}</code></pre>`);
-				code = [];
-				inCode = false;
-			} else {
-				flushPara();
-				closeList();
-				inCode = true;
-			}
-			continue;
-		}
-		if (inCode) {
-			code.push(line);
-			continue;
-		}
-		const heading = line.match(/^(#{1,6})\s+(.*)$/);
-		if (heading) {
-			flushPara();
-			closeList();
-			const lvl = heading[1].length;
-			out.push(`<h${lvl}>${inline(heading[2])}</h${lvl}>`);
-			continue;
-		}
-		if (/^\s*([-*_])\1{2,}\s*$/.test(line)) {
-			flushPara();
-			closeList();
-			out.push('<hr>');
-			continue;
-		}
-		const item = line.match(/^\s*[-*+]\s+(.*)$/);
-		if (item) {
-			flushPara();
-			if (!list) {
-				out.push('<ul>');
-				list = true;
-			}
-			out.push(`<li>${inline(item[1])}</li>`);
-			continue;
-		}
-		if (line.trim() === '') {
-			flushPara();
-			closeList();
-			continue;
-		}
-		para.push(line);
-	}
-	if (inCode)
-		out.push(`<pre><code>${escapeHtml(code.join('\n'))}</code></pre>`);
-	flushPara();
-	closeList();
-
-	const container = document.createElement('div');
-	container.className = 'cm-lsp-markdown';
-	container.innerHTML = out.join('');
-	return container;
-}
-
-function createAggregatedHoverExtension(fileName: string): Extension {
-	return hoverTooltip(async (view, pos) => {
-		const clients = genericLSPService.getAllClientsForFile(fileName);
-		if (clients.length === 0) return null;
-
-		const doc = view.state.doc;
-		const line = doc.lineAt(pos);
-		const character = pos - line.from;
-
-		const hoverPromises = clients.map(async (client) => {
-			try {
-				const capabilities = (client as any).serverCapabilities;
-				if (capabilities && capabilities.hoverProvider === false) return null;
-
-				const result = await (client as any).request('textDocument/hover', {
-					textDocument: { uri: `file:///${fileName}` },
-					position: { line: line.number - 1, character },
-				});
-
-				if (!result?.contents) return null;
-
-				let content = '';
-				const contents = result.contents;
-
-				if (typeof contents === 'string') {
-					content = contents;
-				} else if (
-					contents.kind === 'markdown' ||
-					contents.kind === 'plaintext'
-				) {
-					content = contents.value;
-				} else if (Array.isArray(contents)) {
-					content = contents
-						.map((c: any) => (typeof c === 'string' ? c : c.value || ''))
-						.filter(Boolean)
-						.join('\n\n');
-				} else if (contents.value) {
-					content = contents.value;
-				}
-
-				const trimmed = content.trim();
-				if (!trimmed) return null;
-
-				const configId = genericLSPService.getConfigId(client);
-				const label =
-					(configId && genericLSPService.getConfigName(configId)) ||
-					configId ||
-					'LSP';
-				return { label, content: trimmed };
-			} catch {
-				return null;
-			}
-		});
-
-		const results = await Promise.all(hoverPromises);
-		const validResults = results.filter(
-			(r): r is { label: string; content: string } => r !== null,
+	if (features?.lspTooltips !== false) {
+		extensions.push(
+			createLSPHoverExtension(fileName),
+			createLSPSignatureHelpExtension(fileName),
 		);
-		if (validResults.length === 0) return null;
+	}
 
-		const seen = new Set<string>();
-		const uniqueResults = validResults.filter((r) => {
-			const key = `${r.label}::${r.content}`;
-			if (seen.has(key)) return false;
-			seen.add(key);
-			return true;
-		});
+	if (features?.lspDiagnostics !== false) {
+		extensions.push(
+			createLSPDiagnosticsExtension(fileName),
+			createLSPCodeActionsExtension(fileName),
+		);
+	}
 
-		const dom = document.createElement('div');
-		dom.className = 'cm-tooltip-hover';
+	if (features?.lspSymbolHighlights !== false) {
+		extensions.push(createLSPDocumentHighlightExtension(fileName));
+	}
 
-		uniqueResults.forEach((entry, i) => {
-			if (i > 0) dom.appendChild(document.createElement('hr'));
+	if (features?.lspHighlighting !== false) {
+		extensions.push(createLSPSemanticTokensExtension(fileName));
+	}
 
-			const header = document.createElement('div');
-			header.className = 'cm-tooltip-hover-source';
-			header.textContent = entry.label;
-			dom.appendChild(header);
-
-			dom.appendChild(renderHoverContent(entry.content));
-		});
-
-		return {
-			pos,
-			create: () => ({ dom }),
-			above: true,
-		} as Tooltip;
-	});
+	return extensions;
 }
 
-function createDocumentSyncExtension(fileName: string): Extension {
-	const fileUri = `file:///${fileName}`;
-	let version = 1;
+export function getGenericLSPCompletionSources(
+	fileName: string,
+	features?: LanguageFeatureSettings,
+): CompletionSource[] {
+	if (!fileName || features?.lspCompletion === false) return [];
 
-	return ViewPlugin.fromClass(
-		class {
-			private openedFor = new Set<LSPClient>();
-			private readonly view: EditorView;
-			private readonly handleFileSaved: () => void;
-
-			constructor(view: EditorView) {
-				this.view = view;
-				this.syncOpenState(view);
-				this.handleFileSaved = () => this.notifySaved();
-				document.addEventListener('file-saved', this.handleFileSaved);
-			}
-
-			private syncOpenState(view: EditorView) {
-				const clients = genericLSPService.getAllClientsForFile(fileName);
-				const text = maskAnnotationText(view.state);
-
-				clients.forEach((client) => {
-					if (this.openedFor.has(client)) return;
-					const languageId = detectLanguageId(fileName, client);
-					sendNotification(client, 'textDocument/didOpen', {
-						textDocument: { uri: fileUri, languageId, version, text },
-					});
-					this.openedFor.add(client);
-				});
-			}
-
-			private notifySaved() {
-				const text = this.view.state.doc.toString();
-				this.openedFor.forEach((client) => {
-					const save = (client as any).serverCapabilities?.textDocumentSync
-						?.save;
-					if (!save) return;
-					sendNotification(client, 'textDocument/didSave', {
-						textDocument: { uri: fileUri },
-						...(save.includeText ? { text } : {}),
-					});
-				});
-			}
-
-			update(update: any) {
-				this.syncOpenState(update.view);
-
-				if (!update.docChanged) return;
-				version++;
-				const text = maskAnnotationText(update.state);
-				this.openedFor.forEach((client) => {
-					sendNotification(client, 'textDocument/didChange', {
-						textDocument: { uri: fileUri, version },
-						contentChanges: [{ text }],
-					});
-				});
-			}
-
-			destroy() {
-				document.removeEventListener('file-saved', this.handleFileSaved);
-				this.openedFor.forEach((client) => {
-					sendNotification(client, 'textDocument/didClose', {
-						textDocument: { uri: fileUri },
-					});
-				});
-				this.openedFor.clear();
-			}
-		},
-	);
-}
-
-function documentationToText(documentation: any): string {
-	if (!documentation) return '';
-	if (typeof documentation === 'string') return documentation;
-	return typeof documentation.value === 'string' ? documentation.value : '';
-}
-
-function createCompletionInfo(client: LSPClient, item: any) {
-	return async (): Promise<HTMLElement | null> => {
-		const direct = documentationToText(item.documentation);
-		if (direct) return renderHoverContent(direct);
-
-		const capabilities = (client as any).serverCapabilities;
-		if (capabilities?.completionProvider?.resolveProvider !== true) return null;
-
-		try {
-			const resolved = await (client as any).request(
-				'completionItem/resolve',
-				item,
-			);
-			const text = documentationToText(resolved?.documentation);
-			return text ? renderHoverContent(text) : null;
-		} catch {
-			return null;
-		}
-	};
-}
-
-export function getGenericLSPExtensionsForFile(fileName: string): Extension[] {
-	if (!fileName) return [];
-
-	return [
-		createDocumentSyncExtension(fileName),
-		createAggregatedHoverExtension(fileName),
-		createLSPDiagnosticsExtension(fileName),
-		createSemanticTokensExtension(fileName),
-	];
-}
-
-export function getGenericLSPCompletionSources(fileName: string) {
-	if (!fileName) return [];
-
-	return [
-		async (context: CompletionContext): Promise<CompletionResult | null> => {
-			const clients = genericLSPService.getAllClientsForFile(fileName);
-			if (clients.length === 0) return null;
-
-			for (const client of clients) {
-				const capabilities = (client as any).serverCapabilities;
-				if (capabilities && capabilities.completionProvider === undefined) {
-					continue;
-				}
-
-				try {
-					const doc = context.state.doc;
-					const line = doc.lineAt(context.pos);
-					const character = context.pos - line.from;
-
-					const result = await (client as any).request(
-						'textDocument/completion',
-						{
-							textDocument: { uri: `file:///${fileName}` },
-							position: { line: line.number - 1, character },
-						},
-					);
-
-					if (!result || !result.items || result.items.length === 0) {
-						continue;
-					}
-
-					const options = result.items.map((item: any) => {
-						const range = item.textEdit?.range;
-						const insert =
-							item.textEdit?.newText || item.insertText || item.label;
-						return {
-							label: item.label,
-							type: item.kind === 1 ? 'text' : 'keyword',
-							detail: item.detail,
-							info: createCompletionInfo(client, item),
-							apply: range
-								? (view: EditorView) => {
-										const from = Math.min(
-											doc.line(Math.min(range.start.line + 1, doc.lines)).from +
-												range.start.character,
-											doc.length,
-										);
-										const to = Math.min(
-											doc.line(Math.min(range.end.line + 1, doc.lines)).from +
-												range.end.character,
-											doc.length,
-										);
-										view.dispatch({
-											changes: { from, to, insert },
-											selection: { anchor: from + insert.length },
-										});
-									}
-								: insert,
-						};
-					});
-
-					return {
-						from: context.pos,
-						options,
-					};
-				} catch {}
-			}
-
-			return null;
-		},
-	];
+	return [createLSPCompletionSource(fileName)];
 }

@@ -9,6 +9,7 @@ import type {
 	FontFamily,
 	HighlightTheme,
 	EditorKeymapMode,
+	LanguageFeatureSettings,
 } from '../types/editor';
 import type { CollabConnectOptions, CollabProviderType } from '../types/collab';
 
@@ -53,11 +54,41 @@ export const resolveFontFamily = (value: unknown): string =>
 	fontFamilyMap[value as FontFamily] ??
 	fontFamilyMap[defaultEditorSettings.fontFamily];
 
+export const LANGUAGE_FEATURE_SETTING_IDS: Record<
+	keyof LanguageFeatureSettings,
+	string
+> = {
+	builtinTooltips: 'editor-language-tooltips',
+	builtinDiagnostics: 'editor-language-diagnostics',
+	builtinCompletion: 'editor-language-completion',
+	builtinOutline: 'editor-language-outline',
+	lspTooltips: 'editor-lsp-tooltips',
+	lspDiagnostics: 'editor-lsp-diagnostics',
+	lspCompletion: 'editor-lsp-completion',
+	lspHighlighting: 'editor-lsp-highlighting',
+	lspOutline: 'editor-lsp-outline',
+	lspSymbolHighlights: 'editor-lsp-symbol-highlights',
+	lspNavigation: 'editor-lsp-navigation',
+};
+
 export const defaultEditorSettings: EditorSettings = {
 	fontSize: 16,
 	fontFamily: 'monospace',
 	showLineNumbers: true,
 	syntaxHighlighting: true,
+	languageFeatures: {
+		builtinTooltips: true,
+		builtinDiagnostics: true,
+		builtinCompletion: true,
+		builtinOutline: true,
+		lspTooltips: true,
+		lspDiagnostics: true,
+		lspCompletion: true,
+		lspHighlighting: true,
+		lspOutline: true,
+		lspSymbolHighlights: true,
+		lspNavigation: true,
+	},
 	autoSaveEnabled: false,
 	autoSaveDelay: 150,
 	highlightTheme: 'auto' as HighlightTheme,
@@ -68,6 +99,22 @@ export const defaultEditorSettings: EditorSettings = {
 	language: 'en',
 	textDirection: 'auto',
 };
+
+function readLanguageFeatures(
+	getSetting: (id: string) => { value?: unknown } | undefined,
+): LanguageFeatureSettings {
+	const entries = Object.entries(LANGUAGE_FEATURE_SETTING_IDS) as [
+		keyof LanguageFeatureSettings,
+		string,
+	][];
+
+	return entries.reduce((features, [key, id]) => {
+		features[key] =
+			(getSetting(id)?.value as boolean) ??
+			defaultEditorSettings.languageFeatures[key];
+		return features;
+	}, {} as LanguageFeatureSettings);
+}
 
 interface EditorContextType {
 	editorSettings: EditorSettings;
@@ -122,6 +169,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 			syntaxHighlighting:
 				(getSetting('editor-syntax-highlighting')?.value as boolean) ??
 				defaultEditorSettings.syntaxHighlighting,
+			languageFeatures: readLanguageFeatures(getSetting),
 			autoSaveEnabled:
 				(getSetting('editor-auto-save-enable')?.value as boolean) ??
 				defaultEditorSettings.autoSaveEnabled,
