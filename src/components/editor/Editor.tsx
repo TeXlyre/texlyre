@@ -1215,7 +1215,11 @@ const Editor: React.FC<EditorComponentProps> = ({
 		);
 	}
 
-	if (isEditingFile && (viewerPlugin || rendererDelegate)) {
+	if (
+		isEditingFile &&
+		isDocumentSelected &&
+		(viewerPlugin || rendererDelegate)
+	) {
 		if (rendererDelegate) {
 			return (
 				<div className='editor-container viewer-container'>

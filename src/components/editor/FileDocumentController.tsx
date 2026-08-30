@@ -976,9 +976,22 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	useEffect(() => {
 		if (!selectedFileId || !isEditingFile) return;
 
+		let cancelled = false;
+
 		const loadFileData = async () => {
 			const file = await getFile(selectedFileId);
-			if (!file) return;
+			if (!file || cancelled) return;
+
+			if (loadedFile?.fileId !== selectedFileId) {
+				const fileContent = await getFileContent(selectedFileId);
+				if (fileContent === undefined || cancelled) return;
+
+				setLoadedFile({
+					fileId: selectedFileId,
+					content: fileContent,
+				});
+			}
+
 			if (file.path === currentFilePath) return;
 
 			setFileName(file.name);
@@ -988,11 +1001,17 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			setOutputForFileName(file.name);
 		};
 
-		loadFileData();
+		void loadFileData();
+
+		return () => {
+			cancelled = true;
+		};
 	}, [
 		selectedFileId,
 		isEditingFile,
 		getFile,
+		getFileContent,
+		loadedFile?.fileId,
 		currentFilePath,
 		setOutputForFileName,
 	]);
