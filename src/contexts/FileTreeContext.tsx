@@ -13,6 +13,7 @@ import {
 import { t } from '@/i18n';
 import { useCollab } from '../hooks/useCollab';
 import { useSettings } from '../hooks/useSettings';
+import { autoSaveService } from '../services/AutoSaveService';
 import { collabService } from '../services/CollabService';
 import { fileConflictService } from '../services/FileConflictService';
 import { fileOperationNotificationService } from '../services/FileOperationNotificationService';
@@ -557,6 +558,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					}),
 				);
 
+				await autoSaveService.flushPendingSaves();
+
 				const movedIds =
 					await fileStorageService.batchMoveFiles(moveOperations);
 
@@ -696,6 +699,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				// For move operations, we pass the target directory path
 				// The service will construct the full new path
+				await autoSaveService.flushPendingSaves();
+
 				const movedIds = await fileStorageService.batchMoveFiles([
 					{
 						fileId: sourceId,
@@ -735,6 +740,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				moduleLog.info(
 					`Renaming ${originalFile.name} from ${oldPath} to ${newFullPath}`,
 				);
+
+				await autoSaveService.flushPendingSaves();
 
 				// For rename operations, we pass the full new path
 				const movedIds = await fileStorageService.batchMoveFiles(
