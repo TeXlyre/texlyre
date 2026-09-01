@@ -215,6 +215,14 @@ export async function detectBrowserAsync(): Promise<BrowserKey> {
 	return (await isBraveBrowser()) ? 'brave' : detectBrowser();
 }
 
+export function isMobileUserAgent(): boolean {
+	if (typeof navigator === 'undefined') return false;
+
+	return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+		navigator.userAgent,
+	);
+}
+
 export function isStandaloneApp(): boolean {
 	if (typeof window === 'undefined' || typeof navigator === 'undefined') {
 		return false;
