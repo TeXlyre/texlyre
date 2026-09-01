@@ -63,7 +63,7 @@ const config: TexlyreConfig = {
     userdata: {
         version: '1.3.2',
         forceUpdate: {
-            settings: ['statusPageUrl', 'statusJsonUrl],
+            settings: ['statusPageUrl', 'statusJsonUrl'],
             properties: [],
         },
         default: {
