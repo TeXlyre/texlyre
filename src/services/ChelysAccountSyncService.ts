@@ -22,6 +22,7 @@ import {
 	type UserDataChangedDetail,
 	type UserDataMutation,
 	type UserDataType,
+	getForcedUserData,
 } from '../utils/userDataUtils';
 
 export const CHELYS_ACCOUNT_COLLECTION = 'chelys_account';
@@ -148,6 +149,7 @@ const mutationMapName = (name: StoreName): string => name;
 const SYNC_META_MAP = 'chelys_account_sync_meta';
 const SYNC_SCHEMA_KEY = 'mutationSchema';
 const SYNC_SCHEMA_VERSION = 2;
+const SYNC_FORCED_KEY = 'forcedDefaults:texlyre';
 const toPlain = (value: unknown): unknown =>
 	value === undefined ? null : JSON.parse(JSON.stringify(value));
 const equal = (a: unknown, b: unknown): boolean =>
@@ -326,6 +328,7 @@ class ChelysAccountSyncService {
 			connection.peer.transportPeerId = transportPeerId;
 			this.updateLocalPresence(connection, config);
 			this.migrateMutationSchema(connection);
+			this.applyForcedDefaults(connection);
 			for (const adapter of adapters) {
 				this.initializeStore(connection, adapter);
 			}
@@ -533,6 +536,28 @@ class ChelysAccountSyncService {
 				error,
 			);
 		}
+	}
+
+	private applyForcedDefaults(connection: ChelysAccountConnection): void {
+		const forced = getForcedUserData();
+		if (!forced) return;
+
+		const meta = connection.doc.getMap<unknown>(SYNC_META_MAP);
+		if (meta.get(SYNC_FORCED_KEY) === forced.version) return;
+
+		const { version, ...stores } = forced;
+		connection.doc.transact(() => {
+			for (const [name, entries] of Object.entries(stores)) {
+				if (!adapterByName.has(name as StoreName)) continue;
+				const map = connection.doc.getMap<unknown>(
+					mutationMapName(name as StoreName),
+				);
+				for (const [key, value] of Object.entries(entries)) {
+					map.set(key, toPlain(value));
+				}
+			}
+			meta.set(SYNC_FORCED_KEY, version);
+		}, LOCAL_ORIGIN);
 	}
 
 	private migrateMutationSchema(connection: ChelysAccountConnection): void {

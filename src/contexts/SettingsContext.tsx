@@ -200,7 +200,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				: {};
 			const globalVersion = globalSettingsParsed._version;
 
-			let stored = localStorage.getItem(userStorageKey);
+			const stored = localStorage.getItem(userStorageKey);
 			let storedParsed = stored ? JSON.parse(stored) : null;
 
 			if (
@@ -208,9 +208,12 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				(!storedParsed || storedParsed._version !== globalVersion)
 			) {
 				if (globalSettings) {
-					localStorage.setItem(userStorageKey, globalSettings);
-					stored = globalSettings;
-					storedParsed = globalSettingsParsed;
+					storedParsed = {
+						...globalSettingsParsed,
+						...storedParsed,
+						_version: globalVersion,
+					};
+					localStorage.setItem(userStorageKey, JSON.stringify(storedParsed));
 				}
 			}
 

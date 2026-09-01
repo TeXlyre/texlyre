@@ -22,6 +22,23 @@ export interface UserDataChangedDetail {
 }
 
 export const USER_DATA_CHANGED = 'texlyre-user-data-changed';
+export const FORCED_DEFAULTS_KEY = 'texlyre-forced-defaults';
+
+export interface ForcedUserData {
+	version: string;
+	settings: Record<string, unknown>;
+	properties: Record<string, unknown>;
+}
+
+export function getForcedUserData(): ForcedUserData | null {
+	try {
+		const raw = localStorage.getItem(FORCED_DEFAULTS_KEY);
+		const parsed = raw ? JSON.parse(raw) : null;
+		return parsed?.version ? parsed : null;
+	} catch {
+		return null;
+	}
+}
 
 export function getUserDataKey(
 	userId: string,

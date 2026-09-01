@@ -8,6 +8,13 @@ export interface UserData {
 	records: Record<string, unknown>;
 }
 
+export type UserDataPropertyId = {
+	[S in keyof UserDataProperties]: `${Extract<
+		keyof NonNullable<UserDataProperties[S]>,
+		string
+	>}:${Extract<S, string>}`;
+}[keyof UserDataProperties];
+
 export type DeepPartial<T> = {
 	[P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
 };
@@ -61,6 +68,10 @@ export interface TexlyreConfig {
 
 	userdata: {
 		version: string;
+		forceUpdate?: {
+			settings?: Array<Extract<keyof UserDataSettings, string>>;
+			properties?: UserDataPropertyId[];
+		};
 		default: UserData;
 		mobile?: {
 			settings?: DeepPartial<UserDataSettings>;
