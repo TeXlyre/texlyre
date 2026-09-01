@@ -61,9 +61,9 @@ const config: TexlyreConfig = {
 
     // Overwrite priority is default < local < mobile for corresponding configs
     userdata: {
-        version: '1.3.1',
+        version: '1.3.2',
         forceUpdate: {
-            settings: ['statusPageUrl'],
+            settings: ['statusPageUrl', 'statusJsonUrl],
             properties: [],
         },
         default: {
