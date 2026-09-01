@@ -33,6 +33,10 @@ function deepMerge(target: any, source: any): any {
 	return result;
 }
 
+function flattenIds(ids: string[] = []): string[] {
+	return ids.map((id) => id.replace(/([A-Z])/g, '-$1').toLowerCase());
+}
+
 function flattenSettings(settings: any, prefix = ''): Record<string, any> {
 	const result: Record<string, any> = {};
 
@@ -192,6 +196,10 @@ function generateUserdataFiles(config: any) {
 			version: config.userdata.version || '1.0.0',
 			settings: flattenSettings(settings),
 			properties: flattenProperties(properties),
+			forceUpdate: {
+				settings: flattenIds(config.userdata.forceUpdate?.settings),
+				properties: flattenIds(config.userdata.forceUpdate?.properties),
+			},
 			secrets,
 			records,
 		};

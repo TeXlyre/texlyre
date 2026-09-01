@@ -9,6 +9,7 @@ import type { Project, ProjectType, ProjectGroup } from '../types/projects';
 import { generateRandomColor } from '../utils/colorUtils';
 import { cleanupProjectDatabases } from '../utils/dbDeleteUtils';
 import { generateYjsProjectId } from '../utils/urlUtils';
+import { getUserDataKey } from '../utils/userDataUtils';
 import { fileSystemBackupService } from './FileSystemBackupService';
 import { createNamedLogger } from '@/logging';
 
@@ -211,12 +212,22 @@ class AuthService {
 		await this.db?.delete(this.USER_STORE, oldGuestId);
 
 		this.currentUser = upgradedUser;
+		this.transferUserSettings(oldGuestId, newUserId);
 		localStorage.setItem('texlyre-current-user', newUserId);
 
 		moduleLog.info(
 			`Upgraded guest account ${oldGuestId} to full account: ${username} (${newUserId})`,
 		);
 		return upgradedUser;
+	}
+
+	private transferUserSettings(fromUserId: string, toUserId: string): void {
+		for (const store of ['settings', 'properties'] as const) {
+			const raw = localStorage.getItem(getUserDataKey(fromUserId, store));
+			if (raw === null) continue;
+			localStorage.setItem(getUserDataKey(toUserId, store), raw);
+			localStorage.removeItem(getUserDataKey(fromUserId, store));
+		}
 	}
 
 	private async transferGuestProjects(

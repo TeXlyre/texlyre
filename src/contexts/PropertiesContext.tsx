@@ -137,7 +137,7 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 				: {};
 			const globalVersion = globalPropertiesParsed._version;
 
-			let stored = localStorage.getItem(userStorageKey);
+			const stored = localStorage.getItem(userStorageKey);
 			let storedParsed = stored ? JSON.parse(stored) : null;
 
 			if (
@@ -145,9 +145,12 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 				(!storedParsed || storedParsed._version !== globalVersion)
 			) {
 				if (globalProperties) {
-					localStorage.setItem(userStorageKey, globalProperties);
-					stored = globalProperties;
-					storedParsed = globalPropertiesParsed;
+					storedParsed = {
+						...globalPropertiesParsed,
+						...storedParsed,
+						_version: globalVersion,
+					};
+					localStorage.setItem(userStorageKey, JSON.stringify(storedParsed));
 				}
 			}
 

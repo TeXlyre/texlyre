@@ -24,6 +24,7 @@ import { openDB } from 'idb';
 import './i18n';
 import App from './App';
 import { authService } from './services/AuthService';
+import { FORCED_DEFAULTS_KEY } from './utils/userDataUtils';
 import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('main');
@@ -136,64 +137,78 @@ if (
 	})();
 }
 
+function applyUserDataVersion(
+	store: 'settings' | 'properties',
+	defaults: Record<string, unknown>,
+	forced: string[],
+	version: string,
+): Record<string, unknown> {
+	const overrides = Object.fromEntries(
+		forced.filter((id) => id in defaults).map((id) => [id, defaults[id]]),
+	);
+
+	const globalKey = `texlyre-${store}`;
+	const existingRaw = localStorage.getItem(globalKey);
+	const existing = existingRaw ? JSON.parse(existingRaw) : {};
+	if (existingRaw && existing._version === version) return overrides;
+
+	localStorage.setItem(
+		globalKey,
+		JSON.stringify({ ...existing, ...defaults, _version: version }),
+	);
+
+	const suffix = `-${store}`;
+	for (const key of Object.keys(localStorage)) {
+		if (!key.startsWith('texlyre-user-') || !key.endsWith(suffix)) continue;
+		try {
+			const stored = JSON.parse(localStorage.getItem(key) ?? '{}');
+			localStorage.setItem(
+				key,
+				JSON.stringify({
+					...defaults,
+					...stored,
+					...overrides,
+					_version: version,
+				}),
+			);
+		} catch {
+			localStorage.removeItem(key);
+		}
+	}
+
+	moduleLog.info(
+		`${store} updated from version ${existing._version || 'none'} to ${version}`,
+	);
+
+	return overrides;
+}
+
 async function initUserData(): Promise<void> {
-	const settingsKey = 'texlyre-settings';
-	const propertiesKey = 'texlyre-properties';
-
-	const existingSettings = localStorage.getItem(settingsKey);
-	const existingProperties = localStorage.getItem(propertiesKey);
-
 	try {
 		const isMobile = isMobileDevice();
 		const userdataFile = isMobile ? 'userdata.mobile.json' : 'userdata.json';
 
 		const response = await fetch(`${BASE_PATH}/${userdataFile}`);
 		const userData = await response.json();
-		const newVersion = userData.version || '1.0.0';
+		const version = userData.version || '1.0.0';
 
-		const existingSettingsParsed = existingSettings
-			? JSON.parse(existingSettings)
-			: {};
-		const existingPropertiesParsed = existingProperties
-			? JSON.parse(existingProperties)
-			: {};
+		const settings = applyUserDataVersion(
+			'settings',
+			userData.settings ?? {},
+			userData.forceUpdate?.settings ?? [],
+			version,
+		);
+		const properties = applyUserDataVersion(
+			'properties',
+			userData.properties ?? {},
+			userData.forceUpdate?.properties ?? [],
+			version,
+		);
 
-		const existingSettingsVersion = existingSettingsParsed._version;
-		const existingPropertiesVersion = existingPropertiesParsed._version;
-
-		if (existingSettingsVersion !== newVersion) {
-			const mergedSettings = {
-				...existingSettingsParsed,
-				...userData.settings,
-				_version: newVersion,
-			};
-			localStorage.setItem(settingsKey, JSON.stringify(mergedSettings));
-			moduleLog.info(
-				`Settings updated from version ${existingSettingsVersion || 'none'} to ${newVersion}`,
-			);
-		} else if (!existingSettings) {
-			localStorage.setItem(
-				settingsKey,
-				JSON.stringify({ ...userData.settings, _version: newVersion }),
-			);
-		}
-
-		if (existingPropertiesVersion !== newVersion) {
-			const mergedProperties = {
-				...existingPropertiesParsed,
-				...userData.properties,
-				_version: newVersion,
-			};
-			localStorage.setItem(propertiesKey, JSON.stringify(mergedProperties));
-			moduleLog.info(
-				`Properties updated from version ${existingPropertiesVersion || 'none'} to ${newVersion}`,
-			);
-		} else if (!existingProperties) {
-			localStorage.setItem(
-				propertiesKey,
-				JSON.stringify({ ...userData.properties, _version: newVersion }),
-			);
-		}
+		localStorage.setItem(
+			FORCED_DEFAULTS_KEY,
+			JSON.stringify({ version, settings, properties }),
+		);
 	} catch (error) {
 		moduleLog.warn('Failed to load default user data:', error);
 	}
