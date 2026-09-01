@@ -615,6 +615,35 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 
 		useEffect(() => {
 			const container = containerRef.current;
+			if (!container) return;
+
+			let hadSize = container.clientHeight > 0;
+
+			const observer = new ResizeObserver(() => {
+				const hasSize = container.clientHeight > 0;
+				if (hasSize === hadSize) return;
+
+				hadSize = hasSize;
+				if (!hasSize || !isViewerReady()) return;
+
+				const pdfViewer = pdfViewerRef.current;
+				const scaleValue = pdfViewer.currentScaleValue;
+
+				if (typeof scaleValue === 'string') {
+					pdfViewer.currentScaleValue = scaleValue;
+				}
+
+				pdfViewer.update?.();
+				renderHighlight(pdfViewer, propsRef.current.highlight);
+			});
+
+			observer.observe(container);
+
+			return () => observer.disconnect();
+		}, [isViewerReady]);
+
+		useEffect(() => {
+			const container = containerRef.current;
 			if (!container || !onLocationClick) return;
 
 			const onClick = (event: MouseEvent) => {

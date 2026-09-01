@@ -841,6 +841,25 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 	}, [scrollView, syncScroll]);
 
 	useEffect(() => {
+		if (!scrollView || !scrollContainerRef.current) return;
+
+		const container = scrollContainerRef.current;
+		let hadSize = container.clientHeight > 0;
+
+		const observer = new ResizeObserver(() => {
+			const hasSize = container.clientHeight > 0;
+			if (hasSize === hadSize) return;
+
+			hadSize = hasSize;
+			if (hasSize) syncScroll();
+		});
+
+		observer.observe(container);
+
+		return () => observer.disconnect();
+	}, [scrollView, syncScroll]);
+
+	useEffect(() => {
 		syncScroll();
 	}, [syncScroll]);
 

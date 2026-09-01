@@ -52,7 +52,7 @@ const ProjectBackupControls: React.FC<ProjectBackupControlsProps> = ({
 				title={t('Export project to file system (write to PC)')}
 			>
 				<ExportIcon />
-				{t('Export')}
+				<span className='backup-control-label'>{t('Export')}</span>
 			</button>
 			<button
 				className='action-button'
@@ -61,7 +61,7 @@ const ProjectBackupControls: React.FC<ProjectBackupControlsProps> = ({
 				title={t('Import changes from file system (read from PC)')}
 			>
 				<ImportIcon />
-				{t('Import')}
+				<span className='backup-control-label'>{t('Import')}</span>
 			</button>
 		</div>
 	);

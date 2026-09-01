@@ -24,7 +24,9 @@ import { openDB } from 'idb';
 import './i18n';
 import App from './App';
 import { authService } from './services/AuthService';
+import { isMobileUserAgent } from './utils/browserUtils';
 import { FORCED_DEFAULTS_KEY } from './utils/userDataUtils';
+import { applyStoredViewport } from './utils/viewportUtils';
 import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('main');
@@ -32,11 +34,7 @@ const moduleLog = createNamedLogger('main');
 const BASE_PATH = __BASE_PATH__;
 
 const isMobileDevice = (): boolean => {
-	return (
-		/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-			navigator.userAgent,
-		) || window.innerWidth <= 768
-	);
+	return isMobileUserAgent() || window.innerWidth <= 768;
 };
 
 // Guest account cleanup - runs every hour when app is active
@@ -284,6 +282,7 @@ async function startApp() {
 	);
 }
 
+applyStoredViewport();
 setupDirection();
 setupGuestCleanup();
 startApp();
