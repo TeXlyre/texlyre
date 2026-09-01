@@ -731,7 +731,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 					/>
 				)}
 
-				{isLoading && (
+				{isLoading && !pdfDocument && (
 					<div className='pdf-renderer-loading'>
 						{t('Loading PDF document...')}
 					</div>

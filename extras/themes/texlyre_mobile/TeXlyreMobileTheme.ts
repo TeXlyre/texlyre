@@ -394,12 +394,6 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 
 const teXlyreMobileTheme = createTeXlyreMobileTheme();
 
-window.addEventListener('beforeunload', () => {
-	if (teXlyreMobileTheme.cleanup) {
-		teXlyreMobileTheme.cleanup();
-	}
-});
-
 const observer = new MutationObserver((mutations) => {
 	mutations.forEach((mutation) => {
 		if (
