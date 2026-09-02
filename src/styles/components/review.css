@@ -70,13 +70,11 @@
 .review-panel-actions button {
 	flex: 1;
 	margin: 0;
-	height: var(--button-height-md);
 	padding: var(--space-xs) var(--space-sm);
 	border: 1px solid var(--accent-border);
 	border-radius: var(--radius-sm);
 	background-color: transparent;
 	color: var(--text-color);
-    white-space: nowrap;
 	font-size: 0.75rem;
 	cursor: pointer;
 	transition: background-color var(--transition-normal);
