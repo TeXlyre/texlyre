@@ -127,6 +127,7 @@
 	cursor: pointer;
 	border-radius: var(--radius-sm);
 	font-size: 0.9rem;
+	white-space: nowrap;
 	transition: background-color var(--transition-normal);
 }
 
