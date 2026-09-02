@@ -14,6 +14,7 @@ export interface FileNode {
 	size?: number;
 	isDeleted?: boolean;
 	excludeFromSync?: boolean;
+	launchHandle?: FileSystemFileHandle;
 }
 
 export interface DirectorySummary {
