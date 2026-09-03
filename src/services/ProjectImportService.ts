@@ -1,16 +1,16 @@
 // src/services/ProjectImportService.ts
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import type { Project } from '../types/projects';
 import { authService } from './AuthService';
-import { UnifiedDataStructureService } from './DataStructureService';
+import { UnifiedDataStructureService } from './BackupLayoutService';
 import { ProjectDataService } from './ProjectDataService';
 import {
-	DirectoryAdapter,
-	StorageAdapterService,
-	ZipAdapter,
-} from './StorageAdapterService';
+	DirectoryTarget,
+	WriteTargetService,
+	ZipTarget,
+} from './WriteTargetService';
 import { generateYjsProjectId } from '../utils/urlUtils';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('ProjectImportService');
 
@@ -37,7 +37,7 @@ export interface ImportResult {
 
 class ProjectImportService {
 	private dataSerializer = new ProjectDataService();
-	private fileSystemManager = new StorageAdapterService();
+	private fileSystemManager = new WriteTargetService();
 	private unifiedService = new UnifiedDataStructureService();
 
 	private generateUniqueProjectName(
@@ -60,7 +60,7 @@ class ProjectImportService {
 		const importableProjects: ImportableProject[] = [];
 
 		try {
-			const adapter = new DirectoryAdapter(rootHandle);
+			const adapter = new DirectoryTarget(rootHandle);
 
 			if (!(await adapter.exists(this.unifiedService.getPaths().MANIFEST))) {
 				return [];
@@ -104,7 +104,7 @@ class ProjectImportService {
 		const importableProjects: ImportableProject[] = [];
 
 		try {
-			const zipAdapter = new ZipAdapter();
+			const zipAdapter = new ZipTarget();
 			await zipAdapter.loadFromBlob(file);
 
 			if (!(await zipAdapter.exists(this.unifiedService.getPaths().MANIFEST))) {
@@ -145,7 +145,7 @@ class ProjectImportService {
 		const result: ImportResult = { imported: [], skipped: [], errors: [] };
 
 		try {
-			const adapter = new DirectoryAdapter(rootHandle);
+			const adapter = new DirectoryTarget(rootHandle);
 			const data = await this.fileSystemManager.readUnifiedStructure(adapter);
 
 			await this.processImport(data, projectIds, options, result);
@@ -170,7 +170,7 @@ class ProjectImportService {
 		const result: ImportResult = { imported: [], skipped: [], errors: [] };
 
 		try {
-			const zipAdapter = new ZipAdapter();
+			const zipAdapter = new ZipTarget();
 			await zipAdapter.loadFromBlob(file);
 			const data =
 				await this.fileSystemManager.readUnifiedStructure(zipAdapter);

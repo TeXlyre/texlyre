@@ -14,6 +14,7 @@ import {
 	EditIcon,
 	FileIcon,
 	UnknownFileIcon,
+	DiskLinkedIcon,
 	FilePlusIcon,
 	FolderIcon,
 	FolderOpenIcon,
@@ -53,6 +54,7 @@ interface FileTreeItemProps {
 	onSetActiveMenu: (id: string | null) => void;
 	onLinkToDocument: (fileId: string) => void;
 	onUnlinkFromDocument: (fileId: string) => void;
+	onDisconnectFromDisk: (fileId: string) => void;
 	onMoveFile: (node: FileNode) => void;
 	onDuplicateFile: (node: FileNode) => void;
 	onCopyPath: (node: FileNode) => void;
@@ -105,6 +107,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 	onSetActiveMenu,
 	onLinkToDocument,
 	onUnlinkFromDocument,
+	onDisconnectFromDisk,
 	onMoveFile,
 	onDuplicateFile,
 	onCopyPath,
@@ -288,6 +291,18 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 									title={t('Has viewer plugin')}
 								>
 									{/*👁️*/}
+								</span>
+							)}
+							{node.launchHandle && (
+								<span
+									className='file-disk-indicator'
+									title={t('Connected to a file opened from your device')}
+									onClick={(event) => {
+										event.stopPropagation();
+										onDisconnectFromDisk(node.id);
+									}}
+								>
+									<DiskLinkedIcon />
 								</span>
 							)}
 						</span>
@@ -627,6 +642,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							onSetActiveMenu={onSetActiveMenu}
 							onLinkToDocument={onLinkToDocument}
 							onUnlinkFromDocument={onUnlinkFromDocument}
+							onDisconnectFromDisk={onDisconnectFromDisk}
 							onMoveFile={onMoveFile}
 							onDuplicateFile={onDuplicateFile}
 							onCopyPath={onCopyPath}

@@ -20,6 +20,7 @@ import '@picocss/pico/css/pico.min.css';
 import i18next from 'i18next';
 import { useEffect, useState } from 'react';
 
+import { createNamedLogger } from '@/logging';
 import './styles/global.css';
 import './styles/components/editor.css';
 import './styles/components/editor-tabs.css';
@@ -29,6 +30,7 @@ import './styles/components/file-explorer.css';
 import './styles/components/search.css';
 import './styles/components/outline.css';
 import './styles/components/backup-collab.css';
+import './styles/components/workspace.css';
 import './styles/components/resizable-panel.css';
 import './styles/components/toast.css';
 import './styles/components/tooltip.css';
@@ -65,8 +67,8 @@ import AppRouter from './components/app/AppRouter';
 import AppBootstrap from './components/app/AppSettingBootrap';
 import PasswordModal from './components/auth/PasswordModal';
 import SplashScreen from './components/common/SplashScreen';
-import ConflictResolutionModal from './components/conflicts/ConflictResolutionModal';
-import FileConflictModal from './components/editor/FileConflictModal';
+import MergeResolutionModal from './components/conflicts/MergeResolutionModal';
+import FileConflictPromptModal from './components/conflicts/FileConflictPromptModal';
 import { AuthProvider } from './contexts/AuthContext';
 import { ChelysProvider } from './contexts/ChelysContext';
 import { EditorProvider } from './contexts/EditorContext';
@@ -74,7 +76,7 @@ import { LSPConfigProvider } from './contexts/LSPConfigContext';
 import { SharedToolPreferencesProvider } from './contexts/SharedToolPreferencesContext';
 import { TypesetterConfigProvider } from './contexts/TypesetterConfigContext';
 import { typesetterRegistryService } from './services/TypesetterRegistryService';
-import { FileSystemBackupProvider } from './contexts/FileSystemBackupContext';
+import { FileSystemBackupProvider } from './contexts/DiskBackupContext';
 import { OfflineProvider } from './contexts/OfflineContext';
 import { PropertiesProvider } from './contexts/PropertiesContext';
 import { RecordsProvider } from './contexts/RecordsContext';
@@ -84,7 +86,6 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LocaleContext';
 import { useSecrets } from './hooks/useSecrets';
 import { useChelys } from './hooks/useChelys';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('App');
 
@@ -192,8 +193,8 @@ function AppContent() {
 	return (
 		<>
 			<AppRouter />
-			<ConflictResolutionModal />
-			<FileConflictModal />
+			<MergeResolutionModal />
+			<FileConflictPromptModal />
 			<PasswordModal
 				isOpen={isPasswordModalOpen}
 				onClose={hidePasswordModal}

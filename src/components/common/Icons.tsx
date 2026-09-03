@@ -1150,24 +1150,6 @@ export const LinkIcon: React.FC = () => (
 	</svg>
 );
 
-export const GoToDefinitionIcon: React.FC = () => (
-	<svg
-		xmlns='http://www.w3.org/2000/svg'
-		width='16'
-		height='16'
-		viewBox='0 0 24 24'
-		fill='none'
-		stroke='currentColor'
-		strokeWidth='2'
-		strokeLinecap='round'
-		strokeLinejoin='round'
-	>
-		<polyline points='9 6 15 12 9 18' />
-		<line x1='4' y1='4' x2='4' y2='20' />
-		<line x1='18' y1='12' x2='21' y2='12' />
-	</svg>
-);
-
 export const UnlinkIcon: React.FC = () => (
 	<svg
 		xmlns='http://www.w3.org/2000/svg'
@@ -1186,6 +1168,44 @@ export const UnlinkIcon: React.FC = () => (
 		<line x1='2' y1='8' x2='5' y2='8' />
 		<line x1='16' y1='19' x2='16' y2='22' />
 		<line x1='19' y1='16' x2='22' y2='16' />
+	</svg>
+);
+
+export const DiskLinkedIcon: React.FC = () => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		width='16'
+		height='16'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+	>
+		<path d='M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z' />
+		<polyline points='14 2 14 8 20 8' />
+		<path d='M8 15h8' />
+		<path d='M10 12l-3 3 3 3' />
+		<path d='M14 12l3 3-3 3' />
+	</svg>
+);
+
+export const GoToDefinitionIcon: React.FC = () => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		width='16'
+		height='16'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+	>
+		<polyline points='9 6 15 12 9 18' />
+		<line x1='4' y1='4' x2='4' y2='20' />
+		<line x1='18' y1='12' x2='21' y2='12' />
 	</svg>
 );
 

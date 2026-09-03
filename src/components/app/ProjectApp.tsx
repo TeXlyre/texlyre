@@ -3,11 +3,12 @@ import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 import { useAuth } from '../../hooks/useAuth';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
-import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
+import { useDiskBackup } from '../../hooks/useDiskBackup';
 import { useTheme } from '../../hooks/useTheme';
 import type { Project, ProjectType, ProjectGroup } from '../../types/projects';
 import {
@@ -38,10 +39,9 @@ import DeleteAccountModal from '../profile/DeleteAccountModal';
 import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
 import { NewProjectIcon } from '../common/Icons';
-import { createNamedLogger } from '@/logging';
 import FooterLinks from '../common/FooterLinks';
 import ServiceStatusBanner from '../common/ServiceStatusBanner';
-import StorageBanner from '../common/StorageBanner';
+import QuotaBanner from '../common/QuotaBanner';
 
 const moduleLog = createNamedLogger('ProjectApp');
 
@@ -86,7 +86,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		clearActivity,
 		clearAllActivities,
 		changeDirectory,
-	} = useFileSystemBackup();
+	} = useDiskBackup();
 
 	const [projects, setProjects] = useState<Project[]>([]);
 	const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
@@ -469,7 +469,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				/>
 			)}
 			<ServiceStatusBanner />
-			<StorageBanner />
+			<QuotaBanner />
 			<header>
 				<div className='header-left'>
 					<h1>{t('All Projects')}</h1>
