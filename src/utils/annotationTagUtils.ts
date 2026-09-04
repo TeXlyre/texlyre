@@ -196,6 +196,53 @@ export function collectAnnotationTagRanges(
 const tagTokenPattern = (kind: AnnotationKind) =>
 	`\`?<###(?:\\s|%)*${kind}(?:\\s|%)*id:[\\s\\S]*?###>\`?|\`?<\\/###(?:\\s|%)*${kind}(?:\\s|%)*id:(?:\\s|%)*[\\w-]+(?:\\s|%)*###>\`?`;
 
+export interface AnnotationToken {
+	start: number;
+	end: number;
+	token: string;
+	isClose: boolean;
+}
+
+export function findAnnotationTokens(
+	text: string,
+	kinds: readonly AnnotationKind[] = ANNOTATION_KINDS,
+): AnnotationToken[] {
+	const pattern = new RegExp(kinds.map(tagTokenPattern).join('|'), 'g');
+	const tokens: AnnotationToken[] = [];
+
+	for (const match of text.matchAll(pattern)) {
+		if (match.index === undefined) continue;
+		tokens.push({
+			start: match.index,
+			end: match.index + match[0].length,
+			token: match[0],
+			isClose: match[0].includes('</###'),
+		});
+	}
+
+	return tokens;
+}
+
+export function stripOrphanAnnotationTags(
+	text: string,
+	kinds: readonly AnnotationKind[] = ANNOTATION_KINDS,
+): string {
+	let result = text;
+
+	for (const kind of kinds) {
+		const paired = new Set(
+			scanAnnotationTags(result, kind).map((match) => match.id),
+		);
+
+		result = result.replace(new RegExp(tagTokenPattern(kind), 'g'), (token) => {
+			const id = /id:(?:\s|%)*([\w-]+)/.exec(token)?.[1];
+			return id && !paired.has(id) ? '' : token;
+		});
+	}
+
+	return result;
+}
+
 export function stripAnnotationTagTokens(
 	text: string,
 	kinds: readonly AnnotationKind[] = ANNOTATION_KINDS,
@@ -204,6 +251,47 @@ export function stripAnnotationTagTokens(
 		new RegExp(kinds.map(tagTokenPattern).join('|'), 'g'),
 		'',
 	);
+}
+
+export interface StrippedAnnotationSpan {
+	from: number;
+	to: number;
+}
+
+export function stripAnnotationTagsWithSpans(
+	text: string,
+	kinds: readonly AnnotationKind[] = ANNOTATION_KINDS,
+): { content: string; spans: StrippedAnnotationSpan[] } {
+	const spans: StrippedAnnotationSpan[] = [];
+
+	for (const kind of kinds) {
+		for (const match of scanAnnotationTags(text, kind)) {
+			spans.push({ from: match.openTagEnd, to: match.closeTagStart });
+		}
+	}
+
+	const ranges = collectAnnotationTagRanges(text, kinds);
+	if (!ranges.length) {
+		return { content: text, spans: spans.sort((a, b) => a.from - b.from) };
+	}
+
+	const shiftFor = (offset: number): number => {
+		let removed = 0;
+		for (const range of ranges) {
+			if (range.to <= offset) removed += range.to - range.from;
+			else if (range.from < offset) removed += offset - range.from;
+			else break;
+		}
+		return offset - removed;
+	};
+
+	return {
+		content: stripAnnotationTags(text, kinds),
+		spans: spans
+			.map((span) => ({ from: shiftFor(span.from), to: shiftFor(span.to) }))
+			.filter((span) => span.from < span.to)
+			.sort((a, b) => a.from - b.from),
+	};
 }
 
 export function stripAnnotationTags(

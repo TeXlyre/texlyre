@@ -17,7 +17,7 @@ export interface ProcessorOptions {
 	inPlace?: boolean;
 }
 
-export function hasComments(content: string | ArrayBuffer): boolean {
+export function hasAnnotations(content: string | ArrayBuffer): boolean {
 	return hasAnnotationTags(content);
 }
 
@@ -25,13 +25,13 @@ export function cleanText(text: string): string {
 	return stripAnnotationTags(text);
 }
 
-export function cleanContent(
+export function stripAnnotations(
 	content: string | ArrayBuffer,
 ): string | ArrayBuffer {
 	if (typeof content !== 'string') {
 		const buffer = content as ArrayBuffer;
 		const textContent = new TextDecoder().decode(buffer);
-		if (!hasComments(textContent)) {
+		if (!hasAnnotations(textContent)) {
 			return buffer;
 		}
 		const cleanedText = cleanText(textContent);
@@ -51,7 +51,7 @@ export function cleanBytes(
 	const bytes =
 		content instanceof Uint8Array ? content : new Uint8Array(content);
 	const text = new TextDecoder().decode(bytes);
-	if (!hasComments(text)) {
+	if (!hasAnnotations(text)) {
 		return bytes;
 	}
 
@@ -70,12 +70,12 @@ export function processFile(
 		return fileNode;
 	}
 
-	if (!hasComments(fileNode.content)) {
+	if (!hasAnnotations(fileNode.content)) {
 		return fileNode;
 	}
 
 	const processedNode = options.inPlace ? fileNode : { ...fileNode };
-	processedNode.content = cleanContent(fileNode.content);
+	processedNode.content = stripAnnotations(fileNode.content);
 
 	return processedNode;
 }
@@ -106,7 +106,7 @@ export function processFilesWithStats(
 			return node;
 		}
 
-		if (hasComments(node.content)) {
+		if (hasAnnotations(node.content)) {
 			stats.cleaned++;
 			return processFile(node, options);
 		}

@@ -3,7 +3,7 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
-import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
+import { useDiskBackup } from '../../hooks/useDiskBackup';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import PositionedDropdown from '../common/PositionedDropdown';
 import BackupModal from './BackupModal';
@@ -20,7 +20,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 	currentProjectId,
 	isInEditor = false,
 }) => {
-	const fileSystemBackup = useFileSystemBackup();
+	const fileSystemBackup = useDiskBackup();
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const [showFileSystemModal, setShowFileSystemModal] = useState(false);
 	const [activePlugin, setActivePlugin] = useState<string | null>(null);

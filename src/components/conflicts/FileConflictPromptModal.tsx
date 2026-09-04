@@ -1,4 +1,4 @@
-// src/components/editor/FileConflictModal.tsx
+// src/components/conflicts/FileConflictPromptModal.tsx
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -12,21 +12,22 @@ import {
 	type LinkConfirmation,
 	type LinkedFileConfirmation,
 	type UnlinkConfirmation,
-	fileConflictService,
-} from '../../services/FileConflictService';
+	fileConflictPromptService,
+} from '../../services/FileConflictPromptService';
 import type { FileNode } from '../../types/files';
 import { formatDate } from '../../utils/dateUtils';
 import { isTemporaryFile, formatFileSize } from '../../utils/fileUtils';
 import Modal from '../common/Modal';
-import { TempFileIcon } from '../common/Icons.tsx';
+import { TempFileIcon } from '../common/Icons';
 
-const FileConflictModal: React.FC = () => {
+const FileConflictPromptModal: React.FC = () => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [conflictType, setConflictType] = useState<
 		| 'conflict'
 		| 'delete'
 		| 'link'
 		| 'unlink'
+		| 'disk-disconnect'
 		| 'linked-file-action'
 		| 'batch-conflict'
 		| 'batch-delete'
@@ -59,7 +60,7 @@ const FileConflictModal: React.FC = () => {
 	);
 
 	useEffect(() => {
-		const unsubscribe = fileConflictService.addListener((event) => {
+		const unsubscribe = fileConflictPromptService.addListener((event) => {
 			setConflictType(event.type);
 			setExistingFile(event.existingFile || null);
 			setNewFile(event.newFile || null);
@@ -657,7 +658,6 @@ const FileConflictModal: React.FC = () => {
 							</div>
 						</div>
 					</div>
-
 					{operationWarning && (
 						<div className='warning-message'>{operationWarning}</div>
 					)}
@@ -682,6 +682,60 @@ const FileConflictModal: React.FC = () => {
 							onClick={() => handleResolution('confirm')}
 						>
 							{t('Unlink File')}
+						</button>
+					</div>
+				</div>
+			</Modal>
+		);
+	}
+
+	if (conflictType === 'disk-disconnect' && existingFile) {
+		return (
+			<Modal
+				isOpen={isOpen}
+				onClose={handleClose}
+				title={t('Disconnect File from Disk')}
+				size='medium'
+			>
+				<div className='file-conflict-content'>
+					<p>
+						{t(
+							'Disconnecting "{name}" will stop syncing it with the file opened from your device.',
+							{ name: existingFile.name },
+						)}
+					</p>
+
+					<div className='file-info'>
+						<div className='file-details'>
+							<strong>{existingFile.name}</strong>
+							<div className='file-meta'>
+								<span>
+									{t('Path')}: {existingFile.path}
+								</span>
+								<span>
+									{t('Size')}: {formatFileSize(existingFile.size)}
+								</span>
+								<span>
+									{t('Modified')}: {formatDate(existingFile.lastModified)}
+								</span>
+							</div>
+						</div>
+					</div>
+
+					<div className='modal-actions'>
+						<button
+							type='button'
+							className='button secondary'
+							onClick={handleClose}
+						>
+							{t('Cancel')}
+						</button>
+						<button
+							type='button'
+							className='button primary'
+							onClick={() => handleResolution('confirm')}
+						>
+							{t('Disconnect File')}
 						</button>
 					</div>
 				</div>
@@ -875,4 +929,4 @@ const FileConflictModal: React.FC = () => {
 	return null;
 };
 
-export default FileConflictModal;
+export default FileConflictPromptModal;

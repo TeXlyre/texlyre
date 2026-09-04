@@ -1,4 +1,4 @@
-// src/contexts/FileSystemBackupContext.tsx
+// src/contexts/DiskBackupContext.tsx
 import React, {
 	createContext,
 	useState,
@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 
 import { useSettings } from '../hooks/useSettings';
-import { fileSystemBackupService } from '../services/FileSystemBackupService';
+import { diskBackupService } from '../services/DiskBackupService';
 import type { ImportableProject } from '../services/ProjectImportService';
 
 interface BackupStatus {
@@ -52,30 +52,29 @@ interface FileSystemBackupContextType {
 	getRootHandle: () => FileSystemDirectoryHandle | null;
 }
 
-export const FileSystemBackupContext =
-	createContext<FileSystemBackupContextType>({
-		status: {
-			isConnected: false,
-			isEnabled: false,
-			lastSync: null,
-			status: 'idle',
-		},
-		activities: [],
-		discoveredProjects: [],
-		showDiscoveryModal: false,
-		shouldShowAutoBackupModal: false,
-		requestAccess: async () => false,
-		disconnect: async () => {},
-		setEnabled: async () => {},
-		synchronize: async () => {},
-		exportToFileSystem: async () => {},
-		importChanges: async () => {},
-		clearActivity: () => {},
-		clearAllActivities: () => {},
-		changeDirectory: async () => false,
-		dismissDiscovery: () => {},
-		getRootHandle: () => null,
-	});
+export const DiskBackupContext = createContext<FileSystemBackupContextType>({
+	status: {
+		isConnected: false,
+		isEnabled: false,
+		lastSync: null,
+		status: 'idle',
+	},
+	activities: [],
+	discoveredProjects: [],
+	showDiscoveryModal: false,
+	shouldShowAutoBackupModal: false,
+	requestAccess: async () => false,
+	disconnect: async () => {},
+	setEnabled: async () => {},
+	synchronize: async () => {},
+	exportToFileSystem: async () => {},
+	importChanges: async () => {},
+	clearActivity: () => {},
+	clearAllActivities: () => {},
+	changeDirectory: async () => false,
+	dismissDiscovery: () => {},
+	getRootHandle: () => null,
+});
 
 interface FileSystemBackupProviderProps {
 	children: ReactNode;
@@ -116,11 +115,11 @@ export const FileSystemBackupProvider: React.FC<
 	const requestAccess = useCallback(
 		async (isAutoStart = false): Promise<boolean> => {
 			const connected =
-				(await fileSystemBackupService.restoreAccess()) ||
-				(await fileSystemBackupService.requestAccess(isAutoStart));
+				(await diskBackupService.restoreAccess()) ||
+				(await diskBackupService.requestAccess(isAutoStart));
 			if (connected) {
 				setTempEnabled(true);
-				fileSystemBackupService.setEnabled(true);
+				diskBackupService.setEnabled(true);
 			}
 			return connected;
 		},
@@ -128,14 +127,14 @@ export const FileSystemBackupProvider: React.FC<
 	);
 
 	const disconnect = useCallback(async (): Promise<void> => {
-		await fileSystemBackupService.disconnect();
+		await diskBackupService.disconnect();
 		setTempEnabled(false);
 	}, []);
 
 	const setEnabled = useCallback(
 		async (enabled: boolean, _isAutoStart = false): Promise<void> => {
 			setTempEnabled(enabled);
-			return fileSystemBackupService.setEnabled(enabled);
+			return diskBackupService.setEnabled(enabled);
 		},
 		[],
 	);
@@ -145,7 +144,7 @@ export const FileSystemBackupProvider: React.FC<
 			if (!getEffectiveEnabled()) {
 				await setEnabled(true);
 			}
-			return fileSystemBackupService.synchronize(projectId);
+			return diskBackupService.synchronize(projectId);
 		},
 		[getEffectiveEnabled, setEnabled],
 	);
@@ -155,7 +154,7 @@ export const FileSystemBackupProvider: React.FC<
 			if (!getEffectiveEnabled()) {
 				await setEnabled(true);
 			}
-			return fileSystemBackupService.exportToFileSystem(projectId);
+			return diskBackupService.exportToFileSystem(projectId);
 		},
 		[getEffectiveEnabled, setEnabled],
 	);
@@ -165,26 +164,26 @@ export const FileSystemBackupProvider: React.FC<
 			if (!getEffectiveEnabled()) {
 				await setEnabled(true);
 			}
-			return fileSystemBackupService.importChanges(projectId);
+			return diskBackupService.importChanges(projectId);
 		},
 		[getEffectiveEnabled, setEnabled],
 	);
 
 	const changeDirectory = useCallback(async (): Promise<boolean> => {
-		const changed = await fileSystemBackupService.changeDirectory();
+		const changed = await diskBackupService.changeDirectory();
 		if (changed) {
 			setTempEnabled(true);
-			fileSystemBackupService.setEnabled(true);
+			diskBackupService.setEnabled(true);
 		}
 		return changed;
 	}, []);
 
 	const clearActivity = useCallback((id: string) => {
-		fileSystemBackupService.clearActivity(id);
+		diskBackupService.clearActivity(id);
 	}, []);
 
 	const clearAllActivities = useCallback(() => {
-		fileSystemBackupService.clearAllActivities();
+		diskBackupService.clearAllActivities();
 	}, []);
 
 	const dismissDiscovery = useCallback(() => {
@@ -193,11 +192,11 @@ export const FileSystemBackupProvider: React.FC<
 	}, []);
 
 	const getRootHandle = useCallback((): FileSystemDirectoryHandle | null => {
-		return fileSystemBackupService.getRootHandle();
+		return diskBackupService.getRootHandle();
 	}, []);
 
 	useEffect(() => {
-		const unsubscribeStatus = fileSystemBackupService.addStatusListener(
+		const unsubscribeStatus = diskBackupService.addStatusListener(
 			(newStatus) => {
 				setStatus((prevStatus) => ({
 					...newStatus,
@@ -210,8 +209,8 @@ export const FileSystemBackupProvider: React.FC<
 		);
 
 		const unsubscribeActivities =
-			fileSystemBackupService.addActivityListener(setActivities);
-		const unsubscribeDiscovery = fileSystemBackupService.addDiscoveryListener(
+			diskBackupService.addActivityListener(setActivities);
+		const unsubscribeDiscovery = diskBackupService.addDiscoveryListener(
 			(result) => {
 				if (result.hasImportableProjects) {
 					setDiscoveredProjects(result.projects);
@@ -220,9 +219,9 @@ export const FileSystemBackupProvider: React.FC<
 			},
 		);
 
-		setActivities(fileSystemBackupService.getActivities());
+		setActivities(diskBackupService.getActivities());
 
-		fileSystemBackupService.setEnabled(getEffectiveEnabled());
+		diskBackupService.setEnabled(getEffectiveEnabled());
 
 		return () => {
 			unsubscribeStatus();
@@ -234,10 +233,10 @@ export const FileSystemBackupProvider: React.FC<
 	useEffect(() => {
 		let cancelled = false;
 		(async () => {
-			const restored = await fileSystemBackupService.restoreAccess();
+			const restored = await diskBackupService.restoreAccess();
 			if (!cancelled && restored) {
 				setTempEnabled(true);
-				fileSystemBackupService.setEnabled(true);
+				diskBackupService.setEnabled(true);
 			}
 		})();
 		return () => {
@@ -251,9 +250,9 @@ export const FileSystemBackupProvider: React.FC<
 
 	useEffect(() => {
 		if (backupEnabledSetting) {
-			fileSystemBackupService.setEnabled(true);
+			diskBackupService.setEnabled(true);
 		} else if (!tempEnabled) {
-			fileSystemBackupService.setEnabled(false);
+			diskBackupService.setEnabled(false);
 		}
 	}, [backupEnabledSetting, tempEnabled]);
 
@@ -301,8 +300,8 @@ export const FileSystemBackupProvider: React.FC<
 	);
 
 	return (
-		<FileSystemBackupContext.Provider value={contextValue}>
+		<DiskBackupContext.Provider value={contextValue}>
 			{children}
-		</FileSystemBackupContext.Provider>
+		</DiskBackupContext.Provider>
 	);
 };

@@ -1,4 +1,4 @@
-// src/services/DataStructureService.ts
+// src/services/BackupLayoutService.ts
 import type { User } from '../types/auth';
 import type { FileNode } from '../types/files';
 import type { Project, ProjectGroup, ProjectType } from '../types/projects';
@@ -56,7 +56,7 @@ export interface FileMetadata {
 	content?: ArrayBuffer | string;
 }
 
-export interface DataStructureService {
+export interface BackupLayoutService {
 	manifest: UnifiedManifest;
 	account: User | null;
 	projects: ProjectMetadata[];
@@ -181,7 +181,7 @@ export class UnifiedDataStructureService {
 		};
 	}
 
-	validateStructure(data: Partial<DataStructureService>): boolean {
+	validateStructure(data: Partial<BackupLayoutService>): boolean {
 		return !!(
 			data.manifest?.version &&
 			data.projects &&

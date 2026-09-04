@@ -1,26 +1,35 @@
-// src/services/FileSystemBackupService.ts
+// src/services/DiskBackupService.ts
+import * as Y from 'yjs';
+
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import type {
 	BackupActivity,
 	BackupDiscoveryResult,
 	BackupStatus,
 } from '../types/backup';
 import type { Project } from '../types/projects';
+import { mergeAnnotatedSources } from '../utils/annotationMerge';
+import { stripAnnotationTagsWithSpans } from '../utils/annotationTagUtils';
 import { authService } from './AuthService';
-import { UnifiedDataStructureService } from './DataStructureService';
+import { DiskHandleStore, ensurePermission } from './DiskHandleStore';
+import { UnifiedDataStructureService } from './BackupLayoutService';
+import {
+	mergeResolutionService,
+	type ConflictResolution,
+	type FileConflict,
+} from './MergeResolutionService';
 import { ProjectDataService } from './ProjectDataService';
 import { projectImportService } from './ProjectImportService';
-import {
-	DirectoryAdapter,
-	StorageAdapterService,
-} from './StorageAdapterService';
-import { createNamedLogger } from '@/logging';
+import { DirectoryTarget, WriteTargetService } from './WriteTargetService';
 
-const moduleLog = createNamedLogger('FileSystemBackupService');
+const moduleLog = createNamedLogger('DiskBackupService');
 
-class FileSystemBackupService {
+class DiskBackupService {
 	private rootHandle: FileSystemDirectoryHandle | null = null;
-	private handleDb: IDBDatabase | null = null;
+	private handleStore = new DiskHandleStore<FileSystemDirectoryHandle>(
+		'texlyre-backup-handles',
+	);
 	private isEnabled = false;
 	private status: BackupStatus = {
 		isConnected: false,
@@ -30,7 +39,7 @@ class FileSystemBackupService {
 	};
 	private listeners: Array<(status: BackupStatus) => void> = [];
 	private dataSerializer = new ProjectDataService();
-	private fileSystemManager = new StorageAdapterService();
+	private fileSystemManager = new WriteTargetService();
 	private unifiedService = new UnifiedDataStructureService();
 	private activities: BackupActivity[] = [];
 	private activityListeners: Array<(activities: BackupActivity[]) => void> = [];
@@ -117,12 +126,7 @@ class FileSystemBackupService {
 		const handle = await this.loadHandle(scope);
 		if (!handle) return false;
 
-		const opts = { mode: 'readwrite' } as const;
-		let permission = await (handle as any).queryPermission(opts);
-		if (permission !== 'granted') {
-			permission = await (handle as any).requestPermission(opts);
-		}
-		if (permission !== 'granted') return false;
+		if (!(await ensurePermission(handle, 'readwrite'))) return false;
 
 		this.rootHandle = handle;
 		this.updateStatus({ isConnected: true, status: 'idle', error: undefined });
@@ -192,7 +196,7 @@ class FileSystemBackupService {
 
 		try {
 			const exportData = await this.prepareExportData(projectId);
-			const adapter = new DirectoryAdapter(this.rootHandle!);
+			const adapter = new DirectoryTarget(this.rootHandle!);
 
 			await this.fileSystemManager.writeUnifiedStructure(adapter, exportData);
 
@@ -232,7 +236,7 @@ class FileSystemBackupService {
 		});
 
 		try {
-			const adapter = new DirectoryAdapter(this.rootHandle!);
+			const adapter = new DirectoryTarget(this.rootHandle!);
 
 			if (!(await adapter.exists(this.unifiedService.getPaths().MANIFEST))) {
 				throw new Error(t('No backup data found in filesystem'));
@@ -361,7 +365,7 @@ class FileSystemBackupService {
 		}
 
 		try {
-			const adapter = new DirectoryAdapter(this.rootHandle);
+			const adapter = new DirectoryTarget(this.rootHandle);
 
 			if (!(await adapter.exists(this.unifiedService.getPaths().MANIFEST))) {
 				return { projects: [], projectData: new Map() };
@@ -439,7 +443,14 @@ class FileSystemBackupService {
 				await this.createProjectDirectly(projectMetadata, user.id);
 			}
 
-			const projectData = filesystemData.projectData.get(projectMetadata.id);
+			let projectData = filesystemData.projectData.get(projectMetadata.id);
+			if (projectData && existingProject) {
+				projectData = await this.mergeExistingProjectData(
+					existingProject,
+					projectData,
+				);
+			}
+
 			if (projectData) {
 				await this.dataSerializer.deserializeToIndexedDB({
 					manifest: filesystemData.manifest,
@@ -449,6 +460,238 @@ class FileSystemBackupService {
 				});
 			}
 		}
+	}
+
+	private async mergeExistingProjectData(
+		project: Project,
+		backupData: any,
+	): Promise<any> {
+		const [localDocuments, localFiles] = await Promise.all([
+			this.dataSerializer.serializeProjectDocuments(project),
+			this.dataSerializer.serializeProjectFiles(project),
+		]);
+
+		const merged = {
+			...backupData,
+			documents: [...(backupData.documents ?? [])],
+			documentContents: new Map(backupData.documentContents ?? []),
+			files: [...(backupData.files ?? [])],
+			fileContents: new Map(backupData.fileContents ?? []),
+		};
+
+		const localFileMetadata = new Map<string, any>(
+			localFiles.files.map((file) => [file.path, file]),
+		);
+		const localDocumentContents = localDocuments.documentContents;
+		const linkedDocumentIds = new Set<string>();
+		const conflicts: FileConflict[] = [];
+		const applyResolved = new Map<
+			string,
+			(resolution: ConflictResolution) => void
+		>();
+
+		const updateDocumentText = (documentId: string, content: string) => {
+			const existing = merged.documentContents.get(documentId) ?? {};
+			merged.documentContents.set(documentId, {
+				...existing,
+				readableContent: content,
+				yjsState: this.yjsStateFromText(content),
+			});
+			merged.documents = merged.documents.map((document: any) =>
+				document.id === documentId
+					? { ...document, lastModified: Date.now() }
+					: document,
+			);
+		};
+
+		const updateFileContent = (
+			filePath: string,
+			content: string | ArrayBuffer,
+			documentId?: string,
+		) => {
+			merged.fileContents.set(filePath, content);
+			const size =
+				typeof content === 'string' ? content.length : content.byteLength;
+			merged.files = merged.files.map((file: any) =>
+				file.path === filePath
+					? { ...file, size, lastModified: Date.now() }
+					: file,
+			);
+			if (documentId && typeof content === 'string') {
+				updateDocumentText(documentId, content);
+			}
+		};
+
+		for (const backupFile of merged.files) {
+			if (backupFile.type !== 'file') continue;
+
+			const localFile = localFileMetadata.get(backupFile.path);
+			if (!localFile) continue;
+
+			const documentId = backupFile.documentId ?? localFile.documentId;
+			if (documentId) linkedDocumentIds.add(documentId);
+
+			const localContent = localFiles.fileContents.get(backupFile.path);
+			const backupContent = merged.fileContents.get(backupFile.path);
+			if (localContent === undefined || backupContent === undefined) continue;
+			if (this.contentsEqual(localContent, backupContent)) continue;
+
+			if (
+				typeof localContent === 'string' &&
+				typeof backupContent === 'string'
+			) {
+				const localView = stripAnnotationTagsWithSpans(localContent);
+				const backupView = stripAnnotationTagsWithSpans(backupContent);
+
+				if (localView.content === backupView.content) {
+					updateFileContent(
+						backupFile.path,
+						mergeAnnotatedSources(
+							[localContent, backupContent],
+							localView.content,
+						).content,
+						documentId,
+					);
+					continue;
+				}
+
+				conflicts.push({
+					path: backupFile.path,
+					isBinary: false,
+					baseContent: undefined,
+					localContent,
+					remoteContent: backupContent,
+					localViewContent: localView.content,
+					remoteViewContent: backupView.content,
+					localAnnotationSpans: localView.spans,
+					annotationSpans: backupView.spans,
+				});
+			} else {
+				conflicts.push({
+					path: backupFile.path,
+					isBinary: true,
+					baseContent: undefined,
+					localContent: this.toConflictContent(localContent),
+					remoteContent: this.toConflictContent(backupContent),
+				});
+			}
+
+			applyResolved.set(backupFile.path, (resolution) => {
+				if (resolution.action === 'keep-local') {
+					updateFileContent(backupFile.path, localContent, documentId);
+				} else if (resolution.action === 'merged') {
+					updateFileContent(backupFile.path, resolution.content, documentId);
+				}
+			});
+		}
+
+		for (const backupDocument of merged.documents) {
+			if (linkedDocumentIds.has(backupDocument.id)) continue;
+
+			const localContent = localDocumentContents.get(
+				backupDocument.id,
+			)?.readableContent;
+			const backupContent = merged.documentContents.get(
+				backupDocument.id,
+			)?.readableContent;
+
+			if (
+				typeof localContent !== 'string' ||
+				typeof backupContent !== 'string' ||
+				localContent === backupContent
+			) {
+				continue;
+			}
+
+			const localView = stripAnnotationTagsWithSpans(localContent);
+			const backupView = stripAnnotationTagsWithSpans(backupContent);
+
+			if (localView.content === backupView.content) {
+				updateDocumentText(
+					backupDocument.id,
+					mergeAnnotatedSources(
+						[localContent, backupContent],
+						localView.content,
+					).content,
+				);
+				continue;
+			}
+
+			const path = `documents/${backupDocument.id}.txt`;
+			conflicts.push({
+				path,
+				isBinary: false,
+				baseContent: undefined,
+				localContent,
+				remoteContent: backupContent,
+				localViewContent: localView.content,
+				remoteViewContent: backupView.content,
+				localAnnotationSpans: localView.spans,
+				annotationSpans: backupView.spans,
+			});
+			applyResolved.set(path, (resolution) => {
+				if (resolution.action === 'keep-local') {
+					updateDocumentText(backupDocument.id, localContent);
+				} else if (
+					resolution.action === 'merged' &&
+					typeof resolution.content === 'string'
+				) {
+					updateDocumentText(backupDocument.id, resolution.content);
+				}
+			});
+		}
+
+		if (conflicts.length === 0) return merged;
+
+		const resolutions = await mergeResolutionService.resolveConflicts(
+			conflicts,
+			{
+				keepLocal: t('Keep TeXlyre'),
+				keepRemote: t('Keep Backup'),
+			},
+		);
+		if (!resolutions) {
+			throw new Error(t('Import cancelled due to unresolved conflicts'));
+		}
+
+		for (const [path, apply] of applyResolved) {
+			const resolution = resolutions.get(path);
+			if (resolution) apply(resolution);
+		}
+
+		return merged;
+	}
+
+	private contentsEqual(
+		a: string | ArrayBuffer,
+		b: string | ArrayBuffer,
+	): boolean {
+		if (typeof a === 'string' && typeof b === 'string') return a === b;
+
+		const aBytes =
+			typeof a === 'string' ? new TextEncoder().encode(a) : new Uint8Array(a);
+		const bBytes =
+			typeof b === 'string' ? new TextEncoder().encode(b) : new Uint8Array(b);
+		if (aBytes.byteLength !== bBytes.byteLength) return false;
+
+		for (let i = 0; i < aBytes.byteLength; i++) {
+			if (aBytes[i] !== bBytes[i]) return false;
+		}
+		return true;
+	}
+
+	private toConflictContent(
+		content: string | ArrayBuffer,
+	): string | ArrayBuffer {
+		return content;
+	}
+
+	private yjsStateFromText(text: string): Uint8Array {
+		const doc = new Y.Doc();
+		doc.getText('codemirror').insert(0, text);
+		const state = Y.encodeStateAsUpdate(doc);
+		doc.destroy();
+		return state;
 	}
 
 	private async createProjectDirectly(
@@ -524,53 +767,21 @@ class FileSystemBackupService {
 		return this.rootHandle !== null && this.isEnabled;
 	}
 
-	private async getHandleDb(): Promise<IDBDatabase> {
-		if (this.handleDb) return this.handleDb;
-		this.handleDb = await new Promise<IDBDatabase>((resolve, reject) => {
-			const request = indexedDB.open('texlyre-backup-handles', 1);
-			request.onupgradeneeded = () =>
-				request.result.createObjectStore('handles');
-			request.onsuccess = () => resolve(request.result);
-			request.onerror = () => reject(request.error);
-		});
-		return this.handleDb;
-	}
-
 	private async saveHandle(
 		scope: string,
 		handle: FileSystemDirectoryHandle,
 	): Promise<void> {
-		const db = await this.getHandleDb();
-		await new Promise<void>((resolve, reject) => {
-			const tx = db.transaction('handles', 'readwrite');
-			tx.objectStore('handles').put(handle, scope);
-			tx.oncomplete = () => resolve();
-			tx.onerror = () => reject(tx.error);
-		});
+		await this.handleStore.save(scope, handle);
 	}
 
 	private async loadHandle(
 		scope: string,
 	): Promise<FileSystemDirectoryHandle | null> {
-		const db = await this.getHandleDb();
-		return new Promise((resolve, reject) => {
-			const request = db
-				.transaction('handles', 'readonly')
-				.objectStore('handles')
-				.get(scope);
-			request.onsuccess = () => resolve(request.result ?? null);
-			request.onerror = () => reject(request.error);
-		});
+		return this.handleStore.load(scope);
 	}
 
 	private async clearHandle(scope: string): Promise<void> {
-		const db = await this.getHandleDb();
-		await new Promise<void>((resolve, reject) => {
-			const tx = db.transaction('handles', 'readwrite');
-			tx.objectStore('handles').delete(scope);
-			tx.oncomplete = () => resolve();
-			tx.onerror = () => reject(tx.error);
-		});
+		await this.handleStore.clear(scope);
 	}
 
 	private notifyListeners(): void {
@@ -592,4 +803,4 @@ class FileSystemBackupService {
 	}
 }
 
-export const fileSystemBackupService = new FileSystemBackupService();
+export const diskBackupService = new DiskBackupService();
