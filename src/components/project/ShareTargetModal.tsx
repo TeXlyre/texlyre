@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useAuth } from '../../hooks/useAuth';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileHandlerService } from '../../services/FileHandlerService';
+import { fileStoreService } from '../../services/FileStoreService';
 import { projectImportService } from '../../services/ProjectImportService';
 import type { PendingShareFile } from '../../services/ShareTargetService';
 import type { Project } from '../../types/projects';
@@ -77,7 +78,7 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 	}, [mode, getProjects]);
 
 	const storeFilesInProject = async (docUrl: string): Promise<void> => {
-		await fileStorageService.initialize(docUrl);
+		await fileStoreService.initialize(docUrl);
 		for (const f of files) {
 			if (f.name.toLowerCase().endsWith('.zip')) {
 				const zipFile = new File([f.buffer], f.name, {
@@ -87,15 +88,18 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 					zipFile,
 					'/',
 				);
-				await fileStorageService.batchStoreFiles(
-					[...directories, ...extracted],
-					{ showConflictDialog: false },
-				);
+				await fileStoreService.batchStoreFiles([...directories, ...extracted], {
+					showConflictDialog: false,
+				});
 			} else {
 				const mimeType =
 					getMimeType(f.name) || f.type || 'application/octet-stream';
 				const binary = isBinaryFile(f.name);
-				await fileStorageService.storeFile(
+				const launchHandle =
+					f.handle && (await fileHandlerService.ensureWritable(f.handle))
+						? f.handle
+						: undefined;
+				const storedId = await fileStoreService.storeFile(
 					{
 						id: crypto.randomUUID(),
 						name: f.name,
@@ -106,9 +110,13 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 						size: f.buffer.byteLength,
 						mimeType,
 						isBinary: binary,
+						launchHandle,
 					},
 					{ showConflictDialog: false },
 				);
+				if (launchHandle) {
+					fileHandlerService.registerLaunchLink(storedId);
+				}
 			}
 		}
 	};

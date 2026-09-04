@@ -11,13 +11,14 @@ import {
 } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { useCollab } from '../hooks/useCollab';
 import { useSettings } from '../hooks/useSettings';
 import { autoSaveService } from '../services/AutoSaveService';
 import { collabService } from '../services/CollabService';
-import { fileConflictService } from '../services/FileConflictService';
+import { fileConflictPromptService } from '../services/FileConflictPromptService';
 import { fileOperationNotificationService } from '../services/FileOperationNotificationService';
-import { fileStorageService } from '../services/FileStorageService';
+import { fileStoreService } from '../services/FileStoreService';
 import type { DocumentList } from '../types/documents';
 import type { FileNode, FileTreeContextType } from '../types/files';
 import type { YjsDocUrl } from '../types/yjs';
@@ -29,7 +30,6 @@ import {
 	stringToArrayBuffer,
 } from '../utils/fileUtils';
 import { batchExtractZip } from '../utils/zipUtils';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('FileTreeContext');
 
@@ -71,9 +71,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 		if (!storageInitialized.current && docUrl) {
 			const initFileStorage = async () => {
 				try {
-					await fileStorageService.initialize(docUrl);
+					await fileStoreService.initialize(docUrl);
 					storageInitialized.current = true;
-					const tree = await fileStorageService.buildFileTree();
+					const tree = await fileStoreService.buildFileTree();
 					setFileTree(tree);
 					setIsLoading(false);
 				} catch (error) {
@@ -87,7 +87,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 	const refreshFileTree = useCallback(async () => {
 		try {
-			const tree = await fileStorageService.buildFileTree();
+			const tree = await fileStoreService.buildFileTree();
 			setFileTree(tree);
 			return tree;
 		} catch (error) {
@@ -110,7 +110,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			let targetPath = currentPath;
 			try {
 				if (targetDirectoryId) {
-					const targetDir = await fileStorageService.getFile(targetDirectoryId);
+					const targetDir = await fileStoreService.getFile(targetDirectoryId);
 					if (targetDir && targetDir.type === 'directory') {
 						targetPath = targetDir.path;
 					}
@@ -140,7 +140,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				}
 
 				try {
-					await fileStorageService.batchStoreFiles(filesToProcess);
+					await fileStoreService.batchStoreFiles(filesToProcess);
 				} catch (error) {
 					if (
 						error instanceof Error &&
@@ -186,7 +186,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				);
 
 				const allFiles = [...directories, ...extractedFiles];
-				await fileStorageService.batchStoreFiles(allFiles);
+				await fileStoreService.batchStoreFiles(allFiles);
 
 				fileOperationNotificationService.showSuccess(
 					operationId,
@@ -231,7 +231,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					isBinary: true,
 				};
 
-				await fileStorageService.storeFile(rawFile);
+				await fileStoreService.storeFile(rawFile);
 				await refreshFileTree();
 			} catch (error) {
 				if (
@@ -258,10 +258,11 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 	const linkFileToDocument = useCallback(
 		async (fileId: string, documentId?: string) => {
 			try {
-				if (!fileStorageService.db) await fileStorageService.initialize();
-				const file = await fileStorageService.getFile(fileId);
+				if (!fileStoreService.db) await fileStoreService.initialize();
+				const file = await fileStoreService.getFile(fileId);
 				if (file && changeDoc && doc) {
-					const linkConfirmation = await fileConflictService.confirmLink(file);
+					const linkConfirmation =
+						await fileConflictPromptService.confirmLink(file);
 
 					if (linkConfirmation === 'cancel') {
 						return;
@@ -271,7 +272,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					let textContent = '';
 
 					if (shouldCopyContent) {
-						const fileContent = await fileStorageService.getFile(fileId);
+						const fileContent = await fileStoreService.getFile(fileId);
 						if (fileContent?.content instanceof ArrayBuffer) {
 							textContent = new TextDecoder().decode(fileContent.content);
 						} else if (typeof fileContent?.content === 'string') {
@@ -279,7 +280,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 						}
 					} else {
 						file.content = stringToArrayBuffer('');
-						await fileStorageService.storeFile(file, {
+						await fileStoreService.storeFile(file, {
 							showConflictDialog: false,
 						});
 					}
@@ -307,7 +308,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					});
 
 					file.documentId = documentId || createdDocId;
-					await fileStorageService.storeFile(file, {
+					await fileStoreService.storeFile(file, {
 						showConflictDialog: false,
 					});
 
@@ -407,18 +408,18 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 	const unlinkFileFromDocument = useCallback(
 		async (fileId: string) => {
 			try {
-				if (!fileStorageService.db) await fileStorageService.initialize();
-				const file = await fileStorageService.getFile(fileId);
+				if (!fileStoreService.db) await fileStoreService.initialize();
+				const file = await fileStoreService.getFile(fileId);
 				if (file?.documentId && changeDoc && doc) {
 					const unlinkConfirmation =
-						await fileConflictService.confirmUnlink(file);
+						await fileConflictPromptService.confirmUnlink(file);
 
 					if (unlinkConfirmation === 'cancel') {
 						return;
 					}
 
 					file.documentId = undefined;
-					await fileStorageService.storeFile(file, {
+					await fileStoreService.storeFile(file, {
 						showConflictDialog: false,
 					});
 					changeDoc((d) => {
@@ -458,7 +459,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					type: 'directory',
 					lastModified: Date.now(),
 				};
-				await fileStorageService.storeFile(directory);
+				await fileStoreService.storeFile(directory);
 				await refreshFileTree();
 			} catch (error) {
 				if (
@@ -475,7 +476,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 	const batchDeleteFiles = useCallback(
 		async (fileIds: string[]) => {
 			try {
-				const allFiles = await fileStorageService.getAllFiles(
+				const allFiles = await fileStoreService.getAllFiles(
 					false,
 					false,
 					false,
@@ -515,7 +516,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					allFilesToDelete.push(file.id);
 				}
 
-				await fileStorageService.batchDeleteFiles(allFilesToDelete, {
+				await fileStoreService.batchDeleteFiles(allFilesToDelete, {
 					hardDelete: hasTemporaryFiles,
 				});
 
@@ -560,8 +561,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				await autoSaveService.flushPendingSaves();
 
-				const movedIds =
-					await fileStorageService.batchMoveFiles(moveOperations);
+				const movedIds = await fileStoreService.batchMoveFiles(moveOperations);
 
 				fileOperationNotificationService.showSuccess(
 					operationId,
@@ -605,11 +605,11 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					}),
 				);
 
-				await fileStorageService.batchUnlinkFiles(fileIds);
+				await fileStoreService.batchUnlinkFiles(fileIds);
 
 				if (changeDoc && doc) {
 					const files = await Promise.all(
-						fileIds.map((fileId) => fileStorageService.getFile(fileId)),
+						fileIds.map((fileId) => fileStoreService.getFile(fileId)),
 					);
 
 					changeDoc((d) => {
@@ -667,7 +667,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 	const getFileContent = useCallback(async (fileId: string) => {
 		try {
-			const file = await fileStorageService.getFile(fileId);
+			const file = await fileStoreService.getFile(fileId);
 			return file?.content;
 		} catch (error) {
 			moduleLog.error('Error getting file content:', error);
@@ -677,7 +677,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 	const getFile = useCallback(async (fileId: string) => {
 		try {
-			return await fileStorageService.getFile(fileId);
+			return await fileStoreService.getFile(fileId);
 		} catch (error) {
 			moduleLog.error('Error getting file:', error);
 			return undefined;
@@ -687,7 +687,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 	const moveFileOrDirectory = useCallback(
 		async (sourceId: string, targetPath: string) => {
 			try {
-				const sourceFile = await fileStorageService.getFile(sourceId);
+				const sourceFile = await fileStoreService.getFile(sourceId);
 				if (!sourceFile) {
 					moduleLog.error('Source file not found');
 					return;
@@ -701,7 +701,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				// The service will construct the full new path
 				await autoSaveService.flushPendingSaves();
 
-				const movedIds = await fileStorageService.batchMoveFiles([
+				const movedIds = await fileStoreService.batchMoveFiles([
 					{
 						fileId: sourceId,
 						targetPath: targetPath,
@@ -726,7 +726,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 	const renameFile = useCallback(
 		async (fileId: string, newFullPath: string) => {
 			try {
-				const originalFile = await fileStorageService.getFile(fileId);
+				const originalFile = await fileStoreService.getFile(fileId);
 				if (!originalFile) {
 					throw new Error(t('Original file not found'));
 				}
@@ -744,7 +744,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				await autoSaveService.flushPendingSaves();
 
 				// For rename operations, we pass the full new path
-				const movedIds = await fileStorageService.batchMoveFiles(
+				const movedIds = await fileStoreService.batchMoveFiles(
 					[
 						{
 							fileId,
@@ -789,7 +789,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 		async (fileId: string, content: string) => {
 			try {
 				const contentBuffer = stringToArrayBuffer(content);
-				await fileStorageService.updateFileContent(fileId, contentBuffer);
+				await fileStoreService.updateFileContent(fileId, contentBuffer);
 				await refreshFileTree();
 			} catch (error) {
 				moduleLog.error('Error updating file content:', error);

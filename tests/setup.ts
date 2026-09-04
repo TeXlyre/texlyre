@@ -90,6 +90,18 @@ Object.defineProperty(global, 'crypto', {
     },
 });
 
+if (!process.env.TEST_LOGS) {
+    jest.mock('@/logging', () => ({
+        createNamedLogger: () => ({
+            debug: jest.fn(),
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            trace: jest.fn(),
+        }),
+    }));
+}
+
 const originalError = console.error;
 const originalWarn = console.warn;
 

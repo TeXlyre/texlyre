@@ -16,6 +16,7 @@ export interface PendingShareFile {
 	name: string;
 	type: string;
 	buffer: ArrayBuffer;
+	handle?: FileSystemFileHandle;
 }
 
 async function getDb() {

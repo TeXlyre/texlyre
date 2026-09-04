@@ -3,12 +3,14 @@ import type React from 'react';
 import { useRef, useState, useEffect } from 'react';
 
 import { t } from '@/i18n';
+import { formatDate, formatLastModified } from '@/utils/dateUtils.ts';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import type { Project } from '../../types/projects.ts';
 import ProjectBackupControls from '../backup/ProjectBackupControls';
 import {
 	EditIcon,
 	FolderIcon,
+	FolderOpenIcon,
 	StarIcon,
 	TrashIcon,
 	ChevronDownIcon,
@@ -17,7 +19,6 @@ import {
 } from '../common/Icons.tsx';
 import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import TypesetterInfo from '../common/TypesetterInfo';
-import { formatDate, formatLastModified } from '@/utils/dateUtils.ts';
 
 interface ProjectCardProps {
 	project: Project;
@@ -191,6 +192,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 							)}
 						/>
 					</div>
+					{project.isDiskLinked && (
+						<span
+							className='project-disk-badge'
+							title={t('Mirrored with a folder on your device')}
+						>
+							<FolderOpenIcon />
+						</span>
+					)}
 					{!isSelectionMode && (
 						<button
 							className={`favorite-button ${project.isFavorite ? 'favorited' : ''}`}

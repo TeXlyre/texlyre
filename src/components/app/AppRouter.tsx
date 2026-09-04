@@ -9,9 +9,11 @@ import {
 	Suspense,
 } from 'react';
 
+import { createNamedLogger } from '@/logging';
 import { useAuth } from '../../hooks/useAuth';
+import { useDiskFiles } from '../../hooks/useDiskFiles';
 import { collabService } from '../../services/CollabService';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileStoreService } from '../../services/FileStoreService';
 import {
 	shareTargetService,
 	type PendingShare,
@@ -31,7 +33,6 @@ import LoadingScreen from './LoadingScreen';
 import ProjectApp from './ProjectApp';
 import PrivacyModal from '../common/PrivacyModal';
 import ShareTargetModal from '../project/ShareTargetModal';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('AppRouter');
 
@@ -93,12 +94,12 @@ const downloadAndExtractZip = async (
 			type: 'application/zip',
 		});
 
-		await fileStorageService.initialize(`yjs:${projectId}`);
+		await fileStoreService.initialize(`yjs:${projectId}`);
 
 		const { files, directories } = await batchExtractZip(zipFile, '/');
 		const allFiles = [...directories, ...files];
 
-		await fileStorageService.batchStoreFiles(allFiles, {
+		await fileStoreService.batchStoreFiles(allFiles, {
 			showConflictDialog: false,
 			preserveTimestamp: false,
 		});
@@ -128,6 +129,7 @@ const AppRouter: React.FC = () => {
 	const [isCreatingProject, setIsCreatingProject] = useState(false);
 	const [showPrivacy, setShowPrivacy] = useState(false);
 	const [pendingShare, setPendingShare] = useState<PendingShare | null>(null);
+	const { launchedFiles, clearLaunchedFiles } = useDiskFiles(docUrl);
 
 	const [isPdfViewerWindow, setIsPdfViewerWindow] = useState(false);
 	const [pdfViewerProjectId, setPdfViewerProjectId] = useState<string | null>(
@@ -467,6 +469,7 @@ const AppRouter: React.FC = () => {
 			shareTargetService.clearPendingShare(pendingShare.id);
 			setPendingShare(null);
 		}
+		clearLaunchedFiles();
 		setDocUrl(openDocUrl as YjsDocUrl);
 		setCurrentProjectId(projectId);
 		sessionStorage.setItem('currentProjectId', projectId);
@@ -479,7 +482,10 @@ const AppRouter: React.FC = () => {
 			shareTargetService.clearPendingShare(pendingShare.id);
 			setPendingShare(null);
 		}
+		clearLaunchedFiles();
 	};
+
+	const incomingFiles = pendingShare?.files ?? launchedFiles;
 
 	if (isInitializing || isCreatingProject) {
 		return <LoadingScreen />;
@@ -515,9 +521,9 @@ const AppRouter: React.FC = () => {
 			<PrivacyModal isOpen={showPrivacy} onClose={handleClosePrivacy} />
 
 			<ShareTargetModal
-				isOpen={!!pendingShare && isAuthenticated && !isInitializing}
+				isOpen={incomingFiles.length > 0 && isAuthenticated && !isInitializing}
 				onClose={handleShareTargetClose}
-				files={pendingShare?.files ?? []}
+				files={incomingFiles}
 				onOpenProject={handleShareTargetOpen}
 			/>
 		</>

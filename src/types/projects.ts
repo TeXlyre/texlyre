@@ -18,6 +18,7 @@ export interface Project {
 	collaboratorIds?: string[];
 	lastOpenedDocId?: string;
 	lastOpenedFilePath?: string;
+	isDiskLinked?: boolean;
 }
 
 export interface TemplateVersion {

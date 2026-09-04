@@ -3,9 +3,10 @@ import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { ChatProvider } from '../../contexts/ChatContext';
 import { CollabProvider } from '../../contexts/CollabContext';
-import { FileSyncProvider } from '../../contexts/FileSyncContext';
+import { FileSyncProvider } from '../../contexts/PeerFileSyncContext';
 import { FileTreeProvider } from '../../contexts/FileTreeContext';
 import { LaTeXProvider } from '../../contexts/LaTeXContext';
 import { TypstProvider } from '../../contexts/TypstContext';
@@ -18,9 +19,9 @@ import { useLaTeX } from '../../hooks/useLaTeX';
 import { useTypst } from '../../hooks/useTypst';
 import { useCollab } from '../../hooks/useCollab';
 import { useGlobalKeyboard } from '../../hooks/useGlobalKeyboard';
-import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
+import { useDiskBackup } from '../../hooks/useDiskBackup';
 import { useOffline } from '../../hooks/useOffline';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileStoreService } from '../../services/FileStoreService';
 import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import { popoutViewerService } from '../../services/PopoutViewerService';
 import type { DocumentList } from '../../types/documents';
@@ -37,6 +38,7 @@ import Modal from '../common/Modal';
 import OfflineBanner from '../common/OfflineBanner';
 import ToastContainer from '../common/ToastContainer';
 import TypesetterInfo from '../common/TypesetterInfo';
+import WorkspaceStatusIndicator from '../workspace/WorkspaceStatusIndicator';
 import FileDocumentController from '../editor/FileDocumentController';
 import LaTeXCompileButton from '../output/LaTeXCompileButton';
 import LaTeXExportButton from '../output/LaTeXExportButton';
@@ -60,10 +62,9 @@ import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
 import { isValidYjsUrl, pushHash } from '../../utils/urlUtils';
 import { clickWhenReady } from '../../utils/editorNavigator';
-import { createNamedLogger } from '@/logging';
 import FooterLinks from '../common/FooterLinks';
 import ServiceStatusBanner from '../common/ServiceStatusBanner';
-import StorageBanner from '../common/StorageBanner';
+import QuotaBanner from '../common/QuotaBanner';
 
 const moduleLog = createNamedLogger('EditorApp');
 
@@ -100,7 +101,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		clearActivity,
 		clearAllActivities,
 		changeDirectory,
-	} = useFileSystemBackup();
+	} = useDiskBackup();
 	const headerRightRef = useWheelScroll<HTMLDivElement>();
 	const [showProfileModal, setShowProfileModal] = useState(false);
 	const [profileTab, setProfileTab] = useState<ProfileSettingsTab>('account');
@@ -489,7 +490,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		const checkLinkedFile = async () => {
 			if (localDocId && doc?.documents) {
 				try {
-					const allFiles = await fileStorageService.getAllFiles(
+					const allFiles = await fileStoreService.getAllFiles(
 						false,
 						false,
 						false,
@@ -625,7 +626,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		<div className='app-container'>
 			{isOfflineMode && !hideOfflineBanner && <OfflineBanner />}
 			<ServiceStatusBanner />
-			<StorageBanner />
+			<QuotaBanner />
 			{isGuestUser(user) && (
 				<GuestUpgradeBanner
 					onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)}
@@ -716,12 +717,16 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			)}
 
 			<footer>
-				<div className='project-type-badge'>
-					{t('Typesetter: ')}{' '}
-					<TypesetterInfo
-						type={projectType}
-						provider={activeTypesetterProvider}
-					/>
+				<div className='footer-status'>
+					<div className='project-type-badge'>
+						{t('Typesetter: ')}{' '}
+						<TypesetterInfo
+							type={projectType}
+							provider={activeTypesetterProvider}
+						/>
+					</div>
+
+					<WorkspaceStatusIndicator />
 				</div>
 
 				<FooterLinks

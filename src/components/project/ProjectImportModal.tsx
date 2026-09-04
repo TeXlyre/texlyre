@@ -8,12 +8,15 @@ import {
 	type ImportableProject,
 	projectImportService,
 } from '../../services/ProjectImportService';
+import { authService } from '../../services/AuthService';
+import { workspaceService } from '../../services/WorkspaceService';
 import type { TemplateProject } from '../../types/projects';
 import { formatDate } from '../../utils/dateUtils';
 import {
 	UrlIcon,
 	ShareIcon,
 	ImportIcon,
+	FolderOpenIcon,
 	TemplatesIcon,
 	ZipFileIcon,
 } from '../common/Icons';
@@ -54,6 +57,34 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 	const [showTemplateModal, setShowTemplateModal] = useState(false);
 	const [showUrlModal, setShowUrlModal] = useState(false);
 	const [showYjsLinkModal, setShowYjsLinkModal] = useState(false);
+
+	const handleFolderImport = async () => {
+		setError(null);
+		try {
+			const handle = await workspaceService.pickFolder();
+			if (!handle) return;
+
+			const project = await authService.createProject({
+				name: handle.name,
+				description: t('Mirrored from a folder on this device'),
+				type: 'latex',
+				docUrl: '',
+				tags: [],
+				isFavorite: false,
+			});
+
+			await workspaceService.link(project.id, handle);
+			// onProjectsImported();
+			// onClose();
+			window.location.hash = project.docUrl;
+			window.location.reload();
+		} catch (error) {
+			if ((error as Error)?.name === 'AbortError') return;
+			setError(
+				error instanceof Error ? error.message : t('Failed to link folder'),
+			);
+		}
+	};
 
 	const handleTemplateImport = () => {
 		setShowTemplateModal(true);
@@ -251,6 +282,28 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 							<h3>{t('Choose Import Source')}</h3>
 
 							<div className='import-options'>
+								{workspaceService.isSupported() && (
+									<label
+										className='import-option-button'
+										onClick={handleFolderImport}
+										style={{
+											pointerEvents:
+												isScanning || isImporting ? 'none' : 'auto',
+											opacity: isScanning || isImporting ? 0.5 : 1,
+										}}
+									>
+										<FolderOpenIcon />
+										<div>
+											<strong>{t('From a Folder on This Device')}</strong>
+											<p>
+												{t(
+													'Mirror a folder both ways, so edits on either side stay in sync',
+												)}
+											</p>
+										</div>
+									</label>
+								)}
+
 								<label
 									className='import-option-button'
 									onClick={handleTemplateImport}

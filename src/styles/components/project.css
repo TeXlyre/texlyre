@@ -921,3 +921,77 @@
 	color: var(--text-secondary);
 	margin-top: 0.25rem;
 }
+
+footer .project-type-badge,
+footer .workspace-badge {
+	display: inline-flex;
+	align-items: center;
+	vertical-align: middle;
+	gap: var(--space-xs);
+	height: 1.5rem;
+	margin: 0;
+	padding: 0 var(--space-sm);
+	border-radius: var(--radius-sm);
+	font-size: 0.75rem;
+	font-weight: 400;
+	line-height: 1;
+}
+
+footer .workspace-badge {
+	max-width: 14rem;
+	margin-left: var(--space-sm);
+	border: 1px solid transparent;
+	background-color: var(--pico-secondary-background);
+	color: var(--text-color);
+	cursor: pointer;
+}
+
+footer .workspace-badge span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+footer .workspace-badge svg {
+	flex-shrink: 0;
+	width: 0.85rem;
+	height: 0.85rem;
+}
+
+footer .workspace-badge.disconnected {
+	border-color: var(--pico-del-color);
+	color: var(--pico-del-color);
+}
+
+.workspace-activity-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	max-height: 16rem;
+	overflow-y: auto;
+}
+
+.workspace-activity-list li {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-xs) 0;
+	border-bottom: 1px solid var(--pico-muted-border-color);
+	font-size: 0.8rem;
+}
+
+.workspace-activity-list time {
+	margin-left: auto;
+	opacity: 0.7;
+}
+
+.workspace-modal-actions {
+	display: flex;
+	gap: var(--space-sm);
+	margin: var(--space-md) 0;
+}
+
+.workspace-modal-meta {
+	opacity: 0.7;
+	font-size: 0.8rem;
+}

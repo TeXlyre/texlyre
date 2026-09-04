@@ -85,5 +85,29 @@
         }
       ]
     }
+  },
+  "file_handlers": [
+    {
+      "action": "./",
+      "accept": {
+        "text/x-tex": [
+          ".tex",
+          ".latex",
+          ".cls",
+          ".sty",
+          ".bst"
+        ],
+        "text/x-typst": [
+          ".typ",
+          ".typst"
+        ],
+        "application/x-bibtex": [
+          ".bib"
+        ]
+      }
+    }
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
   }
 }

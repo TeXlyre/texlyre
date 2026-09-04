@@ -3,9 +3,16 @@ import type React from 'react';
 import { type DragEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
+import {
+	FileOperationCancelledError,
+	fileConflictPromptService,
+} from '../../services/FileConflictPromptService';
+import { fileHandlerService } from '../../services/FileHandlerService';
+import { fileStoreService } from '../../services/FileStoreService';
 import type { FileNode, FilePropertiesInfo } from '../../types/files';
 import type { ProjectType } from '../../types/projects';
 import {
@@ -22,13 +29,15 @@ import {
 	parseUrlFragments,
 	pushHash,
 } from '../../utils/urlUtils';
-import { cleanContent } from '../../utils/fileCommentUtils';
+import { workspaceService } from '../../services/WorkspaceService';
+import { stripAnnotations } from '../../utils/fileCommentUtils';
 import { createZipFromFolder, downloadZipFile } from '../../utils/zipUtils';
 import {
 	CheckIcon,
 	CloseIcon,
 	ExportIcon,
 	FilePlusIcon,
+	FolderOpenIcon,
 	FolderPlusIcon,
 	MoveIcon,
 	OptionsIcon,
@@ -41,7 +50,6 @@ import FileExplorerOptionsMenu from './FileExplorerOptionsMenu';
 import FileOperationsModal from './FileOperationsModal';
 import FileTreeItem from './FileTreeItem';
 import ZipHandlingModal from './ZipHandlingModal';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('FileExplorer');
 
@@ -329,6 +337,35 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		}
 	};
 
+	const handleOpenFolder = async () => {
+		if (!currentProjectId) return;
+		try {
+			await workspaceService.connect(currentProjectId);
+			await refreshFileTree();
+		} catch (error) {
+			moduleLog.error('Failed to open folder from disk:', error);
+		}
+	};
+
+	const handleDisconnectFromDisk = async (fileId: string) => {
+		try {
+			const file = await getFile(fileId);
+			if (!file?.launchHandle) return;
+
+			const confirmation =
+				await fileConflictPromptService.confirmDiskDisconnect(file);
+			if (confirmation === 'cancel') return;
+
+			delete file.launchHandle;
+			await fileStoreService.storeFile(file, { showConflictDialog: false });
+			fileHandlerService.unregisterLink(fileId);
+			await refreshFileTree();
+		} catch (error) {
+			if (error instanceof FileOperationCancelledError) return;
+			moduleLog.error('Failed to disconnect file from disk:', error);
+		}
+	};
+
 	const handleExportCurrentProject = () => {
 		if (onExportCurrentProject && currentProjectId) {
 			onExportCurrentProject(currentProjectId);
@@ -391,7 +428,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			if (creatingNewItem.type === 'directory') {
 				await createDirectory(newItemName.trim(), creatingNewItem.parentPath);
 
-				// Expand all parent directories including the newly created one
 				const newDirPath =
 					creatingNewItem.parentPath === '/'
 						? `/${newItemName.trim()}`
@@ -435,7 +471,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 					if (content) {
 						onFileSelect(newFile.id, content, newFile.isBinary || false);
 
-						// Update URL hash
 						const currentFragment = parseUrlFragments(
 							window.location.hash.substring(1),
 						);
@@ -689,7 +724,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		if (node.type === 'file') {
 			const content = await getFileContent(node.id);
 			if (content) {
-				const cleanedContent = cleanContent(content);
+				const cleanedContent = stripAnnotations(content);
 				const blob = new Blob([cleanedContent], {
 					type: node.mimeType || 'text/plain',
 				});
@@ -1164,6 +1199,15 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
 						<button
 							className='action-btn'
+							title={t('Open Folder from Disk')}
+							onClick={handleOpenFolder}
+							disabled={!currentProjectId || !workspaceService.isSupported()}
+						>
+							<FolderOpenIcon />
+						</button>
+
+						<button
+							className='action-btn'
 							title={t('Upload Files')}
 							onClick={() => document.getElementById('file-input').click()}
 						>
@@ -1328,6 +1372,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 									onSetActiveMenu={setActiveMenu}
 									onLinkToDocument={linkFileToDocument}
 									onUnlinkFromDocument={unlinkFileFromDocument}
+									onDisconnectFromDisk={handleDisconnectFromDisk}
 									onMoveFile={handleMoveFile}
 									onDuplicateFile={handleDuplicateFile}
 									onCopyPath={handleCopyPath}
