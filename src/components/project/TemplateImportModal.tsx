@@ -3,6 +3,7 @@ import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { useSettings } from '../../hooks/useSettings';
 import type { TemplateProject } from '../../types/projects';
 import Modal from '../common/Modal';
@@ -15,7 +16,6 @@ import {
 	TemplatesIcon,
 	SettingsIcon,
 } from '../common/Icons';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('TemplateImportModal');
 

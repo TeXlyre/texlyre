@@ -31,7 +31,11 @@ import {
 } from '../../utils/urlUtils';
 import { workspaceService } from '../../services/WorkspaceService';
 import { stripAnnotations } from '../../utils/fileCommentUtils';
-import { createZipFromFolder, downloadZipFile } from '../../utils/zipUtils';
+import {
+	createArchiveFromFolder,
+	downloadArchiveFile,
+	isArchiveFile,
+} from '../../utils/archiveUtils';
 import {
 	CheckIcon,
 	CloseIcon,
@@ -93,8 +97,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		getFileContent,
 		getFile,
 		renameFile,
-		extractZipFile,
-		storeZipFile,
+		extractArchiveFile,
 		enableFileSystemDragDrop,
 		enableInternalDragDrop,
 		refreshFileTree,
@@ -266,19 +269,15 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	]);
 
 	const processFiles = async (files: File[], targetPath: string) => {
-		const zipFiles = files.filter((file) =>
-			file.name.toLowerCase().endsWith('.zip'),
-		);
-		const regularFiles = files.filter(
-			(file) => !file.name.toLowerCase().endsWith('.zip'),
-		);
+		const archiveFiles = files.filter((file) => isArchiveFile(file.name));
+		const regularFiles = files.filter((file) => !isArchiveFile(file.name));
 
 		if (regularFiles.length > 0) {
 			await uploadFiles(regularFiles, targetPath);
 		}
 
-		for (const zipFile of zipFiles) {
-			await handleZipFile(zipFile, targetPath);
+		for (const archiveFile of archiveFiles) {
+			await handleZipFile(archiveFile, targetPath);
 		}
 	};
 
@@ -298,7 +297,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	const handleExtractZip = async () => {
 		if (pendingZipFile) {
 			try {
-				await extractZipFile(pendingZipFile, zipTargetPath);
+				await extractArchiveFile(pendingZipFile, zipTargetPath);
 			} catch (error) {
 				moduleLog.error('Error extracting ZIP:', error);
 			}
@@ -309,9 +308,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	const handleKeepZip = async () => {
 		if (pendingZipFile) {
 			try {
-				await storeZipFile(pendingZipFile, zipTargetPath);
+				await uploadFiles([pendingZipFile], zipTargetPath);
 			} catch (error) {
-				moduleLog.error('Error storing ZIP:', error);
+				moduleLog.error('Error storing archive:', error);
 			}
 		}
 		handleZipModalClose();
@@ -744,12 +743,12 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	const handleExportFolder = async (node: FileNode) => {
 		if (node.type === 'directory') {
 			try {
-				const zipBlob = await createZipFromFolder(
+				const zipBlob = await createArchiveFromFolder(
 					node,
 					getFileContent,
 					getFile,
 				);
-				downloadZipFile(zipBlob, node.name);
+				downloadArchiveFile(zipBlob, node.name);
 			} catch (error) {
 				moduleLog.error('Error exporting folder:', error);
 			}

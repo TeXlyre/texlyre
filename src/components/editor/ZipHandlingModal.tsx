@@ -45,13 +45,13 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
 		<Modal
 			isOpen={isOpen}
 			onClose={onClose}
-			title={t('ZIP File Detected')}
+			title={t('Archive File Detected')}
 			size='medium'
 		>
 			<div className='file-conflict-content zip-handling-content'>
 				<p>
 					{t(
-						'You are adding "{fileName}" to {targetPath}. How would you like to handle this ZIP file?',
+						'You are adding "{fileName}" to {targetPath}. How would you like to handle this archive?',
 						{
 							fileName: zipFile.name,
 							targetPath: getTargetDisplayPath(),
@@ -87,7 +87,7 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
 							</div>
 
 							<p>
-								{t('Extract all files from the ZIP archive into {targetPath}', {
+								{t('Extract all files from the archive into {targetPath}', {
 									targetPath: getTargetDisplayPath(),
 								})}
 							</p>
@@ -108,11 +108,11 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
 						<div className='zip-option-content'>
 							<div className='zip-option-header'>
 								<FileIcon />
-								<strong>{t('Keep as ZIP file')}</strong>
+								<strong>{t('Keep as archive file')}</strong>
 							</div>
 
 							<p>
-								{t('Add the ZIP file as-is to {targetPath}', {
+								{t('Add the archive file as-is to {targetPath}', {
 									targetPath: getTargetDisplayPath(),
 								})}
 							</p>
@@ -129,7 +129,9 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
 						className='button primary'
 						onClick={handleConfirm}
 					>
-						{selectedAction === 'extract' ? t('Extract ZIP') : t('Keep as ZIP')}
+						{selectedAction === 'extract'
+							? t('Extract Archive')
+							: t('Keep Archive')}
 					</button>
 				</div>
 			</div>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { t } from '@/i18n';
 import { accountExportService } from '../../services/AccountExportService';
+import { ARCHIVE_ACCEPT, isArchiveFile } from '../../utils/archiveUtils';
 
 interface ImportAccountProps {
 	onImportSuccess: () => void;
@@ -35,8 +36,8 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 			return;
 		}
 
-		if (!file.name.endsWith('.zip')) {
-			setError(t('Please select a valid TeXlyre export file (.zip)'));
+		if (!isArchiveFile(file.name)) {
+			setError(t('Please select a valid TeXlyre export archive'));
 			return;
 		}
 
@@ -85,12 +86,12 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 					<form onSubmit={handleImport}>
 						<div className='form-group'>
 							<label htmlFor='importFile'>
-								{t('Select account export file (.zip)')}
+								{t('Select account export archive')}
 							</label>
 							<input
 								type='file'
 								id='importFile'
-								accept='.zip'
+								accept={ARCHIVE_ACCEPT}
 								onChange={handleFileChange}
 								disabled={isImporting}
 							/>
