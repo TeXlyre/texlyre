@@ -16,8 +16,8 @@ import { useSettings } from '@/hooks/useSettings';
 import { useTheme } from '@/hooks/useTheme';
 import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
 import { collabService } from '@/services/CollabService';
-import { FileOperationCancelledError } from '@/services/FileConflictService';
-import { fileStorageService } from '@/services/FileStorageService';
+import { FileOperationCancelledError } from '@/services/FileConflictPromptService';
+import { fileStoreService } from '@/services/FileStoreService';
 import type { FileNode } from '@/types/files';
 import { formatFileSize } from '@/utils/fileUtils';
 import '../../viewers/tikz/styles.css';
@@ -254,7 +254,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
 				const isTrulyEmptyFile = (fileInfo.fileSize ?? 0) === 0;
 				if (!text.trim() && !isTrulyEmptyFile && fileId) {
-					const file = await fileStorageService.getFile(fileId);
+					const file = await fileStoreService.getFile(fileId);
 					if (cancelled) return;
 					const stored = file?.content;
 					if (stored instanceof ArrayBuffer) {
@@ -327,7 +327,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			setError(null);
 			try {
 				const dataToSave = new TextEncoder().encode(sourceToSave);
-				await fileStorageService.updateFileContent(fileId, dataToSave.buffer);
+				await fileStoreService.updateFileContent(fileId, dataToSave.buffer);
 				setHasChanges(false);
 				flashSavedIndicator();
 			} catch (error) {
@@ -576,7 +576,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		try {
 			const exported = await requestExport('svg');
 			const svgContent = decodeSvgExport(exported);
-			await fileStorageService.storeFile(makeSvgFile(fileName, svgContent));
+			await fileStoreService.storeFile(makeSvgFile(fileName, svgContent));
 			flashSavedIndicator();
 		} catch (error) {
 			if (error instanceof FileOperationCancelledError) return;

@@ -1,11 +1,11 @@
 import { createTypstCompiler } from '@myriaddreamin/typst.ts/compiler';
 import { createTypstRenderer } from '@myriaddreamin/typst.ts/renderer';
 
+import { createNamedLogger } from '@/logging';
 import type { TypstOutputFormat } from '../../types/typst';
 import { sanitizeSvg } from '../../utils/svgSanitizer';
 import { normalizeTypstSvgNavigation } from './svgNavigation';
 import { longPathFetchPackageRegistry } from './LongPathPackageRegistry';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('typst-worker');
 

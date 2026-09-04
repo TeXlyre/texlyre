@@ -9,6 +9,7 @@ import {
 } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';
 import type {
@@ -23,7 +24,6 @@ import {
 	replaceHash,
 	getProjectName,
 } from '../utils/urlUtils';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('TypstContext');
 

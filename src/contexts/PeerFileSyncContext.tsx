@@ -1,4 +1,4 @@
-// src/contexts/FileSyncContext.tsx
+// src/contexts/PeerFileSyncContext.tsx
 import { nanoid } from 'nanoid';
 import type React from 'react';
 import {
@@ -12,12 +12,13 @@ import {
 import type * as Y from 'yjs';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { useAuth } from '../hooks/useAuth';
 import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';
 import { collabService } from '../services/CollabService';
-import { fileStorageEventEmitter } from '../services/FileStorageService';
-import { fileSyncService } from '../services/FileSyncService';
+import { fileStorageEventEmitter } from '../services/FileStoreService';
+import { peerFileSyncService } from '../services/PeerFileSyncService';
 import type {
 	FileSyncContextType,
 	FileSyncHoldSignal,
@@ -27,13 +28,12 @@ import type {
 	FileSyncVerification,
 } from '../types/fileSync';
 import type { YjsDocUrl } from '../types/yjs';
-import { createNamedLogger } from '@/logging';
 
-const moduleLog = createNamedLogger('FileSyncContext');
+const moduleLog = createNamedLogger('PeerFileSyncContext');
 
 const LOCAL_FILE_MAP_ORIGIN = 'file-sync-local-update';
 
-export const FileSyncContext = createContext<FileSyncContextType>({
+export const PeerFileSyncContext = createContext<FileSyncContextType>({
 	isEnabled: false,
 	isSyncing: false,
 	lastSync: null,
@@ -169,7 +169,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				now - request.timestamp > timeoutMs
 			) {
 				if (request.providerId === user?.id) {
-					fileSyncService.releaseUploader(request.id);
+					peerFileSyncService.releaseUploader(request.id);
 				}
 				processedRequestsRef.current.delete(request.id);
 				processedRequestsRef.current.delete(`download_${request.id}`);
@@ -192,7 +192,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		const activeProjectId = projectId;
 
 		try {
-			const localFiles = await fileSyncService.getLocalFileSyncInfo(
+			const localFiles = await peerFileSyncService.getLocalFileSyncInfo(
 				user.id,
 				user.username,
 				docUrl,
@@ -321,7 +321,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 					disconnected.has(request.requesterId)
 				) {
 					if (request.providerId === user?.id) {
-						fileSyncService.releaseUploader(request.id);
+						peerFileSyncService.releaseUploader(request.id);
 					}
 					processedRequestsRef.current.delete(request.id);
 					processedRequestsRef.current.delete(`download_${request.id}`);
@@ -354,7 +354,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				const fileSyncMap = ydocRef.current.getMap('fileSync');
 				const localFiles =
 					localFilesArg ??
-					(await fileSyncService.getLocalFileSyncInfo(
+					(await peerFileSyncService.getLocalFileSyncInfo(
 						user.id,
 						user.username,
 						docUrl,
@@ -370,12 +370,12 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				fileSyncMap.forEach((remoteFiles, peerId) => {
 					if (
 						peerId === user.id ||
-						fileSyncService.isSyncDisabledForPeer(peerId)
+						peerFileSyncService.isSyncDisabledForPeer(peerId)
 					)
 						return;
 
 					if (
-						!fileSyncService.shouldTriggerSync(
+						!peerFileSyncService.shouldTriggerSync(
 							localFiles,
 							remoteFiles as FileSyncInfo[],
 						)
@@ -383,7 +383,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 						return;
 					}
 
-					const filesToRequest = fileSyncService.determineFilesToRequest(
+					const filesToRequest = peerFileSyncService.determineFilesToRequest(
 						localFiles,
 						remoteFiles as FileSyncInfo[],
 						conflictResolutionStrategy as any,
@@ -465,12 +465,12 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
 			try {
 				setIsSyncing(true);
-				fileSyncService.showLoadingNotification(
+				peerFileSyncService.showLoadingNotification(
 					`Preparing ${request.files.length} file(s) for download...`,
 					operationId,
 				);
 
-				const uploadResult = await fileSyncService.uploadFiles(
+				const uploadResult = await peerFileSyncService.uploadFiles(
 					request.files,
 					request.id,
 					fileSyncServerUrl,
@@ -484,7 +484,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 					timestamp: Date.now(),
 				});
 
-				fileSyncService.showSuccessNotification(
+				peerFileSyncService.showSuccessNotification(
 					`Prepared ${request.files.length} file(s) for download`,
 					{ operationId },
 				);
@@ -497,7 +497,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 			} catch (error) {
 				moduleLog.error('Error handling incoming sync request:', error);
 
-				fileSyncService.showErrorNotification(
+				peerFileSyncService.showErrorNotification(
 					`Failed to prepare files: ${
 						error instanceof Error ? error.message : 'Unknown error'
 					}`,
@@ -546,7 +546,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
 			try {
 				setIsSyncing(true);
-				fileSyncService.showLoadingNotification(
+				peerFileSyncService.showLoadingNotification(
 					`Downloading ${request.files.length} file(s)...`,
 					operationId,
 				);
@@ -566,7 +566,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 						remoteDeletionStates.set(path, deletionState);
 				});
 
-				await fileSyncService.downloadFiles(
+				await peerFileSyncService.downloadFiles(
 					request.filePizzaLink,
 					request.filePaths || request.files,
 					remoteTimestamps,
@@ -591,10 +591,10 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				]);
 
 				releaseHoldSignal(request.holdSignalId);
-				fileSyncService.clearSyncFailures(request.providerId);
+				peerFileSyncService.clearSyncFailures(request.providerId);
 				setLastSyncTimestamp(Date.now());
 
-				fileSyncService.showSuccessNotification(
+				peerFileSyncService.showSuccessNotification(
 					`Downloaded ${request.files.length} file(s) successfully`,
 					{ operationId },
 				);
@@ -612,14 +612,16 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
 				const message =
 					error instanceof Error ? error.message : 'Unknown error';
-				const isDisabled = fileSyncService.trackSyncFailure(request.providerId);
+				const isDisabled = peerFileSyncService.trackSyncFailure(
+					request.providerId,
+				);
 
 				updateRequest(request.id, {
 					status: 'failed',
 					timestamp: Date.now(),
 				});
 
-				fileSyncService.showErrorNotification(
+				peerFileSyncService.showErrorNotification(
 					`Failed to download files: ${message}`,
 					{
 						operationId,
@@ -678,7 +680,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		(verification: FileSyncVerification) => {
 			if (!user || verification.providerId !== user.id) return;
 
-			fileSyncService.releaseUploader(verification.requestId);
+			peerFileSyncService.releaseUploader(verification.requestId);
 			processedRequestsRef.current.delete(verification.requestId);
 
 			addNotification({
@@ -774,7 +776,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
 	const enableSync = useCallback(() => {
 		moduleLog.info('Enabling file sync');
-		fileSyncService.showSuccessNotification(t('File sync enabled'), {
+		peerFileSyncService.showSuccessNotification(t('File sync enabled'), {
 			duration: 2000,
 		});
 		if (enableSyncTimeoutRef.current)
@@ -784,7 +786,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
 	const disableSync = useCallback(() => {
 		moduleLog.info('Disabling file sync');
-		fileSyncService.cleanup();
+		peerFileSyncService.cleanup();
 		activeHoldsRef.current.clear();
 		processedRequestsRef.current.clear();
 
@@ -806,7 +808,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 			}
 		});
 
-		fileSyncService.showInfoNotification(t('File sync disabled'), {
+		peerFileSyncService.showInfoNotification(t('File sync disabled'), {
 			duration: 2000,
 		});
 	}, []);
@@ -884,7 +886,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				awareness?.off('change', handleAwarenessChange);
 		} catch (error) {
 			moduleLog.error('Error initializing YJS doc for file sync:', error);
-			fileSyncService.showErrorNotification(
+			peerFileSyncService.showErrorNotification(
 				t('Failed to initialize file sync'),
 				{
 					duration: 5000,
@@ -965,16 +967,16 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		setIsSyncing(true);
 
 		try {
-			fileSyncService.showLoadingNotification(
+			peerFileSyncService.showLoadingNotification(
 				t('Manual sync initiated...'),
 				operationId,
 			);
 			await performSync();
-			fileSyncService.showSuccessNotification(t('Manual sync completed'), {
+			peerFileSyncService.showSuccessNotification(t('Manual sync completed'), {
 				operationId,
 			});
 		} catch (error) {
-			fileSyncService.showErrorNotification(
+			peerFileSyncService.showErrorNotification(
 				t('Manual sync failed: ') +
 					`${error instanceof Error ? error.message : t('Unknown error')}`,
 				{ operationId },
@@ -991,7 +993,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 	const clearAllNotifications = useCallback(() => setNotifications([]), []);
 
 	useEffect(
-		() => fileSyncService.addListener(addNotification),
+		() => peerFileSyncService.addListener(addNotification),
 		[addNotification],
 	);
 
@@ -1009,7 +1011,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 	}, [isFileSyncEnabled, enableSync, disableSync]);
 
 	return (
-		<FileSyncContext.Provider
+		<PeerFileSyncContext.Provider
 			value={{
 				isEnabled: isFileSyncEnabled,
 				isSyncing,
@@ -1024,6 +1026,6 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 			}}
 		>
 			{children}
-		</FileSyncContext.Provider>
+		</PeerFileSyncContext.Provider>
 	);
 };

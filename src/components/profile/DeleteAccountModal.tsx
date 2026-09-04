@@ -3,12 +3,12 @@ import type React from 'react';
 import { useState } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { useAuth } from '../../hooks/useAuth';
 import { cleanupProjectDatabases } from '../../utils/dbDeleteUtils';
 import { TrashIcon, ExportIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 import { chelysAccountSyncService } from '../../services/ChelysAccountSyncService';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('DeleteAccountModal');
 

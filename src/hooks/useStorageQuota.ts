@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import {
 	type StorageQuotaStatus,
-	storageQuotaService,
-} from '../services/StorageQuotaService';
+	quotaService,
+} from '../services/QuotaService';
 import { useSettings } from './useSettings';
 
 interface StorageQuotaState extends StorageQuotaStatus {
@@ -16,11 +16,11 @@ interface StorageQuotaState extends StorageQuotaStatus {
 
 export const useStorageQuota = (): StorageQuotaState => {
 	const { getSetting } = useSettings();
-	const [status, setStatus] = useState(storageQuotaService.getStatus());
+	const [status, setStatus] = useState(quotaService.getStatus());
 
 	useEffect(() => {
-		const unsubscribe = storageQuotaService.addStatusListener(setStatus);
-		void storageQuotaService.refresh();
+		const unsubscribe = quotaService.addStatusListener(setStatus);
+		void quotaService.refresh();
 
 		return unsubscribe;
 	}, []);
@@ -34,10 +34,10 @@ export const useStorageQuota = (): StorageQuotaState => {
 	const hideBanner =
 		(getSetting('storage-hide-banner')?.value as boolean) ?? false;
 
-	const refresh = useCallback(() => storageQuotaService.refresh(true), []);
+	const refresh = useCallback(() => quotaService.refresh(true), []);
 
 	const requestPersistence = useCallback(
-		() => storageQuotaService.requestPersistence(),
+		() => quotaService.requestPersistence(),
 		[],
 	);
 

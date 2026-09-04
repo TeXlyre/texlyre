@@ -1,9 +1,9 @@
 // src/components/settings/ToolConfigCards.tsx
 import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import type { TransportStatus } from '@chelys/types/transport';
 
 import { t } from '@/i18n';
+import type { TransportStatus } from '@chelys/types/transport';
 import { useSettings } from '../../hooks/useSettings';
 import { useSharedToolPreferences } from '../../hooks/useSharedToolPreferences';
 import type { ToolConfigBlock, ToolConfigKind } from '../../types/toolConfig';

@@ -8,7 +8,7 @@ import PopoutViewerToggleButton from './PopoutViewerToggleButton';
 import { useExternalTypesetter } from '../../hooks/useExternalTypesetter';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileStoreService } from '../../services/FileStoreService';
 import { genericTypesetterService } from '../../services/GenericTypesetterService';
 import type {
 	TypesetterProvider,
@@ -60,7 +60,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const propertiesRegistered = useRef(false);
 
-	const projectId = fileStorageService.getCurrentProjectId() || undefined;
+	const projectId = fileStoreService.getCurrentProjectId() || undefined;
 	const fields = provider.ui?.compile?.fields ?? [];
 	const mainFilePropertyId = `external-${provider.id}-main-file`;
 	const autoCompilePropertyId = `external-${provider.id}-auto-compile-on-save`;

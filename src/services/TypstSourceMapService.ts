@@ -1,13 +1,13 @@
 // src/services/TypstSourceMapService.ts
 import { nanoid } from 'nanoid';
 
+import { createNamedLogger } from '@/logging';
 import type {
 	SourceMapForwardResult,
 	SourceMapReverseResult,
 	SourceMapService,
 } from '../types/sourceMap';
 import type { TypstPageInfo } from '../types/typst';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('TypstSourceMapService');
 

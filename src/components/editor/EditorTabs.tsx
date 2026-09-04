@@ -3,6 +3,7 @@ import type React from 'react';
 import { useCallback, useEffect, useState, useRef } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { useEditorTabs } from '../../hooks/useEditorTabs';
 import { useHeaderVisibility } from '../../hooks/useHeaderVisibility';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
@@ -16,7 +17,6 @@ import {
 	ChevronRightIcon,
 	HeaderShowIcon,
 } from '../common/Icons';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('EditorTabs');
 

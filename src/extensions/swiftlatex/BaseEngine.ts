@@ -1,6 +1,6 @@
 // src/extensions/swiftlatex/BaseEngine.ts
-import type { CompileResult } from '../../types/compilation';
 import { createNamedLogger } from '@/logging';
+import type { CompileResult } from '../../types/compilation';
 
 const moduleLog = createNamedLogger('BaseEngine');
 

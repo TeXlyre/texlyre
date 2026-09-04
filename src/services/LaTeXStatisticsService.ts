@@ -1,9 +1,9 @@
 // src/services/LaTeXStatisticsService.ts
 import { WasmToolsEngine } from '../extensions/wasm-tools/WasmToolsEngine';
 import type { FileNode } from '../types/files';
-import { fileStorageService } from './FileStorageService';
+import { fileStoreService } from './FileStoreService';
 import { isLatexFile } from '../utils/fileUtils';
-import { cleanContent } from '../utils/fileCommentUtils';
+import { stripAnnotations } from '../utils/fileCommentUtils';
 import type {
 	DocumentStatistics,
 	StatisticsOptions,
@@ -98,7 +98,7 @@ class LaTeXStatisticsService {
 
 	private async ensureContent(file: FileNode): Promise<void> {
 		if (file.content) return;
-		const stored = await fileStorageService.getFile(file.id);
+		const stored = await fileStoreService.getFile(file.id);
 		if (!stored?.content) throw new Error('File content not found');
 		file.content = stored.content;
 	}
@@ -109,7 +109,7 @@ class LaTeXStatisticsService {
 			typeof file.content === 'string'
 				? file.content
 				: new TextDecoder().decode(file.content!);
-		return cleanContent(text) as string;
+		return stripAnnotations(text) as string;
 	}
 
 	private async extractIncludedFiles(

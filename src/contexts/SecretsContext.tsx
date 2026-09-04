@@ -8,10 +8,10 @@ import {
 	useState,
 } from 'react';
 
-import { notifyUserDataChanged } from '../utils/userDataUtils';
 import { t } from '@/i18n';
-import { useAuth } from '../hooks/useAuth';
 import { createNamedLogger } from '@/logging';
+import { notifyUserDataChanged } from '../utils/userDataUtils';
+import { useAuth } from '../hooks/useAuth';
 
 const moduleLog = createNamedLogger('SecretsContext');
 

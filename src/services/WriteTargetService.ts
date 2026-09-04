@@ -1,14 +1,13 @@
-// src/services/StorageAdapterService.ts
+// src/services/WriteTargetService.ts
 import JSZip from 'jszip';
 
-import { t } from '@/i18n';
-import { UnifiedDataStructureService } from './DataStructureService';
-import { isBinaryFile, toArrayBuffer } from '../utils/fileUtils';
 import { createNamedLogger } from '@/logging';
+import { UnifiedDataStructureService } from './BackupLayoutService';
+import { isBinaryFile, toArrayBuffer } from '../utils/fileUtils';
 
-const moduleLog = createNamedLogger('StorageAdapterService');
+const moduleLog = createNamedLogger('WriteTargetService');
 
-export interface FileSystemAdapter {
+export interface WriteTarget {
 	writeFile(
 		path: string,
 		content: string | ArrayBuffer | Uint8Array,
@@ -19,8 +18,8 @@ export interface FileSystemAdapter {
 	listDirectory(path: string): Promise<string[]>;
 }
 
-export class DirectoryAdapter implements FileSystemAdapter {
-	constructor(private rootHandle: FileSystemDirectoryHandle) {}
+export class DirectoryTarget implements WriteTarget {
+	constructor(private rootHandle: FileSystemDirectoryHandle) { }
 
 	async writeFile(
 		path: string,
@@ -39,7 +38,7 @@ export class DirectoryAdapter implements FileSystemAdapter {
 				await writable.write(data);
 				await writable.close();
 			} catch (error) {
-				await writable.abort().catch(() => {});
+				await writable.abort().catch(() => { });
 				throw error;
 			}
 		};
@@ -86,6 +85,36 @@ export class DirectoryAdapter implements FileSystemAdapter {
 			entries.push(name);
 		}
 		return entries;
+	}
+
+	async listEntries(
+		path: string,
+	): Promise<Array<{ name: string; isDirectory: boolean }>> {
+		const dirHandle = await this.getDirectory(path);
+		const entries: Array<{ name: string; isDirectory: boolean }> = [];
+		for await (const [name, handle] of (dirHandle as any).entries()) {
+			entries.push({ name, isDirectory: handle.kind === 'directory' });
+		}
+		return entries;
+	}
+
+	async stat(
+		path: string,
+	): Promise<{ lastModified: number; size: number } | null> {
+		try {
+			const { dir, fileName } = this.parsePath(path);
+			const dirHandle = await this.getDirectory(dir);
+			const file = await (await dirHandle.getFileHandle(fileName)).getFile();
+			return { lastModified: file.lastModified, size: file.size };
+		} catch {
+			return null;
+		}
+	}
+
+	async deleteEntry(path: string): Promise<void> {
+		const { dir, fileName } = this.parsePath(path);
+		const dirHandle = await this.getDirectory(dir);
+		await dirHandle.removeEntry(fileName, { recursive: true });
 	}
 
 	private parsePath(path: string): { dir: string; fileName: string } {
@@ -135,7 +164,7 @@ export class DirectoryAdapter implements FileSystemAdapter {
 	}
 }
 
-export class ZipAdapter implements FileSystemAdapter {
+export class ZipTarget implements WriteTarget {
 	private zip = new JSZip();
 
 	async writeFile(
@@ -220,11 +249,11 @@ export class ZipAdapter implements FileSystemAdapter {
 	}
 }
 
-export class StorageAdapterService {
+export class WriteTargetService {
 	private unifiedService = new UnifiedDataStructureService();
 
 	async writeUnifiedStructure(
-		adapter: FileSystemAdapter,
+		adapter: WriteTarget,
 		data: {
 			manifest: any;
 			account: any;
@@ -264,7 +293,7 @@ export class StorageAdapterService {
 		}
 	}
 
-	async readUnifiedStructure(adapter: FileSystemAdapter): Promise<{
+	async readUnifiedStructure(adapter: WriteTarget): Promise<{
 		manifest: any;
 		account: any;
 		userData?: any;
@@ -306,15 +335,12 @@ export class StorageAdapterService {
 		return { manifest, account, userData, projects, projectData };
 	}
 
-	private async readJsonFile(
-		adapter: FileSystemAdapter,
-		path: string,
-	): Promise<any> {
+	private async readJsonFile(adapter: WriteTarget, path: string): Promise<any> {
 		return JSON.parse((await adapter.readFile(path)) as string);
 	}
 
 	private async writeProjectData(
-		adapter: FileSystemAdapter,
+		adapter: WriteTarget,
 		projectId: string,
 		projectData: any,
 	): Promise<void> {
@@ -336,7 +362,7 @@ export class StorageAdapterService {
 	}
 
 	private async writeDocuments(
-		adapter: FileSystemAdapter,
+		adapter: WriteTarget,
 		projectId: string,
 		projectData: any,
 	): Promise<void> {
@@ -377,7 +403,7 @@ export class StorageAdapterService {
 	}
 
 	private async writeFiles(
-		adapter: FileSystemAdapter,
+		adapter: WriteTarget,
 		projectId: string,
 		projectData: any,
 	): Promise<void> {
@@ -410,7 +436,7 @@ export class StorageAdapterService {
 	}
 
 	private async readProjectData(
-		adapter: FileSystemAdapter,
+		adapter: WriteTarget,
 		projectId: string,
 	): Promise<any> {
 		const metadata = await this.readJsonFile(
@@ -428,7 +454,7 @@ export class StorageAdapterService {
 	}
 
 	private async readDocuments(
-		adapter: FileSystemAdapter,
+		adapter: WriteTarget,
 		projectId: string,
 	): Promise<[any[], Map<string, any>]> {
 		const documents: any[] = [];
@@ -480,7 +506,7 @@ export class StorageAdapterService {
 	}
 
 	private async findDocumentsPath(
-		adapter: FileSystemAdapter,
+		adapter: WriteTarget,
 		projectPath: string,
 	): Promise<string | null> {
 		const directPaths = [`${projectPath}/documents`, projectPath];
@@ -492,14 +518,14 @@ export class StorageAdapterService {
 				if (contents.some((name) => name.endsWith('.yjs'))) {
 					return path;
 				}
-			} catch {}
+			} catch { }
 		}
 
 		return null;
 	}
 
 	private async readDocumentMetadata(
-		adapter: FileSystemAdapter,
+		adapter: WriteTarget,
 		projectId: string,
 		docsPath: string,
 	): Promise<any[]> {
@@ -517,7 +543,7 @@ export class StorageAdapterService {
 	}
 
 	private async inferDocumentMetadata(
-		adapter: FileSystemAdapter,
+		adapter: WriteTarget,
 		docsPath: string,
 	): Promise<any[]> {
 		const docFiles = await adapter.listDirectory(docsPath);
@@ -542,7 +568,7 @@ export class StorageAdapterService {
 	}
 
 	private async readFiles(
-		adapter: FileSystemAdapter,
+		adapter: WriteTarget,
 		projectId: string,
 	): Promise<[any[], Map<string, any>]> {
 		const files: any[] = [];
@@ -582,7 +608,7 @@ export class StorageAdapterService {
 	}
 
 	private async resolveMetadataPath(
-		adapter: FileSystemAdapter,
+		adapter: WriteTarget,
 		metadataPath: string,
 		legacyMetadataPath: string,
 	): Promise<string | null> {

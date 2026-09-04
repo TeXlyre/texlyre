@@ -12,6 +12,7 @@ import {
 } from 'react';
 import type { Awareness } from 'y-protocols/awareness';
 
+import { createNamedLogger } from '@/logging';
 import { BibliographyProvider } from '../../contexts/BibliographyContext';
 import { CommentProvider } from '../../contexts/CommentContext';
 import { ReviewProvider } from '../../contexts/ReviewContext';
@@ -30,7 +31,7 @@ import type {
 	ViewerProps,
 } from '../../plugins/PluginInterface';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileStoreService } from '../../services/FileStoreService';
 import type { DocumentList } from '../../types/documents';
 import {
 	buildUrlWithFragments,
@@ -72,7 +73,6 @@ import {
 import { PluginControlGroup, PluginHeader } from '../common/PluginHeader';
 import PluginToolbar, { type ToolbarEntry } from '../common/PluginToolbar';
 import UnlinkedDocumentNotice from './UnlinkedDocumentNotice';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('Editor');
 
@@ -457,7 +457,7 @@ const EditorContent: React.FC<{
 	const handleCopyLinkedFile = useCallback(async () => {
 		if (!linkedFileInfo?.fileId) return;
 		try {
-			const file = await fileStorageService.getFile(linkedFileInfo.fileId);
+			const file = await fileStoreService.getFile(linkedFileInfo.fileId);
 			if (file?.content) {
 				const content =
 					typeof file.content === 'string'
@@ -473,7 +473,7 @@ const EditorContent: React.FC<{
 	const handleDownloadLinkedFile = useCallback(async () => {
 		if (!linkedFileInfo?.fileId || !linkedFileInfo.fileName) return;
 		try {
-			const file = await fileStorageService.getFile(linkedFileInfo.fileId);
+			const file = await fileStoreService.getFile(linkedFileInfo.fileId);
 			if (file?.content) {
 				const content =
 					typeof file.content === 'string'
@@ -1049,7 +1049,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 		const loadFilePath = async () => {
 			if (isEditingFile && fileId) {
 				try {
-					const file = await fileStorageService.getFile(fileId);
+					const file = await fileStoreService.getFile(fileId);
 					if (file) {
 						setFilePath(file.path);
 

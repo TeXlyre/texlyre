@@ -9,6 +9,7 @@ import {
 } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';
 import { latexService } from '../services/LaTeXService';
@@ -24,7 +25,6 @@ import {
 	getProjectName,
 } from '../utils/urlUtils';
 import { popoutViewerService } from '../services/PopoutViewerService';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('LaTeXContext');
 

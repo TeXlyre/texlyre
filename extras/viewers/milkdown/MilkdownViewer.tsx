@@ -21,7 +21,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { useProperties } from '@/hooks/useProperties';
 import type { ViewerProps } from '@/plugins/PluginInterface';
 import { autoSaveService } from '@/services/AutoSaveService';
-import { fileStorageService } from '@/services/FileStorageService';
+import { fileStoreService } from '@/services/FileStoreService';
 import { formatFileSize } from '@/utils/fileUtils';
 import { copyCleanTextToClipboard } from '@/utils/clipboardUtils';
 import type { HighlightTheme } from '@/types/editor';
@@ -219,7 +219,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 
 		try {
 			const bytes = new TextEncoder().encode(getCurrentContent()).buffer;
-			await fileStorageService.updateFileContent(fileId, bytes);
+			await fileStoreService.updateFileContent(fileId, bytes);
 		} catch (err) {
 			moduleLog.error('Error saving Markdown file:', err);
 
@@ -278,7 +278,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 				onSave: async (_saveKey, content) => {
 					if (!content) return;
 					const bytes = new TextEncoder().encode(content).buffer;
-					await fileStorageService.updateFileContent(saveFileId, bytes);
+					await fileStoreService.updateFileContent(saveFileId, bytes);
 				},
 				onError: (error) => moduleLog.error('Auto-save failed:', error),
 			},

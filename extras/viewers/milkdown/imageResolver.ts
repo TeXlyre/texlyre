@@ -4,7 +4,7 @@ import { imageSchema } from '@milkdown/kit/preset/commonmark';
 import type { Node } from '@milkdown/kit/prose/model';
 import type { NodeView } from '@milkdown/kit/prose/view';
 
-import { fileStorageService } from '@/services/FileStorageService';
+import { fileStoreService } from '@/services/FileStoreService';
 
 const isExternal = (src: string): boolean =>
 	/^(https?:|data:|blob:)/i.test(src);
@@ -33,7 +33,7 @@ const fetchBlobUrl = async (
 	src: string,
 ): Promise<string | null> => {
 	const target = resolvePath(currentFilePath, src);
-	const file = await fileStorageService.getFileByPath(target);
+	const file = await fileStoreService.getFileByPath(target);
 
 	if (!file || file.type !== 'file' || !file.content) return null;
 

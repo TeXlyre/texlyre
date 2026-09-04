@@ -1,10 +1,11 @@
 // src/extensions/swiftlatex/SwiftLaTeXService.ts
 import { nanoid } from 'nanoid';
 
+import { createNamedLogger } from '@/logging';
 import type { CompileResult } from '../../types/compilation';
 import type { FileNode } from '../../types/files';
-import { fileStorageService } from '../../services/FileStorageService';
-import { cleanContent } from '../../utils/fileCommentUtils';
+import { fileStoreService } from '../../services/FileStoreService';
+import { stripAnnotations } from '../../utils/fileCommentUtils';
 import {
 	getMimeType,
 	isBinaryFile,
@@ -15,7 +16,6 @@ import type { BaseEngine } from './BaseEngine';
 import { DvipdfmxEngine } from './DvipdfmxEngine';
 import { PdfTeXEngine } from './PdfTeXEngine';
 import { XeTeXEngine } from './XeTeXEngine';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('SwiftLaTeXService');
 
@@ -281,12 +281,12 @@ class SwiftLaTeXService {
 	}
 
 	async clearCache(): Promise<void> {
-		const existing = await fileStorageService.getAllFiles(true, false, false);
+		const existing = await fileStoreService.getAllFiles(true, false, false);
 		const cacheFiles = existing.filter(
 			(f) => isTemporaryFile(f.path) && !f.isDeleted,
 		);
 		if (cacheFiles.length > 0) {
-			await fileStorageService.batchDeleteFiles(
+			await fileStoreService.batchDeleteFiles(
 				cacheFiles.map((f) => f.id),
 				{
 					showDeleteDialog: false,
@@ -376,7 +376,7 @@ class SwiftLaTeXService {
 
 	private async loadAndValidateCachedNodes(nodes: FileNode[]): Promise<void> {
 		try {
-			const existing = await fileStorageService.getAllFiles(true, false, false);
+			const existing = await fileStoreService.getAllFiles(true, false, false);
 			const cacheDir = this.getCacheDirectory(this.currentEngineType);
 			const cached = existing.filter(
 				(f) =>
@@ -486,7 +486,7 @@ class SwiftLaTeXService {
 			try {
 				const content = await this.getFileContent(node);
 				if (content) {
-					const cleaned = cleanContent(content);
+					const cleaned = stripAnnotations(content);
 					engine.writeMemFSFile(
 						`/work/${node.path}`,
 						typeof cleaned === 'string'
@@ -528,7 +528,7 @@ class SwiftLaTeXService {
 	private async storeOutputDirectories(engine: BaseEngine): Promise<void> {
 		if (this.storeCache) await this.storeCacheDirectory(engine);
 		if (this.storeWorkingDirectory) {
-			await fileStorageService.cleanupDirectory('/.texlyre_src/__work');
+			await fileStoreService.cleanupDirectory('/.texlyre_src/__work');
 			await this.storeWorkDirectory(engine);
 		}
 	}
@@ -560,7 +560,7 @@ class SwiftLaTeXService {
 	}): Promise<{ [key: string]: ArrayBuffer }> {
 		const filtered: { [key: string]: ArrayBuffer } = {};
 		try {
-			const existing = await fileStorageService.getAllFiles(true, false, false);
+			const existing = await fileStoreService.getAllFiles(true, false, false);
 			const cacheDir = this.getCacheDirectory(this.currentEngineType);
 			const cachePaths = new Set(
 				existing
@@ -598,10 +598,7 @@ class SwiftLaTeXService {
 			const fileName = storagePath.split('/').pop()!;
 			if (dirPath !== baseDir && dirPath) dirs.add(dirPath);
 
-			const existing = await fileStorageService.getFileByPath(
-				storagePath,
-				true,
-			);
+			const existing = await fileStoreService.getFileByPath(storagePath, true);
 			toStore.push({
 				id: existing?.id || nanoid(),
 				name: fileName,
@@ -619,7 +616,7 @@ class SwiftLaTeXService {
 
 		await this.batchCreateDirectories(Array.from(dirs));
 		if (toStore.length > 0) {
-			await fileStorageService.batchStoreFiles(toStore, {
+			await fileStoreService.batchStoreFiles(toStore, {
 				showConflictDialog: false,
 				preserveTimestamp: true,
 			});
@@ -628,7 +625,7 @@ class SwiftLaTeXService {
 
 	private async batchCreateDirectories(paths: string[]): Promise<void> {
 		const toCreate: FileNode[] = [];
-		const existing = await fileStorageService.getAllFiles(true, false, false);
+		const existing = await fileStoreService.getAllFiles(true, false, false);
 		const existingPaths = new Set(existing.map((f) => f.path));
 
 		const all = new Set<string>();
@@ -654,7 +651,7 @@ class SwiftLaTeXService {
 		}
 
 		if (toCreate.length > 0) {
-			await fileStorageService.batchStoreFiles(toCreate, {
+			await fileStoreService.batchStoreFiles(toCreate, {
 				showConflictDialog: false,
 			});
 		}
@@ -688,7 +685,7 @@ class SwiftLaTeXService {
 			outputs.push(await this.createCompilationLogFile(mainFile, result.log));
 			await this.ensureOutputDirectoriesExist();
 			if (outputs.length > 0) {
-				await fileStorageService.batchStoreFiles(outputs, {
+				await fileStoreService.batchStoreFiles(outputs, {
 					showConflictDialog: false,
 				});
 			}
@@ -704,7 +701,7 @@ class SwiftLaTeXService {
 		try {
 			await this.ensureOutputDirectoriesExist();
 			const logFile = await this.createCompilationLogFile(mainFile, log);
-			await fileStorageService.batchStoreFiles([logFile], {
+			await fileStoreService.batchStoreFiles([logFile], {
 				showConflictDialog: false,
 			});
 		} catch (error) {
@@ -713,7 +710,7 @@ class SwiftLaTeXService {
 	}
 
 	async cleanupStoredWorkDirectory(): Promise<void> {
-		await fileStorageService.cleanupDirectory('/.texlyre_src/__work');
+		await fileStoreService.cleanupDirectory('/.texlyre_src/__work');
 	}
 
 	private async createCompilationLogFile(
@@ -747,7 +744,7 @@ class SwiftLaTeXService {
 			'/.texlyre_cache/__dvi',
 		];
 		const toCreate: FileNode[] = [];
-		const existing = await fileStorageService.getAllFiles(true, false, false);
+		const existing = await fileStoreService.getAllFiles(true, false, false);
 		const existingPaths = new Set(existing.map((f) => f.path));
 		for (const d of required) {
 			if (!existingPaths.has(d)) {
@@ -761,7 +758,7 @@ class SwiftLaTeXService {
 			}
 		}
 		if (toCreate.length > 0) {
-			await fileStorageService.batchStoreFiles(toCreate, {
+			await fileStoreService.batchStoreFiles(toCreate, {
 				showConflictDialog: false,
 			});
 		}
@@ -781,7 +778,7 @@ class SwiftLaTeXService {
 	): Promise<ArrayBuffer | string | null> {
 		if (node.content !== undefined) return node.content;
 		try {
-			const raw = await fileStorageService.getFile(node.id);
+			const raw = await fileStoreService.getFile(node.id);
 			if (raw?.content) return raw.content;
 		} catch (error) {
 			moduleLog.error('Error retrieving file content:', error);
@@ -823,7 +820,7 @@ class SwiftLaTeXService {
 			`${workDir}/_${baseName}.bbl`,
 		]) {
 			try {
-				const file = await fileStorageService.getFileByPath(p, true);
+				const file = await fileStoreService.getFileByPath(p, true);
 				if (file?.content) {
 					const content =
 						typeof file.content === 'string'
@@ -839,7 +836,7 @@ class SwiftLaTeXService {
 		}
 
 		try {
-			const bblFiles = await fileStorageService.getFilesByPath(
+			const bblFiles = await fileStoreService.getFilesByPath(
 				`${workDir}/`,
 				true,
 				{ fileExtension: '.bbl', excludeDirectories: true },
@@ -864,11 +861,9 @@ class SwiftLaTeXService {
 		const workDir = '/.texlyre_src/__work';
 		const artifacts: SwiftExportArtifact[] = [];
 		try {
-			const files = await fileStorageService.getFilesByPath(
-				`${workDir}/`,
-				true,
-				{ excludeDirectories: true },
-			);
+			const files = await fileStoreService.getFilesByPath(`${workDir}/`, true, {
+				excludeDirectories: true,
+			});
 			for (const file of files) {
 				if (!file.content || file.isDeleted) continue;
 				const content =

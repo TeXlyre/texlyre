@@ -1,6 +1,5 @@
 // src/utils/chelysWebauthn.ts
 import { WEBAUTHN_PRF_SALT, WEBAUTHN_RP_NAME, toHex } from '@chelys/protocol';
-
 import { toArrayBuffer } from './fileUtils';
 
 const TEMP_PRF_PREFIX = 'tempPrf:';

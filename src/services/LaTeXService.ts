@@ -2,6 +2,7 @@
 import { nanoid } from 'nanoid';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import {
 	swiftLaTeXService,
 	type SwiftEngineType,
@@ -11,12 +12,11 @@ import type { BusyTeXEngineType } from '../extensions/texlyre-busytex/BusyTeXEng
 import type { CompileResult } from '../types/compilation';
 import type { FileNode } from '../types/files';
 import { downloadFiles } from '../utils/zipUtils';
-import { fileStorageService } from './FileStorageService';
+import { fileStoreService } from './FileStoreService';
 import {
 	notificationService,
 	type NotificationOptions,
 } from './NotificationService';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('LaTeXService');
 
@@ -547,7 +547,7 @@ class LaTeXService {
 				continue;
 			}
 			try {
-				const raw = await fileStorageService.getFile(node.id);
+				const raw = await fileStoreService.getFile(node.id);
 				if (raw?.content) result.push({ ...node, content: raw.content });
 			} catch {}
 		}

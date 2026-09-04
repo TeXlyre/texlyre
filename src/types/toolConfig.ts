@@ -1,7 +1,7 @@
 // src/types/toolConfig.ts
 import type React from 'react';
-import type { TransportStatus } from '@chelys/types/transport';
 
+import type { TransportStatus } from '@chelys/types/transport';
 import type { TypesetterServerConfig } from '../services/GenericTypesetterService';
 import type { LSPConfigBlock } from './lsp';
 

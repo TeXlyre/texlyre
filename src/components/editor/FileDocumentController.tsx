@@ -6,6 +6,7 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { useAuth } from '../../hooks/useAuth';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';
@@ -14,7 +15,7 @@ import { useEditorTabs } from '../../hooks/useEditorTabs';
 import { usePeerDocumentTracking } from '../../hooks/usePeerDocumentTracking';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileStoreService } from '../../services/FileStoreService';
 import { genericLSPService } from '../../services/GenericLSPService';
 import { hasLSPDocumentSymbolProvider } from '../../extensions/codemirror/lsp/lspDocumentSymbols';
 import { popoutViewerService } from '../../services/PopoutViewerService';
@@ -53,7 +54,6 @@ import DocumentExplorer from './DocumentExplorer';
 import Editor from './Editor';
 import FileExplorer from './FileExplorer';
 import SearchPanel from './SearchPanel';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('FileDocumentController');
 
@@ -841,11 +841,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 	useEffect(() => {
 		const buildDocToFileMap = async () => {
-			const allFiles = await fileStorageService.getAllFiles(
-				false,
-				false,
-				false,
-			);
+			const allFiles = await fileStoreService.getAllFiles(false, false, false);
 			const map = new Map<string, LinkedFileInfo>();
 
 			for (const file of allFiles) {

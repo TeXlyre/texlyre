@@ -21,13 +21,13 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { openDB } from 'idb';
 
+import { createNamedLogger } from '@/logging';
 import './i18n';
 import App from './App';
 import { authService } from './services/AuthService';
 import { isMobileUserAgent } from './utils/browserUtils';
 import { FORCED_DEFAULTS_KEY } from './utils/userDataUtils';
 import { applyStoredViewport } from './utils/viewportUtils';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('main');
 

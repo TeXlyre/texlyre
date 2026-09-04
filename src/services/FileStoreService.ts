@@ -1,25 +1,23 @@
-// src/services/FileStorageService.ts
+// src/services/FileStoreService.ts
 import { type IDBPDatabase, openDB } from 'idb';
 import { nanoid } from 'nanoid';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import type { FileNode } from '../types/files';
 import { isBinaryFile, toArrayBuffer } from '../utils/fileUtils';
 import {
 	type FileConflict,
-	conflictResolutionService,
-} from './ConflictResolutionService';
+	mergeResolutionService,
+} from './MergeResolutionService';
 import {
 	FileOperationCancelledError,
-	fileConflictService,
-} from './FileConflictService';
-import {
-	isQuotaExceededError,
-	storageQuotaService,
-} from './StorageQuotaService';
-import { createNamedLogger } from '@/logging';
+	fileConflictPromptService,
+} from './FileConflictPromptService';
+import { fileHandlerService } from './FileHandlerService';
+import { isQuotaExceededError, quotaService } from './QuotaService';
 
-const moduleLog = createNamedLogger('FileStorageService');
+const moduleLog = createNamedLogger('FileStoreService');
 
 type FileStorageListener = () => void;
 const listeners: FileStorageListener[] = [];
@@ -42,7 +40,7 @@ export const fileStorageEventEmitter = {
 	},
 };
 
-class FileStorageService {
+class FileStoreService {
 	public db: IDBPDatabase | null = null;
 	private readonly DB_PREFIX = 'texlyre-project-';
 	private readonly FILES_STORE = 'files';
@@ -123,11 +121,11 @@ class FileStorageService {
 	private async guardWrite<T>(operation: () => Promise<T>): Promise<T> {
 		try {
 			const result = await operation();
-			storageQuotaService.markStale();
+			quotaService.markStale();
 			return result;
 		} catch (error) {
 			if (isQuotaExceededError(error)) {
-				storageQuotaService.markStale();
+				quotaService.markStale();
 				throw new Error(t('Not enough browser storage to save these files'));
 			}
 			throw error;
@@ -237,10 +235,11 @@ class FileStorageService {
 		if (!file.documentId) return true;
 
 		if (operation === 'delete' || operation === 'overwrite') {
-			const confirmation = await fileConflictService.confirmLinkedFileAction(
-				file,
-				operation,
-			);
+			const confirmation =
+				await fileConflictPromptService.confirmLinkedFileAction(
+					file,
+					operation,
+				);
 
 			if (confirmation === 'cancel') {
 				throw new FileOperationCancelledError();
@@ -248,7 +247,7 @@ class FileStorageService {
 
 			if (confirmation === 'show-unlink-dialog') {
 				const unlinkConfirmation =
-					await fileConflictService.confirmUnlink(file);
+					await fileConflictPromptService.confirmUnlink(file);
 				if (unlinkConfirmation === 'confirm') {
 					file.documentId = undefined;
 					await this.storeFile(file, { showConflictDialog: false });
@@ -272,7 +271,7 @@ class FileStorageService {
 			localContent: newFile.content ?? '',
 			remoteContent: existingFile.content ?? '',
 		};
-		const resolutions = await conflictResolutionService.resolveConflicts(
+		const resolutions = await mergeResolutionService.resolveConflicts(
 			[conflict],
 			{ keepLocal: t('Keep New'), keepRemote: t('Keep Existing') },
 		);
@@ -305,7 +304,7 @@ class FileStorageService {
 			remoteContent: p.existing.content ?? '',
 		}));
 
-		const resolutions = await conflictResolutionService.resolveConflicts(
+		const resolutions = await mergeResolutionService.resolveConflicts(
 			conflicts,
 			{ keepLocal: t('Keep New'), keepRemote: t('Keep Existing') },
 		);
@@ -351,7 +350,7 @@ class FileStorageService {
 						: 0;
 		}
 
-		await storageQuotaService.ensureSpace(this.getContentSize(file));
+		await quotaService.ensureSpace(this.getContentSize(file));
 
 		if (!preserveTimestamp) {
 			file.lastModified = Date.now();
@@ -373,7 +372,7 @@ class FileStorageService {
 					await this.validateLinkedFileOperation(existingFile, 'overwrite');
 				}
 
-				const resolution = await fileConflictService.resolveConflict(
+				const resolution = await fileConflictPromptService.resolveConflict(
 					existingFile,
 					file,
 				);
@@ -416,6 +415,7 @@ class FileStorageService {
 		await this.guardWrite(async () => {
 			await this.db?.put(this.FILES_STORE, file);
 		});
+		await fileHandlerService.mirrorFiles([file]);
 		fileStorageEventEmitter.emitChange();
 		return file.id;
 	}
@@ -456,7 +456,7 @@ class FileStorageService {
 	): Promise<string[]> {
 		if (!this.db) await this.initialize();
 
-		await storageQuotaService.ensureSpace(
+		await quotaService.ensureSpace(
 			files.reduce((total, file) => total + this.getContentSize(file), 0),
 		);
 
@@ -533,14 +533,15 @@ class FileStorageService {
 					if (batchResolution) {
 						resolution = batchResolution.replace('-all', '');
 					} else if (conflicts.length > 1) {
-						const batchResult = await fileConflictService.resolveBatchConflict(
-							existingFile,
-							file,
-							conflicts.length,
-							conflicts.findIndex(
-								(c) => c.existing.path === existingFile.path,
-							) + 1,
-						);
+						const batchResult =
+							await fileConflictPromptService.resolveBatchConflict(
+								existingFile,
+								file,
+								conflicts.length,
+								conflicts.findIndex(
+									(c) => c.existing.path === existingFile.path,
+								) + 1,
+							);
 
 						if (batchResult.endsWith('-all')) {
 							batchResolution = batchResult as
@@ -553,10 +554,11 @@ class FileStorageService {
 							resolution = batchResult;
 						}
 					} else {
-						const singleResult = await fileConflictService.resolveConflict(
-							existingFile,
-							file,
-						);
+						const singleResult =
+							await fileConflictPromptService.resolveConflict(
+								existingFile,
+								file,
+							);
 						resolution = singleResult;
 					}
 
@@ -620,6 +622,7 @@ class FileStorageService {
 
 				await tx.done;
 			});
+			await fileHandlerService.mirrorFiles(filesToStore);
 			fileStorageEventEmitter.emitChange();
 		}
 
@@ -666,7 +669,7 @@ class FileStorageService {
 			!filesToDelete.some((f) => f.documentId)
 		) {
 			const confirmation =
-				await fileConflictService.confirmBatchDelete(filesToDelete);
+				await fileConflictPromptService.confirmBatchDelete(filesToDelete);
 			if (confirmation === 'cancel') {
 				throw new Error(t('Delete operation cancelled by user'));
 			}
@@ -700,6 +703,7 @@ class FileStorageService {
 			await tx.done;
 		}
 
+		await fileHandlerService.removeFromDisk(filesToDelete);
 		fileStorageEventEmitter.emitChange();
 	}
 
@@ -810,7 +814,7 @@ class FileStorageService {
 				await this.validateLinkedFileOperation(existingFile, 'overwrite');
 			}
 
-			const resolution = await fileConflictService.resolveConflict(
+			const resolution = await fileConflictPromptService.resolveConflict(
 				existingFile,
 				{ ...sourceFile, path: newFullPath, name: newName },
 			);
@@ -843,6 +847,7 @@ class FileStorageService {
 			path: newFullPath,
 			name: newName,
 			lastModified: Date.now(),
+			launchHandle: undefined,
 		};
 
 		const childrenToMove: Array<{ oldId: string; newFile: FileNode }> = [];
@@ -883,6 +888,11 @@ class FileStorageService {
 			}
 
 			await tx.done;
+
+			await fileHandlerService.mirrorFiles([
+				newFile,
+				...childrenToMove.map((childMove) => childMove.newFile),
+			]);
 
 			await this.batchDeleteFiles(filesToDelete, {
 				showDeleteDialog: false,
@@ -925,7 +935,7 @@ class FileStorageService {
 
 		if (showDialog) {
 			const confirmation =
-				await fileConflictService.confirmBatchUnlink(filesToUnlink);
+				await fileConflictPromptService.confirmBatchUnlink(filesToUnlink);
 			if (confirmation === 'cancel') {
 				throw new Error('Unlink operation cancelled by user');
 			}
@@ -1140,6 +1150,7 @@ class FileStorageService {
 			name: newName,
 			path: newPath,
 			createdAt: file.lastModified,
+			launchHandle: undefined,
 		};
 	}
 
@@ -1165,7 +1176,7 @@ class FileStorageService {
 		}
 
 		if (showDialog && !file.documentId) {
-			const confirmation = await fileConflictService.confirmDelete(file);
+			const confirmation = await fileConflictPromptService.confirmDelete(file);
 			if (confirmation === 'cancel') {
 				throw new Error(t('Delete operation cancelled by user'));
 			}
@@ -1184,6 +1195,7 @@ class FileStorageService {
 			file.size = 0;
 			await this.db?.put(this.FILES_STORE, file);
 		}
+		await fileHandlerService.removeFromDisk([file]);
 		fileStorageEventEmitter.emitChange();
 	}
 
@@ -1238,6 +1250,7 @@ class FileStorageService {
 				size: file.size,
 				isBinary: file.isBinary,
 				mimeType: file.mimeType,
+				launchHandle: file.launchHandle,
 				children: file.type === 'directory' ? [] : undefined,
 			};
 
@@ -1295,4 +1308,4 @@ class FileStorageService {
 	}
 }
 
-export const fileStorageService = new FileStorageService();
+export const fileStoreService = new FileStoreService();

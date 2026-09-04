@@ -3,6 +3,7 @@ import type React from 'react';
 import { useState } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { useAuth } from '../../hooks/useAuth';
 import { useChelys } from '../../hooks/useChelys';
 import {
@@ -13,7 +14,6 @@ import {
 import GuestConsentModal from './GuestConsentModal';
 import PrivacyModal from '../common/PrivacyModal';
 import { PasskeyIcon } from '../common/Icons';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('Login');
 

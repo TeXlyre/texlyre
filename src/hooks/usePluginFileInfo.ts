@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
-import { fileStorageService } from '../services/FileStorageService';
 import { createNamedLogger } from '@/logging';
+import { fileStoreService } from '../services/FileStoreService';
 
 const moduleLog = createNamedLogger('usePluginFileInfo');
 
@@ -23,7 +23,7 @@ export const usePluginFileInfo = (fileId?: string, fileName?: string) => {
 		const loadFileInfo = async () => {
 			if (fileId) {
 				try {
-					const file = await fileStorageService.getFile(fileId);
+					const file = await fileStoreService.getFile(fileId);
 					if (file) {
 						setFileInfo({
 							fileName: file.name,

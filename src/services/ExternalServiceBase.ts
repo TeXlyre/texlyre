@@ -1,4 +1,5 @@
 // src/services/ExternalServiceBase.ts
+import { createNamedLogger } from '@/logging';
 import { openTransport } from '@chelys/peer/TransportFactory';
 import { resolveTransportConfig } from '@chelys/peer/TransportResolution';
 import type {
@@ -6,8 +7,6 @@ import type {
 	TransportConfig,
 	TransportStatus,
 } from '@chelys/types/transport';
-
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('ExternalServiceBase');
 

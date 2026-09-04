@@ -4,9 +4,9 @@ import {
 	type LSPClientConfig,
 	type Transport,
 } from '@codemirror/lsp-client';
-import type { TransportConfig } from '@chelys/types/transport';
 
 import { createNamedLogger } from '@/logging';
+import type { TransportConfig } from '@chelys/types/transport';
 import { SEMANTIC_TOKEN_MODIFIERS, SEMANTIC_TOKEN_TYPES } from '../types/lsp';
 import {
 	ExternalServiceBase,

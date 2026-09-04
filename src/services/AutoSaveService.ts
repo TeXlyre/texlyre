@@ -1,8 +1,8 @@
 // src/services/AutoSaveService.ts
 import debounce from 'lodash/debounce';
 
-import { fileStorageService } from './FileStorageService';
 import { createNamedLogger } from '@/logging';
+import { fileStoreService } from './FileStoreService';
 
 const moduleLog = createNamedLogger('AutoSaveService');
 
@@ -37,7 +37,7 @@ class AutoSaveService {
 				const encoder = new TextEncoder();
 				const dataToSave = encoder.encode(contentToSave).buffer;
 
-				await fileStorageService.updateFileContent(fileId, dataToSave);
+				await fileStoreService.updateFileContent(fileId, dataToSave);
 				await options.onSave?.(fileId, contentToSave);
 			} catch (error) {
 				options.onError?.(error as Error);

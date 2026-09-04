@@ -1,9 +1,9 @@
-// src/services/StorageQuotaService.ts
+// src/services/QuotaService.ts
 import { t } from '@/i18n';
-import { formatFileSize } from '../utils/fileUtils';
 import { createNamedLogger } from '@/logging';
+import { formatFileSize } from '../utils/fileUtils';
 
-const moduleLog = createNamedLogger('StorageQuotaService');
+const moduleLog = createNamedLogger('QuotaService');
 
 const SNAPSHOT_TTL_MS = 30000;
 const SPACE_SAFETY_FACTOR = 10;
@@ -61,7 +61,7 @@ function isStorageManagerAvailable(): boolean {
 	);
 }
 
-class StorageQuotaService {
+class QuotaService {
 	private listeners = new Set<(status: StorageQuotaStatus) => void>();
 	private pending: Promise<StorageQuotaStatus> | null = null;
 	private refreshTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -232,4 +232,4 @@ class StorageQuotaService {
 	}
 }
 
-export const storageQuotaService = new StorageQuotaService();
+export const quotaService = new QuotaService();

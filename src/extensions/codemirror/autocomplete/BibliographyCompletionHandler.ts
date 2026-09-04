@@ -5,12 +5,12 @@ import type {
 } from '@codemirror/autocomplete';
 import type { EditorView } from '@codemirror/view';
 
-import { fileStorageService } from '../../../services/FileStorageService';
+import { createNamedLogger } from '@/logging';
+import { fileStoreService } from '../../../services/FileStoreService';
 import { filePathCacheService } from '../../../services/FilePathCacheService';
 import { BibtexParser } from '../../../utils/bibtexParser';
 import { isLatexFile, isTypstFile } from '../../../utils/fileUtils';
 import { citationCommandPatterns, bibtexEntryPatterns } from './patterns';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('BibliographyCompletionHandler');
 
@@ -64,7 +64,7 @@ export class BibliographyCompletionHandler {
 			const allEntries: BibliographyEntry[] = [];
 
 			for (const bibFile of bibFiles) {
-				const storedFile = await fileStorageService.getFile(bibFile.id);
+				const storedFile = await fileStoreService.getFile(bibFile.id);
 				if (!storedFile?.content) continue;
 
 				const content =

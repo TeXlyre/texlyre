@@ -1,4 +1,5 @@
 // src/services/LaTeXSourceMapService.ts
+import { createNamedLogger } from '@/logging';
 import type {
 	SourceMapData,
 	SourceMapForwardResult,
@@ -6,7 +7,6 @@ import type {
 	SourceMapService,
 } from '../types/sourceMap';
 import { parseSynctex } from '../utils/latexSynctexParser';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('LaTeXSourceMapService');
 

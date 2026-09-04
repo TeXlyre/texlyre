@@ -6,7 +6,7 @@ import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
 import { SharedToolsProvider } from '../../contexts/SharedToolsContext';
 import { useCollab } from '../../hooks/useCollab';
-import { useFileSync } from '../../hooks/useFileSync';
+import { usePeerFileSync } from '../../hooks/usePeerFileSync';
 import { useOffline } from '../../hooks/useOffline';
 import { useSharedTools } from '../../hooks/useSharedTools';
 import { collabService } from '../../services/CollabService';
@@ -37,7 +37,7 @@ const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 	const { isConnected: isCollabConnected } = useCollab();
 	const { isOfflineMode, isCollabOfflineMode } = useOffline();
 	const { isEnabled: isFileSyncEnabled, isSyncing: isFileSyncing } =
-		useFileSync();
+		usePeerFileSync();
 	const sharedTools = useSharedTools();
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const [showCollabModal, setShowCollabModal] = useState(false);

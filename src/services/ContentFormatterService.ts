@@ -1,9 +1,9 @@
 // src/services/ContentFormatterService.ts
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { WasmToolsEngine } from '../extensions/wasm-tools/WasmToolsEngine';
 import type { TypstyleOptions } from '../extensions/wasm-tools/TypstyleEngine';
 import { notificationService } from './NotificationService';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('ContentFormatterService');
 

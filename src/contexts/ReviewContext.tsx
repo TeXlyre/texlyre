@@ -12,7 +12,7 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { useCollab } from '../hooks/useCollab';
 import { useProperties } from '../hooks/useProperties';
-import { fileStorageService } from '../services/FileStorageService';
+import { fileStoreService } from '../services/FileStoreService';
 import { reviewService } from '../services/ReviewService';
 import type { DocumentList } from '../types/documents';
 import type { ReviewContextType, ReviewSnapshot } from '../types/review';
@@ -82,7 +82,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 	useEffect(() => {
 		if (!arePropertiesReady || propertiesLoaded) return;
 
-		const projectId = fileStorageService.getCurrentProjectId();
+		const projectId = fileStoreService.getCurrentProjectId();
 		if (projectId) {
 			setShowReviews(
 				getProperty('review-panel-visible', {
@@ -98,7 +98,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 	useEffect(() => {
 		if (!arePropertiesReady) return;
 
-		const projectId = fileStorageService.getCurrentProjectId();
+		const projectId = fileStoreService.getCurrentProjectId();
 		if (!projectId) return;
 
 		const tracked =
@@ -113,7 +113,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 	useEffect(() => {
 		if (!propertiesLoaded) return;
 
-		const projectId = fileStorageService.getCurrentProjectId();
+		const projectId = fileStoreService.getCurrentProjectId();
 		if (!projectId) return;
 
 		setProperty('review-panel-visible', showReviews, {
@@ -176,7 +176,7 @@ export const ReviewProvider: React.FC<ReviewProviderProps> = ({
 		const next = !trackChangesLocal;
 		setTrackChangesLocal(next);
 
-		const projectId = fileStorageService.getCurrentProjectId();
+		const projectId = fileStoreService.getCurrentProjectId();
 		if (projectId) {
 			const tracked =
 				(getProperty('review-tracking-local', {

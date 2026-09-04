@@ -7,7 +7,7 @@ import PositionedDropdown from '../common/PositionedDropdown';
 import { useExternalTypesetter } from '../../hooks/useExternalTypesetter';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileStoreService } from '../../services/FileStoreService';
 import type {
 	TypesetterProvider,
 	TypesetterUIField,
@@ -52,7 +52,7 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const propertiesRegistered = useRef(false);
 
-	const projectId = fileStorageService.getCurrentProjectId() || undefined;
+	const projectId = fileStoreService.getCurrentProjectId() || undefined;
 	const section = provider.ui?.export;
 	const fields = section?.fields ?? [];
 	const mainFilePropertyId = `external-${provider.id}-main-file`;

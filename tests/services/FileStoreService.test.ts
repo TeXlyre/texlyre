@@ -1,20 +1,20 @@
-import { fileStorageService } from '@src/services/FileStorageService';
+import { fileStoreService } from '@src/services/FileStoreService';
 import type { FileNode } from '@src/types/files';
 
-describe.skip('FileStorageService', () => {
+describe.skip('FileStoreService', () => {
     beforeEach(async () => {
         const FDBFactory = require('fake-indexeddb/lib/FDBFactory');
         global.indexedDB = new FDBFactory();
-        await fileStorageService.initialize('yjs:test-project');
+        await fileStoreService.initialize('yjs:test-project');
     });
 
     afterEach(async () => {
         try {
-            const files = await fileStorageService.getAllFiles();
+            const files = await fileStoreService.getAllFiles();
             for (const file of files) {
-                await fileStorageService.deleteFile(file.id);
+                await fileStoreService.deleteFile(file.id);
             }
-            await fileStorageService.cleanup();
+            await fileStoreService.cleanup();
         } catch (error) {
             // Ignore cleanup errors
         }
@@ -34,8 +34,8 @@ describe.skip('FileStorageService', () => {
                 isBinary: false,
             };
 
-            await fileStorageService.storeFile(file);
-            const retrieved = await fileStorageService.getFile('file-1');
+            await fileStoreService.storeFile(file);
+            const retrieved = await fileStoreService.getFile('file-1');
 
             expect(retrieved).toBeDefined();
             expect(retrieved?.name).toBe('test.tex');
@@ -55,16 +55,16 @@ describe.skip('FileStorageService', () => {
                 isBinary: false,
             };
 
-            await fileStorageService.storeFile(file);
+            await fileStoreService.storeFile(file);
 
             const updated = {
                 ...file,
                 content: new TextEncoder().encode('Updated').buffer,
                 size: 7,
             };
-            await fileStorageService.storeFile(updated);
+            await fileStoreService.storeFile(updated);
 
-            const retrieved = await fileStorageService.getFile('file-2');
+            const retrieved = await fileStoreService.getFile('file-2');
             const content = new TextDecoder().decode(retrieved?.content as ArrayBuffer);
 
             expect(content).toBe('Updated');
@@ -83,10 +83,10 @@ describe.skip('FileStorageService', () => {
                 isBinary: false,
             };
 
-            await fileStorageService.storeFile(file);
-            await fileStorageService.deleteFile('file-3');
+            await fileStoreService.storeFile(file);
+            await fileStoreService.deleteFile('file-3');
 
-            const retrieved = await fileStorageService.getFile('file-3');
+            const retrieved = await fileStoreService.getFile('file-3');
             expect(retrieved).toBeUndefined();
         });
     });
@@ -119,12 +119,12 @@ describe.skip('FileStorageService', () => {
             ];
 
             for (const file of files) {
-                await fileStorageService.storeFile(file);
+                await fileStoreService.storeFile(file);
             }
         });
 
         it('should get all files', async () => {
-            const files = await fileStorageService.getAllFiles();
+            const files = await fileStoreService.getAllFiles();
 
             expect(files.length).toBeGreaterThanOrEqual(2);
             expect(files.some(f => f.name === 'main.tex')).toBe(true);
@@ -132,7 +132,7 @@ describe.skip('FileStorageService', () => {
         });
 
         it('should get files by directory', async () => {
-            const files = await fileStorageService.getFilesByDirectory('/chapters');
+            const files = await fileStoreService.getFilesByDirectory('/chapters');
 
             expect(files.some(f => f.name === 'intro.tex')).toBe(true);
             expect(files.some(f => f.name === 'main.tex')).toBe(false);
@@ -153,10 +153,10 @@ describe.skip('FileStorageService', () => {
                 isBinary: false,
             };
 
-            await fileStorageService.storeFile(file);
-            await fileStorageService.linkFileToDocument('link-1', 'doc-123');
+            await fileStoreService.storeFile(file);
+            await fileStoreService.linkFileToDocument('link-1', 'doc-123');
 
-            const retrieved = await fileStorageService.getFile('link-1');
+            const retrieved = await fileStoreService.getFile('link-1');
             expect(retrieved?.documentId).toBe('doc-123');
         });
 
@@ -174,10 +174,10 @@ describe.skip('FileStorageService', () => {
                 documentId: 'doc-456',
             };
 
-            await fileStorageService.storeFile(file);
-            await fileStorageService.unlinkFileFromDocument('unlink-1');
+            await fileStoreService.storeFile(file);
+            await fileStoreService.unlinkFileFromDocument('unlink-1');
 
-            const retrieved = await fileStorageService.getFile('unlink-1');
+            const retrieved = await fileStoreService.getFile('unlink-1');
             expect(retrieved?.documentId).toBeUndefined();
         });
     });
@@ -209,10 +209,10 @@ describe.skip('FileStorageService', () => {
                 },
             ];
 
-            await fileStorageService.batchStoreFiles(files);
+            await fileStoreService.batchStoreFiles(files);
 
-            const file1 = await fileStorageService.getFile('batch-1');
-            const file2 = await fileStorageService.getFile('batch-2');
+            const file1 = await fileStoreService.getFile('batch-1');
+            const file2 = await fileStoreService.getFile('batch-2');
 
             expect(file1).toBeDefined();
             expect(file2).toBeDefined();

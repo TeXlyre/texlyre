@@ -2,8 +2,8 @@
 import type React from 'react';
 import { createContext, useCallback, useState, useEffect } from 'react';
 
-import { searchService, type SearchResult } from '../services/SearchService';
 import { createNamedLogger } from '@/logging';
+import { searchService, type SearchResult } from '../services/SearchService';
 
 const moduleLog = createNamedLogger('SearchContext');
 

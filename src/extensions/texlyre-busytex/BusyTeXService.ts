@@ -3,11 +3,12 @@ import { nanoid } from 'nanoid';
 import { isPackageCached, deletePackageCache } from 'texlyre-busytex';
 import type { TexliveRemoteFile } from 'texlyre-busytex';
 
+import { createNamedLogger } from '@/logging';
 import { busyTeXEngine, BUSYTEX_CACHE_DIR, MISSES_KEY } from './BusyTeXEngine';
 import type { BusyTeXEngineType } from './BusyTeXEngine';
 import type { CompileResult } from '../../types/compilation';
 import type { FileNode } from '../../types/files';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileStoreService } from '../../services/FileStoreService';
 import { latexSourceMapService } from '../../services/LaTeXSourceMapService';
 import {
 	getMimeType,
@@ -15,9 +16,8 @@ import {
 	isTemporaryFile,
 	toArrayBuffer,
 } from '../../utils/fileUtils';
-import { cleanContent } from '../../utils/fileCommentUtils';
+import { stripAnnotations } from '../../utils/fileCommentUtils';
 import { findCompileArtifact } from '../../utils/compilerUtils';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('BusyTeXService');
 
@@ -136,7 +136,7 @@ class BusyTeXService {
 			.filter((node) => !isTemporaryFile(node.path))
 			.map((node) => {
 				if (node.type !== 'file' || node.content === undefined) return node;
-				const cleaned = cleanContent(node.content);
+				const cleaned = stripAnnotations(node.content);
 				const path = this.flattenMainDirectory
 					? this.flattenNodePath(node.path, mainFileName)
 					: node.path.replace(/^\/+/, '');
@@ -202,7 +202,7 @@ class BusyTeXService {
 
 	private async loadCachedMisses(): Promise<string[]> {
 		try {
-			const file = await fileStorageService.getFileByPath(MISSES_KEY, true);
+			const file = await fileStoreService.getFileByPath(MISSES_KEY, true);
 			if (!file?.content) return [];
 			const text =
 				typeof file.content === 'string'
@@ -221,7 +221,7 @@ class BusyTeXService {
 			const misses = await busyTeXEngine.readMisses();
 			const content = JSON.stringify(misses);
 			const encoded = new TextEncoder().encode(content);
-			await fileStorageService.batchStoreFiles(
+			await fileStoreService.batchStoreFiles(
 				[
 					{
 						id: nanoid(),
@@ -247,7 +247,7 @@ class BusyTeXService {
 	private async loadCachedRemoteFiles(): Promise<void> {
 		if (!this.storeCache) return;
 		try {
-			const cached = await fileStorageService.getFilesByPath(
+			const cached = await fileStoreService.getFilesByPath(
 				`${REMOTE_FILES_DIR}/`,
 				true,
 				{ excludeDirectories: true },
@@ -296,7 +296,7 @@ class BusyTeXService {
 				const safeName =
 					file.format !== undefined ? `${file.format}_${file.name}` : file.name;
 				const storagePath = `${REMOTE_FILES_DIR}/${safeName}`;
-				const existing = await fileStorageService.getFileByPath(
+				const existing = await fileStoreService.getFileByPath(
 					storagePath,
 					true,
 				);
@@ -322,7 +322,7 @@ class BusyTeXService {
 				});
 			}
 
-			await fileStorageService.batchStoreFiles(toStore, {
+			await fileStoreService.batchStoreFiles(toStore, {
 				showConflictDialog: false,
 			});
 		} catch (error) {
@@ -341,7 +341,7 @@ class BusyTeXService {
 				const dirPath = storagePath.substring(0, storagePath.lastIndexOf('/'));
 				if (dirPath) dirsToCreate.add(dirPath);
 
-				const existing = await fileStorageService.getFileByPath(
+				const existing = await fileStoreService.getFileByPath(
 					storagePath,
 					true,
 				);
@@ -365,7 +365,7 @@ class BusyTeXService {
 			await this.ensureDirectoriesExist(Array.from(dirsToCreate));
 
 			if (filesToStore.length > 0) {
-				await fileStorageService.batchStoreFiles(filesToStore, {
+				await fileStoreService.batchStoreFiles(filesToStore, {
 					showConflictDialog: false,
 					preserveTimestamp: true,
 				});
@@ -403,7 +403,7 @@ class BusyTeXService {
 			outputFiles.push(this.createLogFileNode(baseName, result.log));
 
 			await this.ensureOutputDirsExist();
-			await fileStorageService.batchStoreFiles(outputFiles, {
+			await fileStoreService.batchStoreFiles(outputFiles, {
 				showConflictDialog: false,
 			});
 		} catch (error) {
@@ -418,7 +418,7 @@ class BusyTeXService {
 		try {
 			await this.ensureOutputDirsExist();
 			const baseName = this.getBaseName(mainFile);
-			await fileStorageService.batchStoreFiles(
+			await fileStoreService.batchStoreFiles(
 				[this.createLogFileNode(baseName, log)],
 				{ showConflictDialog: false },
 			);
@@ -446,7 +446,7 @@ class BusyTeXService {
 	}
 
 	async cleanupStoredWorkDirectory(): Promise<void> {
-		await fileStorageService.cleanupDirectory('/.texlyre_src/__work');
+		await fileStoreService.cleanupDirectory('/.texlyre_src/__work');
 	}
 
 	private getBaseName(filePath: string): string {
@@ -467,7 +467,7 @@ class BusyTeXService {
 	}
 
 	private async ensureDirectoriesExist(paths: string[]): Promise<void> {
-		const existing = await fileStorageService.getAllFiles(true, false, false);
+		const existing = await fileStoreService.getAllFiles(true, false, false);
 		const existingPaths = new Set(existing.map((f) => f.path));
 
 		const allPaths = new Set<string>();
@@ -494,7 +494,7 @@ class BusyTeXService {
 		}
 
 		if (toCreate.length > 0) {
-			await fileStorageService.batchStoreFiles(toCreate, {
+			await fileStoreService.batchStoreFiles(toCreate, {
 				showConflictDialog: false,
 			});
 		}
@@ -510,7 +510,7 @@ class BusyTeXService {
 			`${workDir}/_${baseName}.bbl`,
 		]) {
 			try {
-				const file = await fileStorageService.getFileByPath(p, true);
+				const file = await fileStoreService.getFileByPath(p, true);
 				if (file?.content) {
 					const content =
 						typeof file.content === 'string'
@@ -526,7 +526,7 @@ class BusyTeXService {
 		}
 
 		try {
-			const bblFiles = await fileStorageService.getFilesByPath(
+			const bblFiles = await fileStoreService.getFilesByPath(
 				`${workDir}/`,
 				true,
 				{ fileExtension: '.bbl', excludeDirectories: true },
@@ -557,11 +557,9 @@ class BusyTeXService {
 			mimeType: string;
 		}> = [];
 		try {
-			const files = await fileStorageService.getFilesByPath(
-				`${workDir}/`,
-				true,
-				{ excludeDirectories: true },
-			);
+			const files = await fileStoreService.getFilesByPath(`${workDir}/`, true, {
+				excludeDirectories: true,
+			});
 			for (const file of files) {
 				if (!file.content || file.isDeleted) continue;
 				const content =

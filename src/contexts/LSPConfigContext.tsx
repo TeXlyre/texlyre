@@ -11,6 +11,7 @@ import {
 } from 'react';
 import type { LSPClientConfig } from '@codemirror/lsp-client';
 
+import { createNamedLogger } from '@/logging';
 import { useSettings } from '../hooks/useSettings';
 import { genericLSPService } from '../services/GenericLSPService';
 import type { LSPConfigBlock } from '../types/lsp';
@@ -20,7 +21,6 @@ import {
 	upsertConfig,
 	withoutDisabled,
 } from '../utils/toolConfigUtils';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('LSPConfigContext');
 

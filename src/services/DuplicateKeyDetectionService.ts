@@ -1,8 +1,8 @@
 // src/services/DuplicateKeyDetectionService.ts
 import { t } from '@/i18n';
-import { fileStorageService } from './FileStorageService';
-import { notificationService } from './NotificationService';
 import { createNamedLogger } from '@/logging';
+import { fileStoreService } from './FileStoreService';
+import { notificationService } from './NotificationService';
 
 const moduleLog = createNamedLogger('DuplicateKeyDetectionService');
 
@@ -39,7 +39,7 @@ class DuplicateKeyDetectionService {
 		if (this.autoSanitizeInProgress) return;
 
 		try {
-			const result = await fileStorageService.autoSanitizeDuplicates();
+			const result = await fileStoreService.autoSanitizeDuplicates();
 
 			if (result && result.removed > 0) {
 				const now = Date.now();
@@ -66,7 +66,7 @@ class DuplicateKeyDetectionService {
 				operationId,
 			);
 
-			const result = await fileStorageService.autoSanitizeDuplicates();
+			const result = await fileStoreService.autoSanitizeDuplicates();
 
 			if (result && result.removed > 0) {
 				const message =

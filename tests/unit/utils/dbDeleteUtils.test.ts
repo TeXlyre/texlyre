@@ -12,11 +12,11 @@ import {
     listReclaimableDatabases,
     projectDbNames,
 } from '@src/utils/dbDeleteUtils';
-import { fileStorageService } from '@src/services/FileStorageService';
+import { fileStoreService } from '@src/services/FileStoreService';
 import type { Project } from '@src/types/projects';
 
-jest.mock('@src/services/FileStorageService', () => ({
-    fileStorageService: {
+jest.mock('@src/services/FileStoreService', () => ({
+    fileStoreService: {
         isConnectedToProject: jest.fn(),
         cleanup: jest.fn(),
         getCurrentProjectId: jest.fn().mockReturnValue(''),
@@ -32,8 +32,8 @@ jest.mock('@src/services/CollabService', () => ({
     },
 }));
 
-jest.mock('@src/services/StorageQuotaService', () => ({
-    storageQuotaService: {
+jest.mock('@src/services/QuotaService', () => ({
+    quotaService: {
         markStale: jest.fn(),
     },
 }));
@@ -52,10 +52,10 @@ describe('DB Delete Utils', () => {
         databasesSpy.mockReset();
         cacheNamesSpy.mockReset();
         cacheOpenSpy.mockReset();
-        (fileStorageService.getCurrentProjectId as jest.Mock).mockReturnValue('');
-        (fileStorageService.setProjectId as jest.Mock).mockReset();
-        (fileStorageService.getAllFiles as jest.Mock).mockResolvedValue([]);
-        (fileStorageService.batchDeleteFiles as jest.Mock).mockResolvedValue(undefined);
+        (fileStoreService.getCurrentProjectId as jest.Mock).mockReturnValue('');
+        (fileStoreService.setProjectId as jest.Mock).mockReset();
+        (fileStoreService.getAllFiles as jest.Mock).mockResolvedValue([]);
+        (fileStoreService.batchDeleteFiles as jest.Mock).mockResolvedValue(undefined);
         (global as any).indexedDB = {
             deleteDatabase: deleteDatabaseSpy,
             databases: databasesSpy,
@@ -114,40 +114,40 @@ describe('DB Delete Utils', () => {
 
     describe('closeActiveConnections', () => {
         it('should clean up when connected', async () => {
-            (fileStorageService.isConnectedToProject as jest.Mock).mockReturnValue(
+            (fileStoreService.isConnectedToProject as jest.Mock).mockReturnValue(
                 true,
             );
 
             await closeActiveConnections('proj1');
 
-            expect(fileStorageService.cleanup).toHaveBeenCalled();
+            expect(fileStoreService.cleanup).toHaveBeenCalled();
         });
 
         it('should clear the current project id when that project is deleted', async () => {
-            (fileStorageService.getCurrentProjectId as jest.Mock).mockReturnValue(
+            (fileStoreService.getCurrentProjectId as jest.Mock).mockReturnValue(
                 'proj1',
             );
-            (fileStorageService.isConnectedToProject as jest.Mock).mockReturnValue(
+            (fileStoreService.isConnectedToProject as jest.Mock).mockReturnValue(
                 false,
             );
 
             await closeActiveConnections('proj1');
 
-            expect(fileStorageService.setProjectId).toHaveBeenCalledWith('');
+            expect(fileStoreService.setProjectId).toHaveBeenCalledWith('');
         });
 
         it('should do nothing when not connected to another project', async () => {
-            (fileStorageService.isConnectedToProject as jest.Mock).mockReturnValue(
+            (fileStoreService.isConnectedToProject as jest.Mock).mockReturnValue(
                 false,
             );
-            (fileStorageService.getCurrentProjectId as jest.Mock).mockReturnValue(
+            (fileStoreService.getCurrentProjectId as jest.Mock).mockReturnValue(
                 'proj2',
             );
 
             await closeActiveConnections('proj1');
 
-            expect(fileStorageService.cleanup).not.toHaveBeenCalled();
-            expect(fileStorageService.setProjectId).not.toHaveBeenCalled();
+            expect(fileStoreService.cleanup).not.toHaveBeenCalled();
+            expect(fileStoreService.setProjectId).not.toHaveBeenCalled();
         });
     });
 
@@ -165,10 +165,10 @@ describe('DB Delete Utils', () => {
                 Promise.resolve().then(() => request.onsuccess?.());
                 return request;
             });
-            (fileStorageService.getCurrentProjectId as jest.Mock).mockReturnValue(
+            (fileStoreService.getCurrentProjectId as jest.Mock).mockReturnValue(
                 'proj1',
             );
-            (fileStorageService.isConnectedToProject as jest.Mock).mockReturnValue(
+            (fileStoreService.isConnectedToProject as jest.Mock).mockReturnValue(
                 true,
             );
 
@@ -190,7 +190,7 @@ describe('DB Delete Utils', () => {
             expect(deleteDatabaseSpy).not.toHaveBeenCalledWith(
                 'texlyre-project-proj2',
             );
-            expect(fileStorageService.setProjectId).toHaveBeenCalledWith('');
+            expect(fileStoreService.setProjectId).toHaveBeenCalledWith('');
         });
     });
 
@@ -296,7 +296,7 @@ describe('DB Delete Utils', () => {
         });
 
         it('should treat a stale open-project id as leftover when auth metadata is gone', async () => {
-            (fileStorageService.getCurrentProjectId as jest.Mock).mockReturnValue(
+            (fileStoreService.getCurrentProjectId as jest.Mock).mockReturnValue(
                 'open',
             );
             listNames(['texlyre-project-open']);
@@ -378,13 +378,13 @@ describe('DB Delete Utils', () => {
 
     describe('current project typesetter cache', () => {
         beforeEach(() => {
-            (fileStorageService.getCurrentProjectId as jest.Mock).mockReturnValue(
+            (fileStoreService.getCurrentProjectId as jest.Mock).mockReturnValue(
                 'open',
             );
         });
 
         it('should detect SwiftLaTeX and BusyTeX cache files', async () => {
-            (fileStorageService.getAllFiles as jest.Mock).mockResolvedValue([
+            (fileStoreService.getAllFiles as jest.Mock).mockResolvedValue([
                 {
                     id: 'swift-cache',
                     path: '/.texlyre_cache/__tex/pkg.sty',
@@ -399,7 +399,7 @@ describe('DB Delete Utils', () => {
             ]);
 
             await expect(hasCurrentProjectTypesetterCache()).resolves.toBe(true);
-            expect(fileStorageService.getAllFiles).toHaveBeenCalledWith(
+            expect(fileStoreService.getAllFiles).toHaveBeenCalledWith(
                 true,
                 false,
                 false,
@@ -407,7 +407,7 @@ describe('DB Delete Utils', () => {
         });
 
         it('should include deleted cache entries because they still use storage', async () => {
-            (fileStorageService.getAllFiles as jest.Mock).mockResolvedValue([
+            (fileStoreService.getAllFiles as jest.Mock).mockResolvedValue([
                 {
                     id: 'old-cache',
                     path: '/.texlyre_cache/__tex/pkg.sty',
@@ -419,7 +419,7 @@ describe('DB Delete Utils', () => {
         });
 
         it('should hard-delete only current-project typesetter cache entries', async () => {
-            (fileStorageService.getAllFiles as jest.Mock).mockResolvedValue([
+            (fileStoreService.getAllFiles as jest.Mock).mockResolvedValue([
                 {
                     id: 'swift-cache',
                     path: '/.texlyre_cache/__tex/pkg.sty',
@@ -434,7 +434,7 @@ describe('DB Delete Utils', () => {
             ]);
 
             await expect(deleteCurrentProjectTypesetterCache()).resolves.toBe(2);
-            expect(fileStorageService.batchDeleteFiles).toHaveBeenCalledWith(
+            expect(fileStoreService.batchDeleteFiles).toHaveBeenCalledWith(
                 ['swift-cache', 'busy-cache'],
                 {
                     showDeleteDialog: false,
@@ -444,11 +444,11 @@ describe('DB Delete Utils', () => {
         });
 
         it('should not inspect files when no project is open', async () => {
-            (fileStorageService.getCurrentProjectId as jest.Mock).mockReturnValue('');
-        (fileStorageService.setProjectId as jest.Mock).mockReset();
+            (fileStoreService.getCurrentProjectId as jest.Mock).mockReturnValue('');
+        (fileStoreService.setProjectId as jest.Mock).mockReset();
 
             await expect(hasCurrentProjectTypesetterCache()).resolves.toBe(false);
-            expect(fileStorageService.getAllFiles).not.toHaveBeenCalled();
+            expect(fileStoreService.getAllFiles).not.toHaveBeenCalled();
         });
     });
 

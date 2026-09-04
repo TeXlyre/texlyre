@@ -1,10 +1,10 @@
 // src/services/BibliographyImportService.ts
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import { parseUrlFragments } from '../utils/urlUtils';
-import { fileStorageService } from './FileStorageService';
+import { fileStoreService } from './FileStoreService';
 import { collabService } from './CollabService';
 import type { BibEntry } from '../types/bibliography';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('BibliographyImportService');
 
@@ -42,19 +42,19 @@ class DefaultBibTexParser implements BibTexParser {
 		const entries: BibEntry[] = [];
 
 		// Remove comments and clean content
-		const cleanContent = content
+		const stripAnnotations = content
 			.split('\n')
 			.map((line) => line.replace(/%.*$/, '').trim())
 			.join('\n');
 
 		let pos = 0;
-		while (pos < cleanContent.length) {
+		while (pos < stripAnnotations.length) {
 			// Find next @ symbol
-			const atPos = cleanContent.indexOf('@', pos);
+			const atPos = stripAnnotations.indexOf('@', pos);
 			if (atPos === -1) break;
 
 			// Find entry type and opening brace
-			const typeMatch = cleanContent
+			const typeMatch = stripAnnotations
 				.slice(atPos)
 				.match(/^@(\w+)\s*\{\s*([^,\s]+)\s*,/);
 			if (!typeMatch) {
@@ -71,8 +71,8 @@ class DefaultBibTexParser implements BibTexParser {
 			let currentPos = contentStart;
 			let entryEnd = -1;
 
-			while (currentPos < cleanContent.length && braceCount > 0) {
-				const char = cleanContent[currentPos];
+			while (currentPos < stripAnnotations.length && braceCount > 0) {
+				const char = stripAnnotations[currentPos];
 				if (char === '{') {
 					braceCount++;
 				} else if (char === '}') {
@@ -91,8 +91,8 @@ class DefaultBibTexParser implements BibTexParser {
 			}
 
 			// Extract the full entry and field content
-			const fullEntry = cleanContent.slice(entryStart, entryEnd + 1);
-			const fieldsContent = cleanContent.slice(contentStart, entryEnd);
+			const fullEntry = stripAnnotations.slice(entryStart, entryEnd + 1);
+			const fieldsContent = stripAnnotations.slice(contentStart, entryEnd);
 
 			// Parse fields
 			const fields: Record<string, string> = {};
@@ -315,7 +315,7 @@ export class BibliographyImportService {
 	}
 
 	private async dispatchFileReload(filePath: string): Promise<void> {
-		const file = await fileStorageService.getFileByPath(filePath);
+		const file = await fileStoreService.getFileByPath(filePath);
 		if (!file) return;
 		document.dispatchEvent(
 			new CustomEvent('file-reloaded', {
@@ -473,7 +473,7 @@ export class BibliographyImportService {
 		filePath: string,
 		updater: (currentContent: string) => string,
 	): Promise<void> {
-		const file = await fileStorageService.getFileByPath(filePath);
+		const file = await fileStoreService.getFileByPath(filePath);
 		if (!file) throw new Error('File not found');
 
 		if (file.documentId) {
@@ -500,7 +500,7 @@ export class BibliographyImportService {
 		}
 
 		const newContent = updater(currentContent);
-		await fileStorageService.updateFileContent(file.id, newContent);
+		await fileStoreService.updateFileContent(file.id, newContent);
 	}
 
 	registerOpenFile(filePath: string): void {

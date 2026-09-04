@@ -3,6 +3,7 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import { removeAwarenessStates } from 'y-protocols/awareness';
 import * as Y from 'yjs';
 
+import { createNamedLogger } from '@/logging';
 import { collabWebrtc } from '../extensions/yjs/CollabWebrtc';
 import { collabWebsocket } from '../extensions/yjs/CollabWebsocket';
 import type { User } from '../types/auth';
@@ -15,7 +16,6 @@ import type {
 import type { YjsDocUrl } from '../types/yjs';
 import { parseUrlFragments } from '../utils/urlUtils';
 import { offlineService } from './OfflineService';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('CollabService');
 

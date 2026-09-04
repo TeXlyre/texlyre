@@ -24,7 +24,7 @@ import {
 	isTemporaryFile,
 	getFilenameFromPath,
 } from '../../utils/fileUtils';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileStoreService } from '../../services/FileStoreService';
 import { ChevronDownIcon, OptionsIcon, ExportIcon } from '../common/Icons';
 
 interface TypstExportButtonProps {
@@ -58,7 +58,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const propertiesRegistered = useRef(false);
 
-	const projectId = fileStorageService.getCurrentProjectId() || undefined;
+	const projectId = fileStoreService.getCurrentProjectId() || undefined;
 
 	const propMainFile = getProperty('typst-export-main-file', {
 		scope: 'project',

@@ -25,7 +25,7 @@ import {
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import type { ViewerProps } from '@/plugins/PluginInterface';
-import { fileStorageService } from '@/services/FileStorageService';
+import { fileStoreService } from '@/services/FileStoreService';
 import { formatFileSize } from '@/utils/fileUtils';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './ImageViewerPlugin';
@@ -186,7 +186,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 		try {
 			const data = await processImageWithTransforms();
 			if (data) {
-				await fileStorageService.updateFileContent(fileId, data);
+				await fileStoreService.updateFileContent(fileId, data);
 				latestSavedRef.current = data;
 				setHasChanges(false);
 			}

@@ -1,11 +1,10 @@
 // src/services/ChelysService.ts
+import { t } from '@/i18n';
 import {
 	deriveIdentity,
 	fromHex,
 	type DerivedIdentity,
 } from '@chelys/protocol';
-
-import { t } from '@/i18n';
 import type { User } from '../types/auth';
 import { authService } from './AuthService';
 import { chelysAccountSyncService } from './ChelysAccountSyncService';

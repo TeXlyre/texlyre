@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { useStorageQuota } from '@src/hooks/useStorageQuota';
-import { storageQuotaService } from '@src/services/StorageQuotaService';
+import { quotaService } from '@src/services/QuotaService';
 import { useSettings } from '@src/hooks/useSettings';
 
 jest.mock('@src/hooks/useSettings', () => ({
@@ -18,7 +18,7 @@ describe('useStorageQuota', () => {
     };
 
     const setStatus = (usageBytes: number, quotaBytes: number) => {
-        jest.spyOn(storageQuotaService, 'getStatus').mockReturnValue({
+        jest.spyOn(quotaService, 'getStatus').mockReturnValue({
             isSupported: true,
             isPersisted: false,
             usageBytes,
@@ -32,8 +32,8 @@ describe('useStorageQuota', () => {
 
     beforeEach(() => {
         jest.restoreAllMocks();
-        jest.spyOn(storageQuotaService, 'refresh').mockResolvedValue(
-            storageQuotaService.getStatus(),
+        jest.spyOn(quotaService, 'refresh').mockResolvedValue(
+            quotaService.getStatus(),
         );
         setSettings({});
     });
@@ -41,13 +41,13 @@ describe('useStorageQuota', () => {
     it('should refresh once on mount and unsubscribe on unmount', async () => {
         const unsubscribe = jest.fn();
         const addStatusListener = jest
-            .spyOn(storageQuotaService, 'addStatusListener')
+            .spyOn(quotaService, 'addStatusListener')
             .mockReturnValue(unsubscribe);
 
         const { unmount } = renderHook(() => useStorageQuota());
 
         await waitFor(() => {
-            expect(storageQuotaService.refresh).toHaveBeenCalled();
+            expect(quotaService.refresh).toHaveBeenCalled();
         });
         expect(addStatusListener).toHaveBeenCalled();
 

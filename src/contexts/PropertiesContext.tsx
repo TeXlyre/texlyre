@@ -9,8 +9,8 @@ import {
 	useState,
 } from 'react';
 
-import { notifyUserDataChanged } from '../utils/userDataUtils';
 import { createNamedLogger } from '@/logging';
+import { notifyUserDataChanged } from '../utils/userDataUtils';
 
 const moduleLog = createNamedLogger('PropertiesContext');
 

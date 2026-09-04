@@ -2,7 +2,7 @@
 import type { EditorView } from '@codemirror/view';
 import { EditorView as CMEditorView } from '@codemirror/view';
 
-import { fileStorageService } from '../../../services/FileStorageService';
+import { fileStoreService } from '../../../services/FileStoreService';
 import { filePathCacheService } from '../../../services/FilePathCacheService';
 import {
 	linkNavigationService,
@@ -194,7 +194,7 @@ export class LinkNavigator {
 		const file = await filePathCacheService.findFileByPath('', filePath);
 		if (!file) return null;
 
-		const storedFile = await fileStorageService.getFile(file.id);
+		const storedFile = await fileStoreService.getFile(file.id);
 		if (!storedFile?.content) return null;
 
 		const content =
@@ -215,7 +215,7 @@ export class LinkNavigator {
 		const file = await filePathCacheService.findFileByPath('', filePath);
 		if (!file) return null;
 
-		const storedFile = await fileStorageService.getFile(file.id);
+		const storedFile = await fileStoreService.getFile(file.id);
 		if (!storedFile?.content) return null;
 
 		const content =

@@ -1,9 +1,9 @@
 // src/services/linkNavigationService.ts
+import { createNamedLogger } from '@/logging';
 import { isBibFile } from '../utils/fileUtils';
 import { gotoEditor } from '../utils/editorNavigator';
-import { fileStorageService } from './FileStorageService';
+import { fileStoreService } from './FileStoreService';
 import { filePathCacheService } from './FilePathCacheService';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('LinkNavigationService');
 
@@ -54,7 +54,7 @@ class LinkNavigationService {
 				);
 
 			for (const bibFile of bibFiles) {
-				const storedFile = await fileStorageService.getFile(bibFile.id);
+				const storedFile = await fileStoreService.getFile(bibFile.id);
 				if (!storedFile?.content) continue;
 
 				const content =
@@ -85,7 +85,7 @@ class LinkNavigationService {
 	navigateToFileAndLine(filePath: string, lineNumber: number): void {
 		const handleEditorReady = (event: Event) => {
 			const { fileId } = (event as CustomEvent).detail;
-			fileStorageService.getFile(fileId).then((file) => {
+			fileStoreService.getFile(fileId).then((file) => {
 				if (file?.path !== filePath) return;
 				document.removeEventListener('editor-ready', handleEditorReady);
 				gotoEditor({ kind: 'file', fileId }, { line: lineNumber });

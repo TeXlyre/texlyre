@@ -1,8 +1,8 @@
 // src/extensions/swiftlatex/PdfTeXEngine.ts
+import { createNamedLogger } from '@/logging';
 import type { CompileResult } from '../../types/compilation';
 import { BaseEngine, type EngineConfig } from './BaseEngine';
 import { EngineLoader } from './EngineLoader';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('PdfTeXEngine');
 

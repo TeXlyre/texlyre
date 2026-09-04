@@ -11,6 +11,7 @@ import {
 } from 'react';
 import type * as Y from 'yjs';
 
+import { createNamedLogger } from '@/logging';
 import { useSettings } from '../hooks/useSettings';
 import { collabService } from '../services/CollabService';
 import type {
@@ -19,7 +20,6 @@ import type {
 	CollabProviderType,
 } from '../types/collab';
 import type { YjsDocUrl } from '../types/yjs';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('CollabContext');
 

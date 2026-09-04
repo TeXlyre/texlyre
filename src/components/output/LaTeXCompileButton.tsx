@@ -3,6 +3,7 @@ import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { createNamedLogger } from '@/logging';
 import PopoutViewerToggleButton from './PopoutViewerToggleButton';
 import PositionedDropdown from '../common/PositionedDropdown';
 import { usePersistentState } from '../../hooks/usePersistentState';
@@ -20,7 +21,7 @@ import {
 	isLatexMainFile,
 	isTemporaryFile,
 } from '../../utils/fileUtils';
-import { fileStorageService } from '../../services/FileStorageService';
+import { fileStoreService } from '../../services/FileStoreService';
 import { latexService } from '../../services/LaTeXService';
 import { BUSYTEX_BUNDLE_LABELS } from '../../extensions/texlyre-busytex/BusyTeXService';
 import {
@@ -32,7 +33,6 @@ import {
 	StopIcon,
 	TrashIcon,
 } from '../common/Icons';
-import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('LaTeXCompileButton');
 
@@ -109,7 +109,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 	);
 	const propertiesRegistered = useRef(false);
 
-	const projectId = fileStorageService.getCurrentProjectId() || undefined;
+	const projectId = fileStoreService.getCurrentProjectId() || undefined;
 
 	const settingEngine =
 		(getSetting('latex-engine')?.value as LaTeXEngine) ?? 'pdftex';

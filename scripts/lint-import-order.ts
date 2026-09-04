@@ -10,7 +10,7 @@ const I18N_HEADER = [
 	"import { Trans } from 'react-i18next';",
 ];
 
-const LOCAL_PREFIXES = ['@/', '@src/', './', '../'];
+const LOCAL_PREFIXES = ['@/', '@src/', '@chelys', './', '../'];
 
 function parseImports(content: string): {
 	imports: ImportLine[];
