@@ -1,8 +1,10 @@
 // src/services/WriteTargetService.ts
-import JSZip from 'jszip';
-
 import { createNamedLogger } from '@/logging';
 import { UnifiedDataStructureService } from './BackupLayoutService';
+import {
+	ArchiveStore,
+	type WritableArchiveFormat,
+} from '../utils/archiveUtils';
 import { isBinaryFile, toArrayBuffer } from '../utils/fileUtils';
 
 const moduleLog = createNamedLogger('WriteTargetService');
@@ -19,7 +21,7 @@ export interface WriteTarget {
 }
 
 export class DirectoryTarget implements WriteTarget {
-	constructor(private rootHandle: FileSystemDirectoryHandle) { }
+	constructor(private rootHandle: FileSystemDirectoryHandle) {}
 
 	async writeFile(
 		path: string,
@@ -38,7 +40,7 @@ export class DirectoryTarget implements WriteTarget {
 				await writable.write(data);
 				await writable.close();
 			} catch (error) {
-				await writable.abort().catch(() => { });
+				await writable.abort().catch(() => {});
 				throw error;
 			}
 		};
@@ -165,87 +167,41 @@ export class DirectoryTarget implements WriteTarget {
 }
 
 export class ZipTarget implements WriteTarget {
-	private zip = new JSZip();
+	private archive = new ArchiveStore();
 
-	async writeFile(
+	writeFile(
 		path: string,
 		content: string | ArrayBuffer | Uint8Array,
 	): Promise<void> {
-		this.zip.file(this.normalizePath(path), content);
+		return this.archive.writeFile(path, content);
 	}
 
-	async readFile(path: string): Promise<string | ArrayBuffer> {
-		const normalizedPath = this.normalizePath(path);
-		const file = this.zip.file(normalizedPath);
-
-		if (!file) {
-			throw new Error(`File not found: ${normalizedPath}`);
-		}
-
-		return !isBinaryFile(normalizedPath)
-			? file.async('string')
-			: file.async('arraybuffer');
+	readFile(path: string): Promise<string | ArrayBuffer> {
+		return this.archive.readFile(path);
 	}
 
-	async createDirectory(path: string): Promise<void> {
-		const normalizedPath = this.normalizePath(path);
-		if (normalizedPath) this.zip.folder(normalizedPath);
+	createDirectory(path: string): Promise<void> {
+		return this.archive.createDirectory(path);
 	}
 
-	async exists(path: string): Promise<boolean> {
-		const normalizedPath = this.normalizePath(path);
-
-		if (this.zip.file(normalizedPath)) return true;
-
-		const folderPath = normalizedPath.endsWith('/')
-			? normalizedPath
-			: `${normalizedPath}/`;
-
-		let hasEntries = false;
-		this.zip.forEach((relativePath) => {
-			if (relativePath.startsWith(folderPath)) {
-				hasEntries = true;
-			}
-		});
-
-		return hasEntries;
+	exists(path: string): Promise<boolean> {
+		return this.archive.exists(path);
 	}
 
-	async listDirectory(path: string): Promise<string[]> {
-		const entries: string[] = [];
-		const normalizedPath = this.normalizePath(path);
-		const searchPath = normalizedPath
-			? normalizedPath.endsWith('/')
-				? normalizedPath
-				: `${normalizedPath}/`
-			: '';
-
-		this.zip.forEach((relativePath) => {
-			if (!relativePath.startsWith(searchPath)) return;
-
-			const remaining = relativePath.substring(searchPath.length);
-			const firstSlash = remaining.indexOf('/');
-			const name =
-				firstSlash === -1 ? remaining : remaining.substring(0, firstSlash);
-
-			if (name && !entries.includes(name)) {
-				entries.push(name);
-			}
-		});
-
-		return entries;
+	listDirectory(path: string): Promise<string[]> {
+		return this.archive.listDirectory(path);
 	}
 
-	async generateZip(): Promise<Blob> {
-		return this.zip.generateAsync({ type: 'blob' });
+	generateArchive(format: WritableArchiveFormat = 'zip'): Promise<Blob> {
+		return this.archive.generateArchive(format);
 	}
 
-	async loadFromBlob(blob: Blob): Promise<void> {
-		this.zip = await JSZip.loadAsync(blob);
+	generateZip(): Promise<Blob> {
+		return this.generateArchive('zip');
 	}
 
-	private normalizePath(path: string): string {
-		return path.replace(/^\/+/, '').replace(/\/+/g, '/');
+	loadFromBlob(blob: Blob): Promise<void> {
+		return this.archive.loadFromBlob(blob);
 	}
 }
 
@@ -518,7 +474,7 @@ export class WriteTargetService {
 				if (contents.some((name) => name.endsWith('.yjs'))) {
 					return path;
 				}
-			} catch { }
+			} catch {}
 		}
 
 		return null;

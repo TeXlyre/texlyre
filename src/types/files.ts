@@ -70,7 +70,7 @@ export interface FileTreeContextType {
 	updateFileContent: (fileId: string, content: string) => Promise<void>;
 	refreshFileTree: () => Promise<FileNode[]>;
 	moveFileOrDirectory: (sourceId: string, targetPath: string) => Promise<void>;
-	extractZipFile: (zipFile: File, targetPath: string) => Promise<void>;
+	extractArchiveFile: (zipFile: File, targetPath: string) => Promise<void>;
 	storeZipFile: (zipFile: File, targetPath: string) => Promise<void>;
 	enableFileSystemDragDrop: boolean;
 	enableInternalDragDrop: boolean;

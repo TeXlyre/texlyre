@@ -15,7 +15,7 @@ import {
 	type TypesetterFile,
 } from '../services/GenericTypesetterService';
 import type { FileNode } from '../types/files';
-import { type DownloadableFile, downloadFiles } from '../utils/zipUtils';
+import { type DownloadableFile, downloadFiles } from '../utils/archiveUtils';
 import { findCompileArtifact, outputExtension } from '../utils/compilerUtils';
 import { getProjectName } from '../utils/urlUtils';
 import { toBytes } from '../utils/fileUtils';
