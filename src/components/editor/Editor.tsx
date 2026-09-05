@@ -46,6 +46,7 @@ import {
 	arrayBufferToString,
 	detectFileType,
 	formatFileSize,
+	isBinaryFile as isBinaryFileByName,
 	isLatexFile,
 	isTypstFile,
 } from '../../utils/fileUtils';
@@ -210,448 +211,352 @@ const EditorContent: React.FC<{
 	toolbarVisible = true,
 	onToolbarToggle,
 }) => {
-	const [showUnlinkedNotice, setShowUnlinkedNotice] = useState(false);
-	const {
-		isAvailable: isSourceMapAvailable,
-		forwardSync,
-		forwardClickEnabled,
-		forwardClickMode,
-	} = useSourceMap();
-	const { parseComments, addComment, updateComments } = useComments();
-	const fileInfo = usePluginFileInfo(fileId, fileName);
-	const {
-		data: doc,
-		changeData: changeDoc,
-		getAwareness,
-	} = useCollab<DocumentList>();
-	const { viewRef, showSaveIndicator, toolbarController } = useEditorView(
-		editorRef,
-		docUrl,
-		documentId,
-		isDocumentSelected,
-		textContent,
-		onUpdateContent,
-		updateComments,
-		isEditingFile,
-		isViewOnly,
-		fileName,
-		fileId,
-		true,
-		toolbarVisible,
-		true,
-	);
-
-	const toolbarItems = useSyncExternalStore(
-		useCallback(
-			(cb) => toolbarController?.subscribe(cb) ?? (() => {}),
-			[toolbarController],
-		),
-		() => toolbarController?.getItems() ?? EMPTY_TOOLBAR_ITEMS,
-	);
-
-	const protectedTailGroups = useMemo(() => {
-		let count = 0;
-		if (
-			toolbarItems.some((i) => 'key' in i && i.key.endsWith('-row-add-before'))
-		)
-			count += 2;
-		if (toolbarItems.some((i) => 'key' in i && i.key.endsWith('-color-edit')))
-			count += 1;
-		return count;
-	}, [toolbarItems]);
-
-	const editorCollectionName = useMemo(() => `yjs_${documentId}`, [documentId]);
-	const [awareness, setAwareness] = useState<Awareness | null>(null);
-
-	useEffect(() => {
-		if (!isDocumentSelected || isEditingFile) {
-			setAwareness(null);
-			return;
-		}
-
-		let cancelled = false;
-		const tryResolve = () => {
-			if (cancelled) return;
-			const a = getAwareness(editorCollectionName);
-			if (a) {
-				setAwareness(a);
-			} else {
-				setTimeout(tryResolve, 100);
-			}
-		};
-		tryResolve();
-
-		return () => {
-			cancelled = true;
-		};
-	}, [isDocumentSelected, isEditingFile, editorCollectionName, getAwareness]);
-
-	const handleForwardSync = useCallback(() => {
-		if (!viewRef.current) return;
-		const targetPath = isEditingFile
-			? filePath || fileInfo.filePath
-			: linkedFileInfo?.filePath;
-		if (!targetPath) return;
-
-		const pos = viewRef.current.state.selection.main.head;
-		const line = viewRef.current.state.doc.lineAt(pos);
-		const column = pos - line.from;
-		forwardSync(targetPath, line.number, column);
-	}, [
-		viewRef,
-		isEditingFile,
-		filePath,
-		fileInfo.filePath,
-		linkedFileInfo?.filePath,
-		forwardSync,
-	]);
-
-	const handleForwardSyncRef = useRef(handleForwardSync);
-	useEffect(() => {
-		handleForwardSyncRef.current = handleForwardSync;
-	}, [handleForwardSync]);
-
-	useEffect(() => {
-		if (!forwardClickEnabled || !isSourceMapAvailable) return;
-		const el = editorRef.current;
-		if (!el) return;
-
-		let clickCount = 0;
-		let clickTimer: ReturnType<typeof setTimeout> | null = null;
-
-		const handleClick = () => {
-			clickCount++;
-			if (clickTimer) clearTimeout(clickTimer);
-			clickTimer = setTimeout(() => {
-				const required =
-					forwardClickMode === 'single'
-						? 1
-						: forwardClickMode === 'double'
-							? 2
-							: 3;
-				if (clickCount >= required) handleForwardSyncRef.current();
-				clickCount = 0;
-			}, 300);
-		};
-
-		el.addEventListener('click', handleClick);
-		return () => {
-			el.removeEventListener('click', handleClick);
-			if (clickTimer) clearTimeout(clickTimer);
-		};
-	}, [forwardClickEnabled, forwardClickMode, isSourceMapAvailable, editorRef]);
-
-	useEffect(() => {
-		if (!isSourceMapAvailable) return;
-		const handler = () => handleForwardSyncRef.current();
-		document.addEventListener('trigger-sourcemap-forward', handler);
-		return () =>
-			document.removeEventListener('trigger-sourcemap-forward', handler);
-	}, [isSourceMapAvailable]);
-
-	useEffect(() => {
-		if (!isDocumentSelected || !textContent) return;
-
-		updateComments(textContent);
-	}, [textContent, isDocumentSelected, updateComments]);
-
-	useEffect(() => {
-		let timeoutId: NodeJS.Timeout;
-		if (
-			!isEditingFile &&
-			documentId &&
-			!linkedFileInfo?.fileName &&
-			documents
-		) {
-			timeoutId = setTimeout(() => setShowUnlinkedNotice(true), 750);
-		} else {
-			setShowUnlinkedNotice(false);
-		}
-		return () => {
-			if (timeoutId) clearTimeout(timeoutId);
-		};
-	}, [isEditingFile, documentId, linkedFileInfo?.fileName, documents]);
-
-	useEffect(() => {
-		const handleAddCommentToEditor = (event: Event) => {
-			const customEvent = event as CustomEvent;
-			if (!viewRef.current || isViewOnly) return;
-
-			const { content, selection } = customEvent.detail;
-			if (!content || !selection || selection.from === selection.to) return;
-
-			try {
-				const rawComment = addComment(content) as any;
-				if (!rawComment?.openTag || !rawComment.closeTag) return;
-
-				const view = viewRef.current;
-				const cursorPos =
-					selection.to + rawComment.openTag.length + rawComment.closeTag.length;
-				view.dispatch({
-					changes: [
-						{ from: selection.to, insert: rawComment.closeTag },
-						{ from: selection.from, insert: rawComment.openTag },
-					],
-					selection: { anchor: cursorPos, head: cursorPos },
-				});
-			} catch (error) {
-				moduleLog.error('Error adding comment:', error);
-			}
-		};
-
-		document.addEventListener(
-			'add-comment-to-editor',
-			handleAddCommentToEditor,
+		const [showUnlinkedNotice, setShowUnlinkedNotice] = useState(false);
+		const {
+			isAvailable: isSourceMapAvailable,
+			forwardSync,
+			forwardClickEnabled,
+			forwardClickMode,
+		} = useSourceMap();
+		const { parseComments, addComment, updateComments } = useComments();
+		const fileInfo = usePluginFileInfo(fileId, fileName);
+		const {
+			data: doc,
+			changeData: changeDoc,
+			getAwareness,
+		} = useCollab<DocumentList>();
+		const { viewRef, showSaveIndicator, toolbarController } = useEditorView(
+			editorRef,
+			docUrl,
+			documentId,
+			isDocumentSelected,
+			textContent,
+			onUpdateContent,
+			updateComments,
+			isEditingFile,
+			isViewOnly,
+			fileName,
+			fileId,
+			true,
+			toolbarVisible,
+			true,
 		);
-		return () =>
-			document.removeEventListener(
+
+		const toolbarItems = useSyncExternalStore(
+			useCallback(
+				(cb) => toolbarController?.subscribe(cb) ?? (() => { }),
+				[toolbarController],
+			),
+			() => toolbarController?.getItems() ?? EMPTY_TOOLBAR_ITEMS,
+		);
+
+		const protectedTailGroups = useMemo(() => {
+			let count = 0;
+			if (
+				toolbarItems.some((i) => 'key' in i && i.key.endsWith('-row-add-before'))
+			)
+				count += 2;
+			if (toolbarItems.some((i) => 'key' in i && i.key.endsWith('-color-edit')))
+				count += 1;
+			return count;
+		}, [toolbarItems]);
+
+		const editorCollectionName = useMemo(() => `yjs_${documentId}`, [documentId]);
+		const [awareness, setAwareness] = useState<Awareness | null>(null);
+
+		useEffect(() => {
+			if (!isDocumentSelected || isEditingFile) {
+				setAwareness(null);
+				return;
+			}
+
+			let cancelled = false;
+			const tryResolve = () => {
+				if (cancelled) return;
+				const a = getAwareness(editorCollectionName);
+				if (a) {
+					setAwareness(a);
+				} else {
+					setTimeout(tryResolve, 100);
+				}
+			};
+			tryResolve();
+
+			return () => {
+				cancelled = true;
+			};
+		}, [isDocumentSelected, isEditingFile, editorCollectionName, getAwareness]);
+
+		const handleForwardSync = useCallback(() => {
+			if (!viewRef.current) return;
+			const targetPath = isEditingFile
+				? filePath || fileInfo.filePath
+				: linkedFileInfo?.filePath;
+			if (!targetPath) return;
+
+			const pos = viewRef.current.state.selection.main.head;
+			const line = viewRef.current.state.doc.lineAt(pos);
+			const column = pos - line.from;
+			forwardSync(targetPath, line.number, column);
+		}, [
+			viewRef,
+			isEditingFile,
+			filePath,
+			fileInfo.filePath,
+			linkedFileInfo?.filePath,
+			forwardSync,
+		]);
+
+		const handleForwardSyncRef = useRef(handleForwardSync);
+		useEffect(() => {
+			handleForwardSyncRef.current = handleForwardSync;
+		}, [handleForwardSync]);
+
+		useEffect(() => {
+			if (!forwardClickEnabled || !isSourceMapAvailable) return;
+			const el = editorRef.current;
+			if (!el) return;
+
+			let clickCount = 0;
+			let clickTimer: ReturnType<typeof setTimeout> | null = null;
+
+			const handleClick = () => {
+				clickCount++;
+				if (clickTimer) clearTimeout(clickTimer);
+				clickTimer = setTimeout(() => {
+					const required =
+						forwardClickMode === 'single'
+							? 1
+							: forwardClickMode === 'double'
+								? 2
+								: 3;
+					if (clickCount >= required) handleForwardSyncRef.current();
+					clickCount = 0;
+				}, 300);
+			};
+
+			el.addEventListener('click', handleClick);
+			return () => {
+				el.removeEventListener('click', handleClick);
+				if (clickTimer) clearTimeout(clickTimer);
+			};
+		}, [forwardClickEnabled, forwardClickMode, isSourceMapAvailable, editorRef]);
+
+		useEffect(() => {
+			if (!isSourceMapAvailable) return;
+			const handler = () => handleForwardSyncRef.current();
+			document.addEventListener('trigger-sourcemap-forward', handler);
+			return () =>
+				document.removeEventListener('trigger-sourcemap-forward', handler);
+		}, [isSourceMapAvailable]);
+
+		useEffect(() => {
+			if (!isDocumentSelected || !textContent) return;
+
+			updateComments(textContent);
+		}, [textContent, isDocumentSelected, updateComments]);
+
+		useEffect(() => {
+			let timeoutId: NodeJS.Timeout;
+			if (
+				!isEditingFile &&
+				documentId &&
+				!linkedFileInfo?.fileName &&
+				documents
+			) {
+				timeoutId = setTimeout(() => setShowUnlinkedNotice(true), 750);
+			} else {
+				setShowUnlinkedNotice(false);
+			}
+			return () => {
+				if (timeoutId) clearTimeout(timeoutId);
+			};
+		}, [isEditingFile, documentId, linkedFileInfo?.fileName, documents]);
+
+		useEffect(() => {
+			const handleAddCommentToEditor = (event: Event) => {
+				const customEvent = event as CustomEvent;
+				if (!viewRef.current || isViewOnly) return;
+
+				const { content, selection } = customEvent.detail;
+				if (!content || !selection || selection.from === selection.to) return;
+
+				try {
+					const rawComment = addComment(content) as any;
+					if (!rawComment?.openTag || !rawComment.closeTag) return;
+
+					const view = viewRef.current;
+					const cursorPos =
+						selection.to + rawComment.openTag.length + rawComment.closeTag.length;
+					view.dispatch({
+						changes: [
+							{ from: selection.to, insert: rawComment.closeTag },
+							{ from: selection.from, insert: rawComment.openTag },
+						],
+						selection: { anchor: cursorPos, head: cursorPos },
+					});
+				} catch (error) {
+					moduleLog.error('Error adding comment:', error);
+				}
+			};
+
+			document.addEventListener(
 				'add-comment-to-editor',
 				handleAddCommentToEditor,
 			);
-	}, [viewRef, isViewOnly, addComment]);
-
-	useEffect(() => {
-		const handleTriggerFormat = async (event: Event) => {
-			const customEvent = event as CustomEvent;
-			const {
-				contentType,
-				fileId: eventFileId,
-				documentId: eventDocId,
-			} = customEvent.detail;
-
-			const isTarget =
-				(isEditingFile && eventFileId === fileId) ||
-				(!isEditingFile && eventDocId === documentId);
-
-			if (isTarget && viewRef.current) {
-				document.dispatchEvent(
-					new CustomEvent('request-format', {
-						detail: {
-							content: viewRef.current.state.doc.toString(),
-							contentType,
-						},
-					}),
+			return () =>
+				document.removeEventListener(
+					'add-comment-to-editor',
+					handleAddCommentToEditor,
 				);
+		}, [viewRef, isViewOnly, addComment]);
+
+		useEffect(() => {
+			const handleTriggerFormat = async (event: Event) => {
+				const customEvent = event as CustomEvent;
+				const {
+					contentType,
+					fileId: eventFileId,
+					documentId: eventDocId,
+				} = customEvent.detail;
+
+				const isTarget =
+					(isEditingFile && eventFileId === fileId) ||
+					(!isEditingFile && eventDocId === documentId);
+
+				if (isTarget && viewRef.current) {
+					document.dispatchEvent(
+						new CustomEvent('request-format', {
+							detail: {
+								content: viewRef.current.state.doc.toString(),
+								contentType,
+							},
+						}),
+					);
+				}
+			};
+
+			document.addEventListener('trigger-format', handleTriggerFormat);
+			return () =>
+				document.removeEventListener('trigger-format', handleTriggerFormat);
+		}, [isEditingFile, fileId, documentId, viewRef]);
+
+		const handleFormattedContent = useCallback(
+			(formatted: string) => {
+				if (!viewRef.current) return;
+				const currentContent = viewRef.current.state.doc.toString();
+				if (currentContent === formatted) return;
+
+				const changes = computeReplacementChange(currentContent, formatted);
+				if (changes.length > 0) {
+					viewRef.current.dispatch({ changes });
+				}
+			},
+			[viewRef],
+		);
+
+		const handleCopyLinkedFile = useCallback(async () => {
+			if (!linkedFileInfo?.fileId) return;
+			try {
+				const file = await fileStoreService.getFile(linkedFileInfo.fileId);
+				if (file?.content) {
+					const content =
+						typeof file.content === 'string'
+							? file.content
+							: new TextDecoder().decode(file.content);
+					await copyCleanTextToClipboard(content);
+				}
+			} catch (error) {
+				moduleLog.error('Error copying linked file:', error);
 			}
-		};
+		}, [linkedFileInfo?.fileId]);
 
-		document.addEventListener('trigger-format', handleTriggerFormat);
-		return () =>
-			document.removeEventListener('trigger-format', handleTriggerFormat);
-	}, [isEditingFile, fileId, documentId, viewRef]);
-
-	const handleFormattedContent = useCallback(
-		(formatted: string) => {
-			if (!viewRef.current) return;
-			const currentContent = viewRef.current.state.doc.toString();
-			if (currentContent === formatted) return;
-
-			const changes = computeReplacementChange(currentContent, formatted);
-			if (changes.length > 0) {
-				viewRef.current.dispatch({ changes });
+		const handleDownloadLinkedFile = useCallback(async () => {
+			if (!linkedFileInfo?.fileId || !linkedFileInfo.fileName) return;
+			try {
+				const file = await fileStoreService.getFile(linkedFileInfo.fileId);
+				if (file?.content) {
+					const content =
+						typeof file.content === 'string'
+							? file.content
+							: new TextDecoder().decode(file.content);
+					const blob = new Blob([processTextSelection(content)], {
+						type: 'text/plain;charset=utf-8',
+					});
+					const url = URL.createObjectURL(blob);
+					const a = document.createElement('a');
+					a.href = url;
+					a.download = linkedFileInfo.fileName;
+					document.body.appendChild(a);
+					a.click();
+					document.body.removeChild(a);
+					URL.revokeObjectURL(url);
+				}
+			} catch (error) {
+				moduleLog.error('Error downloading linked file:', error);
 			}
-		},
-		[viewRef],
-	);
+		}, [linkedFileInfo?.fileId, linkedFileInfo?.fileName]);
 
-	const handleCopyLinkedFile = useCallback(async () => {
-		if (!linkedFileInfo?.fileId) return;
-		try {
-			const file = await fileStoreService.getFile(linkedFileInfo.fileId);
-			if (file?.content) {
-				const content =
-					typeof file.content === 'string'
-						? file.content
-						: new TextDecoder().decode(file.content);
-				await copyCleanTextToClipboard(content);
-			}
-		} catch (error) {
-			moduleLog.error('Error copying linked file:', error);
-		}
-	}, [linkedFileInfo?.fileId]);
-
-	const handleDownloadLinkedFile = useCallback(async () => {
-		if (!linkedFileInfo?.fileId || !linkedFileInfo.fileName) return;
-		try {
-			const file = await fileStoreService.getFile(linkedFileInfo.fileId);
-			if (file?.content) {
-				const content =
-					typeof file.content === 'string'
-						? file.content
-						: new TextDecoder().decode(file.content);
-				const blob = new Blob([processTextSelection(content)], {
-					type: 'text/plain;charset=utf-8',
-				});
-				const url = URL.createObjectURL(blob);
-				const a = document.createElement('a');
-				a.href = url;
-				a.download = linkedFileInfo.fileName;
-				document.body.appendChild(a);
-				a.click();
-				document.body.removeChild(a);
-				URL.revokeObjectURL(url);
-			}
-		} catch (error) {
-			moduleLog.error('Error downloading linked file:', error);
-		}
-	}, [linkedFileInfo?.fileId, linkedFileInfo?.fileName]);
-
-	const tooltipInfo = useMemo(() => {
-		if (isEditingFile && fileName) {
-			return [
-				t('File: {fileName}', { fileName }),
-				t('Path: {path}', { path: filePath || fileInfo.filePath }),
-				t('Mode: {mode}', { mode: isViewOnly ? t('Read-only') : t('Editing') }),
-				linkedDocumentId
-					? t('Linked to document: {documentId}', {
+		const tooltipInfo = useMemo(() => {
+			if (isEditingFile && fileName) {
+				return [
+					t('File: {fileName}', { fileName }),
+					t('Path: {path}', { path: filePath || fileInfo.filePath }),
+					t('Mode: {mode}', { mode: isViewOnly ? t('Read-only') : t('Editing') }),
+					linkedDocumentId
+						? t('Linked to document: {documentId}', {
 							documentId: linkedDocumentId,
 						})
-					: '',
-				t('MIME Type: {mimeType}', {
-					mimeType: fileInfo.mimeType || 'text/plain',
-				}),
-				t('Size: {size}', { size: formatFileSize(fileInfo.fileSize) }),
-				t('Last Modified: {lastModified}', {
-					lastModified: fileInfo.lastModified
-						? formatDate(fileInfo.lastModified)
-						: t('Unknown'),
-				}),
-			];
-		}
-		if (!isEditingFile && documentId && documents) {
-			return [
-				t('Document: {documentName}', {
-					documentName:
-						documents.find((d) => d.id === documentId)?.name || t('Untitled'),
-				}),
-				linkedFileInfo
-					? t('Linked File: {fileName}', { fileName: linkedFileInfo.fileName })
-					: '',
-				linkedFileInfo
-					? t('Path: {path}', { path: linkedFileInfo.filePath })
-					: t('No linked file'),
-				t('Mode: Collaborative editing'),
-				t('Type: Text document'),
-			];
-		}
-		return '';
-	}, [
-		isEditingFile,
-		fileName,
-		filePath,
-		fileInfo,
-		isViewOnly,
-		linkedDocumentId,
-		documentId,
-		documents,
-		linkedFileInfo,
-	]);
+						: '',
+					t('MIME Type: {mimeType}', {
+						mimeType: fileInfo.mimeType || 'text/plain',
+					}),
+					t('Size: {size}', { size: formatFileSize(fileInfo.fileSize) }),
+					t('Last Modified: {lastModified}', {
+						lastModified: fileInfo.lastModified
+							? formatDate(fileInfo.lastModified)
+							: t('Unknown'),
+					}),
+				];
+			}
+			if (!isEditingFile && documentId && documents) {
+				return [
+					t('Document: {documentName}', {
+						documentName:
+							documents.find((d) => d.id === documentId)?.name || t('Untitled'),
+					}),
+					linkedFileInfo
+						? t('Linked File: {fileName}', { fileName: linkedFileInfo.fileName })
+						: '',
+					linkedFileInfo
+						? t('Path: {path}', { path: linkedFileInfo.filePath })
+						: t('No linked file'),
+					t('Mode: Collaborative editing'),
+					t('Type: Text document'),
+				];
+			}
+			return '';
+		}, [
+			isEditingFile,
+			fileName,
+			filePath,
+			fileInfo,
+			isViewOnly,
+			linkedDocumentId,
+			documentId,
+			documents,
+			linkedFileInfo,
+		]);
 
-	const fileType = detectFileType(filePath || '');
-	const { lsp: availableLSPPlugins, bib: availableBibPlugins } =
-		getPluginToggleButtons([fileType]);
-	const hasPluginToggles =
-		availableLSPPlugins.length > 0 || availableBibPlugins.length > 0;
-	const headerControls =
-		isEditingFile && fileName ? (
-			<>
-				{hasToolbarSupport(fileType) && !isViewOnly && (
-					<PluginControlGroup>
-						<button
-							onClick={() => onToolbarToggle?.(!toolbarVisible)}
-							title={toolbarVisible ? t('Hide Toolbar') : t('Show Toolbar')}
-							className={`control-button ${toolbarVisible ? 'active' : ''}`}
-						>
-							<ToolbarShowIcon />
-						</button>
-
-						{(isLatexFile(filePath) || isTypstFile(filePath)) && (
-							<>
-								{isSourceMapAvailable && (
-									<SourceMapButton onForwardSync={handleForwardSync} />
-								)}
-
-								<ContentFormatterButton
-									getCurrentContent={() =>
-										viewRef.current?.state.doc.toString() || ''
-									}
-									contentType={fileType}
-									onFormat={handleFormattedContent}
-								/>
-							</>
-						)}
-					</PluginControlGroup>
-				)}
-
-				<LSPNavigationButton fileName={fileName} />
-
-				<PluginControlGroup>
-					{!isViewOnly && onSave && (
-						<button
-							onClick={onSave}
-							title={t('Save File (Ctrl+S)')}
-							className='control-button'
-						>
-							<SaveIcon />
-						</button>
-					)}
-					<button
-						onClick={() => {
-							const content =
-								viewRef.current?.state.doc.toString() || textContent;
-							copyCleanTextToClipboard(content);
-						}}
-						title={t('Copy Text')}
-						className='control-button'
-					>
-						<CopyIcon />
-					</button>
-					{onExport && (
-						<button
-							onClick={() =>
-								onExport?.(() => viewRef.current?.state.doc.toString() || '')
-							}
-							title={t('Download File')}
-							className='control-button'
-						>
-							<DownloadIcon />
-						</button>
-					)}
-				</PluginControlGroup>
-
-				<PluginControlGroup>
-					{!isViewOnly && (
-						<>
-							<TrackChangesButton className='header-review-button' />
-							<ReviewToggleButton className='header-review-button' />
-							<CommentToggleButton className='header-comment-button' />
-						</>
-					)}
-				</PluginControlGroup>
-
-				{hasPluginToggles && (
-					<PluginControlGroup>
-						{availableLSPPlugins.map((plugin) => (
-							<LSPToggleButton
-								key={plugin.id}
-								pluginId={plugin.id}
-								className='header-lsp-button'
-							/>
-						))}
-						{availableBibPlugins.map((plugin) => (
-							<LSPToggleButton
-								key={plugin.id}
-								pluginId={plugin.id}
-								className='header-lsp-button'
-							/>
-						))}
-					</PluginControlGroup>
-				)}
-			</>
-		) : !isEditingFile && linkedFileInfo && !showUnlinkedNotice ? (
-			<>
-				{hasToolbarSupport(detectFileType(linkedFileInfo.filePath)) &&
-					!isViewOnly && (
+		const fileType = detectFileType(filePath || '');
+		const { lsp: availableLSPPlugins, bib: availableBibPlugins } =
+			getPluginToggleButtons([fileType]);
+		const hasPluginToggles =
+			availableLSPPlugins.length > 0 || availableBibPlugins.length > 0;
+		const headerControls =
+			isEditingFile && fileName ? (
+				<>
+					{hasToolbarSupport(fileType) && !isViewOnly && (
 						<PluginControlGroup>
 							<button
 								onClick={() => onToolbarToggle?.(!toolbarVisible)}
@@ -661,8 +566,7 @@ const EditorContent: React.FC<{
 								<ToolbarShowIcon />
 							</button>
 
-							{(isLatexFile(linkedFileInfo.filePath) ||
-								isTypstFile(linkedFileInfo.filePath)) && (
+							{(isLatexFile(filePath) || isTypstFile(filePath)) && (
 								<>
 									{isSourceMapAvailable && (
 										<SourceMapButton onForwardSync={handleForwardSync} />
@@ -672,7 +576,7 @@ const EditorContent: React.FC<{
 										getCurrentContent={() =>
 											viewRef.current?.state.doc.toString() || ''
 										}
-										contentType={detectFileType(linkedFileInfo.filePath)}
+										contentType={fileType}
 										onFormat={handleFormattedContent}
 									/>
 								</>
@@ -680,286 +584,383 @@ const EditorContent: React.FC<{
 						</PluginControlGroup>
 					)}
 
-				{linkedFileInfo.fileName && (
-					<LSPNavigationButton fileName={linkedFileInfo.fileName} />
-				)}
+					<LSPNavigationButton fileName={fileName} />
 
-				<PluginControlGroup>
-					{onSaveDocument && (
+					<PluginControlGroup>
+						{!isViewOnly && onSave && (
+							<button
+								onClick={onSave}
+								title={t('Save File (Ctrl+S)')}
+								className='control-button'
+							>
+								<SaveIcon />
+							</button>
+						)}
 						<button
-							onClick={onSaveDocument}
-							title={t('Save document to linked file (Ctrl+S)')}
+							onClick={() => {
+								const content =
+									viewRef.current?.state.doc.toString() || textContent;
+								copyCleanTextToClipboard(content);
+							}}
+							title={t('Copy Text')}
 							className='control-button'
 						>
-							<SaveIcon />
+							<CopyIcon />
 						</button>
-					)}
-					<button
-						onClick={handleCopyLinkedFile}
-						title={t('Copy text from linked file: {fileName}', {
-							fileName: linkedFileInfo.fileName,
-						})}
-						className='control-button'
-					>
-						<CopyIcon />
-					</button>
-					<button
-						onClick={handleDownloadLinkedFile}
-						title={t('Download linked file: {fileName}', {
-							fileName: linkedFileInfo.fileName,
-						})}
-						className='control-button'
-					>
-						<DownloadIcon />
-					</button>
-				</PluginControlGroup>
-
-				<PluginControlGroup>
-					{!isViewOnly && (
-						<>
-							<TrackChangesButton className='header-review-button' />
-							<ReviewToggleButton className='header-review-button' />
-							<CommentToggleButton className='header-comment-button' />
-						</>
-					)}
-				</PluginControlGroup>
-				{linkedFileInfo?.fileName &&
-					(() => {
-						const linkedFileExtension = linkedFileInfo.fileName
-							.split('.')
-							.pop()
-							?.toLowerCase();
-						const { lsp: linkedLSPPlugins, bib: linkedBibPlugins } =
-							getPluginToggleButtons([linkedFileExtension]);
-						const hasLinkedPlugins =
-							linkedLSPPlugins.length > 0 || linkedBibPlugins.length > 0;
-
-						return (
-							hasLinkedPlugins && (
-								<PluginControlGroup>
-									{linkedLSPPlugins.map((plugin) => (
-										<LSPToggleButton
-											key={plugin.id}
-											pluginId={plugin.id}
-											className='header-lsp-button'
-										/>
-									))}
-									{linkedBibPlugins.map((plugin) => (
-										<LSPToggleButton
-											key={plugin.id}
-											pluginId={plugin.id}
-											className='header-lsp-button'
-										/>
-									))}
-								</PluginControlGroup>
-							)
-						);
-					})()}
-			</>
-		) : !isEditingFile && documentId && documents ? (
-			<>
-				<PluginControlGroup>
-					<button
-						onClick={() => {
-							const content =
-								viewRef.current?.state.doc.toString() || textContent;
-							copyCleanTextToClipboard(content);
-						}}
-						title={t('Copy Text')}
-						className='control-button'
-					>
-						<CopyIcon />
-					</button>
-				</PluginControlGroup>
-
-				<PluginControlGroup>
-					{!isViewOnly && (
-						<>
-							<TrackChangesButton className='header-review-button' />
-							<ReviewToggleButton className='header-review-button' />
-							<CommentToggleButton className='header-comment-button' />
-						</>
-					)}
-				</PluginControlGroup>
-
-				{textContent?.includes('\\') &&
-					(() => {
-						const { lsp: supportedLSPPlugins, bib: supportedBibPlugins } =
-							getPluginToggleButtons([
-								'tex',
-								'latex',
-								'typ',
-								'typst',
-								'bib',
-								'bibtex',
-							]);
-						const hasSupportedPlugins =
-							supportedLSPPlugins.length > 0 || supportedBibPlugins.length > 0;
-
-						return (
-							hasSupportedPlugins && (
-								<PluginControlGroup>
-									{supportedLSPPlugins.map((plugin) => (
-										<LSPToggleButton
-											key={plugin.id}
-											pluginId={plugin.id}
-											className='header-lsp-button'
-										/>
-									))}
-									{supportedBibPlugins.map((plugin) => (
-										<LSPToggleButton
-											key={plugin.id}
-											pluginId={plugin.id}
-											className='header-lsp-button'
-										/>
-									))}
-								</PluginControlGroup>
-							)
-						);
-					})()}
-			</>
-		) : null;
-
-	return (
-		<>
-			{((isEditingFile && fileName) ||
-				(!isEditingFile && documentId && documents)) && (
-				<PluginHeader
-					fileName={
-						isEditingFile
-							? fileInfo.fileName
-							: documents?.find((d) => d.id === documentId)?.name || 'Document'
-					}
-					filePath={
-						isEditingFile
-							? filePath || fileInfo.filePath
-							: linkedFileInfo?.filePath
-					}
-					pluginName={isEditingFile ? 'Text Editor' : 'Document Editor'}
-					pluginVersion='1.0.0'
-					tooltipInfo={tooltipInfo}
-					controls={headerControls}
-					onNavigateToLinkedFile={
-						!isEditingFile && linkedFileInfo
-							? onNavigateToLinkedFile
-							: undefined
-					}
-					linkedFileInfo={!isEditingFile ? linkedFileInfo : null}
-					awareness={awareness}
-				/>
-			)}
-
-			<div className='editor-toolbar'>
-				{isViewOnly && linkedDocumentId && (
-					<div className='linked-file-notice'>
-						<span>
-							{t(
-								'Read-only: This file is linked to a collaborative document',
-							)}{' '}
-						</span>
-						<div className='linked-file-actions'>
+						{onExport && (
 							<button
-								className='link-button'
-								onClick={onDocumentNavigation}
-								title={t('Navigate to linked document')}
+								onClick={() =>
+									onExport?.(() => viewRef.current?.state.doc.toString() || '')
+								}
+								title={t('Download File')}
+								className='control-button'
 							>
-								<FileTextIcon />
-								{t('View linked doc')}
+								<DownloadIcon />
 							</button>
-						</div>
-					</div>
-				)}
+						)}
+					</PluginControlGroup>
 
-				{showUnlinkedNotice && (
-					<UnlinkedDocumentNotice
-						documentId={documentId}
-						documentName={
-							documents.find((d) => d.id === documentId)?.name || 'Untitled'
-						}
-						projectType={doc?.projectMetadata?.type || 'latex'}
-						onDeleteDocument={(docId) => {
-							if (!changeDoc) {
-								moduleLog.error(
-									'Cannot delete document: changeData not available',
-								);
-								return;
+					<PluginControlGroup>
+						{!isViewOnly && (
+							<>
+								<TrackChangesButton className='header-review-button' />
+								<ReviewToggleButton className='header-review-button' />
+								<CommentToggleButton className='header-comment-button' />
+							</>
+						)}
+					</PluginControlGroup>
+
+					{hasPluginToggles && (
+						<PluginControlGroup>
+							{availableLSPPlugins.map((plugin) => (
+								<LSPToggleButton
+									key={plugin.id}
+									pluginId={plugin.id}
+									className='header-lsp-button'
+								/>
+							))}
+							{availableBibPlugins.map((plugin) => (
+								<LSPToggleButton
+									key={plugin.id}
+									pluginId={plugin.id}
+									className='header-lsp-button'
+								/>
+							))}
+						</PluginControlGroup>
+					)}
+				</>
+			) : !isEditingFile && linkedFileInfo && !showUnlinkedNotice ? (
+				<>
+					{hasToolbarSupport(detectFileType(linkedFileInfo.filePath)) &&
+						!isViewOnly && (
+							<PluginControlGroup>
+								<button
+									onClick={() => onToolbarToggle?.(!toolbarVisible)}
+									title={toolbarVisible ? t('Hide Toolbar') : t('Show Toolbar')}
+									className={`control-button ${toolbarVisible ? 'active' : ''}`}
+								>
+									<ToolbarShowIcon />
+								</button>
+
+								{(isLatexFile(linkedFileInfo.filePath) ||
+									isTypstFile(linkedFileInfo.filePath)) && (
+										<>
+											{isSourceMapAvailable && (
+												<SourceMapButton onForwardSync={handleForwardSync} />
+											)}
+
+											<ContentFormatterButton
+												getCurrentContent={() =>
+													viewRef.current?.state.doc.toString() || ''
+												}
+												contentType={detectFileType(linkedFileInfo.filePath)}
+												onFormat={handleFormattedContent}
+											/>
+										</>
+									)}
+							</PluginControlGroup>
+						)}
+
+					{linkedFileInfo.fileName && (
+						<LSPNavigationButton fileName={linkedFileInfo.fileName} />
+					)}
+
+					<PluginControlGroup>
+						{onSaveDocument && (
+							<button
+								onClick={onSaveDocument}
+								title={t('Save document to linked file (Ctrl+S)')}
+								className='control-button'
+							>
+								<SaveIcon />
+							</button>
+						)}
+						<button
+							onClick={handleCopyLinkedFile}
+							title={t('Copy text from linked file: {fileName}', {
+								fileName: linkedFileInfo.fileName,
+							})}
+							className='control-button'
+						>
+							<CopyIcon />
+						</button>
+						<button
+							onClick={handleDownloadLinkedFile}
+							title={t('Download linked file: {fileName}', {
+								fileName: linkedFileInfo.fileName,
+							})}
+							className='control-button'
+						>
+							<DownloadIcon />
+						</button>
+					</PluginControlGroup>
+
+					<PluginControlGroup>
+						{!isViewOnly && (
+							<>
+								<TrackChangesButton className='header-review-button' />
+								<ReviewToggleButton className='header-review-button' />
+								<CommentToggleButton className='header-comment-button' />
+							</>
+						)}
+					</PluginControlGroup>
+					{linkedFileInfo?.fileName &&
+						(() => {
+							const linkedFileExtension = linkedFileInfo.fileName
+								.split('.')
+								.pop()
+								?.toLowerCase();
+							const { lsp: linkedLSPPlugins, bib: linkedBibPlugins } =
+								getPluginToggleButtons([linkedFileExtension]);
+							const hasLinkedPlugins =
+								linkedLSPPlugins.length > 0 || linkedBibPlugins.length > 0;
+
+							return (
+								hasLinkedPlugins && (
+									<PluginControlGroup>
+										{linkedLSPPlugins.map((plugin) => (
+											<LSPToggleButton
+												key={plugin.id}
+												pluginId={plugin.id}
+												className='header-lsp-button'
+											/>
+										))}
+										{linkedBibPlugins.map((plugin) => (
+											<LSPToggleButton
+												key={plugin.id}
+												pluginId={plugin.id}
+												className='header-lsp-button'
+											/>
+										))}
+									</PluginControlGroup>
+								)
+							);
+						})()}
+				</>
+			) : !isEditingFile && documentId && documents ? (
+				<>
+					<PluginControlGroup>
+						<button
+							onClick={() => {
+								const content =
+									viewRef.current?.state.doc.toString() || textContent;
+								copyCleanTextToClipboard(content);
+							}}
+							title={t('Copy Text')}
+							className='control-button'
+						>
+							<CopyIcon />
+						</button>
+					</PluginControlGroup>
+
+					<PluginControlGroup>
+						{!isViewOnly && (
+							<>
+								<TrackChangesButton className='header-review-button' />
+								<ReviewToggleButton className='header-review-button' />
+								<CommentToggleButton className='header-comment-button' />
+							</>
+						)}
+					</PluginControlGroup>
+
+					{textContent?.includes('\\') &&
+						(() => {
+							const { lsp: supportedLSPPlugins, bib: supportedBibPlugins } =
+								getPluginToggleButtons([
+									'tex',
+									'latex',
+									'typ',
+									'typst',
+									'bib',
+									'bibtex',
+								]);
+							const hasSupportedPlugins =
+								supportedLSPPlugins.length > 0 || supportedBibPlugins.length > 0;
+
+							return (
+								hasSupportedPlugins && (
+									<PluginControlGroup>
+										{supportedLSPPlugins.map((plugin) => (
+											<LSPToggleButton
+												key={plugin.id}
+												pluginId={plugin.id}
+												className='header-lsp-button'
+											/>
+										))}
+										{supportedBibPlugins.map((plugin) => (
+											<LSPToggleButton
+												key={plugin.id}
+												pluginId={plugin.id}
+												className='header-lsp-button'
+											/>
+										))}
+									</PluginControlGroup>
+								)
+							);
+						})()}
+				</>
+			) : null;
+
+		return (
+			<>
+				{((isEditingFile && fileName) ||
+					(!isEditingFile && documentId && documents)) && (
+						<PluginHeader
+							fileName={
+								isEditingFile
+									? fileInfo.fileName
+									: documents?.find((d) => d.id === documentId)?.name || 'Document'
 							}
-
-							changeDoc((data) => {
-								if (!data.documents) return;
-
-								const docIndex = data.documents.findIndex(
-									(d) => d.id === docId,
-								);
-								if (docIndex >= 0) {
-									data.documents.splice(docIndex, 1);
-								}
-
-								if (data.currentDocId === docId) {
-									data.currentDocId =
-										data.documents.length > 0 ? data.documents[0].id : '';
-								}
-							});
-
-							const remainingDocs = documents.filter((d) => d.id !== docId);
-							if (remainingDocs.length > 0 && onSelectDocument) {
-								const newSelectedId = remainingDocs[0].id;
-								onSelectDocument(newSelectedId);
-								const currentFragment = parseUrlFragments(
-									window.location.hash.substring(1),
-								);
-								const newUrl = buildUrlWithFragments(
-									currentFragment.yjsUrl,
-									newSelectedId,
-								);
-								replaceHash(newUrl);
-							} else if (onSelectDocument) {
-								onSelectDocument('');
-								const currentFragment = parseUrlFragments(
-									window.location.hash.substring(1),
-								);
-								const newUrl = buildUrlWithFragments(currentFragment.yjsUrl);
-								replaceHash(newUrl);
+							filePath={
+								isEditingFile
+									? filePath || fileInfo.filePath
+									: linkedFileInfo?.filePath
 							}
-						}}
-						onDocumentLinked={() => {
-							window.location.reload();
-						}}
-					/>
-				)}
-			</div>
-
-			<div className='editor-main-container'>
-				<div
-					className='editor-wrapper'
-					style={{ flex: 1, position: 'relative' }}
-				>
-					{toolbarVisible && toolbarController && (
-						<PluginToolbar
-							items={toolbarItems}
-							onRun={(key) => toolbarController.run(key)}
-							protectedTailGroups={protectedTailGroups}
+							pluginName={isEditingFile ? 'Text Editor' : 'Document Editor'}
+							pluginVersion='1.0.0'
+							tooltipInfo={tooltipInfo}
+							controls={headerControls}
+							onNavigateToLinkedFile={
+								!isEditingFile && linkedFileInfo
+									? onNavigateToLinkedFile
+									: undefined
+							}
+							linkedFileInfo={!isEditingFile ? linkedFileInfo : null}
+							awareness={awareness}
 						/>
 					)}
 
-					<div ref={editorRef} className='codemirror-editor-container' />
-
-					{showSaveIndicator && (
-						<div className={`save-indicator ${isViewOnly ? 'read-only' : ''}`}>
+				<div className='editor-toolbar'>
+					{isViewOnly && linkedDocumentId && (
+						<div className='linked-file-notice'>
 							<span>
-								{isViewOnly ? t('Cannot Save Read-Only') : t('Saved')}
+								{t(
+									'Read-only: This file is linked to a collaborative document',
+								)}{' '}
 							</span>
+							<div className='linked-file-actions'>
+								<button
+									className='link-button'
+									onClick={onDocumentNavigation}
+									title={t('Navigate to linked document')}
+								>
+									<FileTextIcon />
+									{t('View linked doc')}
+								</button>
+							</div>
 						</div>
+					)}
+
+					{showUnlinkedNotice && (
+						<UnlinkedDocumentNotice
+							documentId={documentId}
+							documentName={
+								documents.find((d) => d.id === documentId)?.name || 'Untitled'
+							}
+							projectType={doc?.projectMetadata?.type || 'latex'}
+							onDeleteDocument={(docId) => {
+								if (!changeDoc) {
+									moduleLog.error(
+										'Cannot delete document: changeData not available',
+									);
+									return;
+								}
+
+								changeDoc((data) => {
+									if (!data.documents) return;
+
+									const docIndex = data.documents.findIndex(
+										(d) => d.id === docId,
+									);
+									if (docIndex >= 0) {
+										data.documents.splice(docIndex, 1);
+									}
+
+									if (data.currentDocId === docId) {
+										data.currentDocId =
+											data.documents.length > 0 ? data.documents[0].id : '';
+									}
+								});
+
+								const remainingDocs = documents.filter((d) => d.id !== docId);
+								if (remainingDocs.length > 0 && onSelectDocument) {
+									const newSelectedId = remainingDocs[0].id;
+									onSelectDocument(newSelectedId);
+									const currentFragment = parseUrlFragments(
+										window.location.hash.substring(1),
+									);
+									const newUrl = buildUrlWithFragments(
+										currentFragment.yjsUrl,
+										newSelectedId,
+									);
+									replaceHash(newUrl);
+								} else if (onSelectDocument) {
+									onSelectDocument('');
+									const currentFragment = parseUrlFragments(
+										window.location.hash.substring(1),
+									);
+									const newUrl = buildUrlWithFragments(currentFragment.yjsUrl);
+									replaceHash(newUrl);
+								}
+							}}
+							onDocumentLinked={() => {
+								window.location.reload();
+							}}
+						/>
 					)}
 				</div>
 
-				{!isViewOnly && <ReviewPanel className='editor-review-panel' />}
-				{!isViewOnly && <CommentPanel className='editor-comment-panel' />}
-				{!isViewOnly && <BibliographyPanel className='editor-lsp-panel' />}
-			</div>
-		</>
-	);
-};
+				<div className='editor-main-container'>
+					<div
+						className='editor-wrapper'
+						style={{ flex: 1, position: 'relative' }}
+					>
+						{toolbarVisible && toolbarController && (
+							<PluginToolbar
+								items={toolbarItems}
+								onRun={(key) => toolbarController.run(key)}
+								protectedTailGroups={protectedTailGroups}
+							/>
+						)}
+
+						<div ref={editorRef} className='codemirror-editor-container' />
+
+						{showSaveIndicator && (
+							<div className={`save-indicator ${isViewOnly ? 'read-only' : ''}`}>
+								<span>
+									{isViewOnly ? t('Cannot Save Read-Only') : t('Saved')}
+								</span>
+							</div>
+						)}
+					</div>
+
+					{!isViewOnly && <ReviewPanel className='editor-review-panel' />}
+					{!isViewOnly && <CommentPanel className='editor-comment-panel' />}
+					{!isViewOnly && <BibliographyPanel className='editor-lsp-panel' />}
+				</div>
+			</>
+		);
+	};
 
 const Editor: React.FC<EditorComponentProps> = ({
 	content,
@@ -1164,8 +1165,11 @@ const Editor: React.FC<EditorComponentProps> = ({
 		);
 	}, [viewerPlugin, content, fileName, mimeType, getSetting]);
 
+	const effectiveIsBinaryFile =
+		isBinaryFile || (isEditingFile && isBinaryFileByName(fileName));
+
 	const textContent = useMemo(() => {
-		if (isBinaryFile) return '';
+		if (effectiveIsBinaryFile) return '';
 		if (viewerPlugin || rendererDelegate) return '';
 		if (content instanceof ArrayBuffer) {
 			return arrayBufferToString(content);
@@ -1174,7 +1178,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 			return content;
 		}
 		return '';
-	}, [content, isBinaryFile, viewerPlugin, rendererDelegate]);
+	}, [content, effectiveIsBinaryFile, viewerPlugin, rendererDelegate]);
 
 	if (
 		collaborativeViewerPlugin &&
@@ -1250,7 +1254,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 		);
 	}
 
-	if (isBinaryFile) {
+	if (effectiveIsBinaryFile) {
 		return (
 			<div className='editor-container binary-file'>
 				<div className='binary-file-message'>
