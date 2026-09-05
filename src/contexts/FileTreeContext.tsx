@@ -29,7 +29,7 @@ import {
 	isTemporaryFile,
 	stringToArrayBuffer,
 } from '../utils/fileUtils';
-import { batchExtractZip } from '../utils/zipUtils';
+import { batchExtractArchive } from '../utils/archiveUtils';
 
 const moduleLog = createNamedLogger('FileTreeContext');
 
@@ -161,7 +161,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 		[refreshFileTree],
 	);
 
-	const extractZipFile = useCallback(
+	const extractArchiveFile = useCallback(
 		async (zipFile: File, targetPath: string) => {
 			const operationId = `extract-${Date.now()}`;
 
@@ -173,10 +173,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					}),
 				);
 
-				const { files: extractedFiles, directories } = await batchExtractZip(
-					zipFile,
-					targetPath,
-				);
+				const { files: extractedFiles, directories } =
+					await batchExtractArchive(zipFile, targetPath);
 
 				fileOperationNotificationService.updateProgress(
 					operationId,
@@ -818,7 +816,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 		updateFileContent,
 		refreshFileTree,
 		moveFileOrDirectory,
-		extractZipFile,
+		extractArchiveFile,
 		storeZipFile,
 		enableFileSystemDragDrop,
 		enableInternalDragDrop,

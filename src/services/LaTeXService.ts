@@ -11,7 +11,7 @@ import { busyTexService } from '../extensions/texlyre-busytex/BusyTeXService';
 import type { BusyTeXEngineType } from '../extensions/texlyre-busytex/BusyTeXEngine';
 import type { CompileResult } from '../types/compilation';
 import type { FileNode } from '../types/files';
-import { downloadFiles } from '../utils/zipUtils';
+import { downloadFiles } from '../utils/archiveUtils';
 import { fileStoreService } from './FileStoreService';
 import {
 	notificationService,

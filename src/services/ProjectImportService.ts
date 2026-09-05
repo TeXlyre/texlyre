@@ -131,7 +131,7 @@ class ProjectImportService {
 				});
 			}
 		} catch (error) {
-			moduleLog.error('Error scanning zip file:', error);
+			moduleLog.error('Error scanning ZIP file:', error);
 		}
 
 		return importableProjects;

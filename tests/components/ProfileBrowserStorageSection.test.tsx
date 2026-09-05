@@ -170,7 +170,9 @@ describe('ProfileBrowserStorageSection Component', () => {
     it('should disable Keep my data outside the installed app', () => {
         renderSection();
 
-        expect(screen.getByRole('button', { name: 'Keep my data' })).toBeDisabled();
+        expect(
+            screen.getByRole('button', { name: 'Keep my data' }),
+        ).toBeDisabled();
     });
 
     it('should explain why Keep my data is disabled outside the installed app', () => {
@@ -192,7 +194,9 @@ describe('ProfileBrowserStorageSection Component', () => {
         setStandalone(true);
         renderSection();
 
-        expect(screen.getByRole('button', { name: 'Keep my data' })).toBeEnabled();
+        expect(
+            screen.getByRole('button', { name: 'Keep my data' }),
+        ).toBeEnabled();
     });
 
     it('should request persistence in the installed app', async () => {
@@ -248,7 +252,9 @@ describe('ProfileBrowserStorageSection Component', () => {
             }),
         ).toBeInTheDocument();
         expect(
-            screen.getByText(/Installed Chromium apps may receive persistent storage again/),
+            screen.getByText(
+                /Installed Chromium apps may receive persistent storage again/,
+            ),
         ).toBeInTheDocument();
         expect(
             screen.getByRole('link', { name: 'Open app uninstall instructions' }),
@@ -421,30 +427,34 @@ describe('ProfileBrowserStorageSection Component', () => {
         ]);
         renderSection();
 
-        expect(
-            await screen.findByRole('button', { name: 'Clear Typesetter cache' }),
-        ).toBeEnabled();
+        await waitFor(() => {
+            expect(
+                screen.getByRole('button', { name: 'Clear Typesetter cache' }),
+            ).toBeEnabled();
+        });
     });
 
     it('should enable the typesetter cache action for current-project cache files', async () => {
         mockedHasProjectTypesetterCache.mockResolvedValue(true);
         renderSection();
 
-        expect(
-            await screen.findByRole('button', { name: 'Clear Typesetter cache' }),
-        ).toBeEnabled();
+        await waitFor(() => {
+            expect(
+                screen.getByRole('button', { name: 'Clear Typesetter cache' }),
+            ).toBeEnabled();
+        });
     });
 
     it('should enable the typesetter cache action for Typst package cache', async () => {
         mockedHasTypstPackageCache.mockResolvedValue(true);
         renderSection();
 
-        expect(
-            await screen.findByRole('button', { name: 'Clear Typesetter cache' }),
-        ).toBeEnabled();
+        await waitFor(() => {
+            expect(
+                screen.getByRole('button', { name: 'Clear Typesetter cache' }),
+            ).toBeEnabled();
+        });
     });
-
-
 
     it('should separate detailed browser storage categories in the legend', async () => {
         mockedUseStorageQuota.mockReturnValue(
@@ -453,8 +463,16 @@ describe('ProfileBrowserStorageSection Component', () => {
                 quotaBytes: 100 * 1024,
                 availableBytes: 93 * 1024,
                 segments: [
-                    { id: 'indexedDB', label: 'Projects and documents', bytes: 6 * 1024 },
-                    { id: 'caches', label: 'Offline app cache', bytes: 1024 },
+                    {
+                        id: 'indexedDB',
+                        label: 'Projects and documents',
+                        bytes: 6 * 1024,
+                    },
+                    {
+                        id: 'caches',
+                        label: 'Offline app cache',
+                        bytes: 1024,
+                    },
                 ],
             }),
         );
@@ -469,14 +487,27 @@ describe('ProfileBrowserStorageSection Component', () => {
 
         renderSection();
 
-        expect(await screen.findByText(/Projects and documents 3.0 KB/)).toBeInTheDocument();
-        expect(screen.getByText(/Typesetter cache 2.0 KB/)).toBeInTheDocument();
-        expect(screen.getByText(/Leftover project data 1.0 KB/)).toBeInTheDocument();
-        expect(screen.getByText(/Account and app data 823 bytes/)).toBeInTheDocument();
+        expect(
+            await screen.findByText(/Projects and documents 3.0 KB/),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText(/Typesetter cache 2.0 KB/),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText(/Leftover project data 1.0 KB/),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText(/Account and app data 823 bytes/),
+        ).toBeInTheDocument();
         expect(screen.getByText(/Offline app cache 512 bytes/)).toBeInTheDocument();
-        expect(screen.getByText(/Browser storage overhead 256 bytes/)).toBeInTheDocument();
-        expect(screen.queryByText(/Projects and documents 6.0 KB/)).not.toBeInTheDocument();
+        expect(
+            screen.getByText(/Browser storage overhead 256 bytes/),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByText(/Projects and documents 6.0 KB/),
+        ).not.toBeInTheDocument();
     });
+
     it('should clear IndexedDB, project, and Typst typesetter caches', async () => {
         mockedListReclaimableDatabases.mockResolvedValue([
             { name: 'EM_PRELOAD_CACHE', kind: 'typesetter-cache' },

@@ -23,7 +23,7 @@ import {
 	isTemporaryFile,
 	toArrayBuffer,
 } from '../utils/fileUtils';
-import { downloadFiles } from '../utils/zipUtils';
+import { downloadFiles } from '../utils/archiveUtils';
 
 const moduleLog = createNamedLogger('TypstService');
 
