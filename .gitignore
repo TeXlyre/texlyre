@@ -14,14 +14,16 @@ dist-ssr
 coverage
 *.local
 
-public/core/busytex/*
-public/core/detypify/*
-public/core/drawio-embed/*
-public/core/oniguruma/*
-public/core/tikz-editor/*
-public/core/texfmt/*
-public/core/typst-ts-renderer/*
-public/core/typst-ts-web-compiler/*
+public/core/busytex/
+public/core/detypify/
+public/core/drawio-embed/
+public/core/oniguruma/
+public/core/perl/
+public/core/tikz-editor/
+public/core/texfmt/
+public/core/typst-ts-renderer/
+public/core/typst-ts-web-compiler/
+public/core/webperl/
 
 public/assets/cmaps/
 public/assets/grammars/

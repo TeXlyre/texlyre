@@ -134,7 +134,7 @@
 		"texlyre-busytex": "^1.4.0",
 		"vscode-oniguruma": "^2.0.1",
 		"vscode-textmate": "^9.3.2",
-		"wasm-latex-tools": "^0.1.1",
+		"wasm-latex-tools": "^0.2.0",
 		"y-codemirror.next": "=0.3.5",
 		"y-indexeddb": "^9.0.12",
 		"y-protocols": "^1.0.7",

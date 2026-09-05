@@ -4,6 +4,7 @@ const { copyKTeXFonts } = require('./copy-mathlive-fonts.cjs');
 const { copyDetypifyAssets } = require('./copy-detypify-assets.cjs');
 const { copyTypstAssets } = require('./copy-typst-assets.cjs');
 const { copyOnigurumaWasm } = require('./copy-oniguruma-wasm.cjs');
+const { copyWasmLatexToolsAssets } = require('./copy-wasm-latex-tools-assets.cjs');
 const { downloadCoreAssets } = require('./download-core-assets.cjs');
 
 async function setupAssets() {
@@ -15,7 +16,9 @@ async function setupAssets() {
 		await copyDetypifyAssets();
 		await copyTypstAssets();
 		await copyOnigurumaWasm();
+		await copyWasmLatexToolsAssets();
 		await downloadCoreAssets();
+
 		console.log('\n✅ Asset setup complete');
 	} catch (err) {
 		console.error('\n❌ Asset setup failed:', err);
