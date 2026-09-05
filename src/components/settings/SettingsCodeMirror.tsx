@@ -48,20 +48,13 @@ const getLanguageExtension = (language: string) => {
 	}
 };
 
-const isDarkTheme = (currentVariant: string): boolean => {
-	if (currentVariant === 'system') {
-		return window.matchMedia('(prefers-color-scheme: dark)').matches;
-	}
-	return currentVariant === 'dark';
-};
-
 export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
 	setting,
 	value,
 	onChange,
 }) => {
 	const options = { ...DEFAULT_OPTIONS, ...setting.codeMirrorOptions };
-	const { currentVariant } = useTheme();
+	const { isCurrentVariantDark } = useTheme();
 	const editorViewRef = useRef<EditorView | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const onChangeRef = useRef(onChange);
@@ -78,8 +71,8 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
 	const getThemeExtension = useCallback(() => {
 		if (options.theme === 'dark') return oneDark;
 		if (options.theme === 'light') return [];
-		return isDarkTheme(currentVariant) ? oneDark : [];
-	}, [options.theme, currentVariant]);
+		return isCurrentVariantDark ? oneDark : [];
+	}, [options.theme, isCurrentVariantDark]);
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: Mount-only; reactive updates are handled by the compartment effects below */
 	useEffect(() => {

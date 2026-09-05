@@ -265,6 +265,14 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 				>
 					{jsonDraft === null ? t('Edit as JSON') : t('Close JSON editor')}
 				</button>
+				{jsonDraft !== null && (
+					<button
+						className='button secondary smaller tool-config-json-apply'
+						onClick={applyJsonDraft}
+					>
+						{t('Apply')}
+					</button>
+				)}
 			</div>
 
 			{error && <div className='error-message'>{error}</div>}
@@ -272,11 +280,6 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 			{jsonDraft !== null && (
 				<div className='tool-config-json'>
 					<ToolConfigJsonEditor value={jsonDraft} onChange={setJsonDraft} />
-					<div className='form-actions'>
-						<button className='button primary' onClick={applyJsonDraft}>
-							{t('Apply')}
-						</button>
-					</div>
 				</div>
 			)}
 
