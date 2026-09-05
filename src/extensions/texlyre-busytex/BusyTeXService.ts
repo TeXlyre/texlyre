@@ -9,6 +9,7 @@ import type { BusyTeXEngineType } from './BusyTeXEngine';
 import type { CompileResult } from '../../types/compilation';
 import type { FileNode } from '../../types/files';
 import { fileStoreService } from '../../services/FileStoreService';
+import { filePathCacheService } from '../../services/FilePathCacheService';
 import { latexSourceMapService } from '../../services/LaTeXSourceMapService';
 import {
 	getMimeType,
@@ -163,7 +164,7 @@ class BusyTeXService {
 				'.synctex.gz',
 			]);
 			if (synctex) {
-				latexSourceMapService.setMainFilePath(mainFileName);
+				filePathCacheService.setMainFilePath(mainFileName);
 				latexSourceMapService.loadFromBytes(synctex.data);
 			} else {
 				latexSourceMapService.clear();

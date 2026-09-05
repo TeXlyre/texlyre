@@ -7,6 +7,7 @@ import type {
 	SourceMapService,
 } from '../types/sourceMap';
 import { parseSynctex } from '../utils/latexSynctexParser';
+import { filePathCacheService } from './FilePathCacheService';
 
 const moduleLog = createNamedLogger('LaTeXSourceMapService');
 
@@ -23,6 +24,7 @@ class LaTeXSourceMapService implements SourceMapService {
 		}
 
 		try {
+			this.mainFilePath = filePathCacheService.getMainFilePath();
 			this.data = parseSynctex(bytes);
 			this.notifyListeners();
 		} catch (error) {
@@ -30,10 +32,6 @@ class LaTeXSourceMapService implements SourceMapService {
 			this.data = null;
 			this.notifyListeners();
 		}
-	}
-
-	setMainFilePath(path: string): void {
-		this.mainFilePath = path;
 	}
 
 	getMainFilePath(): string {
