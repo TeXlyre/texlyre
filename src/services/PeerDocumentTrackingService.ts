@@ -3,6 +3,7 @@ import type { Awareness } from 'y-protocols/awareness';
 
 import { createNamedLogger } from '@/logging';
 import { collabService } from './CollabService';
+import { documentFileSyncService } from './DocumentFileSyncService';
 import type { CollabConnectOptions } from '../types/collab';
 
 const moduleLog = createNamedLogger('PeerDocumentTracking');
@@ -71,6 +72,7 @@ class PeerDocumentTrackingService {
 		} catch {}
 
 		for (const docId of tracker.backgroundDocs) {
+			documentFileSyncService.unwatch(projectId, docId);
 			collabService.disconnect(projectId, `yjs_${docId}`);
 		}
 		tracker.backgroundDocs.clear();
@@ -140,12 +142,13 @@ class PeerDocumentTrackingService {
 			if (tracker.backgroundDocs.has(docId)) continue;
 
 			try {
-				collabService.connect(
+				const { doc } = collabService.connect(
 					tracker.projectId,
 					`yjs_${docId}`,
 					tracker.collabOptions ?? {},
 				);
 				tracker.backgroundDocs.add(docId);
+				documentFileSyncService.watch(tracker.projectId, docId, doc);
 			} catch (error) {
 				moduleLog.warn(
 					`Failed to open background connection for ${docId}:`,
@@ -156,6 +159,7 @@ class PeerDocumentTrackingService {
 
 		for (const docId of Array.from(tracker.backgroundDocs)) {
 			if (tracker.localOpenDocs.has(docId)) {
+				documentFileSyncService.unwatch(tracker.projectId, docId);
 				tracker.backgroundDocs.delete(docId);
 				continue;
 			}
@@ -163,6 +167,7 @@ class PeerDocumentTrackingService {
 			if (remoteOpenDocs.has(docId)) {
 				continue;
 			}
+			documentFileSyncService.unwatch(tracker.projectId, docId);
 			collabService.disconnect(tracker.projectId, `yjs_${docId}`);
 			tracker.backgroundDocs.delete(docId);
 		}
