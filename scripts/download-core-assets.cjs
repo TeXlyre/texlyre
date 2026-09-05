@@ -43,6 +43,26 @@ const ASSETS = [
 		dest: path.resolve(__dirname, '../public/core/busytex'),
 		tarGz: true,
 	},
+	{
+		name: 'grammar-assets',
+		version: 'v0.1.0',
+		url: (version) =>
+			`https://github.com/TeXlyre/texlyre-grammar-assets/releases/download/${version}/texlyre-grammar-assets-${version.substring(1)}.zip`,
+		includeOptionalUrl: (version) =>
+			`https://github.com/TeXlyre/texlyre-grammar-assets/releases/download/${version}/texlyre-grammar-assets-${version.substring(1)}-include-optional.zip`,
+		dest: path.resolve(__dirname, '../public/assets/grammars'),
+		extractPath: (version) => `texlyre-grammar-assets-${version.substring(1)}/`,
+		includeOptionalExtractPath: (version) =>
+			`texlyre-grammar-assets-${version.substring(1)}-include-optional/`,
+	},
+	{
+		name: 'font-assets',
+		version: 'v0.1.0',
+		url: (version) =>
+			`https://github.com/TeXlyre/texlyre-font-assets/releases/download/${version}/texlyre-font-assets-${version.substring(1)}.zip`,
+		dest: path.resolve(__dirname, '../public/assets/fonts'),
+		extractPath: (version) => `texlyre-font-assets-${version.substring(1)}/`,
+	},
 ];
 
 async function downloadFile(url) {
@@ -93,7 +113,7 @@ async function extractTarGz(buffer, dest) {
 	}
 }
 
-async function downloadAndExtract(asset) {
+async function downloadAndExtract(asset, includeOptional = false) {
 	if (await fs.pathExists(asset.dest)) {
 		const files = await fs.readdir(asset.dest);
 		if (files.length > 0) {
@@ -104,8 +124,12 @@ async function downloadAndExtract(asset) {
 
 	console.log(`Downloading ${asset.name} ${asset.version}...`);
 
+	const urlSource =
+		includeOptional && asset.includeOptionalUrl
+			? asset.includeOptionalUrl
+			: asset.url;
 	const url =
-		typeof asset.url === 'function' ? asset.url(asset.version) : asset.url;
+		typeof urlSource === 'function' ? urlSource(asset.version) : urlSource;
 	const buffer = await downloadFile(url);
 
 	console.log(`Extracting ${asset.name}...`);
@@ -113,16 +137,26 @@ async function downloadAndExtract(asset) {
 	if (asset.tarGz) {
 		await extractTarGz(buffer, asset.dest);
 	} else {
-		await extractZip(buffer, asset.dest, asset.extractPath(asset.version));
+		const extractPathSource =
+			includeOptional && asset.includeOptionalExtractPath
+				? asset.includeOptionalExtractPath
+				: asset.extractPath;
+		const extractPath =
+			typeof extractPathSource === 'function'
+				? extractPathSource(asset.version)
+				: extractPathSource;
+		await extractZip(buffer, asset.dest, extractPath);
 	}
 
 	console.log(`✓ ${asset.name} ready`);
 }
 
-async function downloadCoreAssets() {
+async function downloadCoreAssets(
+	includeOptional = process.env.TEXLYRE_INCLUDE_OPTIONAL === '1',
+) {
 	try {
 		for (const asset of ASSETS) {
-			await downloadAndExtract(asset);
+			await downloadAndExtract(asset, includeOptional);
 		}
 		console.log('\n✅ All core assets ready');
 	} catch (err) {

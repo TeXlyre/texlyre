@@ -8410,10 +8410,10 @@ walker@^1.0.8:
   dependencies:
     makeerror "1.0.12"
 
-wasm-latex-tools@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.npmjs.org/wasm-latex-tools/-/wasm-latex-tools-0.1.1.tgz"
-  integrity sha512-eMrphNq/1fvmu82T0c1rKWMaAEN/Xcmzox8gKjdzFZCZXVsJY5CZCUNqTl5nm/oBrXOP0Ffnn7sbKxB7+xqF6g==
+wasm-latex-tools@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.npmjs.org/wasm-latex-tools/-/wasm-latex-tools-0.2.0.tgz"
+  integrity sha512-ILqdDTwPXwSYg+uKtEusH1H0jHil81QegpT7Eiu9B/YBkhctUrJPOC3EJESzsZy3KPUy/wGdL16Fy7ARebmDcA==
 
 webidl-conversions@^7.0.0:
   version "7.0.0"

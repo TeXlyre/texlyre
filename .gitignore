@@ -14,17 +14,21 @@ dist-ssr
 coverage
 *.local
 
-public/core/drawio-embed/*
-public/core/tikz-editor/*
-public/core/texfmt/*
-public/core/busytex/*
-public/core/oniguruma/*
+public/core/busytex/
+public/core/detypify/
+public/core/drawio-embed/
+public/core/oniguruma/
+public/core/perl/
+public/core/tikz-editor/
+public/core/texfmt/
+public/core/typst-ts-renderer/
+public/core/typst-ts-web-compiler/
+public/core/webperl/
 
-public/assets/grammars/**
-!public/assets/grammars/**/
-!public/assets/grammars/**/manifest.json
-!public/assets/grammars/**/*-embedded.tmLanguage.json
-!public/assets/grammars/lilypond/README.md
+public/assets/cmaps/
+public/assets/grammars/
+public/assets/fonts/
+public/assets/math-fonts/
 
 src/plugins/
 !src/plugins/PluginRegistry.ts
