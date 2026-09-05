@@ -69,17 +69,13 @@ class TypstSourceMapService implements SourceMapService {
 		if (!this.forwardMap) return null;
 
 		const normalized = file.replace(/^\/+/, '');
-		let resolvedFile: string | null = null;
-		for (const key of this.fileInCodeBlock.keys()) {
-			if (
-				key === normalized ||
-				key.endsWith(`/${normalized}`) ||
-				normalized.endsWith(`/${key}`)
-			) {
-				resolvedFile = key;
-				break;
-			}
-		}
+		const keys = Array.from(this.fileInCodeBlock.keys());
+		const resolvedFile =
+			keys.find((key) => key === normalized) ??
+			keys.find(
+				(key) =>
+					key.endsWith(`/${normalized}`) || normalized.endsWith(`/${key}`),
+			);
 		if (!resolvedFile) return null;
 
 		const exact = this.forwardMap.get(`${resolvedFile}:${line}`);

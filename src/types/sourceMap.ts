@@ -36,6 +36,7 @@ export interface SourceMapData {
 export interface SourceMapService extends SourceMapData {
 	isAvailable(): boolean;
 	clear(): void;
+	getMainFilePath?(): string;
 }
 
 export interface SourceMapContextType {

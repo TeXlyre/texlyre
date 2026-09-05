@@ -121,7 +121,7 @@ class LaTeXStatisticsService {
 
 		INCLUDE_PATTERN.lastIndex = 0;
 		while ((match = INCLUDE_PATTERN.exec(content)) !== null) {
-			let filename = match[1];
+			let filename = match[1].trim().replace(/^\/+/, '');
 			if (!isLatexFile(filename)) filename += '.tex';
 
 			const file = allFiles.find(

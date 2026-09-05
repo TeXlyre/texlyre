@@ -163,6 +163,7 @@ class BusyTeXService {
 				'.synctex.gz',
 			]);
 			if (synctex) {
+				latexSourceMapService.setMainFilePath(mainFileName);
 				latexSourceMapService.loadFromBytes(synctex.data);
 			} else {
 				latexSourceMapService.clear();

@@ -294,25 +294,18 @@ class FilePathCacheService {
 	): Promise<FileNode | null> {
 		const resolvedPath = this.resolveFilePath(fromPath, candidatePath);
 		const relativeResolvedPath = resolvedPath.replace(/^\/+/, '');
-		const cachedFiles = this.flattenFiles(await this.getCachedFiles());
+		const cachedFiles = this.flattenFiles(await this.getCachedFiles()).filter(
+			(file) =>
+				file.type === 'file' && !file.isDeleted && !isTemporaryFile(file.path),
+		);
+
+		const match = (predicate: (storedPath: string) => boolean) =>
+			cachedFiles.find((file) => predicate(this.normalizePath(file.path)));
 
 		return (
-			cachedFiles.find((file) => {
-				if (
-					file.type !== 'file' ||
-					file.isDeleted ||
-					isTemporaryFile(file.path)
-				) {
-					return false;
-				}
-
-				const storedPath = this.normalizePath(file.path);
-
-				return (
-					storedPath === resolvedPath ||
-					storedPath.endsWith(`/${relativeResolvedPath}`)
-				);
-			}) ?? null
+			match((storedPath) => storedPath === resolvedPath) ??
+			match((storedPath) => storedPath.endsWith(`/${relativeResolvedPath}`)) ??
+			null
 		);
 	}
 
