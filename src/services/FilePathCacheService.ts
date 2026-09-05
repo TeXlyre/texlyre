@@ -29,6 +29,7 @@ interface LabelCache {
 
 class FilePathCacheService {
 	private cachedFiles: FileNode[] = [];
+	private mainFilePath = '';
 	private lastCacheUpdate = 0;
 	private cacheTimeout = 5000;
 	private cacheUpdateTimeout: NodeJS.Timeout | null = null;
@@ -248,6 +249,27 @@ class FilePathCacheService {
 		return result;
 	}
 
+	setMainFilePath(path: string) {
+		this.mainFilePath = path ?? '';
+	}
+
+	getMainFilePath(): string {
+		return this.mainFilePath;
+	}
+
+	getMainDirectory(): string {
+		return this.mainFilePath.replace(/^\/+/, '').replace(/[^/]*$/, '');
+	}
+
+	toCompileRelativePath(path: string): string {
+		const normalized = path.replace(/^\/+/, '');
+		const mainDir = this.getMainDirectory();
+
+		return mainDir && normalized.startsWith(mainDir)
+			? normalized.substring(mainDir.length)
+			: normalized;
+	}
+
 	normalizePath(path: string): string {
 		const trimmedPath = path.trim().replace(/\\/g, '/');
 		const isAbsolute = trimmedPath.startsWith('/');
@@ -309,28 +331,8 @@ class FilePathCacheService {
 		);
 	}
 
-	getLatexRelativePath(fromPath: string, toPath: string): string {
-		if (!fromPath || fromPath === '/') {
-			return toPath.startsWith('/') ? toPath.slice(1) : toPath;
-		}
-
-		const fromDir = fromPath.substring(0, fromPath.lastIndexOf('/')) || '/';
-		const toDir = toPath.substring(0, toPath.lastIndexOf('/')) || '/';
-		const toFileName = toPath.substring(toPath.lastIndexOf('/') + 1);
-
-		if (fromDir === toDir) {
-			return toFileName;
-		}
-
-		if (toPath.startsWith(`${fromDir}/`)) {
-			return toPath.substring(fromDir.length + 1);
-		}
-
-		if (fromDir !== '/' && toDir === '/') {
-			return toFileName;
-		}
-
-		return toPath.startsWith('/') ? toPath.slice(1) : toPath;
+	getLatexRelativePath(_fromPath: string, toPath: string): string {
+		return this.toCompileRelativePath(toPath);
 	}
 
 	getTypstRelativePath(fromPath: string, toPath: string): string {
@@ -586,6 +588,7 @@ class FilePathCacheService {
 
 	cleanup() {
 		this.cachedFiles = [];
+		this.mainFilePath = '';
 		this.cacheUpdateCallbacks.clear();
 		this.filePathUpdateCallbacks.clear();
 		this.bibliographyFileCallbacks.clear();
