@@ -595,8 +595,13 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 			const pdfViewer = pdfViewerRef.current;
 			if (!pdfViewer) return;
 			setViewerScale(scale);
+		}, [scale, setViewerScale]);
+
+		useEffect(() => {
+			const pdfViewer = pdfViewerRef.current;
+			if (!pdfViewer) return;
 			renderHighlight(pdfViewer, highlight);
-		}, [scale, highlight, setViewerScale]);
+		}, [highlight]);
 
 		useEffect(() => {
 			const pdfViewer = pdfViewerRef.current;
