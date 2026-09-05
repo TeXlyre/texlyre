@@ -55,6 +55,7 @@
 /* ============================================================
    Editor layout
    ============================================================ */
+
 .cm-editor .cm-panel.cm-search button {
 	border-radius: var(--radius-sm);
 	padding: var(--space-xs) var(--space-sm);
@@ -106,8 +107,15 @@
 	padding: 0 var(--space-xs);
 }
 
+.cm-gutter {
+	background-color: var(--pico-background);
+}
+
+.cm-gutters-before {
+	border-left: 0.5px solid var(--accent-border);
+}
+
 .codemirror-editor-container .cm-gutters {
-	background-color: var(--pico-background) !important;
 	/* color: var(--cm-color-gutter-text); */
 	border-right: 1px solid var(--accent-border);
 }

@@ -15,6 +15,16 @@
 	margin-left: auto;
 }
 
+.tool-config-json-apply {
+	background: var(--pico-primary);
+	border-color: var(--pico-primary-focus);
+	color: var(--pico-primary-inverse) !important;
+}
+
+.tool-config-json-apply:hover {
+	color: var(--text-color) !important;
+}
+
 .tool-config-empty {
 	margin: 0;
 	color: var(--pico-secondary);

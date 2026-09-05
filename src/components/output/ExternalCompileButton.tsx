@@ -262,6 +262,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 		if (field.kind === 'boolean') {
 			return (
 				<label className='dropdown-checkbox' key={field.key}>
+					<br />
 					<input
 						type='checkbox'
 						checked={value === true}
