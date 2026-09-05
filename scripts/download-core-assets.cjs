@@ -55,6 +55,14 @@ const ASSETS = [
 		includeOptionalExtractPath: (version) =>
 			`texlyre-grammar-assets-${version.substring(1)}-include-optional/`,
 	},
+	{
+		name: 'font-assets',
+		version: 'v0.1.0',
+		url: (version) =>
+			`https://github.com/TeXlyre/texlyre-font-assets/releases/download/${version}/texlyre-font-assets-${version.substring(1)}.zip`,
+		dest: path.resolve(__dirname, '../public/assets/fonts'),
+		extractPath: (version) => `texlyre-font-assets-${version.substring(1)}/`,
+	},
 ];
 
 async function downloadFile(url) {

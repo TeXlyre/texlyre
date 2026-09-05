@@ -21,6 +21,9 @@ public/core/busytex/*
 public/core/oniguruma/*
 
 public/assets/grammars/
+public/assets/fonts/
+public/assets/math-fonts/
+
 src/plugins/
 !src/plugins/PluginRegistry.ts
 !src/plugins/PluginInterface.ts

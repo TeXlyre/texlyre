@@ -537,7 +537,7 @@ export function createMathLiveExtension(
 	locale: string,
 ): Extension {
 	if (!mathLiveFontsConfigured) {
-		MathfieldElement.fontsDirectory = `${BASE_PATH}/assets/fonts/`;
+		MathfieldElement.fontsDirectory = `${BASE_PATH}/assets/math-fonts/`;
 		MathfieldElement.locale = normalizeLocale(locale);
 		mathLiveFontsConfigured = true;
 	}

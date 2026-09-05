@@ -3,7 +3,7 @@ const fs = require('fs-extra');
 const path = require('node:path');
 
 const fontsSource = path.resolve(__dirname, '../node_modules/mathlive/fonts');
-const fontsDestination = path.resolve(__dirname, '../public/assets/fonts');
+const fontsDestination = path.resolve(__dirname, '../public/assets/math-fonts');
 
 async function copyKTeXFonts() {
 	try {
@@ -17,7 +17,7 @@ async function copyKTeXFonts() {
 
 		await fs.ensureDir(fontsDestination);
 		await fs.copy(fontsSource, fontsDestination);
-		console.log('✓ MathLive KTeX fonts copied to public/assets/cmaps');
+		console.log('✓ MathLive KTeX fonts copied to public/assets/math-fonts');
 	} catch (err) {
 		console.error('❌ Error copying MathLive KTeX fonts:', err);
 		throw err;
