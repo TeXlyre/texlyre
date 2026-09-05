@@ -11,6 +11,7 @@ import {
 import { authService } from '../../services/AuthService';
 import { workspaceService } from '../../services/WorkspaceService';
 import type { TemplateProject } from '../../types/projects';
+import { ARCHIVE_ACCEPT, isArchiveFile } from '../../utils/archiveUtils';
 import { formatDate } from '../../utils/dateUtils';
 import {
 	UrlIcon,
@@ -155,6 +156,10 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 	) => {
 		const file = event.target.files?.[0];
 		if (!file) return;
+		if (!isArchiveFile(file.name)) {
+			setError(t('Unsupported archive format'));
+			return;
+		}
 
 		try {
 			setIsScanning(true);
@@ -168,7 +173,9 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 			setSelectedProjects(new Set());
 		} catch (error) {
 			setError(
-				error instanceof Error ? error.message : t('Error scanning zip file'),
+				error instanceof Error
+					? error.message
+					: t('Error scanning archive file'),
 			);
 		} finally {
 			setIsScanning(false);
@@ -209,7 +216,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 				throw new Error(t('Invalid import source'));
 			}
 			if (!selectedZipFile) {
-				throw new Error(t('No ZIP file available for import'));
+				throw new Error(t('No archive file available for import'));
 			}
 
 			const result = await projectImportService.importFromZip(
@@ -351,7 +358,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 										<strong>{t('From URL')}</strong>
 										<p>
 											{t(
-												'Import from URL: GitHub, GitLab, Codeberg repositories or ZIP link',
+												'Import from URL: GitHub, GitLab, Codeberg repositories or archive link',
 											)}
 										</p>
 									</div>
@@ -360,17 +367,17 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 								<label className='import-option-button'>
 									<ZipFileIcon />
 									<div>
-										<strong>{t('From ZIP File')}</strong>
+										<strong>{t('From Archive File')}</strong>
 										<p>
 											{t(
-												'Import projects from a TeXlyre export file: Supports LaTeX and Typst',
+												'Import projects from a TeXlyre export archive: Supports LaTeX and Typst',
 											)}
 										</p>
 									</div>
 									<input
 										ref={fileInputRef}
 										type='file'
-										accept='.zip'
+										accept={ARCHIVE_ACCEPT}
 										onChange={handleZipFileSelect}
 										style={{ display: 'none' }}
 										disabled={isScanning || isImporting}
@@ -500,7 +507,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 					{importSource && availableProjects.length === 0 && !isScanning && (
 						<div className='no-projects'>
 							<p>
-								{t('No importable projects found in the selected ZIP file.')}
+								{t('No importable projects found in the selected archive.')}
 							</p>
 							<button
 								className='button secondary'

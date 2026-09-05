@@ -116,6 +116,7 @@
 		"jszip": "^3.10.1",
 		"katex": "^0.18.4",
 		"lib0": "^0.2.117",
+		"libarchive-wasm": "^1.2.0",
 		"lodash": "^4.18.1",
 		"mathlive": "^0.110.0",
 		"mime": "^4.1.0",
@@ -154,7 +155,7 @@
 		"brace-expansion": "^5.0.9",
 		"dompurify": "^3.4.13",
 		"esbuild": "^0.28.1",
-		"fast-uri": "^4.1.2",
+		"fast-uri": "^4.1.4",
 		"glob": "^13.0.6",
 		"immutable": "^5.1.8",
 		"inflight": "npm:inflight-lru@^1.0.0",
@@ -169,7 +170,9 @@
 		"tr46": "^6.0.0",
 		"uri-js": "npm:uri-js-replace@1.0.1",
 		"whatwg-url": "^16.0.1",
-		"ws": "^8.21.0"
+		"ws": "^8.21.0",
+		"browserslist": "^4.28.8",
+		"@humanfs/node@<0.16.8": "^0.16.8"
 	},
 	"pnpm": {
 		"overrides": {
@@ -183,7 +186,7 @@
 			"brace-expansion": "^5.0.9",
 			"dompurify": "^3.4.13",
 			"esbuild": "^0.28.1",
-			"fast-uri": "^4.1.2",
+			"fast-uri": "^4.1.4",
 			"glob": "^13.0.6",
 			"immutable": "^5.1.8",
 			"inflight": "npm:inflight-lru@^1.0.0",
@@ -198,7 +201,9 @@
 			"tr46": "^6.0.0",
 			"uri-js": "npm:uri-js-replace@1.0.1",
 			"whatwg-url": "^16.0.1",
-			"ws": "^8.21.0"
+			"ws": "^8.21.0",
+			"browserslist": "^4.28.8",
+			"@humanfs/node@<0.16.8": "^0.16.8"
 		},
 		"peerDependencyRules": {
 			"allowedVersions": {

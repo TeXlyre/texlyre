@@ -25,7 +25,7 @@ import {
 	pushHash,
 	replaceHash,
 } from '../../utils/urlUtils';
-import { batchExtractZip } from '../../utils/zipUtils';
+import { batchExtractArchive } from '../../utils/archiveUtils';
 import { extractTempPrf } from '../../utils/chelysWebauthn';
 import AuthApp from './AuthApp';
 import EditorApp from './EditorApp';
@@ -96,7 +96,7 @@ const downloadAndExtractZip = async (
 
 		await fileStoreService.initialize(`yjs:${projectId}`);
 
-		const { files, directories } = await batchExtractZip(zipFile, '/');
+		const { files, directories } = await batchExtractArchive(zipFile, '/');
 		const allFiles = [...directories, ...files];
 
 		await fileStoreService.batchStoreFiles(allFiles, {

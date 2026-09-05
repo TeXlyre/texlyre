@@ -10,7 +10,7 @@ import { projectImportService } from '../../services/ProjectImportService';
 import type { PendingShareFile } from '../../services/ShareTargetService';
 import type { Project } from '../../types/projects';
 import { getMimeType, isBinaryFile } from '../../utils/fileUtils';
-import { batchExtractZip } from '../../utils/zipUtils';
+import { batchExtractArchive } from '../../utils/archiveUtils';
 import { ImportIcon, NewProjectIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 
@@ -84,7 +84,7 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 				const zipFile = new File([f.buffer], f.name, {
 					type: f.type || 'application/zip',
 				});
-				const { files: extracted, directories } = await batchExtractZip(
+				const { files: extracted, directories } = await batchExtractArchive(
 					zipFile,
 					'/',
 				);

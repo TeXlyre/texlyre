@@ -2,13 +2,13 @@
 import { saveAs } from 'file-saver';
 
 import { t } from '@/i18n';
-import { cleanContent, processFile } from '../utils/fileCommentUtils';
-import { authService } from './AuthService';
-import { UnifiedDataStructureService } from './DataStructureService';
-import { ProjectDataService } from './ProjectDataService';
-import { StorageAdapterService, ZipAdapter } from './StorageAdapterService';
-import { importUserData, exportUserData } from '../utils/userDataUtils';
 import { createNamedLogger } from '@/logging';
+import { stripAnnotations, processFile } from '../utils/fileCommentUtils';
+import { authService } from './AuthService';
+import { UnifiedDataStructureService } from './BackupLayoutService';
+import { ProjectDataService } from './ProjectDataService';
+import { WriteTargetService, ZipTarget } from './WriteTargetService';
+import { importUserData, exportUserData } from '../utils/userDataUtils';
 
 const moduleLog = createNamedLogger('AccountExportService');
 
@@ -25,7 +25,7 @@ export interface ExportOptions {
 
 class AccountExportService {
 	private dataSerializer = new ProjectDataService();
-	private fileSystemManager = new StorageAdapterService();
+	private fileSystemManager = new WriteTargetService();
 	private unifiedService = new UnifiedDataStructureService();
 
 	async exportAccount(
@@ -166,7 +166,7 @@ class AccountExportService {
 				projectData,
 			};
 
-			const zipAdapter = new ZipAdapter();
+			const zipAdapter = new ZipTarget();
 
 			if (options.format === 'files-only') {
 				await this.writeFilesOnlyStructure(zipAdapter, unifiedData, options);
@@ -216,11 +216,11 @@ class AccountExportService {
 	}
 
 	private async writeFilesOnlyStructure(
-		adapter: ZipAdapter,
+		adapter: ZipTarget,
 		data: any,
 		options?: ExportOptions,
 	): Promise<void> {
-		const { fileStorageService } = await import('./FileStorageService');
+		const { fileStoreService } = await import('./FileStoreService');
 
 		const isSingleProject =
 			options?.isSingleProjectExport || data.projectData.size === 1;
@@ -256,21 +256,21 @@ class AccountExportService {
 
 			let filesExported = false;
 
-			// Try to use live FileStorageService first
-			if (!fileStorageService.isConnectedToProject(actualProjectId)) {
+			// Try to use live FileStoreService first
+			if (!fileStoreService.isConnectedToProject(actualProjectId)) {
 				try {
-					await fileStorageService.initialize(`yjs:${actualProjectId}`);
+					await fileStoreService.initialize(`yjs:${actualProjectId}`);
 				} catch (error) {
 					moduleLog.warn(
-						`Could not initialize FileStorageService for project ${projectId}:`,
+						`Could not initialize FileStoreService for project ${projectId}:`,
 						error,
 					);
 				}
 			}
 
-			if (fileStorageService.isConnectedToProject(actualProjectId)) {
+			if (fileStoreService.isConnectedToProject(actualProjectId)) {
 				try {
-					const allFiles = await fileStorageService.getAllFiles(false);
+					const allFiles = await fileStoreService.getAllFiles(false);
 					let fileFiles = allFiles.filter((f) => f.type === 'file');
 
 					if (!options?.includeTemporaryFiles) {
@@ -305,7 +305,7 @@ class AccountExportService {
 					}
 				} catch (error) {
 					moduleLog.error(
-						`Error exporting files from FileStorageService for project ${projectId}:`,
+						`Error exporting files from FileStoreService for project ${projectId}:`,
 						error,
 					);
 				}
@@ -329,7 +329,7 @@ class AccountExportService {
 						if (file.type === 'file') {
 							const content = projectData.fileContents.get(file.path);
 							if (content) {
-								const cleanedContent = cleanContent(content);
+								const cleanedContent = stripAnnotations(content);
 
 								const cleanPath = file.path.startsWith('/')
 									? file.path.slice(1)
@@ -372,7 +372,7 @@ class AccountExportService {
 
 	async importAccount(file: File): Promise<void> {
 		try {
-			const zipAdapter = new ZipAdapter();
+			const zipAdapter = new ZipTarget();
 			await zipAdapter.loadFromBlob(file);
 
 			const unifiedData =
