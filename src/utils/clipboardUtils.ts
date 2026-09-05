@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 
 import { createNamedLogger } from '@/logging';
 import type { FileNode } from '../types/files';
+import { filePathCacheService } from '../services/FilePathCacheService';
 import { fileStoreService } from '../services/FileStoreService';
 import { isLatexFile, getFileExtension, getRelativePath } from './fileUtils';
 import { processTextSelection } from './fileCommentUtils';
@@ -66,20 +67,9 @@ export async function uploadPastedFile(
 			const currentFile = await fileStoreService.getFile(currentFileId);
 
 			if (currentFile) {
-				const relativePath = getRelativePath(currentFile.path, uploadPath);
-				// We only need this special check for LaTeX due to the flattening of dir structure
-				const isLatex = isLatexFile(currentFile.path);
-				if (isLatex) {
-					if (relativePath.startsWith('../')) {
-						return uploadPath.startsWith('/')
-							? uploadPath.slice(1)
-							: uploadPath;
-					} else {
-						return relativePath;
-					}
-				} else {
-					return relativePath;
-				}
+				return isLatexFile(currentFile.path)
+					? filePathCacheService.toCompileRelativePath(uploadPath)
+					: getRelativePath(currentFile.path, uploadPath);
 			}
 		}
 
