@@ -80,6 +80,10 @@
 	opacity: 0.8;
 }
 
+.file-disk-indicator:hover {
+	color: var(--pico-secondary);
+}
+
 .cm-annotated-span {
 	background-color: color-mix(in srgb, var(--pico-primary) 18%, transparent);
 	border-bottom: 1px solid var(--pico-primary);

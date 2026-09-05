@@ -46,6 +46,7 @@ import {
 	arrayBufferToString,
 	detectFileType,
 	formatFileSize,
+	isBinaryFile as isBinaryFileByName,
 	isLatexFile,
 	isTypstFile,
 } from '../../utils/fileUtils';
@@ -1164,8 +1165,11 @@ const Editor: React.FC<EditorComponentProps> = ({
 		);
 	}, [viewerPlugin, content, fileName, mimeType, getSetting]);
 
+	const effectiveIsBinaryFile =
+		isBinaryFile || (isEditingFile && isBinaryFileByName(fileName));
+
 	const textContent = useMemo(() => {
-		if (isBinaryFile) return '';
+		if (effectiveIsBinaryFile) return '';
 		if (viewerPlugin || rendererDelegate) return '';
 		if (content instanceof ArrayBuffer) {
 			return arrayBufferToString(content);
@@ -1174,7 +1178,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 			return content;
 		}
 		return '';
-	}, [content, isBinaryFile, viewerPlugin, rendererDelegate]);
+	}, [content, effectiveIsBinaryFile, viewerPlugin, rendererDelegate]);
 
 	if (
 		collaborativeViewerPlugin &&
@@ -1250,7 +1254,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 		);
 	}
 
-	if (isBinaryFile) {
+	if (effectiveIsBinaryFile) {
 		return (
 			<div className='editor-container binary-file'>
 				<div className='binary-file-message'>
