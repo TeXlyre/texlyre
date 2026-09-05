@@ -4,7 +4,9 @@ const { copyKTeXFonts } = require('./copy-mathlive-fonts.cjs');
 const { copyDetypifyAssets } = require('./copy-detypify-assets.cjs');
 const { copyTypstAssets } = require('./copy-typst-assets.cjs');
 const { copyOnigurumaWasm } = require('./copy-oniguruma-wasm.cjs');
-const { copyWasmLatexToolsAssets } = require('./copy-wasm-latex-tools-assets.cjs');
+const {
+	copyWasmLatexToolsAssets,
+} = require('./copy-wasm-latex-tools-assets.cjs');
 const { downloadCoreAssets } = require('./download-core-assets.cjs');
 
 async function setupAssets() {

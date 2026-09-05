@@ -6,19 +6,13 @@ const webperlSource = path.resolve(
 	__dirname,
 	'../node_modules/wasm-latex-tools/assets/core/webperl',
 );
-const webperlDestination = path.resolve(
-	__dirname,
-	'../public/core/webperl',
-);
+const webperlDestination = path.resolve(__dirname, '../public/core/webperl');
 
 const perlSource = path.resolve(
 	__dirname,
 	'../node_modules/wasm-latex-tools/assets/core/perl',
 );
-const perlDestination = path.resolve(
-	__dirname,
-	'../public/core/perl',
-);
+const perlDestination = path.resolve(__dirname, '../public/core/perl');
 
 async function copyWasmLatexToolsAssets() {
 	try {
