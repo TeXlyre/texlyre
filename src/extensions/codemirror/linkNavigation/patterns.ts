@@ -18,6 +18,12 @@ export const latexLinkPatterns: LinkPattern[] = [
 		fileType: 'latex',
 	},
 	{
+		pattern:
+			/\\(?:input|include|subfile|bibliography|addbibresource|includegraphics|includesvg|lstinputlisting|verbatiminput)(?:\[[^\]]*\])?\{([^}]+)\}/g,
+		type: 'file',
+		fileType: 'latex',
+	},
+	{
 		pattern: /\\cite(?:\w*)\{([^}]+)\}/g,
 		type: 'bibentry',
 		fileType: 'latex',

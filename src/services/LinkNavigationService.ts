@@ -1,11 +1,13 @@
 // src/services/linkNavigationService.ts
 import { createNamedLogger } from '@/logging';
-import { isBibFile } from '../utils/fileUtils';
+import { isBibFile, isLatexFile } from '../utils/fileUtils';
 import { gotoEditor } from '../utils/editorNavigator';
 import { fileStoreService } from './FileStoreService';
 import { filePathCacheService } from './FilePathCacheService';
 
 const moduleLog = createNamedLogger('LinkNavigationService');
+
+const LATEX_IMPLICIT_EXTENSIONS = ['.tex', '.bib'];
 
 export interface DetectedLink {
 	from: number;
@@ -103,7 +105,37 @@ class LinkNavigationService {
 	}
 
 	private async findTargetFile(filePath: string) {
-		return filePathCacheService.findFileByPath(this.currentFilePath, filePath);
+		if (!isLatexFile(this.currentFilePath)) {
+			return filePathCacheService.findFileByPath(
+				this.currentFilePath,
+				filePath,
+			);
+		}
+
+		const candidates = /\.[A-Za-z0-9]+$/.test(filePath)
+			? [filePath]
+			: [
+					filePath,
+					...LATEX_IMPLICIT_EXTENSIONS.map((ext) => `${filePath}${ext}`),
+				];
+
+		const fromPaths = [
+			filePathCacheService.getMainFilePath(),
+			'',
+			this.currentFilePath,
+		];
+
+		for (const candidate of candidates) {
+			for (const fromPath of fromPaths) {
+				const file = await filePathCacheService.findFileByPath(
+					fromPath,
+					candidate,
+				);
+				if (file) return file;
+			}
+		}
+
+		return null;
 	}
 
 	private navigateToUrl(url: string): void {

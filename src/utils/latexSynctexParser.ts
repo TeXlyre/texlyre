@@ -80,6 +80,14 @@ const buildIndex = (text: string): Index => {
 	const byPage = new Map<number, Box[]>();
 	let page = 0;
 	let inContent = false;
+	let rootPrefix = '';
+
+	const toRootRelative = (file: string): string => {
+		const path = file.replace(/\/\.\//g, '/');
+		return rootPrefix && path.startsWith(rootPrefix)
+			? path.substring(rootPrefix.length)
+			: path;
+	};
 
 	for (const raw of text.split('\n')) {
 		if (!raw) continue;
@@ -94,7 +102,11 @@ const buildIndex = (text: string): Index => {
 		}
 
 		if (!inContent) {
-			if (raw === 'Content:') inContent = true;
+			if (raw === 'Content:') {
+				inContent = true;
+				const main = (inputs.get(1) ?? '').replace(/\/\.\//g, '/');
+				rootPrefix = main.substring(0, main.lastIndexOf('/') + 1);
+			}
 			continue;
 		}
 
@@ -121,8 +133,10 @@ const buildIndex = (text: string): Index => {
 		const fields = parseRecord(raw);
 		if (!fields) continue;
 
-		const file = inputs.get(fields.tag);
-		if (!file || page === 0) continue;
+		const input = inputs.get(fields.tag);
+		if (!input || page === 0) continue;
+
+		const file = toRootRelative(input);
 
 		const key = `${file}:${fields.line}`;
 
@@ -168,15 +182,22 @@ export function parseSynctex(bytes: Uint8Array): SourceMapData {
 			const target = normalize(file);
 			const targetBase = target.split('/').pop() ?? '';
 
-			const matchesFile = (indexed: string): boolean => {
+			const rankFile = (indexed: string): number => {
 				const n = normalize(indexed);
-				return (
-					n === target ||
-					n.endsWith(`/${target}`) ||
-					target.endsWith(`/${n}`) ||
-					(!!targetBase && n.split('/').pop() === targetBase)
-				);
+				if (n === target) return 0;
+				if (n.endsWith(`/${target}`) || target.endsWith(`/${n}`)) return 1;
+				if (targetBase && n.split('/').pop() === targetBase) return 2;
+				return Number.POSITIVE_INFINITY;
 			};
+
+			let bestRank = Number.POSITIVE_INFINITY;
+			for (const key of index.byFileLine.keys()) {
+				bestRank = Math.min(
+					bestRank,
+					rankFile(key.substring(0, key.lastIndexOf(':'))),
+				);
+			}
+			if (bestRank === Number.POSITIVE_INFINITY) return null;
 
 			let exact: Box[] = [];
 			let nearest: Box[] = [];
@@ -184,7 +205,7 @@ export function parseSynctex(bytes: Uint8Array): SourceMapData {
 
 			for (const [key, boxes] of index.byFileLine) {
 				const colon = key.lastIndexOf(':');
-				if (!matchesFile(key.substring(0, colon))) continue;
+				if (rankFile(key.substring(0, colon)) !== bestRank) continue;
 
 				const blockLine = Number.parseInt(key.substring(colon + 1), 10);
 				if (blockLine === line) {

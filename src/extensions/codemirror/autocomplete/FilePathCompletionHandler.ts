@@ -12,6 +12,7 @@ import {
 	isMarkdownFile,
 	isTypstFile,
 } from '../../../utils/fileUtils';
+import { filePathCacheService } from '../../../services/FilePathCacheService';
 import { filePathCacheField } from '../PathAndBibAutocompleteExtension';
 import {
 	latexCommandPatterns,
@@ -34,12 +35,14 @@ type CommandPattern = {
 	pattern: RegExp;
 	fileTypes: PathFileType;
 	pathGroup?: number;
+	stripExtension?: string;
 };
 
 type PathMatch = {
 	partialPath: string;
 	from: number;
 	fileTypes: PathFileType;
+	stripExtension?: string;
 };
 
 export class FilePathCompletionHandler {
@@ -58,6 +61,7 @@ export class FilePathCompletionHandler {
 			candidatePaths,
 			currentFilePath,
 			match.partialPath,
+			match.stripExtension,
 		);
 
 		if (options.length === 0) return null;
@@ -98,6 +102,7 @@ export class FilePathCompletionHandler {
 				partialPath,
 				from: line.from + fromInLine,
 				fileTypes: patternConfig.fileTypes,
+				stripExtension: patternConfig.stripExtension,
 			};
 		}
 
@@ -249,12 +254,17 @@ export class FilePathCompletionHandler {
 		paths: string[],
 		currentFilePath: string,
 		partialPath: string,
+		stripExtension?: string,
 	): Completion[] {
 		const normalizedPartial = partialPath.toLowerCase();
 
 		return paths
 			.map((path) => {
-				const relativePath = this.getRelativePath(currentFilePath, path);
+				const relativePath = this.getInsertPath(
+					currentFilePath,
+					path,
+					stripExtension,
+				);
 				const fileName = path.substring(path.lastIndexOf('/') + 1);
 
 				return {
@@ -339,6 +349,22 @@ export class FilePathCompletionHandler {
 		if (name.includes(partial)) return 30;
 
 		return 0;
+	}
+
+	private getInsertPath(
+		currentFilePath: string,
+		targetPath: string,
+		stripExtension?: string,
+	): string {
+		if (!isLatexFile(currentFilePath)) {
+			return this.getRelativePath(currentFilePath, targetPath);
+		}
+
+		const path = filePathCacheService.toCompileRelativePath(targetPath);
+
+		return stripExtension && path.toLowerCase().endsWith(stripExtension)
+			? path.slice(0, -stripExtension.length)
+			: path;
 	}
 
 	private getRelativePath(currentFilePath: string, targetPath: string): string {

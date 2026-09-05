@@ -21,6 +21,7 @@ import {
 	isLatexMainFile,
 	isTemporaryFile,
 } from '../../utils/fileUtils';
+import { filePathCacheService } from '../../services/FilePathCacheService';
 import { fileStoreService } from '../../services/FileStoreService';
 import { latexService } from '../../services/LaTeXService';
 import { BUSYTEX_BUNDLE_LABELS } from '../../extensions/texlyre-busytex/BusyTeXService';
@@ -282,6 +283,12 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		linkedFileInfo,
 		autoMainFile,
 	]);
+
+	useEffect(() => {
+		if (effectiveMainFile) {
+			filePathCacheService.setMainFilePath(effectiveMainFile);
+		}
+	}, [effectiveMainFile]);
 
 	useEffect(() => {
 		if (!useSharedSettings || !projectEngine) return;

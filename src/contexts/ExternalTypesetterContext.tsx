@@ -5,6 +5,7 @@ import { type ReactNode, createContext, useCallback, useState } from 'react';
 import { useFileTree } from '../hooks/useFileTree';
 import { typesetterRegistryService } from '../services/TypesetterRegistryService';
 import { fileStoreService } from '../services/FileStoreService';
+import { filePathCacheService } from '../services/FilePathCacheService';
 import { latexSourceMapService } from '../services/LaTeXSourceMapService';
 import {
 	type PopoutContentKind,
@@ -156,6 +157,7 @@ export const ExternalTypesetterProvider: React.FC<
 					]);
 
 					if (synctex) {
+						filePathCacheService.setMainFilePath(mainFileName);
 						latexSourceMapService.loadFromBytes(synctex.data);
 					} else {
 						latexSourceMapService.clear();

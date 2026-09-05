@@ -253,15 +253,16 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({
 					false,
 				);
 				const normalized = result.file.replace(/^\.?\/+/, '');
+				const mainDir = (service.getMainFilePath?.() ?? '')
+					.replace(/^\/+/, '')
+					.replace(/[^/]*$/, '');
+				const candidates = allFiles.filter((file) => !file.isDeleted);
 
-				const targetFile = allFiles.find(
-					(file) =>
-						!file.isDeleted &&
-						(file.path === result.file ||
-							file.path === `/${normalized}` ||
-							file.path.endsWith(`/${normalized}`) ||
-							file.name === normalized.split('/').pop()),
-				);
+				const targetFile =
+					candidates.find((file) => file.path === `/${mainDir}${normalized}`) ??
+					candidates.find((file) => file.path === `/${normalized}`) ??
+					candidates.find((file) => file.path.endsWith(`/${normalized}`)) ??
+					candidates.find((file) => file.name === normalized.split('/').pop());
 
 				if (!targetFile) {
 					moduleLog.warn(`Target file not found: ${result.file}`);
