@@ -4,7 +4,6 @@ const { copyKTeXFonts } = require('./copy-mathlive-fonts.cjs');
 const { copyDetypifyAssets } = require('./copy-detypify-assets.cjs');
 const { copyTypstAssets } = require('./copy-typst-assets.cjs');
 const { copyOnigurumaWasm } = require('./copy-oniguruma-wasm.cjs');
-const { downloadGrammars } = require('./download-grammars.cjs');
 const { downloadCoreAssets } = require('./download-core-assets.cjs');
 
 async function setupAssets() {
@@ -16,7 +15,6 @@ async function setupAssets() {
 		await copyDetypifyAssets();
 		await copyTypstAssets();
 		await copyOnigurumaWasm();
-		await downloadGrammars();
 		await downloadCoreAssets();
 		console.log('\n✅ Asset setup complete');
 	} catch (err) {

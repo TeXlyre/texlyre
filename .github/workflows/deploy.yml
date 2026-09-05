@@ -33,6 +33,8 @@ jobs:
        run: npm ci
      - name: Build
        run: npm run build:prod
+       env:
+         TEXLYRE_INCLUDE_OPTIONAL: ${{ github.repository == 'TeXlyre/texlyre' && '1' || '0' }}
      - name: Setup Pages
        uses: actions/configure-pages@v4
      - name: Upload artifact

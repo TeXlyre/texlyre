@@ -20,12 +20,7 @@ public/core/texfmt/*
 public/core/busytex/*
 public/core/oniguruma/*
 
-public/assets/grammars/**
-!public/assets/grammars/**/
-!public/assets/grammars/**/manifest.json
-!public/assets/grammars/**/*-embedded.tmLanguage.json
-!public/assets/grammars/lilypond/README.md
-
+public/assets/grammars/
 src/plugins/
 !src/plugins/PluginRegistry.ts
 !src/plugins/PluginInterface.ts
