@@ -188,7 +188,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 	const getSyncButtonText = () => {
 		if (!syncSession) return t('Sync All');
 		if (syncProgress.total === 0) return t('Connecting...');
-		return `Sync Active (${syncProgress.current}/${syncProgress.total})`;
+		return ` (${syncProgress.current}/${syncProgress.total})`;
 	};
 
 	return (
@@ -230,20 +230,9 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 				</div>
 
 				{syncSession && syncProgress.total > 0 && (
-					<div
-						className='sync-progress'
-						style={{
-							padding: '0.5rem',
-							fontSize: '0.8rem',
-							color: 'var(--accent-color)',
-							borderBottom: '1px solid var(--border-color)',
-							backgroundColor: 'var(--accent-color)',
-						}}
-					>
+					<div className='sync-progress'>
 						{t('🔄')}
-
-						{getSyncButtonText()}
-						{t('- Real-time sync active')}
+						{getSyncButtonText()} {t('- Real-time sync active')}
 					</div>
 				)}
 
