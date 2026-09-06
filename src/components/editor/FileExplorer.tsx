@@ -338,6 +338,12 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
 	const handleOpenFolder = async () => {
 		if (!currentProjectId) return;
+
+		if (workspaceService.getStatus().projectId) {
+			document.dispatchEvent(new CustomEvent('show-workspace-modal'));
+			return;
+		}
+
 		try {
 			await workspaceService.connect(currentProjectId);
 			await refreshFileTree();

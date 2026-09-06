@@ -2576,20 +2576,20 @@
   resolved "https://registry.npmjs.org/@msgpack/msgpack/-/msgpack-2.8.0.tgz"
   integrity sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ==
 
-"@myriaddreamin/typst-ts-renderer@npm:@texlyre/typst-ts-renderer@^0.8.0-rc1", "@myriaddreamin/typst-ts-renderer@npm:@texlyre/typst-ts-renderer@0.8.0-rc1":
-  version "0.8.0-rc1"
-  resolved "https://registry.npmjs.org/@texlyre/typst-ts-renderer/-/typst-ts-renderer-0.8.0-rc1.tgz"
-  integrity sha512-9rrQGMLOsI+BzSuNICpkvG0j6MV8/FW7tgL8UTc6cRvLzNQ5jBOgIIFR4ADWL4/0k7d4P1dY1WFOXdEBbV7oIg==
+"@myriaddreamin/typst-ts-renderer@npm:@texlyre/typst-ts-renderer@^0.8.0-rc3", "@myriaddreamin/typst-ts-renderer@npm:@texlyre/typst-ts-renderer@0.8.0-rc3":
+  version "0.8.0-rc3"
+  resolved "https://registry.npmjs.org/@texlyre/typst-ts-renderer/-/typst-ts-renderer-0.8.0-rc3.tgz"
+  integrity sha512-b36DRDZ14mzGFBLj3wFaB2tBh9Kj0YoGHncgRZfhKhopSYEUT0wjANFR9LETuolTL1p2oLg8y9TP5t/553p9wQ==
 
-"@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@^0.8.0-rc1", "@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@0.8.0-rc1":
-  version "0.8.0-rc1"
-  resolved "https://registry.npmjs.org/@texlyre/typst-ts-web-compiler/-/typst-ts-web-compiler-0.8.0-rc1.tgz"
-  integrity sha512-Cq9AIH0pKXBwR34JosX1yxZhgUpYeuiD7HRvOvgM+dDJYtSHnn9jJ8p55tC3XG3V7IxKR+rvs+zTs9j8lfNLpA==
+"@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@^0.8.0-rc3", "@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@0.8.0-rc3":
+  version "0.8.0-rc3"
+  resolved "https://registry.npmjs.org/@texlyre/typst-ts-web-compiler/-/typst-ts-web-compiler-0.8.0-rc3.tgz"
+  integrity sha512-zKEXIMNSmmCTeSNGaUOcsb50u9AFgiZPR2uiiYd1+NmFW8k3UPrCAYh9WwJdN1lEfsU5FkwAa3PE/34JBX8Qjw==
 
-"@myriaddreamin/typst.ts@npm:@texlyre/typst.ts@0.8.0-rc1":
-  version "0.8.0-rc1"
-  resolved "https://registry.npmjs.org/@texlyre/typst.ts/-/typst.ts-0.8.0-rc1.tgz"
-  integrity sha512-Cr/gVzTNT3OL8DOeNYfU/XYzZQTWEGC5j7NSDA5rkvIIBYo53EZipXqt/3qoLWlZ9eA5DhW7e+FWanq22tLKOA==
+"@myriaddreamin/typst.ts@npm:@texlyre/typst.ts@0.8.0-rc3":
+  version "0.8.0-rc3"
+  resolved "https://registry.npmjs.org/@texlyre/typst.ts/-/typst.ts-0.8.0-rc3.tgz"
+  integrity sha512-6FMSIW/JbMF18B7E5jIm3dxnsOplVjij4xa6E67+sJpVMXNPt0u7bYBJPZbZPUzFjXzLhg8gi1Ev4HXavktzmQ==
   dependencies:
     idb "^7.1.1"
 

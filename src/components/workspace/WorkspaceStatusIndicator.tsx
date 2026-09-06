@@ -21,6 +21,14 @@ const WorkspaceStatusIndicator: React.FC = () => {
 		return workspaceService.addStatusListener(setStatus);
 	}, []);
 
+	useEffect(() => {
+		const handleShowModal = () => setShowModal(true);
+
+		document.addEventListener('show-workspace-modal', handleShowModal);
+		return () =>
+			document.removeEventListener('show-workspace-modal', handleShowModal);
+	}, []);
+
 	if (!status.projectId) return null;
 
 	const tooltip = status.needsPermission

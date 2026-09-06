@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.11.15",
+	"version": "0.12.0",
 	"description": "A local-first LaTeX & Typst collaborative web editor ",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -89,9 +89,9 @@
 		"@milkdown/crepe": "^7.22.1",
 		"@milkdown/kit": "^7.22.1",
 		"@milkdown/react": "^7.22.1",
-		"@myriaddreamin/typst-ts-renderer": "npm:@texlyre/typst-ts-renderer@0.8.0-rc1",
-		"@myriaddreamin/typst-ts-web-compiler": "npm:@texlyre/typst-ts-web-compiler@0.8.0-rc1",
-		"@myriaddreamin/typst.ts": "npm:@texlyre/typst.ts@0.8.0-rc1",
+		"@myriaddreamin/typst-ts-renderer": "npm:@texlyre/typst-ts-renderer@0.8.0-rc3",
+		"@myriaddreamin/typst-ts-web-compiler": "npm:@texlyre/typst-ts-web-compiler@0.8.0-rc3",
+		"@myriaddreamin/typst.ts": "npm:@texlyre/typst.ts@0.8.0-rc3",
 		"@picocss/pico": "^2.1.1",
 		"@replit/codemirror-emacs": "^6.1.0",
 		"@replit/codemirror-vim": "^6.4.0",
@@ -205,8 +205,8 @@
 		},
 		"peerDependencyRules": {
 			"allowedVersions": {
-				"@myriaddreamin/typst-ts-renderer": "0.8.0-rc1",
-				"@myriaddreamin/typst-ts-web-compiler": "0.8.0-rc1"
+				"@myriaddreamin/typst-ts-renderer": "0.8.0-rc3",
+				"@myriaddreamin/typst-ts-web-compiler": "0.8.0-rc3"
 			}
 		},
 		"onlyBuiltDependencies": [
