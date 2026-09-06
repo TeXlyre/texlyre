@@ -85,25 +85,25 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 						<strong>
 							{t('{typesetter} Engine:', { typesetter: t('Typst') })}
 						</strong>{' '}
-						{t('@myriaddreamin/typst.ts v0.8.0-rc1')}
+						{t('@myriaddreamin/typst.ts v0.8.0-rc3')}
 					</div>
 					<div className='typesetter-tooltip-section'>
 						<strong>
 							{t('{typesetter} Renderer:', { typesetter: t('Typst') })}
 						</strong>{' '}
-						{t('@texlyre/typst-ts-renderer v0.8.0-rc1')}
+						{t('@texlyre/typst-ts-renderer v0.8.0-rc3')}
 					</div>
 					<div className='typesetter-tooltip-section'>
 						<strong>
 							{t('{typesetter} Compiler:', { typesetter: t('Typst') })}
 						</strong>{' '}
-						{t('@texlyre/typst-ts-compiler v0.8.0-rc1')}
+						{t('@texlyre/typst-ts-compiler v0.8.0-rc3')}
 					</div>
 					<div className='typesetter-tooltip-section'>
 						<strong>
 							{t('{typesetter} Version:', { typesetter: t('Typst') })}
 						</strong>{' '}
-						{t('0.15.0 (15/06/2026)')}
+						{t('0.15.1 (17/07/2026)')}
 					</div>
 					<div className='typesetter-tooltip-section'>
 						<strong>{t('Output Format:')}</strong>

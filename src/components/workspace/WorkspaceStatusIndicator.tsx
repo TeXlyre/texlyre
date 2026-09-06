@@ -34,9 +34,9 @@ const WorkspaceStatusIndicator: React.FC = () => {
 	const tooltip = status.needsPermission
 		? t('Folder access is not granted. Click to reconnect.')
 		: t('Mirroring {count} files with {name}', {
-			count: status.fileCount,
-			name: status.directoryName ?? '',
-		});
+				count: status.fileCount,
+				name: status.directoryName ?? '',
+			});
 
 	return (
 		<>
