@@ -21,14 +21,22 @@ const WorkspaceStatusIndicator: React.FC = () => {
 		return workspaceService.addStatusListener(setStatus);
 	}, []);
 
+	useEffect(() => {
+		const handleShowModal = () => setShowModal(true);
+
+		document.addEventListener('show-workspace-modal', handleShowModal);
+		return () =>
+			document.removeEventListener('show-workspace-modal', handleShowModal);
+	}, []);
+
 	if (!status.projectId) return null;
 
 	const tooltip = status.needsPermission
 		? t('Folder access is not granted. Click to reconnect.')
 		: t('Mirroring {count} files with {name}', {
-				count: status.fileCount,
-				name: status.directoryName ?? '',
-			});
+			count: status.fileCount,
+			name: status.directoryName ?? '',
+		});
 
 	return (
 		<>
