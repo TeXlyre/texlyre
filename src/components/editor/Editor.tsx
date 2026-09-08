@@ -20,7 +20,6 @@ import { hasToolbarSupport } from '../../extensions/codemirror/ToolbarExtension'
 import { useEditorView } from '../../hooks/editor/useEditorView';
 import { useCollab } from '../../hooks/useCollab';
 import { useComments } from '../../hooks/useComments';
-import { useReview } from '../../hooks/useReview';
 import { usePluginFileInfo } from '../../hooks/usePluginFileInfo';
 import { useSourceMap } from '../../hooks/useSourceMap';
 import { useSettings } from '../../hooks/useSettings';
@@ -218,7 +217,7 @@ const EditorContent: React.FC<{
 		forwardClickEnabled,
 		forwardClickMode,
 	} = useSourceMap();
-	const { parseComments, addComment, updateComments } = useComments();
+	const { addComment, updateComments } = useComments();
 	const fileInfo = usePluginFileInfo(fileId, fileName);
 	const {
 		data: doc,

@@ -31,14 +31,14 @@ const config: TexlyreConfig = {
         themeColor: {
             light: '#fafafa',
             dark: '#11191f',
-            fallback: '#fafafa',
+            fallback: '#11191f',
         },
         manifest: './manifest.json',
         startUrl: './',
         backgroundColor: {
             light: '#fafafa',
             dark: '#11191f',
-            fallback: '#fafafa',
+            fallback: '#11191f',
         },
         icons: [
             {

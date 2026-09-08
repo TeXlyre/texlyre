@@ -17,6 +17,7 @@ import { pluginRegistry } from '../plugins/PluginRegistry';
 interface ThemeContextType {
 	currentThemePlugin: ThemePlugin | null;
 	currentVariant: string;
+	resolvedVariant: string | null;
 	currentLayout: ThemeLayout | null;
 	setTheme: (pluginId: string) => void;
 	setVariant: (variantId: string) => void;
@@ -27,6 +28,7 @@ interface ThemeContextType {
 export const ThemeContext = createContext<ThemeContextType>({
 	currentThemePlugin: null,
 	currentVariant: 'dark',
+	resolvedVariant: 'dark',
 	currentLayout: null,
 	setTheme: () => {},
 	setVariant: () => {},
@@ -174,6 +176,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 			value={{
 				currentThemePlugin,
 				currentVariant,
+				resolvedVariant,
 				currentLayout,
 				setTheme,
 				setVariant,

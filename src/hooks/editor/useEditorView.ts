@@ -181,7 +181,7 @@ export const useEditorView = (
 	} = useEditor();
 
 	const { user } = useAuth();
-	const { currentVariant } = useTheme();
+	const { currentVariant, resolvedVariant } = useTheme();
 
 	const ytextRef = useRef<Y.Text | null>(null);
 	const viewRef = useRef<EditorView | null>(null);
@@ -404,7 +404,7 @@ export const useEditorView = (
 		editorSettings.languageFeatures.lspHighlighting
 			? resolveHighlightTheme(
 					editorSettings.highlightTheme || 'auto',
-					currentVariant,
+					resolvedVariant ?? currentVariant,
 				)
 			: [];
 
@@ -915,6 +915,7 @@ export const useEditorView = (
 		});
 	}, [
 		currentVariant,
+		resolvedVariant,
 		editorSettings.highlightTheme,
 		editorSettings.languageFeatures.lspHighlighting,
 		getSyntaxHighlightingEnabled,
