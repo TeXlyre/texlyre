@@ -201,6 +201,7 @@ export const useDiskFiles = (docUrl: string | null) => {
 
 		const initialize = async () => {
 			try {
+				await fileStoreService.initialize(docUrl);
 				await seedLinks();
 				if (!isCancelled) await syncFromDisk();
 			} catch (error) {
