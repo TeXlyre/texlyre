@@ -19,6 +19,14 @@ export type DeepPartial<T> = {
 	[P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
 };
 
+export type PwaColor =
+	| string
+	| {
+			light: string;
+			dark: string;
+			fallback?: string;
+	  };
+
 export interface TexlyreConfig {
 	title: string;
 	tagline: string;
@@ -36,7 +44,7 @@ export interface TexlyreConfig {
 
 	pwa?: {
 		enabled: boolean;
-		themeColor: string;
+		themeColor: PwaColor;
 		manifest: string;
 
 		// All optional – if omitted, your generator can fall back
@@ -46,7 +54,7 @@ export interface TexlyreConfig {
 		shortName?: string;
 		description?: string;
 		display?: 'fullscreen' | 'standalone' | 'minimal-ui' | 'browser';
-		backgroundColor?: string;
+		backgroundColor?: PwaColor;
 		icons?: Array<{
 			src: string;
 			sizes: string;

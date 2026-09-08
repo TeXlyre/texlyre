@@ -9,6 +9,13 @@ const Filename = fileURLToPath(import.meta.url);
 const Dirname = path.dirname(Filename);
 const rootDir = path.join(Dirname, '..');
 
+interface NormalizedPwaColor {
+	light: string;
+	dark: string;
+	fallback: string;
+	adaptive: boolean;
+}
+
 async function loadConfig() {
 	const configPath = path.join(rootDir, 'texlyre.config.ts');
 	const { default: config } = await import(pathToFileURL(configPath).href);
@@ -67,6 +74,88 @@ function flattenProperties(properties: any): Record<string, any> {
 	return result;
 }
 
+function normalizePwaColor(
+	value: unknown,
+	defaultColor: string,
+): NormalizedPwaColor {
+	if (typeof value === 'string' && value.length > 0) {
+		return {
+			light: value,
+			dark: value,
+			fallback: value,
+			adaptive: false,
+		};
+	}
+
+	if (value && typeof value === 'object') {
+		const color = value as {
+			light?: unknown;
+			dark?: unknown;
+			fallback?: unknown;
+		};
+
+		if (
+			typeof color.light === 'string' &&
+			color.light.length > 0 &&
+			typeof color.dark === 'string' &&
+			color.dark.length > 0
+		) {
+			return {
+				light: color.light,
+				dark: color.dark,
+				fallback:
+					typeof color.fallback === 'string' && color.fallback.length > 0
+						? color.fallback
+						: color.light,
+				adaptive: true,
+			};
+		}
+	}
+
+	return {
+		light: defaultColor,
+		dark: defaultColor,
+		fallback: defaultColor,
+		adaptive: false,
+	};
+}
+
+function generatePwaColorHead(pwa: any): string {
+	const themeColor = normalizePwaColor(pwa.themeColor, '#000000');
+	const backgroundColor = normalizePwaColor(pwa.backgroundColor, '#ffffff');
+	const lines: string[] = ['  <!-- PWA adaptive colors:start -->'];
+
+	if (themeColor.adaptive) {
+		lines.push(
+			`  <meta name="theme-color" content="${themeColor.light}" media="(prefers-color-scheme: light)">`,
+			`  <meta name="theme-color" content="${themeColor.dark}" media="(prefers-color-scheme: dark)">`,
+		);
+	} else {
+		lines.push(`  <meta name="theme-color" content="${themeColor.fallback}">`);
+	}
+
+	if (backgroundColor.adaptive) {
+		lines.push(
+			'  <style id="pwa-background-colors">',
+			'    html,',
+			'    body {',
+			`      background-color: ${backgroundColor.light};`,
+			'    }',
+			'',
+			'    @media (prefers-color-scheme: dark) {',
+			'      html,',
+			'      body {',
+			`        background-color: ${backgroundColor.dark};`,
+			'      }',
+			'    }',
+			'  </style>',
+		);
+	}
+
+	lines.push('  <!-- PWA adaptive colors:end -->');
+	return lines.join('\n');
+}
+
 function generatePluginsConfig(config: any) {
 	const allPlugins: string[] = [];
 
@@ -112,10 +201,26 @@ function generateIndexHtml(config: any) {
 	);
 
 	if (config.pwa?.enabled) {
-		indexContent = indexContent.replace(
-			/name="theme-color" content="[^"]*"/,
-			`name="theme-color" content="${config.pwa.themeColor}"`,
-		);
+		const pwaColorHead = generatePwaColorHead(config.pwa);
+		const managedBlockPattern =
+			/[ \t]*<!-- PWA adaptive colors:start -->[\s\S]*?<!-- PWA adaptive colors:end -->[ \t]*\n?/;
+
+		if (managedBlockPattern.test(indexContent)) {
+			indexContent = indexContent.replace(
+				managedBlockPattern,
+				`${pwaColorHead}\n`,
+			);
+		} else {
+			// Remove the legacy single theme-color tag before adding the managed block.
+			indexContent = indexContent.replace(
+				/[ \t]*<meta\s+name=["']theme-color["'][^>]*>[ \t]*\n?/g,
+				'',
+			);
+			indexContent = indexContent.replace(
+				/(^[ \t]*<title>)/m,
+				`${pwaColorHead}\n$1`,
+			);
+		}
 	}
 
 	fs.writeFileSync(indexPath, indexContent);
@@ -167,13 +272,17 @@ function generateManifest(config: any) {
 
 	manifest.display = config.pwa.display ?? manifest.display ?? 'standalone';
 
-	manifest.background_color =
-		config.pwa.backgroundColor ?? manifest.background_color ?? '#ffffff';
+	// The Web App Manifest only supports one static color. For adaptive config
+	// objects, use their explicit fallback (or light if fallback is omitted).
+	manifest.background_color = normalizePwaColor(
+		config.pwa.backgroundColor,
+		manifest.background_color ?? '#ffffff',
+	).fallback;
 
-	// Keep themeColor in sync with config & index.html
-	manifest.theme_color =
-		config.pwa.themeColor ?? manifest.theme_color ?? '#000000';
-
+	manifest.theme_color = normalizePwaColor(
+		config.pwa.themeColor,
+		manifest.theme_color ?? '#000000',
+	).fallback;
 	// Icons:
 	// - If pwa.icons is provided, override
 	// - Otherwise, keep whatever is already in manifest.json

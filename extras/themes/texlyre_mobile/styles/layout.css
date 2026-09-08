@@ -178,6 +178,10 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	display: none;
 }
 
+[data-layout="texlyre-mobile"] footer .workspace-badge {
+	display: none;
+}
+
 /* Sidebar / explorer / panels */
 [data-layout="texlyre-mobile"] .file-explorer,
 [data-layout="texlyre-mobile"] .sidebar-container,
@@ -441,16 +445,6 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	.codemirror-editor-container,
 [data-layout="texlyre-mobile"] body.mobile-view-output .editor-tabs-container {
 	display: none !important;
-}
-
-[data-layout="texlyre-mobile"] body.mobile-view-output .editor-container-outer,
-[data-layout="texlyre-mobile"]
-	body.mobile-view-output
-	.editor-output-container {
-	width: 100vw !important;
-	height: 100% !important;
-	flex: 1 !important;
-	display: flex !important;
 }
 
 [data-layout="texlyre-mobile"]

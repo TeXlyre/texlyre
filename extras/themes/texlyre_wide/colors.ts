@@ -110,15 +110,4 @@ export const themes = {
 		'secondary-background': '#f0f0f0',
 		secondary: '#696c77',
 	},
-	system: {
-		background: 'var(--background)',
-		color: 'var(--color)',
-		'text-color': 'var(--text-color)',
-		primary: 'var(--primary)',
-		'primary-hover': 'var(--primary-hover)',
-		'primary-focus': 'var(--primary-focus)',
-		'primary-inverse': 'var(--primary-inverse)',
-		'secondary-background': 'var(--secondary-background)',
-		secondary: 'var(--secondary)',
-	},
 };

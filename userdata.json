@@ -1,5 +1,5 @@
 {
-  "version": "1.3.2",
+  "version": "1.3.3",
   "settings": {
     "bibtex-viewer-auto-tidy": false,
     "bibtex-viewer-tidy-options": "standard",
@@ -51,7 +51,7 @@
     "status-page-url": "https://texlyre.org/upptime",
     "templates-api-url": "https://texlyre.github.io/texlyre-templates/api/templates.json",
     "theme-plugin": "texlyre-wide-theme",
-    "theme-variant": "atom_light",
+    "theme-variant": "system",
     "typst-auto-compile-on-open": false,
     "typst-default-format": "canvas",
     "typst-sourcemap-enable": true
@@ -75,7 +75,8 @@
   "forceUpdate": {
     "settings": [
       "status-page-url",
-      "status-json-url"
+      "status-json-url",
+      "theme-variant"
     ],
     "properties": []
   },
