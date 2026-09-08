@@ -59,27 +59,10 @@ const createTeXlyreWideTheme = (): ThemePlugin => {
 
 		applyTheme(variantId: string): boolean {
 			const theme = this.themes.find((t) => t.id === variantId);
-			if (!theme) return false;
+			if (!theme || variantId === 'system') return false;
 
 			currentThemeId = variantId;
-
-			if (variantId === 'system') {
-				const prefersDark = window.matchMedia(
-					'(prefers-color-scheme: dark)',
-				).matches;
-				applyThemeColors(prefersDark ? 'dark' : 'light');
-				document.documentElement.setAttribute(
-					'data-theme-mode',
-					prefersDark ? 'dark' : 'light',
-				);
-			} else {
-				applyThemeColors(variantId);
-				document.documentElement.setAttribute(
-					'data-theme-mode',
-					theme.isDark ? 'dark' : 'light',
-				);
-			}
-
+			applyThemeColors(variantId);
 			document.documentElement.setAttribute('data-theme', variantId);
 			document.documentElement.setAttribute('data-theme-plugin', 'texlyre');
 			document.documentElement.setAttribute(

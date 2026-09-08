@@ -7,8 +7,37 @@
   <meta name="viewport" content="width=1200, user-scalable=yes" />
   <!-- PWA Manifest -->
   <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#ffffff">
+  <style id="pwa-background-colors">
+    html,
+    body {
+      background-color: #fafafa;
+    }
 
+    @media (prefers-color-scheme: dark) {
+
+      html,
+      body {
+        background-color: #11191f;
+      }
+    }
+  </style>
+  <!-- PWA adaptive colors:start -->
+  <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#11191f" media="(prefers-color-scheme: dark)">
+  <style id="pwa-background-colors">
+    html,
+    body {
+      background-color: #fafafa;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      html,
+      body {
+        background-color: #11191f;
+      }
+    }
+  </style>
+  <!-- PWA adaptive colors:end -->
   <title>TeXlyre</title>
 </head>
 

@@ -28,10 +28,18 @@ const config: TexlyreConfig = {
 
     pwa: {
         enabled: true,
-        themeColor: '#ffffff',
+        themeColor: {
+            light: '#fafafa',
+            dark: '#11191f',
+            fallback: '#fafafa',
+        },
         manifest: './manifest.json',
         startUrl: './',
-        backgroundColor: '#ffffff',
+        backgroundColor: {
+            light: '#fafafa',
+            dark: '#11191f',
+            fallback: '#fafafa',
+        },
         icons: [
             {
                 src: './assets/images/TeXlyre_notext_192.png',
@@ -53,7 +61,7 @@ const config: TexlyreConfig = {
         viewers: ['bibtex', 'image', 'media', 'pdf', 'drawio', 'tikz', 'milkdown'],
         renderers: ['pdf', 'canvas'],
         loggers: ['latex_visualizer', 'typst_visualizer'],
-        bibliography: ['zotero', 'openalex'], // 'jabref' 
+        bibliography: ['zotero', 'openalex'], // 'jabref'
         lsp: [],
         backup: ['github', 'gitlab', 'forgejo', 'gitea'],
         themes: ['texlyre_slim', 'texlyre_wide', 'texlyre_mobile'],
@@ -61,9 +69,9 @@ const config: TexlyreConfig = {
 
     // Overwrite priority is default < local < mobile for corresponding configs
     userdata: {
-        version: '1.3.2',
+        version: '1.3.3',
         forceUpdate: {
-            settings: ['statusPageUrl', 'statusJsonUrl'],
+            settings: ['statusPageUrl', 'statusJsonUrl', 'themeVariant'],
             properties: [],
         },
         default: {
@@ -118,7 +126,7 @@ const config: TexlyreConfig = {
                 statusPageUrl: 'https://texlyre.org/upptime',
                 templatesApiUrl: 'https://texlyre.github.io/texlyre-templates/api/templates.json',
                 themePlugin: 'texlyre-wide-theme',
-                themeVariant: 'atom_light',
+                themeVariant: 'system',
                 typstAutoCompileOnOpen: false,
                 typstDefaultFormat: 'canvas',
                 typstSourcemapEnable: true,
@@ -165,7 +173,6 @@ const config: TexlyreConfig = {
                 statusJsonUrl: '',
                 statusPageUrl: '',
                 themeVariant: 'dark',
-
             },
             properties: {
                 global: {
