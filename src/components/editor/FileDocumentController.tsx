@@ -841,6 +841,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 	useEffect(() => {
 		const buildDocToFileMap = async () => {
+			if (!docUrl) return;
+
+			await fileStoreService.initialize(docUrl);
+
 			const allFiles = await fileStoreService.getAllFiles(false, false, false);
 			const map = new Map<string, LinkedFileInfo>();
 
@@ -859,7 +863,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			setDocToFileMapReady(true);
 		};
 
-		buildDocToFileMap();
+		void buildDocToFileMap();
 
 		document.addEventListener('refresh-file-tree', buildDocToFileMap);
 		document.addEventListener('file-saved', buildDocToFileMap);
@@ -868,7 +872,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			document.removeEventListener('refresh-file-tree', buildDocToFileMap);
 			document.removeEventListener('file-saved', buildDocToFileMap);
 		};
-	}, []);
+	}, [docUrl]);
 
 	useEffect(() => {
 		const handleOpenSearchPanel = () => {
