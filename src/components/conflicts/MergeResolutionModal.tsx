@@ -1,5 +1,4 @@
 // src/components/conflicts/MergeResolutionModal.tsx
-// src/components/conflicts/MergeResolutionModal.tsx
 import { useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
@@ -11,10 +10,21 @@ import {
 	type ConflictResolutionRequest,
 	type FileConflict,
 } from '../../services/MergeResolutionService';
-import MergeEditor, { type MergeEditorHandle } from './MergeEditor';
+import { stripAnnotationTagsWithSpans } from '../../utils/annotationTagUtils';
+import { SaveIcon } from '../common/Icons';
+import MergeEditor, {
+	type MergeEditorHandle,
+	type MergeEmptySideNote,
+} from './MergeEditor';
 
 const toText = (content: string | ArrayBuffer): string =>
 	typeof content === 'string' ? content : new TextDecoder().decode(content);
+
+const compareStatus = (conflict: FileConflict): string => {
+	if (conflict.changeType === 'added') return 'A';
+	if (conflict.changeType === 'deleted') return 'D';
+	return 'M';
+};
 
 type ResolutionState = {
 	resolution: ConflictResolution | null;
@@ -36,6 +46,9 @@ const MergeResolutionModal: React.FC = () => {
 	const [resetKeys, setResetKeys] = useState<Map<number, number>>(new Map());
 	const confirmedRef = useRef(false);
 	const mergeEditorRef = useRef<MergeEditorHandle>(null);
+	const [dirtyIndices, setDirtyIndices] = useState<Set<number>>(new Set());
+	const [isSaving, setIsSaving] = useState(false);
+	const [saveError, setSaveError] = useState<string | null>(null);
 	const [annotationStatus, setAnnotationStatus] = useState<{
 		surviving: number;
 		total: number;
@@ -49,15 +62,50 @@ const MergeResolutionModal: React.FC = () => {
 			setShowComplete(false);
 			setResetKeys(new Map());
 			setAnnotationStatus(null);
+			setDirtyIndices(new Set());
+			setIsSaving(false);
+			setSaveError(null);
 			confirmedRef.current = false;
 		});
 	}, []);
 
 	if (!request) return null;
 
+	const isCompare = request.mode === 'compare';
+	const isEdit = request.mode === 'edit';
+	const isInspect = isCompare || isEdit;
 	const current: FileConflict = request.conflicts[selectedIndex];
 	const localView = toText(current.localViewContent ?? current.localContent);
 	const remoteView = toText(current.remoteViewContent ?? current.remoteContent);
+	const localAnnotations =
+		typeof current.localContent === 'string'
+			? stripAnnotationTagsWithSpans(current.localContent)
+			: null;
+	const remoteAnnotations =
+		typeof current.remoteContent === 'string'
+			? stripAnnotationTagsWithSpans(current.remoteContent)
+			: null;
+	const emptySide: 'a' | 'b' | null =
+		isInspect &&
+		(current.changeType === 'added' || current.changeType === 'deleted')
+			? isEdit
+				? current.changeType === 'added'
+					? 'b'
+					: 'a'
+				: current.changeType === 'added'
+					? 'a'
+					: 'b'
+			: null;
+	const emptySideNote: MergeEmptySideNote | undefined = emptySide
+		? {
+				side: emptySide,
+				text: `${t('Empty')} — ${
+					emptySide === 'a'
+						? (request.labels?.local ?? t('Current'))
+						: (request.labels?.remote ?? t('Other'))
+				}`,
+			}
+		: undefined;
 
 	const getState = (index: number): ResolutionState =>
 		states.get(index) ?? { resolution: null };
@@ -71,15 +119,33 @@ const MergeResolutionModal: React.FC = () => {
 	};
 
 	const currentState = getState(selectedIndex);
+	const mergedStateAnnotations =
+		currentState.resolution?.action === 'merged'
+			? stripAnnotationTagsWithSpans(toText(currentState.resolution.content))
+			: null;
+	const localReviewDeletions =
+		mergedStateAnnotations?.reviewDeletions ??
+		(currentState.resolution?.action === 'keep-remote'
+			? remoteAnnotations?.reviewDeletions
+			: localAnnotations?.reviewDeletions);
 	const resolvedCount = request.conflicts.filter(
 		(_, i) => getState(i).resolution !== null,
 	).length;
 	const allResolved = resolvedCount === request.conflicts.length;
 
 	const navigateTo = (index: number) => {
+		if (!current.isBinary && currentState.resolution?.action === 'merged') {
+			const merged = mergeEditorRef.current?.getMergedContent();
+			if (merged !== undefined) {
+				updateState(selectedIndex, {
+					resolution: { action: 'merged', content: merged },
+				});
+			}
+		}
 		setSelectedIndex(index);
 		setShowComplete(false);
 		setAnnotationStatus(null);
+		setSaveError(null);
 	};
 
 	const handleCancel = () => {
@@ -92,10 +158,18 @@ const MergeResolutionModal: React.FC = () => {
 		if (confirmedRef.current) return;
 		confirmedRef.current = true;
 
+		const activeMerged =
+			!current.isBinary && currentState.resolution?.action === 'merged'
+				? mergeEditorRef.current?.getMergedContent()
+				: undefined;
 		const resolutions = new Map<string, ConflictResolution>();
 		request.conflicts.forEach((conflict, i) => {
 			const state = getState(i);
-			if (state.resolution) resolutions.set(conflict.path, state.resolution);
+			const resolution =
+				i === selectedIndex && activeMerged !== undefined
+					? { action: 'merged' as const, content: activeMerged }
+					: state.resolution;
+			if (resolution) resolutions.set(conflict.path, resolution);
 		});
 		request.resolve(resolutions);
 		setRequest(null);
@@ -144,6 +218,10 @@ const MergeResolutionModal: React.FC = () => {
 			});
 			return next;
 		});
+		if (isEdit) {
+			setDirtyIndices((prev) => new Set(prev).add(selectedIndex));
+			setSaveError(null);
+		}
 	};
 
 	const handleReset = () => {
@@ -155,18 +233,51 @@ const MergeResolutionModal: React.FC = () => {
 		});
 	};
 
+	const handleSaveCurrent = async (content?: string) => {
+		if (!isEdit || current.isBinary || !request.save || isSaving) return;
+		const merged =
+			content ?? mergeEditorRef.current?.getMergedContent() ?? localView;
+		setIsSaving(true);
+		setSaveError(null);
+		try {
+			await request.save(current.path, merged);
+			updateState(selectedIndex, {
+				resolution: { action: 'merged', content: merged },
+				initialMerged: merged,
+			});
+			setDirtyIndices((prev) => {
+				const next = new Set(prev);
+				next.delete(selectedIndex);
+				return next;
+			});
+		} catch (error) {
+			setSaveError(
+				error instanceof Error ? error.message : t('Failed to save file'),
+			);
+		} finally {
+			setIsSaving(false);
+		}
+	};
+
+	const title = isInspect
+		? (request.title ??
+			(isEdit ? t('Edit Working Tree') : t('Compare Versions')))
+		: t('Resolve Conflicts ({resolved}/{total} resolved)', {
+				resolved: resolvedCount,
+				total: request.conflicts.length,
+			});
+
 	return (
 		<Modal
 			isOpen
 			onClose={handleCancel}
-			title={t('Resolve Conflicts ({resolved}/{total} resolved)', {
-				resolved: resolvedCount,
-				total: request.conflicts.length,
-			})}
+			title={title}
 			size='wide'
-			closeOnClickOutside={false}
+			closeOnClickOutside={isCompare}
 		>
-			<div className='conflict-resolution'>
+			<div
+				className={`conflict-resolution${isInspect ? ' compare-mode' : ''}${isEdit ? ' edit-mode' : ''}`}
+			>
 				<ResizablePanel
 					direction='horizontal'
 					width={sidebarWidth}
@@ -176,14 +287,18 @@ const MergeResolutionModal: React.FC = () => {
 					collapsible={false}
 					className='conflict-sidebar-panel'
 				>
-					<div className='conflict-sidebar'>
-						<div className='conflict-sidebar-header'>
-							<h3>{t('Files')}</h3>
-							<span className='conflict-sidebar-count'>
-								{resolvedCount}/{request.conflicts.length}
+					<div className='ui-panel' data-height='full'>
+						<div className='ui-panel-header' data-shrink='true'>
+							<h3 className='ui-panel-title' data-size='body'>
+								{t('Files')}
+							</h3>
+							<span className='ui-meta'>
+								{isInspect
+									? request.conflicts.length
+									: `${resolvedCount}/${request.conflicts.length}`}
 							</span>
 						</div>
-						<div className='conflict-sidebar-list'>
+						<div className='ui-list ui-panel-content' data-overflow='y'>
 							{request.conflicts.map((conflict, i) => {
 								const state = getState(i);
 								const isResolved = state.resolution !== null;
@@ -191,25 +306,45 @@ const MergeResolutionModal: React.FC = () => {
 								return (
 									<div
 										key={conflict.path}
-										className={`conflict-file-node ${isResolved ? 'resolved' : 'unresolved'} ${isActive ? 'selected' : ''}`}
+										className='ui-list-item'
+										data-align='center'
+										data-gap='xs'
+										data-padding='xs'
+										data-interactive='true'
+										data-selected={isActive ? 'true' : undefined}
 										onClick={() => navigateTo(i)}
 									>
-										<span className='conflict-file-status'>
-											{isResolved ? '✓' : '○'}
-										</span>
-										<span className='conflict-file-name'>
-											{conflict.path.split('/').pop()}
-											{conflict.isBinary && (
-												<span className='conflict-file-badge'>{t('bin')}</span>
-											)}
-										</span>
-										<span className='conflict-file-dir'>
-											{conflict.path.includes('/')
-												? conflict.path.substring(
-														0,
-														conflict.path.lastIndexOf('/'),
-													)
-												: '/'}
+										<div
+											className='ui-list-content'
+											data-grow='true'
+											data-gap='xs'
+										>
+											<span className='conflict-file-name'>
+												{conflict.path.split('/').pop()}
+												{conflict.isBinary && (
+													<span className='ui-badge' data-variant='label'>
+														{t('bin')}
+													</span>
+												)}
+											</span>
+											<span className='conflict-file-dir ui-meta'>
+												{conflict.path.includes('/')
+													? conflict.path.substring(
+															0,
+															conflict.path.lastIndexOf('/'),
+														)
+													: '/'}
+											</span>
+										</div>
+										<span
+											className='ui-status'
+											data-tone={isResolved ? 'success' : 'muted'}
+										>
+											{isInspect
+												? compareStatus(conflict)
+												: isResolved
+													? '✓'
+													: '○'}
 										</span>
 									</div>
 								);
@@ -219,30 +354,44 @@ const MergeResolutionModal: React.FC = () => {
 				</ResizablePanel>
 
 				<div className='conflict-main'>
-					{showComplete ? (
-						<div className='conflict-complete'>
+					{showComplete && !isInspect ? (
+						<div className='conflict-complete ui-empty-state'>
 							<div className='conflict-complete-icon'>✓</div>
-							<h3>{t('All conflicts resolved')}</h3>
-							<p>
+							<h3 className='ui-panel-title'>{t('All conflicts resolved')}</h3>
+							<p className='ui-note'>
 								{t(
 									'Review your resolutions below, or click any file in the panel to revise.',
 								)}
 							</p>
-							<div className='conflict-complete-summary'>
+							<div className='conflict-complete-summary ui-list'>
 								{request.conflicts.map((conflict, i) => {
 									const state = getState(i);
 									const action = state.resolution?.action ?? 'unresolved';
 									return (
 										<div
 											key={conflict.path}
-											className='conflict-summary-item'
+											className='ui-list-item'
+											data-align='center'
+											data-justify='between'
+											data-gap='md'
+											data-padding='xs'
+											data-appearance='flat'
+											data-interactive='true'
 											onClick={() => navigateTo(i)}
 										>
 											<span className='conflict-summary-path'>
 												{conflict.path}
 											</span>
 											<span
-												className={`conflict-summary-action action-${action}`}
+												className='ui-badge'
+												data-variant='label'
+												data-tone={
+													action === 'merged'
+														? 'success'
+														: action === 'unresolved'
+															? 'warning'
+															: 'accent'
+												}
 											>
 												{action === 'keep-local' && t('Local')}
 												{action === 'keep-remote' && t('Remote')}
@@ -255,41 +404,83 @@ const MergeResolutionModal: React.FC = () => {
 						</div>
 					) : (
 						<>
-							<div className='conflict-path'>{current.path}</div>
+							<div className='conflict-path'>
+								<span>{current.path}</span>
+								{isInspect && (
+									<span className='comparison-side-labels'>
+										<code>{request.labels?.remote ?? t('Other')}</code>
+										<span aria-hidden='true'>↔</span>
+										<code>{request.labels?.local ?? t('Current')}</code>
+									</span>
+								)}
+								{isEdit && !current.isBinary && (
+									<button
+										type='button'
+										className='button conflict-save-button'
+										title={t('Save File (Ctrl+S)')}
+										aria-label={t('Save File')}
+										onClick={() => void handleSaveCurrent()}
+										disabled={!dirtyIndices.has(selectedIndex) || isSaving}
+									>
+										<SaveIcon />
+									</button>
+								)}
+							</div>
 							{current.isBinary ? (
-								<div className='conflict-binary-notice'>
-									{t('Binary file. Choose which version to keep.')}
+								<div
+									className='ui-message'
+									data-tone='info'
+									data-align='center'
+								>
+									{isInspect
+										? t('Binary file differs between these versions.')
+										: t('Binary file. Choose which version to keep.')}
 								</div>
 							) : (
 								<MergeEditor
 									ref={mergeEditorRef}
-									key={`${selectedIndex}-${resetKeys.get(selectedIndex) ?? 0}`}
+									fileName={current.path}
+									key={`${selectedIndex}-${resetKeys.get(selectedIndex) ?? 0}-${isCompare ? 'compare' : isEdit ? 'edit' : 'resolve'}`}
 									local={localView}
 									remote={remoteView}
 									initialMerged={
-										currentState.initialMerged ??
-										(currentState.resolution?.action === 'merged'
-											? toText(currentState.resolution.content)
-											: undefined)
+										isCompare
+											? undefined
+											: (currentState.initialMerged ??
+												mergedStateAnnotations?.content)
 									}
 									localAnnotationSpans={current.localAnnotationSpans}
 									annotationSpans={current.annotationSpans}
-									onMergedChange={handleMergedChange}
-									onAnnotationsChange={(surviving, total) =>
-										setAnnotationStatus({ surviving, total })
+									localReviewDeletions={localReviewDeletions}
+									reviewDeletions={remoteAnnotations?.reviewDeletions}
+									emptySideNote={emptySideNote}
+									onMergedChange={isCompare ? undefined : handleMergedChange}
+									onAnnotationsChange={
+										isInspect
+											? undefined
+											: (surviving, total) =>
+													setAnnotationStatus({ surviving, total })
 									}
+									onSave={
+										isEdit
+											? (content) => void handleSaveCurrent(content)
+											: undefined
+									}
+									readOnly={isCompare}
 								/>
 							)}
 						</>
 					)}
 
-					{annotationStatus && annotationStatus.total > 0 ? (
+					{!isInspect && annotationStatus && annotationStatus.total > 0 ? (
 						<div
-							className={`conflict-annotation-status ${
+							className='ui-message'
+							data-tone={
 								annotationStatus.surviving < annotationStatus.total
-									? 'losing'
-									: ''
-							}`}
+									? 'warning'
+									: 'info'
+							}
+							data-density='compact'
 						>
 							{t('{kept} of {total} comments will be kept', {
 								kept: annotationStatus.surviving,
@@ -298,9 +489,20 @@ const MergeResolutionModal: React.FC = () => {
 						</div>
 					) : null}
 
-					<div className='conflict-actions'>
-						<div className='conflict-actions-nav'>
+					{saveError && (
+						<div
+							className='ui-message'
+							data-tone='error'
+							data-density='compact'
+						>
+							{saveError}
+						</div>
+					)}
+
+					<div className='ui-actions' data-justify='between' data-wrap='true'>
+						<div className='ui-actions' data-wrap='true'>
 							<button
+								type='button'
 								className='button secondary'
 								onClick={() => navigateTo(selectedIndex - 1)}
 								disabled={showComplete || selectedIndex === 0}
@@ -308,6 +510,7 @@ const MergeResolutionModal: React.FC = () => {
 								{t('← Prev')}
 							</button>
 							<button
+								type='button'
 								className='button secondary'
 								onClick={() => navigateTo(selectedIndex + 1)}
 								disabled={
@@ -316,10 +519,15 @@ const MergeResolutionModal: React.FC = () => {
 							>
 								{t('Next →')}
 							</button>
-							{!showComplete && (
+
+							{!isInspect && !showComplete && (
 								<>
 									<button
-										className={`button secondary${currentState.resolution?.action === 'keep-local' ? ' active-resolution' : ''}`}
+										type='button'
+										className='button secondary'
+										aria-pressed={
+											currentState.resolution?.action === 'keep-local'
+										}
 										onClick={() =>
 											handleResolutionAction({ action: 'keep-local' })
 										}
@@ -327,7 +535,11 @@ const MergeResolutionModal: React.FC = () => {
 										{request.labels?.keepLocal ?? t('Keep Local')}
 									</button>
 									<button
-										className={`button secondary${currentState.resolution?.action === 'keep-remote' ? ' active-resolution' : ''}`}
+										type='button'
+										className='button secondary'
+										aria-pressed={
+											currentState.resolution?.action === 'keep-remote'
+										}
 										onClick={() =>
 											handleResolutionAction({ action: 'keep-remote' })
 										}
@@ -337,12 +549,17 @@ const MergeResolutionModal: React.FC = () => {
 									{!current.isBinary && (
 										<>
 											<button
-												className={`button primary${currentState.resolution?.action === 'merged' ? ' active-resolution' : ''}`}
+												type='button'
+												className='button primary'
+												aria-pressed={
+													currentState.resolution?.action === 'merged'
+												}
 												onClick={handleUseMerged}
 											>
 												{t('Use Merged')}
 											</button>
 											<button
+												type='button'
 												className='button secondary'
 												onClick={handleReset}
 											>
@@ -354,17 +571,34 @@ const MergeResolutionModal: React.FC = () => {
 							)}
 						</div>
 
-						<div className='conflict-actions-right'>
-							<button className='button secondary' onClick={handleCancel}>
-								{t('Cancel Push')}
-							</button>
-							<button
-								className='button primary'
-								onClick={handleConfirm}
-								disabled={!allResolved}
-							>
-								{t('Confirm Push')}
-							</button>
+						<div className='ui-actions' data-wrap='true'>
+							{isInspect ? (
+								<button
+									type='button'
+									className='button secondary'
+									onClick={handleCancel}
+								>
+									{t('Close')}
+								</button>
+							) : (
+								<>
+									<button
+										type='button'
+										className='button secondary'
+										onClick={handleCancel}
+									>
+										{t('Cancel Push')}
+									</button>
+									<button
+										type='button'
+										className='button primary'
+										onClick={handleConfirm}
+										disabled={!allResolved}
+									>
+										{t('Confirm Push')}
+									</button>
+								</>
+							)}
 						</div>
 					</div>
 				</div>

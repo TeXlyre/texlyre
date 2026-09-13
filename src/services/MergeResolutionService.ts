@@ -1,5 +1,6 @@
 // src/services/MergeResolutionService.ts
-import { mergeAnnotatedSources } from '../utils/annotationMerge';
+import { mergeAnnotatedSources } from '../utils/annotationMergeUtils';
+import { stripAnnotations, hasAnnotations } from '../utils/fileCommentUtils';
 import { threeWayMerge } from '../utils/textDiffUtils';
 import { yjsStateFromText } from '../utils/yjsUtils';
 
@@ -16,6 +17,7 @@ export interface FileConflict {
 	previousRef?: string;
 	localAnnotationSpans?: Array<{ from: number; to: number }>;
 	annotationSpans?: Array<{ from: number; to: number }>;
+	changeType?: 'added' | 'modified' | 'deleted';
 }
 
 export type ConflictResolution =
@@ -25,16 +27,30 @@ export type ConflictResolution =
 
 export interface ConflictResolutionRequest {
 	conflicts: FileConflict[];
-	labels?: { keepLocal?: string; keepRemote?: string };
+	mode?: 'resolve' | 'compare' | 'edit';
+	title?: string;
+	labels?: {
+		keepLocal?: string;
+		keepRemote?: string;
+		local?: string;
+		remote?: string;
+	};
+	save?: (path: string, content: string) => Promise<void>;
 	resolve: (resolutions: Map<string, ConflictResolution> | null) => void;
 }
 
-export type AutoMergeResult =
+type AutoMergeResult =
 	| { resolved: true; content: string; unchanged?: boolean }
 	| { resolved: false };
 
 class MergeResolutionService {
 	private listeners: Array<(request: ConflictResolutionRequest) => void> = [];
+
+	private emit(request: ConflictResolutionRequest): void {
+		this.listeners.forEach((listener) => {
+			listener(request);
+		});
+	}
 
 	tryAutoMerge(
 		base: string | undefined,
@@ -42,24 +58,98 @@ class MergeResolutionService {
 		remote: string,
 		isBinary: boolean,
 	): AutoMergeResult {
-		if (local === remote) {
-			return { resolved: true, content: local, unchanged: base === local };
-		}
-		if (base !== undefined && base === local) {
-			return { resolved: true, content: remote };
-		}
-		if (base !== undefined && base === remote) {
-			return { resolved: true, content: local };
-		}
-		if (isBinary || base === undefined) {
+		if (isBinary) {
+			if (local === remote) {
+				return { resolved: true, content: local, unchanged: base === local };
+			}
+			if (base !== undefined && base === local) {
+				return { resolved: true, content: remote };
+			}
+			if (base !== undefined && base === remote) {
+				return { resolved: true, content: local };
+			}
 			return { resolved: false };
 		}
 
-		const merged = threeWayMerge(base, local, remote);
-		if (!merged.hasConflicts) {
-			return { resolved: true, content: merged.merged };
+		if (base === undefined) {
+			if (local === remote) return { resolved: true, content: local };
+			const cleanLocal = stripAnnotations(local) as string;
+			const cleanRemote = stripAnnotations(remote) as string;
+			if (cleanLocal !== cleanRemote) return { resolved: false };
+			return {
+				resolved: true,
+				content: mergeAnnotatedSources([local, remote], cleanLocal).content,
+			};
 		}
-		return { resolved: false };
+
+		const cleanBase = stripAnnotations(base) as string;
+		const cleanLocal = stripAnnotations(local) as string;
+		const cleanRemote = stripAnnotations(remote) as string;
+		let mergedText: string;
+		if (cleanLocal === cleanRemote) mergedText = cleanLocal;
+		else if (cleanBase === cleanLocal) mergedText = cleanRemote;
+		else if (cleanBase === cleanRemote) mergedText = cleanLocal;
+		else {
+			const merged = threeWayMerge(cleanBase, cleanLocal, cleanRemote);
+			if (merged.hasConflicts) return { resolved: false };
+			mergedText = merged.merged;
+		}
+
+		const content = mergeAnnotatedSources([local, remote], mergedText).content;
+		return {
+			resolved: true,
+			content,
+			unchanged: cleanBase === mergedText && base === content,
+		};
+	}
+
+	async compareFiles(
+		conflicts: FileConflict[],
+		labels?: { local?: string; remote?: string },
+		title?: string,
+	): Promise<void> {
+		if (conflicts.length === 0) return;
+
+		return new Promise((resolve) => {
+			this.emit({
+				conflicts,
+				mode: 'compare',
+				title,
+				labels,
+				resolve: () => resolve(),
+			});
+		});
+	}
+
+	async editFiles(
+		conflicts: FileConflict[],
+		labels: { local?: string; remote?: string } | undefined,
+		title: string | undefined,
+		save: (path: string, content: string) => Promise<void>,
+	): Promise<void> {
+		if (conflicts.length === 0) return;
+
+		return new Promise((resolve) => {
+			this.emit({
+				conflicts,
+				mode: 'edit',
+				title,
+				labels,
+				save: async (path, content) => {
+					const conflict = conflicts.find((item) => item.path === path);
+					if (!conflict) throw new Error(`Unknown comparison file: ${path}`);
+					await save(
+						path,
+						this.restoreAnnotationsForContent(conflict, content),
+					);
+				},
+				resolve: () => resolve(),
+			});
+		});
+	}
+
+	restoreEditedContent(conflict: FileConflict, content: string): string {
+		return this.restoreAnnotationsForContent(conflict, content);
 	}
 
 	async resolveConflicts(
@@ -121,9 +211,7 @@ class MergeResolutionService {
 					resolve(resolutions);
 				},
 			};
-			this.listeners.forEach((listener) => {
-				listener(request);
-			});
+			this.emit(request);
 		});
 	}
 
@@ -134,6 +222,27 @@ class MergeResolutionService {
 		return () => {
 			this.listeners = this.listeners.filter((l) => l !== callback);
 		};
+	}
+
+	private restoreAnnotationsForContent(
+		conflict: FileConflict,
+		content: string,
+	): string {
+		if (
+			conflict.isBinary ||
+			(!conflict.localAnnotationSpans?.length &&
+				!conflict.annotationSpans?.length)
+		) {
+			return content;
+		}
+
+		const sources = [
+			this.toText(conflict.localContent),
+			this.toText(conflict.remoteContent),
+		];
+		if (hasAnnotations(content)) sources.unshift(content);
+
+		return mergeAnnotatedSources(sources, content).content;
 	}
 
 	private restoreMergedAnnotations(
@@ -152,18 +261,12 @@ class MergeResolutionService {
 			const resolution = resolutions.get(conflict.path);
 			if (resolution?.action !== 'merged') continue;
 
-			const merged = this.toText(resolution.content);
-			const restored = mergeAnnotatedSources(
-				[
-					this.toText(conflict.localContent),
-					this.toText(conflict.remoteContent),
-				],
-				merged,
-			);
-
 			resolutions.set(conflict.path, {
 				action: 'merged',
-				content: restored.content,
+				content: this.restoreAnnotationsForContent(
+					conflict,
+					this.toText(resolution.content),
+				),
 			});
 		}
 	}

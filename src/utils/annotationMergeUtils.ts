@@ -34,12 +34,6 @@ function annotationIds(text: string): Set<string> {
 	return ids;
 }
 
-function cleanLines(annotatedLines: string[], annotated: string): string[] {
-	const cleaned = (stripAnnotations(annotated) as string).split('\n');
-	if (cleaned.length === annotatedLines.length) return cleaned;
-	return annotatedLines.map((line) => stripAnnotations(line) as string);
-}
-
 function cleanAlignedLines(
 	annotated: string,
 	annotatedLines: string[],
@@ -173,7 +167,7 @@ function positionedAnnotations(text: string): PositionedAnnotation[] {
 		for (const match of scanAnnotationTags(text, kind)) {
 			const from = shiftFor(match.openTagEnd);
 			const to = shiftFor(match.closeTagStart);
-			if (from >= to) continue;
+			if (from > to) continue;
 			positioned.push({
 				key: `${kind}:${match.id}`,
 				from,
@@ -272,7 +266,15 @@ export function mergeAnnotatedSources(
 
 	const opens = new Map<number, PositionedAnnotation[]>();
 	const closes = new Map<number, PositionedAnnotation[]>();
+	const points = new Map<number, PositionedAnnotation[]>();
 	for (const annotation of positioned.values()) {
+		if (annotation.from === annotation.to) {
+			const point = points.get(annotation.from) ?? [];
+			point.push(annotation);
+			points.set(annotation.from, point);
+			continue;
+		}
+
 		const open = opens.get(annotation.from) ?? [];
 		open.push(annotation);
 		opens.set(annotation.from, open);
@@ -288,6 +290,13 @@ export function mergeAnnotatedSources(
 		if (closing) {
 			for (const annotation of [...closing].reverse()) {
 				content += annotation.closeTag;
+			}
+		}
+
+		const point = points.get(i);
+		if (point) {
+			for (const annotation of point) {
+				content += annotation.openTag + annotation.closeTag;
 			}
 		}
 
