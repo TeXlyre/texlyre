@@ -99,7 +99,7 @@
 		"@typstyle/typstyle-wasm-bundler": "^0.15.1",
 		"@uiw/codemirror-themes-all": "^4.25.11",
 		"bib-editor": "^1.14.1",
-		"codemirror": "^6.65.7",
+		"codemirror": "^6.0.2",
 		"codemirror-helix": "^0.5.7",
 		"codemirror-lang-bib": "^0.2.4",
 		"codemirror-lang-latex": "^0.6.1",

@@ -152,7 +152,7 @@ importers:
         specifier: ^1.14.1
         version: 1.14.1
       codemirror:
-        specifier: ^6.65.7
+        specifier: ^6.0.2
         version: 6.65.7
       codemirror-helix:
         specifier: ^0.5.7
