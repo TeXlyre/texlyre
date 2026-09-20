@@ -7,6 +7,7 @@ import type {
 	ThemeLayout,
 	ThemePlugin,
 	ThemeVariant,
+	ThemeView,
 } from '@/plugins/PluginInterface';
 import {
 	ProjectsIcon,
@@ -20,7 +21,7 @@ import {
 	applyDesktopViewport,
 	applyMobileViewport,
 } from '@/utils/viewportUtils';
-import { themes } from './colors';
+import { isThemeColorId, themes } from '../shared/colors';
 import './styles/index.css';
 
 const renderIcon = (IconComponent: React.FC<any>, props = {}) => {
@@ -29,10 +30,11 @@ const renderIcon = (IconComponent: React.FC<any>, props = {}) => {
 
 const createTeXlyreMobileTheme = (): ThemePlugin => {
 	let currentThemeId = 'dark';
-	let currentView: 'explorer' | 'editor' | 'output' | 'chat' = 'editor';
+	let currentView: ThemeView = 'editor';
 	const nav = document.createElement('div');
 	nav.className = 'mobile-bottom-nav texlyre-mobile-nav';
 	let mobileClickHandler: ((e: Event) => void) | null = null;
+	let mobileViewRequestHandler: ((e: Event) => void) | null = null;
 	let hashChangeHandler: (() => void) | null = null;
 	let languageChangeHandler: (() => void) | null = null;
 	let loginCheckInterval: NodeJS.Timeout | null = null;
@@ -45,11 +47,16 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 		minFileExplorerWidth: 100,
 		maxFileExplorerWidth: 100,
 		stylesheetPath: './styles/layout.css',
+		outlineControls: {
+			preview: true,
+			maximize: true,
+			returnToEditorOnNavigate: true,
+		},
 	};
 
 	const applyThemeColors = (themeId: string) => {
+		if (!isThemeColorId(themeId)) return;
 		const colors = themes[themeId];
-		if (!colors) return;
 
 		Object.entries(colors).forEach(([key, value]) => {
 			document.documentElement.style.setProperty(
@@ -84,6 +91,14 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 		if (mobileClickHandler) {
 			document.removeEventListener('click', mobileClickHandler);
 			mobileClickHandler = null;
+		}
+
+		if (mobileViewRequestHandler) {
+			document.removeEventListener(
+				'texlyre-mobile-view-request',
+				mobileViewRequestHandler,
+			);
+			mobileViewRequestHandler = null;
 		}
 
 		if (hashChangeHandler) {
@@ -161,6 +176,29 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 		};
 
 		window.addEventListener('language-changed', languageChangeHandler);
+
+		if (mobileViewRequestHandler) {
+			document.removeEventListener(
+				'texlyre-mobile-view-request',
+				mobileViewRequestHandler,
+			);
+		}
+
+		mobileViewRequestHandler = (event: Event) => {
+			const requestedView = (event as CustomEvent<{ view?: string }>).detail
+				?.view;
+			if (
+				!['explorer', 'editor', 'output', 'chat'].includes(requestedView ?? '')
+			)
+				return;
+
+			currentView = requestedView as typeof currentView;
+			updateMobileView(currentView);
+		};
+		document.addEventListener(
+			'texlyre-mobile-view-request',
+			mobileViewRequestHandler,
+		);
 	};
 
 	const setupMobileNavigation = () => {
@@ -258,10 +296,10 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 		if (view === 'chat') {
 			setTimeout(() => {
 				const chatHeader = document.querySelector(
-					'.chat-panel-header',
+					'.ui-panel-header[data-role="chat"]',
 				) as HTMLElement;
 				if (chatHeader) {
-					const chatPanel = chatHeader.closest('.chat-panel');
+					const chatPanel = chatHeader.closest('.ui-panel[data-role="chat"]');
 					if (chatPanel?.classList.contains('collapsed')) {
 						chatHeader.click();
 					}
@@ -362,6 +400,11 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			if (isLoggedIn()) {
 				handleMobileNavigation();
 			}
+		},
+
+		requestView(view: ThemeView): void {
+			currentView = view;
+			updateMobileView(view);
 		},
 
 		cleanup(): void {

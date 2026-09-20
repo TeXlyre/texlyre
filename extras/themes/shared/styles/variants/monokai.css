@@ -1,5 +1,7 @@
-/* extras/themes/texlyre_mobile/styles/variants/monokai.css */
-[data-theme="monokai"][data-theme-plugin="texlyre-mobile"] {
+/* Shared monokai palette. */
+[data-theme="monokai"][data-theme-plugin="texlyre"],
+[data-theme="monokai"][data-theme-plugin="texlyre-mobile"],
+[data-theme="monokai"][data-theme-plugin="texlyre-slim"] {
 	--accent-background: #383830;
 	--accent-border: #49483e;
 	--editor-background: #272822;

@@ -1,5 +1,7 @@
-/* extras/themes/texlyre_wide/styles/variants/solarized_light.css */
-[data-theme="solarized_light"][data-theme-plugin="texlyre"] {
+/* Shared solarized light palette. */
+[data-theme="solarized_light"][data-theme-plugin="texlyre"],
+[data-theme="solarized_light"][data-theme-plugin="texlyre-mobile"],
+[data-theme="solarized_light"][data-theme-plugin="texlyre-slim"] {
 	--accent-background: #eee8d5;
 	--accent-border: #d3cbb7;
 	--editor-background: #fdf6e3;

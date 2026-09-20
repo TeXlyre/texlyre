@@ -1,5 +1,7 @@
-/* extras/themes/texlyre_mobile/styles/variants/protanopia.css */
-[data-theme="protanopia"][data-theme-plugin="texlyre-mobile"] {
+/* Shared protanopia palette. */
+[data-theme="protanopia"][data-theme-plugin="texlyre"],
+[data-theme="protanopia"][data-theme-plugin="texlyre-mobile"],
+[data-theme="protanopia"][data-theme-plugin="texlyre-slim"] {
 	--accent-background: #f2f4f7;
 	--accent-border: #ccd3dc;
 	--editor-background: #ffffff;

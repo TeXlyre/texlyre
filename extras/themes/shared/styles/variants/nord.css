@@ -1,5 +1,7 @@
-/* extras/themes/texlyre_wide/styles/variants/nord.css */
-[data-theme="nord"][data-theme-plugin="texlyre"] {
+/* Shared nord palette. */
+[data-theme="nord"][data-theme-plugin="texlyre"],
+[data-theme="nord"][data-theme-plugin="texlyre-mobile"],
+[data-theme="nord"][data-theme-plugin="texlyre-slim"] {
 	--accent-background: #3b4252;
 	--accent-border: #4c566a;
 	--editor-background: #2e3440;

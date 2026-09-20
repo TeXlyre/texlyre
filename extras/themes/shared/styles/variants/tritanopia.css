@@ -1,4 +1,6 @@
-/* extras/themes/texlyre_slim/styles/variants/tritanopia.css */
+/* Shared tritanopia palette. */
+[data-theme="tritanopia"][data-theme-plugin="texlyre"],
+[data-theme="tritanopia"][data-theme-plugin="texlyre-mobile"],
 [data-theme="tritanopia"][data-theme-plugin="texlyre-slim"] {
 	--accent-background: #f6f7f8;
 	--accent-border: #d9dee3;

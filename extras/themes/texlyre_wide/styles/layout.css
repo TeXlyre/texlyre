@@ -1,7 +1,77 @@
 /* extras/themes/texlyre_wide/styles/layout.css */
 [data-layout="texlyre-wide"] {
+	--ui-field-control-height: 42px;
+	--ui-field-control-min-height: 42px;
+	--ui-panel-controls-control-height: var(--ui-field-control-height);
+	--ui-header-actions-gap: 6px;
+	--ui-status-icon-gap: 4px;
+	--ui-status-font-size: var(--font-size-meta);
+	--ui-status-line-height: 1;
+	--ui-settings-modal-height: min(700px, 90vh);
+	--ui-settings-modal-width: min(900px, 92vw);
+	--ui-settings-sidebar-width: min(240px, 28%);
+	--ui-toast-top: calc(
+		var(--texlyre-header-height) +
+		var(--space-xl) +
+		var(--space-md)
+	);
+	--ui-toast-right: var(--space-xl);
+	--ui-toast-max-width: 360px;
+	--ui-toast-visible-animation: toast-slide-in 0.4s
+		cubic-bezier(0.68, -0.55, 0.265, 1.55);
+	--ui-toast-hidden-animation: toast-slide-out 0.3s ease-in forwards;
+	--ui-footer-links-font-size: var(--font-size-meta);
 	--texlyre-header-height: 70px;
 	--texlyre-footer-height: 28px;
+	--ui-icon-button-size: 28px;
+	--ui-icon-button-padding: var(--space-xs);
+	--ui-icon-button-radius: var(--texlyre-radius-sm);
+	--ui-panel-header-padding: var(--space-md) var(--space-lg);
+	--ui-explorer-tabs-background: var(--accent-background);
+	--ui-explorer-tabs-border: 1px solid var(--accent-border);
+	--ui-explorer-tab-padding: var(--space-sm) var(--space-md);
+	--ui-explorer-tab-font-size: var(--font-size-small);
+	--ui-explorer-tab-font-weight: 500;
+	--ui-explorer-tab-transition: all var(--texlyre-transition-fast);
+	--ui-explorer-tab-hover-background: rgba(
+		var(--pico-primary-rgb, 16, 149, 193),
+		0.1
+	);
+	--ui-explorer-tab-active-background: rgba(
+		var(--pico-primary-rgb, 16, 149, 193),
+		0.15
+	);
+	--ui-explorer-tab-active-border: 2px solid var(--pico-primary);
+	--ui-explorer-tab-active-font-weight: 600;
+	--ui-explorer-header-background: var(--accent-background);
+	--ui-explorer-header-border-color: var(--accent-border);
+	--ui-explorer-title-font-size: var(--font-size-small);
+	--ui-explorer-title-font-weight: 600;
+	--ui-file-tree-padding: var(--space-sm) 0;
+	--ui-file-node-padding: var(--space-sm) var(--space-lg);
+	--ui-file-root-node-padding: var(--space-sm) var(--space-lg);
+	--ui-file-node-margin: 1px var(--space-sm);
+	--ui-file-root-node-margin-left: var(--space-sm);
+	--ui-file-node-radius: var(--texlyre-radius-sm);
+	--ui-file-node-transition: all var(--texlyre-transition-fast);
+	--ui-file-node-hover-background: rgba(
+		var(--pico-primary-rgb, 16, 149, 193),
+		0.1
+	);
+	--ui-file-node-selected-background: rgba(
+		var(--pico-primary-rgb, 16, 149, 193),
+		0.15
+	);
+	--ui-file-node-drag-background: rgba(
+		var(--pico-primary-rgb, 16, 149, 193),
+		0.2
+	);
+	--ui-file-icon-color: var(--pico-secondary);
+	--ui-file-icon-selected-color: var(--pico-primary);
+	--ui-file-name-font-size: var(--font-size-small);
+	--ui-directory-indent: var(--space-lg);
+	--ui-empty-state-padding: var(--space-lg);
+	--ui-empty-state-font-size: var(--font-size-small);
 }
 
 [data-layout="texlyre-wide"] #root {
@@ -28,13 +98,24 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 0 var(--texlyre-spacing-xl);
+	padding: 0 var(--space-xl);
 	background-color: var(--pico-secondary-background);
 	border-bottom: 1px solid var(--accent-border);
 	margin: 0;
 	width: 100vw;
-	z-index: var(--texlyre-z-index-sticky);
+	z-index: var(--z-sticky);
 	box-shadow: var(--texlyre-shadow-sm);
+}
+
+[data-layout="texlyre-wide"] header .header-left button,
+[data-layout="texlyre-wide"] header .header-right button,
+[data-layout="texlyre-wide"]
+	header
+	.header-right
+	.ui-button-group[data-size="control"]
+	> button {
+	height: var(--button-height-md);
+	min-height: var(--button-height-md);
 }
 
 [data-layout="texlyre-wide"] .main-content {
@@ -48,24 +129,19 @@
 
 [data-layout="texlyre-wide"] footer {
 	grid-row: 3;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 0 var(--texlyre-spacing-xl);
 	background-color: transparent;
 	margin: 0;
 }
 
-[data-layout="texlyre-wide"] .sidebar-container {
+[data-layout="texlyre-wide"] :where(.sidebar-container) {
 	height: 100%;
 	min-height: 0;
 	border-radius: 0;
-	border-right: 1px solid var(--accent-border);
+	border-right: 1px solid var(--sidebar-border);
 	background-color: var(--sidebar-background);
-	border-color: var(--sidebar-border);
 }
 
-[data-layout="texlyre-wide"] .editor-container {
+[data-layout="texlyre-wide"] :where(.editor-container) {
 	flex: 1;
 	height: 100%;
 	border-radius: 0;
@@ -76,12 +152,36 @@
 	color: var(--editor-text);
 }
 
-[data-layout="texlyre-wide"] .resize-handle.horizontal {
-	width: 5px;
-	transition: background-color var(--texlyre-transition-fast);
+@media (max-width: 768px) {
+	[data-layout="texlyre-wide"] {
+		--ui-toast-top: calc(var(--texlyre-header-height) + var(--space-md));
+		--ui-toast-right: var(--space-md);
+		--ui-toast-max-width: calc(100vw - 2 * var(--space-md));
+	}
 }
 
-[data-layout="texlyre-wide"] .resize-handle.horizontal:hover,
-[data-layout="texlyre-wide"] .resize-handle.horizontal:active {
-	background-color: var(--pico-primary);
+html[data-layout="texlyre-wide"]
+	body
+	input:not(
+		[type="checkbox"],
+		[type="radio"],
+		[type="range"],
+		[type="color"],
+		[type="file"],
+		[type="hidden"],
+		[type="button"],
+		[type="submit"],
+		[type="reset"],
+		[type="image"]
+	),
+html[data-layout="texlyre-wide"] body select:not([multiple]),
+html[data-layout="texlyre-wide"]
+	body
+	.ui-field-control:not(textarea):not(select[multiple]) {
+	box-sizing: border-box;
+	height: var(--ui-field-control-height);
+	min-height: var(--ui-field-control-height);
+	max-height: var(--ui-field-control-height);
+	padding-block: 0;
+	line-height: var(--ui-field-control-line-height, 1.35);
 }

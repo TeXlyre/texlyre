@@ -1,18 +1,4 @@
 /* extras/themes/texlyre_mobile/styles/components.css */
-
-[data-layout="texlyre-mobile"] .editor-tabs-container {
-	min-height: var(--mobile-min-touch-target);
-	max-height: var(--mobile-min-touch-target);
-}
-
-[data-layout="texlyre-mobile"] .editor-tab {
-	min-width: 120px;
-	max-width: 180px;
-	height: calc(var(--mobile-min-touch-target) - 8px);
-	font-size: var(--mobile-font-sm);
-	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
-}
-
 [data-layout="texlyre-mobile"] .codemirror-editor-container .cm-scroller {
 	line-height: 1.7;
 }
@@ -25,290 +11,18 @@
 	padding: 0 var(--mobile-spacing-sm);
 }
 
-[data-layout="texlyre-mobile"] .view-toggle {
-	border-bottom: 2px solid var(--accent-border);
-	background-color: var(--pico-secondary-background);
-}
-
-[data-layout="texlyre-mobile"] .view-toggle button {
-	padding: var(--mobile-spacing-md);
-	font-size: var(--mobile-font-sm);
-	min-height: var(--mobile-min-touch-target);
-	font-weight: 600;
-}
-
-[data-layout="texlyre-mobile"] .file-explorer-header {
-	padding: var(--mobile-spacing-md);
-	min-height: calc(var(--mobile-min-touch-target) + 8px);
-	margin-top: 0 !important;
-	flex-shrink: 0 !important;
-}
-
-[data-layout="texlyre-mobile"] .file-explorer-header h3 {
-	font-size: var(--mobile-font-lg);
-}
-
-[data-layout="texlyre-mobile"] .file-node {
-	padding: var(--mobile-spacing-md);
-	font-size: var(--mobile-font-sm);
-	min-height: var(--mobile-min-touch-target);
-	border-radius: var(--mobile-radius-md);
-	margin: var(--mobile-spacing-xs) var(--mobile-spacing-sm);
-}
-
-[data-layout="texlyre-mobile"] .file-name {
-	font-size: var(--mobile-font-sm);
-}
-
-[data-layout="texlyre-mobile"] .action-btn {
-	min-width: var(--mobile-min-touch-target);
-	min-height: var(--mobile-min-touch-target);
-	padding: var(--mobile-spacing-md);
-}
-
-[data-layout="texlyre-mobile"] .action-btn svg {
-	width: var(--mobile-icon-size-md);
-	height: var(--mobile-icon-size-md);
-}
-
-[data-layout="texlyre-mobile"] .output-header {
-	padding: var(--mobile-spacing-md);
-	min-height: calc(var(--mobile-min-touch-target) * 1.5);
-}
-
-[data-layout="texlyre-mobile"] .compile-button-group .compile-button {
-	min-height: var(--mobile-min-touch-target);
-	padding: var(--mobile-spacing-sm) var(--mobile-spacing-sm);
-	font-size: var(--mobile-font-sm);
-}
-
-[data-layout="texlyre-mobile"] .share-project-buttons {
-	gap: var(--mobile-spacing-sm);
-}
-
-[data-layout="texlyre-mobile"] .share-button-group .main-button {
-	min-height: var(--mobile-min-touch-target);
-	padding: var(--mobile-spacing-sm) var(--mobile-spacing-sm);
-	font-size: var(--mobile-font-sm);
-}
-
-[data-layout="texlyre-mobile"] .backup-button-group .main-button,
-[data-layout="texlyre-mobile"] .collab-button-group .main-button {
-	min-height: var(--mobile-min-touch-target);
-	padding: var(--mobile-spacing-sm) var(--mobile-spacing-sm);
-}
-
-[data-layout="texlyre-mobile"] .dropdown-toggle,
-[data-layout="texlyre-mobile"] .collab-button-group .collab-dropdown-toggle,
-[data-layout="texlyre-mobile"] .backup-button-group .backup-dropdown-toggle {
-	min-height: var(--mobile-min-touch-target);
-	padding: var(--mobile-spacing-md);
-	border-top-left-radius: 0 !important;
-	border-bottom-left-radius: 0 !important;
-	width: var(--mobile-min-touch-target);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-[data-layout="texlyre-mobile"] .backup-button-group .main-button svg,
-[data-layout="texlyre-mobile"] .collab-button-group .main-button svg,
-[data-layout="texlyre-mobile"] .compile-button-group .compile-button svg,
-[data-layout="texlyre-mobile"] .open-button-group .open-button svg,
-[data-layout="texlyre-mobile"] .share-button-group .main-button svg,
-[data-layout="texlyre-mobile"] .dropdown-toggle svg,
-[data-layout="texlyre-mobile"] .collab-button-group .collab-dropdown-toggle svg,
 [data-layout="texlyre-mobile"]
-	.backup-button-group
-	.backup-dropdown-toggle
-	svg {
-	width: var(--mobile-icon-size-sm);
-	height: var(--mobile-icon-size-sm);
-	flex-shrink: 0;
-}
-
-/* TODO (fabawi): Hidden for now, but might consider restoring them in the future */
-[data-layout="texlyre-mobile"] .backup-button-group .main-button .backup-label,
-[data-layout="texlyre-mobile"] .collab-button-group .main-button .collab-label,
-[data-layout="texlyre-mobile"] .backup-button-group .backup-dropdown-toggle,
-[data-layout="texlyre-mobile"] .collab-button-group .collab-dropdown-toggle {
-	/* font-size: var(--mobile-font-sm); */
+	.ui-button-group[data-role="status"]
+	> .ui-split-main
+	> span,
+[data-layout="texlyre-mobile"]
+	.ui-button-group[data-role="status"]
+	> .ui-split-toggle {
 	display: none;
 }
 
-[data-layout="texlyre-mobile"] .tab-button {
-	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
-	font-size: var(--mobile-font-sm);
-	min-height: calc(var(--mobile-min-touch-target) - 8px);
-}
-
-[data-layout="texlyre-mobile"] .external-outline-header,
-[data-layout="texlyre-mobile"] .latex-outline-header,
-[data-layout="texlyre-mobile"] .textmate-outline-header,
-[data-layout="texlyre-mobile"] .typst-outline-header {
-	padding: var(--mobile-spacing-md);
-	font-size: var(--mobile-font-sm);
-}
-
 [data-layout="texlyre-mobile"] .outline-section {
-	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
-	font-size: var(--mobile-font-sm);
-	min-height: var(--mobile-min-touch-target);
-	border-radius: var(--mobile-radius-md);
 	margin: var(--mobile-spacing-xs);
-}
-
-[data-layout="texlyre-mobile"] .chat-panel {
-	background-color: var(--pico-background);
-}
-
-[data-layout="texlyre-mobile"] .chat-panel-header {
-	padding: var(--mobile-spacing-md);
-	min-height: calc(var(--mobile-min-touch-target) + 8px);
-	background: var(--pico-secondary-background);
-}
-
-[data-layout="texlyre-mobile"] .chat-panel-title {
-	font-size: var(--mobile-font-lg);
-}
-
-[data-layout="texlyre-mobile"] .chat-message {
-	margin-bottom: var(--mobile-spacing-md);
-}
-
-[data-layout="texlyre-mobile"] .message-text {
-	font-size: var(--mobile-font-sm);
-	line-height: 1.6;
-}
-
-[data-layout="texlyre-mobile"] .chat-panel-input {
-	font-size: var(--mobile-font-md);
-	padding: var(--mobile-spacing-md);
-	min-height: calc(var(--mobile-min-touch-target) * 2);
-}
-
-[data-layout="texlyre-mobile"] .chat-panel-send-button {
-	font-size: var(--mobile-font-sm);
-	padding: var(--mobile-spacing-md) var(--mobile-spacing-lg);
-	min-height: var(--mobile-min-touch-target);
-	background: var(--pico-primary);
-	color: var(--pico-primary-inverse);
-}
-
-[data-layout="texlyre-mobile"] .chat-panel-send-button:hover:not(:disabled) {
-	background: var(--pico-primary-hover);
-}
-
-[data-layout="texlyre-mobile"] .message-count {
-	background: var(--pico-primary);
-	color: var(--pico-primary-inverse);
-}
-
-[data-layout="texlyre-mobile"] .empty-chat {
-	color: var(--pico-secondary);
-}
-
-[data-layout="texlyre-mobile"] .chat-panel-input-container {
-	background: var(--pico-background);
-	border-top-color: var(--pico-secondary);
-}
-
-[data-layout="texlyre-mobile"] .chat-message.own-message .message-content {
-	background: var(--pico-primary);
-	color: var(--pico-primary-inverse);
-}
-
-[data-layout="texlyre-mobile"] .chat-message.other-message .message-content {
-	background: var(--pico-secondary-background);
-	color: var(--text-color);
-}
-
-[data-layout="texlyre-mobile"] .settings-button {
-	min-height: var(--mobile-min-touch-target);
-	font-size: var(--mobile-font-sm);
-	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
-}
-
-[data-layout="texlyre-mobile"] .modal-container {
-	border-radius: var(--mobile-radius-lg);
-}
-
-[data-layout="texlyre-mobile"] .modal-header {
-	padding: var(--mobile-spacing-lg);
-}
-
-[data-layout="texlyre-mobile"] .modal-header h2 {
-	font-size: var(--mobile-font-lg);
-}
-
-[data-layout="texlyre-mobile"] .modal-content {
-	padding: var(--mobile-spacing-lg);
-}
-
-[data-layout="texlyre-mobile"] .modal-close-button {
-	min-width: var(--mobile-min-touch-target);
-	min-height: var(--mobile-min-touch-target);
-	padding: var(--mobile-spacing-md);
-}
-
-[data-layout="texlyre-mobile"] .modal-close-button svg {
-	width: var(--mobile-icon-size-md);
-	height: var(--mobile-icon-size-md);
-}
-
-[data-layout="texlyre-mobile"] .form-group label {
-	font-size: var(--mobile-font-sm);
-	margin-bottom: var(--mobile-spacing-sm);
-}
-
-[data-layout="texlyre-mobile"] .form-group input,
-[data-layout="texlyre-mobile"] .form-group textarea,
-[data-layout="texlyre-mobile"] .form-group select {
-	font-size: var(--mobile-font-md);
-	padding: var(--mobile-spacing-md);
-	min-height: var(--mobile-min-touch-target);
-	border-radius: var(--mobile-radius-md);
-}
-
-[data-layout="texlyre-mobile"] input.toolbarField {
-	margin: 0;
-}
-
-[data-layout="texlyre-mobile"] .button,
-[data-layout="texlyre-mobile"] .action-button {
-	min-height: var(--mobile-min-touch-target);
-	font-size: var(--mobile-font-sm);
-	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
-	border-radius: var(--mobile-radius-md);
-}
-
-[data-layout="texlyre-mobile"] .button.small {
-	font-size: var(--mobile-font-xs);
-	padding: var(--mobile-spacing-xs) var(--mobile-spacing-sm);
-	min-height: calc(var(--mobile-min-touch-target) - 12px);
-}
-
-[data-layout="texlyre-mobile"] .dropdown-menu {
-	min-width: 180px;
-	border-radius: var(--mobile-radius-lg);
-	box-shadow: var(--mobile-shadow-lg);
-}
-
-[data-layout="texlyre-mobile"] .dropdown-item {
-	padding: var(--mobile-spacing-md);
-	font-size: var(--mobile-font-sm);
-	min-height: var(--mobile-min-touch-target);
-}
-
-[data-layout="texlyre-mobile"] .dropdown-checkbox {
-	font-size: var(--mobile-font-sm);
-	min-height: var(--mobile-min-touch-target);
-}
-
-[data-layout="texlyre-mobile"] .toast {
-	padding: var(--mobile-spacing-md);
-	border-radius: var(--mobile-radius-lg);
-	font-size: var(--mobile-font-sm);
 }
 
 [data-layout="texlyre-mobile"] .project-title {
@@ -328,22 +42,14 @@
 	display: none;
 }
 
-[data-layout="texlyre-mobile"] .user-dropdown-button,
-[data-layout="texlyre-mobile"] .back-button {
-	font-size: var(--mobile-font-sm);
-	height: var(--mobile-min-touch-target);
-	border: 1px solid var(--accent-border, #ddd);
+[data-layout="texlyre-mobile"] .user-dropdown-button {
 	border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-	background-color: var(--pico-primary-inverse) !important;
+	background-color: var(--pico-primary-inverse);
 }
 
 [data-layout="texlyre-mobile"] .user-dropdown-button span {
 	min-width: var(--mobile-min-touch-target);
 	padding: var(--mobile-spacing-xs);
-}
-
-[data-layout="texlyre-mobile"] .linked-file-icon {
-	border: none;
 }
 
 .mobile-nav-button {
@@ -387,17 +93,4 @@
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
-}
-
-[data-layout="texlyre-mobile"] ::-webkit-scrollbar {
-	width: 8px;
-}
-
-[data-layout="texlyre-mobile"] ::-webkit-scrollbar-thumb {
-	background-color: var(--accent-border);
-	border-radius: var(--mobile-radius-sm);
-}
-
-[data-layout="texlyre-mobile"] ::-webkit-scrollbar-thumb:hover {
-	background-color: var(--pico-primary);
 }

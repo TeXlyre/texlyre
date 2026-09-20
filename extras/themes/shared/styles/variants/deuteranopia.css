@@ -1,4 +1,6 @@
-/* extras/themes/texlyre_slim/styles/variants/deuteranopia.css */
+/* Shared deuteranopia palette. */
+[data-theme="deuteranopia"][data-theme-plugin="texlyre"],
+[data-theme="deuteranopia"][data-theme-plugin="texlyre-mobile"],
 [data-theme="deuteranopia"][data-theme-plugin="texlyre-slim"] {
 	--accent-background: #242832;
 	--accent-border: #3a4150;

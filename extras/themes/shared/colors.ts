@@ -1,4 +1,4 @@
-// extras/themes/texlyre_slim/colors.ts
+// extras/themes/shared/colors.ts
 export const themes = {
 	light: {
 		background: '#ffffff',
@@ -111,3 +111,8 @@ export const themes = {
 		secondary: '#696c77',
 	},
 };
+
+export type ThemeColorId = keyof typeof themes;
+
+export const isThemeColorId = (themeId: string): themeId is ThemeColorId =>
+	Object.hasOwn(themes, themeId);

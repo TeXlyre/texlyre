@@ -1,5 +1,7 @@
-/* extras/themes/texlyre_mobile/styles/variants/atom_light.css */
-[data-theme="atom_light"][data-theme-plugin="texlyre-mobile"] {
+/* Shared atom light palette. */
+[data-theme="atom_light"][data-theme-plugin="texlyre"],
+[data-theme="atom_light"][data-theme-plugin="texlyre-mobile"],
+[data-theme="atom_light"][data-theme-plugin="texlyre-slim"] {
 	--accent-background: #f0f0f0;
 	--accent-border: #e0e0e0;
 	--editor-background: #fafafa;
