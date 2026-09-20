@@ -86,8 +86,15 @@ const gitHubBackupAdapter: GitBackupAdapter<GitHubTarget> = {
 		fullName: target.fullName,
 	}),
 
-	getRecursiveTree: (token, target, branch) =>
-		gitHubAPIService.getRecursiveTree(token, target.owner, target.repo, branch),
+	getRecursiveTree: async (token, target, branch) =>
+		(
+			await gitHubAPIService.getRecursiveTree(
+				token,
+				target.owner,
+				target.repo,
+				branch,
+			)
+		).map((item) => ({ ...item, sha: item.sha ?? undefined })),
 
 	getFileRefForPath: (item: GitTreeItem) => item.sha || item.path || '',
 
