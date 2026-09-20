@@ -1,4 +1,6 @@
 .scroll-x {
+	min-width: 0;
+	max-width: 100%;
 	overflow-x: auto;
 	overflow-y: hidden;
 	overscroll-behavior-x: contain;
