@@ -289,28 +289,31 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 	const headerControls = (
 		<>
 			<PluginControlGroup>
-				<button onClick={handleZoomOut} title={t('Zoom Out')}>
+				<button type='button' onClick={handleZoomOut} title={t('Zoom Out')}>
 					<ZoomOutIcon />
 				</button>
 				<button
+					type='button'
 					onClick={() => updateTransform({ scale: 1 })}
 					title={t('Reset Zoom')}
 				>
 					{Math.round(transform.scale * 100)}%
 				</button>
-				<button onClick={handleZoomIn} title={t('Zoom In')}>
+				<button type='button' onClick={handleZoomIn} title={t('Zoom In')}>
 					<ZoomInIcon />
 				</button>
 			</PluginControlGroup>
 
 			<PluginControlGroup>
 				<button
+					type='button'
 					onClick={handleRotate}
 					title={t('Rotate 90° ({degree}°)', { degree: transform.rotation })}
 				>
 					<RotateIcon />
 				</button>
 				<button
+					type='button'
 					onClick={handleFlipH}
 					title={t('Flip Horizontal')}
 					className={transform.flipH ? 'active' : ''}
@@ -318,6 +321,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 					<FlipHorizontalIcon />
 				</button>
 				<button
+					type='button'
 					onClick={handleFlipV}
 					title={t('Flip Vertical')}
 					className={transform.flipV ? 'active' : ''}
@@ -329,6 +333,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 			{enableFilters && (
 				<PluginControlGroup>
 					<button
+						type='button'
 						onClick={() => handleBrightness(-10)}
 						title={t('Decrease Brightness ({percent}%)', {
 							percent: transform.brightness,
@@ -337,6 +342,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 						<BrightnessDownIcon />
 					</button>
 					<button
+						type='button'
 						onClick={() => handleBrightness(10)}
 						title={t('Increase Brightness ({percent}%)', {
 							percent: transform.brightness,
@@ -345,6 +351,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 						<BrightnessIcon />
 					</button>
 					<button
+						type='button'
 						onClick={() => handleContrast(-10)}
 						title={t('Decrease Contrast ({percent}%)', {
 							percent: transform.contrast,
@@ -353,6 +360,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 						<ContrastDownIcon />
 					</button>
 					<button
+						type='button'
 						onClick={() => handleContrast(10)}
 						title={t('Increase Contrast ({percent}%)', {
 							percent: transform.contrast,
@@ -364,14 +372,23 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 			)}
 
 			<PluginControlGroup>
-				<button onClick={handleRecenter} title={t('Recenter Image')}>
+				<button
+					type='button'
+					onClick={handleRecenter}
+					title={t('Recenter Image')}
+				>
 					<MoveIcon />
 				</button>
-				<button onClick={handleReset} title={t('Reset All Transforms')}>
+				<button
+					type='button'
+					onClick={handleReset}
+					title={t('Reset All Transforms')}
+				>
 					<ResetIcon />
 				</button>
 				{!isSvg && fileId && (
 					<button
+						type='button'
 						onClick={handleSave}
 						title={t('Save Changes to File')}
 						disabled={!hasChanges || isSaving}
@@ -380,7 +397,11 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 						<SaveIcon />
 					</button>
 				)}
-				<button onClick={handleExport} title={t('Download Image')}>
+				<button
+					type='button'
+					onClick={handleExport}
+					title={t('Download Image')}
+				>
 					<DownloadIcon />
 				</button>
 			</PluginControlGroup>
@@ -388,7 +409,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 	);
 
 	return (
-		<div className='image-viewer-container'>
+		<div className='ui-viewer' data-surface='secondary'>
 			<canvas ref={canvasRef} style={{ display: 'none' }} />
 
 			<PluginHeader
@@ -401,7 +422,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 			/>
 
 			<div
-				className='image-viewer-content'
+				className='ui-viewer-content'
 				style={{
 					cursor: isPanning ? 'grabbing' : 'grab',
 					userSelect: 'none',
@@ -417,7 +438,13 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 				onTouchCancel={endPan}
 			>
 				{isLoading && (
-					<div className='loading-indicator'>{t('Loading image...')}</div>
+					<div
+						className='ui-message'
+						data-variant='loading'
+						data-placement='overlay-center'
+					>
+						{t('Loading image...')}
+					</div>
 				)}
 
 				{!isLoading && imageSrc && (
@@ -447,7 +474,11 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 				)}
 
 				{!isLoading && !imageSrc && (
-					<div className='image-error-message'>
+					<div
+						className='ui-message'
+						data-placement='overlay-center'
+						data-variant='error'
+					>
 						{t('Cannot display this image.')}
 					</div>
 				)}

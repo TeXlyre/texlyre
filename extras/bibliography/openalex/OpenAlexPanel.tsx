@@ -17,7 +17,6 @@ import { openAlexService } from './OpenAlexService';
 import { WORK_TYPES } from './OpenAlexAPIService';
 import type { OpenAlexFilters } from './OpenAlexAPIService';
 import OpenAlexConnectionModal from './OpenAlexConnectionModal';
-import './styles.css';
 
 const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 	className = '',
@@ -107,38 +106,72 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 	const hasImportable = externalEntries.some((e) => !e.isImported);
 
 	return (
-		<div className={`openalex-panel ${className}`}>
+		<div className={`ui-stack ${className}`} data-gap='sm'>
 			{connectionStatus === 'disconnected' && (
-				<div className='openalex-not-connected'>
+				<div
+					className='ui-card ui-stack'
+					data-gap='sd'
+					data-padding='md'
+					data-surface='secondary'
+				>
 					<p>{t('Connect to OpenAlex to search 250M+ scholarly works.')}</p>
-					<button className='button primary' onClick={() => setShowModal(true)}>
+					<button
+						type='button'
+						className='button primary'
+						onClick={() => setShowModal(true)}
+					>
 						{t('Connect to OpenAlex')}
 					</button>
 				</div>
 			)}
 
 			{connectionStatus === 'connecting' && (
-				<div className='openalex-connecting'>
+				<div
+					className='ui-card ui-stack'
+					data-gap='sd'
+					data-padding='md'
+					data-surface='secondary'
+				>
 					<p>{t('Connecting to OpenAlex...')}</p>
 				</div>
 			)}
 
 			{connectionStatus === 'error' && (
-				<div className='openalex-error'>
-					<p className='error-message'>
+				<div
+					className='ui-card ui-stack'
+					data-gap='sd'
+					data-padding='md'
+					data-surface='secondary'
+				>
+					<p className='ui-message' data-tone='error'>
 						{t('Failed to connect to {provider}', { provider: 'OpenAlex' })}
 					</p>
-					<div className='backup-toolbar'>
-						<div className='primary-actions'>
+					<div
+						className='ui-toolbar'
+						data-width='full'
+						data-justify='between'
+						data-gap='md'
+					>
+						<div
+							className='ui-toolbar-actions'
+							data-role='primary'
+							data-gap='sm'
+						>
 							<button
+								type='button'
 								className='button primary'
 								onClick={() => setShowModal(true)}
 							>
 								{t('Reconnect')}
 							</button>
 						</div>
-						<div className='secondary-actions'>
+						<div
+							className='ui-toolbar-actions'
+							data-role='secondary'
+							data-gap='xs'
+						>
 							<button
+								type='button'
 								className='button secondary icon-only'
 								onClick={handleDisconnect}
 								title={t('Disconnect')}
@@ -151,10 +184,20 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 			)}
 
 			{connectionStatus === 'connected' && (
-				<div className='openalex-connected'>
-					<div className='backup-toolbar'>
-						<div className='primary-actions'>
+				<div className='ui-stack' data-gap='sm'>
+					<div
+						className='ui-toolbar'
+						data-width='full'
+						data-justify='between'
+						data-gap='md'
+					>
+						<div
+							className='ui-toolbar-actions'
+							data-role='primary'
+							data-gap='sm'
+						>
 							<button
+								type='button'
 								className='button secondary'
 								onClick={updateAllLocal}
 								disabled={isBulkOperating || !hasUpdatable}
@@ -164,6 +207,7 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 								{t('Update')}
 							</button>
 							<button
+								type='button'
 								className='button secondary icon-only'
 								onClick={importAllExternal}
 								disabled={isBulkOperating || !targetBibFile || !hasImportable}
@@ -172,16 +216,28 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 								<ImportIcon />
 							</button>
 						</div>
-						<div className='secondary-actions'>
+						<div
+							className='ui-toolbar-actions'
+							data-role='secondary'
+							data-gap='xs'
+						>
 							<button
+								type='button'
 								className={`button secondary icon-only ${showFilters || hasFilters ? 'active' : ''}`}
 								onClick={() => setShowFilters((v) => !v)}
 								title={t('Toggle Search Filters')}
 							>
 								<SearchIcon />
-								{hasFilters && <span className='bib-filter-badge' />}
+								{hasFilters && (
+									<span
+										className='ui-status-dot'
+										data-tone='accent'
+										data-placement='corner'
+									/>
+								)}
 							</button>
 							<button
+								type='button'
 								className='button secondary icon-only'
 								onClick={() => setShowModal(true)}
 								title={t('Edit Credentials')}
@@ -189,6 +245,7 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 								<KeyIcon />
 							</button>
 							<button
+								type='button'
 								className='button secondary icon-only'
 								onClick={handleDisconnect}
 								title={t('Disconnect')}
@@ -199,12 +256,20 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 					</div>
 
 					{showFilters && (
-						<div className='openalex-filters'>
-							<div className='openalex-filters-header'>
-								<span className='openalex-filters-label'>{t('Filters')}</span>
+						<div className='ui-card ui-stack' data-gap='sm' data-padding='sm'>
+							<div className='ui-toolbar' data-justify='between'>
+								<span
+									className='ui-menu-title'
+									data-size='sm'
+									data-tone='secondary'
+								>
+									{t('Filters')}
+								</span>
 								{hasFilters && (
 									<button
-										className='openalex-clear-filters'
+										type='button'
+										className='button '
+										data-variant='text'
 										onClick={clearFilters}
 									>
 										{t('Clear')}
@@ -212,7 +277,7 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 								)}
 							</div>
 
-							<div className='openalex-filter-row'>
+							<div className='ui-field'>
 								<label>{t('Author')}</label>
 								<input
 									type='text'
@@ -221,18 +286,18 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 									onChange={(e) =>
 										updateFilter('authorQuery', e.target.value || undefined)
 									}
-									className='openalex-filter-input'
+									className='ui-field-control'
 								/>
 							</div>
 
-							<div className='openalex-filter-row'>
+							<div className='ui-field'>
 								<label>{t('Type')}</label>
 								<select
 									value={filters.type || ''}
 									onChange={(e) =>
 										updateFilter('type', e.target.value || undefined)
 									}
-									className='openalex-filter-select'
+									className='ui-field-control'
 								>
 									<option value=''>{t('Any type')}</option>
 									{WORK_TYPES.map((type) => (
@@ -243,9 +308,9 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 								</select>
 							</div>
 
-							<div className='openalex-filter-row'>
+							<div className='ui-field'>
 								<label>{t('Year')}</label>
-								<div className='openalex-year-range'>
+								<div className='ui-control-cluster'>
 									<input
 										type='number'
 										placeholder={t('From')}
@@ -258,9 +323,9 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 												e.target.value ? Number(e.target.value) : undefined,
 											)
 										}
-										className='openalex-year-input'
+										className='ui-field-control'
 									/>
-									<span>–</span>
+									<span className='ui-note'>–</span>
 									<input
 										type='number'
 										placeholder={t('To')}
@@ -273,12 +338,12 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 												e.target.value ? Number(e.target.value) : undefined,
 											)
 										}
-										className='openalex-year-input'
+										className='ui-field-control'
 									/>
 								</div>
 							</div>
 
-							<div className='openalex-filter-row'>
+							<div className='ui-field'>
 								<label>{t('Open Access')}</label>
 								<select
 									value={filters.isOA === undefined ? '' : String(filters.isOA)}
@@ -290,7 +355,7 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 												: e.target.value === 'true',
 										)
 									}
-									className='openalex-filter-select'
+									className='ui-field-control'
 								>
 									<option value=''>{t('Any')}</option>
 									<option value='true'>{t('Open Access only')}</option>
@@ -298,7 +363,7 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 								</select>
 							</div>
 
-							<div className='openalex-filter-row'>
+							<div className='ui-field'>
 								<label>{t('Has DOI')}</label>
 								<select
 									value={
@@ -312,7 +377,7 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 												: e.target.value === 'true',
 										)
 									}
-									className='openalex-filter-select'
+									className='ui-field-control'
 								>
 									<option value=''>{t('Any')}</option>
 									<option value='true'>{t('Yes')}</option>
@@ -320,7 +385,7 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 								</select>
 							</div>
 
-							<div className='openalex-filter-row'>
+							<div className='ui-field'>
 								<label>{t('Min. Citations')}</label>
 								<input
 									type='number'
@@ -333,7 +398,7 @@ const OpenAlexPanel: React.FC<BibliographyPanelProps> = ({
 											e.target.value ? Number(e.target.value) : undefined,
 										)
 									}
-									className='openalex-filter-input'
+									className='ui-field-control'
 								/>
 							</div>
 						</div>

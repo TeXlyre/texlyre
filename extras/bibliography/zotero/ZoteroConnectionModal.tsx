@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from 'react';
 import Modal from '@/components/common/Modal';
 import { ZoteroIcon } from './Icon';
 import { zoteroAPIService } from './ZoteroAPIService';
-import './styles.css';
 
 interface ZoteroConnectionModalProps {
 	isOpen: boolean;
@@ -134,16 +133,16 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 			icon={ZoteroIcon}
 			size='medium'
 		>
-			<div className='zotero-connection-modal'>
+			<div className='ui-stack' data-gap='lg'>
 				{step === 'credentials' && (
-					<div className='zotero-connection-step'>
-						<p className='zotero-step-description'>
+					<div className='ui-stack' data-gap='lg'>
+						<p className='ui-note'>
 							{t(
 								'Enter your Zotero API credentials. You can find these in your Zotero account settings.',
 							)}
 						</p>
 
-						<div className='form-group'>
+						<div className='ui-field' data-spacing='section'>
 							<label>{t('API Key:')}</label>
 							<input
 								type='password'
@@ -154,7 +153,7 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 							/>
 						</div>
 
-						<div className='form-group'>
+						<div className='ui-field' data-spacing='section'>
 							<label>{t('User ID:')}</label>
 							<input
 								type='text'
@@ -165,17 +164,26 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 							/>
 						</div>
 
-						{error && <div className='error-message'>{error}</div>}
+						{error && (
+							<div className='ui-message' data-tone='error'>
+								{error}
+							</div>
+						)}
 
-						<div className='button-group zotero-button-group'>
+						<div className='ui-actions' data-gap='md' data-cross='stretch'>
 							<button
+								type='button'
 								className='button primary'
 								onClick={handleCredentialsSubmit}
 								disabled={isLoading || !apiKey.trim() || !userId.trim()}
 							>
 								{isLoading ? t('Connecting...') : t('Connect')}
 							</button>
-							<button className='button secondary' onClick={onClose}>
+							<button
+								type='button'
+								className='button secondary'
+								onClick={onClose}
+							>
 								{t('Cancel')}
 							</button>
 						</div>
@@ -184,7 +192,6 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 							href='https://texlyre.org/docs/integrations/zotero'
 							target='_blank'
 							rel='noopener noreferrer'
-							className='dropdown-link'
 						>
 							{t('Learn more about Zotero Integration')}
 						</a>
@@ -192,12 +199,12 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 				)}
 
 				{step === 'library' && (
-					<div className='zotero-connection-step'>
-						<p className='zotero-step-description'>
+					<div className='ui-stack' data-gap='lg'>
+						<p className='ui-note'>
 							{t('Select a Zotero library to use for this project.')}
 						</p>
 
-						<div className='form-group'>
+						<div className='ui-field' data-spacing='section'>
 							<label>{t('Library:')}</label>
 							<select
 								value={selectedLibrary}
@@ -214,10 +221,15 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 							</select>
 						</div>
 
-						{error && <div className='error-message'>{error}</div>}
+						{error && (
+							<div className='ui-message' data-tone='error'>
+								{error}
+							</div>
+						)}
 
-						<div className='button-group zotero-button-group'>
+						<div className='ui-actions' data-gap='md' data-cross='stretch'>
 							<button
+								type='button'
 								className='button primary'
 								onClick={handleLibrarySubmit}
 								disabled={isLoading || !selectedLibrary}
@@ -225,6 +237,7 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 								{isLoading ? t('Connecting...') : t('Connect')}
 							</button>
 							<button
+								type='button'
 								className='button secondary'
 								onClick={() => setStep('credentials')}
 								disabled={isLoading}

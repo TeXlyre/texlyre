@@ -290,6 +290,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 		<>
 			<PluginControlGroup>
 				<button
+					type='button'
 					onClick={handlePreviousPage}
 					disabled={currentPage <= 1 || isLoading}
 					title={t('Previous Page')}
@@ -297,6 +298,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 					<ChevronLeftIcon />
 				</button>
 				<button
+					type='button'
 					onClick={handleNextPage}
 					disabled={currentPage >= numPages || isLoading}
 					title={t('Next Page')}
@@ -305,19 +307,21 @@ const PdfViewer: React.FC<ViewerProps> = ({
 				</button>
 			</PluginControlGroup>
 
-			<PluginControlGroup className='page-input-group'>
+			<PluginControlGroup>
 				<input
 					type='text'
 					value={currentPage}
 					onChange={handlePageChange}
 					disabled={isLoading}
-					className='page-input'
+					className='ui-field-control page-input'
+					data-width='short'
 				/>
-				<span>/ {numPages}</span>
+				<span className='ui-meta'>/ {numPages}</span>
 			</PluginControlGroup>
 
 			<PluginControlGroup>
 				<button
+					type='button'
 					onClick={handleZoomOut}
 					title={t('Zoom Out')}
 					disabled={isLoading}
@@ -328,7 +332,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 					value={hasCustomZoom ? 'custom' : currentZoom}
 					onChange={handleZoomChange}
 					disabled={isLoading}
-					className='zoom-dropdown'
+					className='zoom-dropdown ui-field-control'
 					title={t('Zoom Level')}
 				>
 					{zoomOptions.map((option) => (
@@ -343,6 +347,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 					)}
 				</select>
 				<button
+					type='button'
 					onClick={handleZoomIn}
 					title={t('Zoom In')}
 					disabled={isLoading}
@@ -353,6 +358,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 
 			<PluginControlGroup>
 				<button
+					type='button'
 					onClick={handleExport}
 					title={t('Download PDF')}
 					disabled={isLoading}
@@ -364,7 +370,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 	);
 
 	return (
-		<div className='pdf-viewer-container'>
+		<div className='ui-viewer' data-surface='secondary'>
 			<PluginHeader
 				fileName={fileInfo.fileName}
 				filePath={fileInfo.filePath}
@@ -374,13 +380,25 @@ const PdfViewer: React.FC<ViewerProps> = ({
 				controls={headerControls}
 			/>
 
-			<div className='pdf-viewer-content'>
+			<div className='ui-viewer-content' data-overflow='auto'>
 				{isLoading && (
-					<div className='loading-indicator'>
+					<div
+						className='ui-message'
+						data-variant='loading'
+						data-placement='overlay-center'
+					>
 						{t('Loading PDF document...')}
 					</div>
 				)}
-				{error && <div className='pdf-error-message'>{error}</div>}
+				{error && (
+					<div
+						className='ui-message'
+						data-placement='overlay-center'
+						data-variant='error'
+					>
+						{error}
+					</div>
+				)}
 				{!isLoading && !error && (
 					<div className='pdf-container' ref={pdfContainerRef}>
 						<div className='pdf-page-container'>

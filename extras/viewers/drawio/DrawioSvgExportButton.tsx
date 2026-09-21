@@ -256,13 +256,16 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
 	};
 
 	return (
-		<div
-			className={`drawio-export-button-container ${className}`}
-			ref={dropdownRef}
-		>
-			<div className='drawio-export-button-group'>
+		<div className={`ui-control-cluster ${className}`} ref={dropdownRef}>
+			<div
+				className='ui-button-group ui-split-button'
+				data-layout='weighted'
+				data-main-padding='md'
+				data-trigger-group='true'
+			>
 				<button
-					className={`control-button export-button ${isExporting ? 'exporting' : ''}`}
+					type='button'
+					className={`button ui-split-main export-button ${isExporting ? 'exporting' : ''}`}
 					onClick={handleSaveAsSvg}
 					disabled={disabled || isExporting}
 					title={t('Save as SVG')}
@@ -271,7 +274,8 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
 				</button>
 
 				<button
-					className='control-button dropdown-toggle'
+					type='button'
+					className='button ui-split-toggle dropdown-toggle'
 					onClick={toggleDropdown}
 					disabled={disabled || isExporting}
 					title={t('SVG Export Options')}
@@ -284,12 +288,12 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
 				isOpen={isDropdownOpen}
 				triggerElement={
 					dropdownRef.current?.querySelector(
-						'.drawio-export-button-group',
+						'[data-trigger-group]',
 					) as HTMLElement
 				}
 				className='drawio-svg-dropdown'
 			>
-				<div className='dropdown-option'>
+				<div className='ui-menu-section' data-variant='control'>
 					<label>
 						{t('Margin (px):')}
 						<NumberInput
@@ -305,7 +309,7 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
 					</label>
 				</div>
 
-				<div className='dropdown-option'>
+				<div className='ui-menu-section' data-variant='control'>
 					<label>
 						{t('Image scale:')}
 						<NumberInput
@@ -321,7 +325,7 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
 					</label>
 				</div>
 
-				<div className='dropdown-option'>
+				<div className='ui-menu-section' data-variant='control'>
 					<label>
 						<input
 							type='checkbox'
@@ -336,7 +340,7 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
 				</div>
 
 				{!transparentBackground && (
-					<div className='dropdown-option'>
+					<div className='ui-menu-section' data-variant='control'>
 						<label>
 							{t('Background color:')}
 							<input
@@ -351,9 +355,10 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
 					</div>
 				)}
 
-				<div className='dropdown-option'>
+				<div className='ui-menu-section' data-variant='control'>
 					<button
-						className='dropdown-button'
+						type='button'
+						className='button primary'
 						onClick={handleDownloadAsSvg}
 						disabled={disabled || isExporting}
 					>

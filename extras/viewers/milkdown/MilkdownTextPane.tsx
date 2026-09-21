@@ -84,7 +84,12 @@ const MilkdownTextPane: React.FC<MilkdownTextPaneProps> = ({
 			<div ref={editorRef} className='codemirror-editor-container' />
 
 			{showSaveIndicator && (
-				<div className='save-indicator'>
+				<div
+					className='ui-message'
+					data-role='save-indicator'
+					data-tone='success'
+					data-density='compact'
+				>
 					<span>Saved</span>
 				</div>
 			)}

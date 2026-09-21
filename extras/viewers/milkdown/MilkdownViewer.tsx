@@ -276,7 +276,6 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 				enabled: autoSaveEnabled,
 				delay: autoSaveDelay,
 				onSave: async (_saveKey, content) => {
-					if (!content) return;
 					const bytes = new TextEncoder().encode(content).buffer;
 					await fileStoreService.updateFileContent(saveFileId, bytes);
 				},
@@ -290,7 +289,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 		};
 	}, [fileId, autoSaveEnabled, autoSaveDelay, getCurrentContent]);
 
-	/* biome-ignore lint/correctness/useExhaustiveDependencies: markdown is the change trigger and not read in body */
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: markdown is the change trigger and not read in body. */
 	useEffect(() => {
 		autoSaveRef.current?.();
 	}, [markdown]);
@@ -308,6 +307,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 		<>
 			<PluginControlGroup>
 				<button
+					type='button'
 					className={showToolbar ? 'active' : ''}
 					onClick={toggleToolbar}
 					title={showToolbar ? t('Hide Toolbar') : t('Show Toolbar')}
@@ -315,6 +315,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 					<ToolbarShowIcon />
 				</button>
 				<button
+					type='button'
 					className={viewMode === 'text' ? 'active' : ''}
 					onClick={() => switchView(viewMode === 'visual' ? 'text' : 'visual')}
 					title={t('Switch to {viewMode}', {
@@ -328,6 +329,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 			<PluginControlGroup>
 				{fileId && (
 					<button
+						type='button'
 						onClick={() => {
 							if (viewMode === 'text') {
 								document.dispatchEvent(
@@ -346,6 +348,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 					</button>
 				)}
 				<button
+					type='button'
 					onClick={() => copyCleanTextToClipboard(getCurrentContent())}
 					title={t('Copy Text')}
 					disabled={isLoadingContent}
@@ -354,6 +357,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 				</button>
 
 				<button
+					type='button'
 					onClick={handleExport}
 					title={t('Download Markdown')}
 					disabled={isLoadingContent}
@@ -365,7 +369,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 	);
 
 	return (
-		<div className='milkdown-viewer-container'>
+		<div className='ui-viewer' data-surface='secondary'>
 			<PluginHeader
 				fileName={fileInfo.fileName}
 				filePath={fileInfo.filePath}
@@ -375,13 +379,15 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 				controls={headerControls}
 			/>
 
-			<div className='milkdown-viewer-content'>
+			<div className='ui-viewer-content' data-layout='fill'>
 				{error && (
-					<div className='milkdown-error-message error-message'>{error}</div>
+					<div className='ui-message' data-tone='error' data-spacing='inset'>
+						{error}
+					</div>
 				)}
 
 				{isLoadingContent ? (
-					<div className='milkdown-loading-message'>
+					<div className='ui-message' data-spacing='inset'>
 						{t('Loading Markdown…')}
 					</div>
 				) : viewMode === 'visual' ? (

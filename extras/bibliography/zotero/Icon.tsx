@@ -7,7 +7,7 @@ export const ZoteroIcon: React.FC = () => (
 		xmlns='http://www.w3.org/2000/svg'
 		width='16'
 		height='16'
-		viewBox='0 0 30 24'
+		viewBox='-1 0 26 24'
 		className='brand-icon--monochrome'
 		fill='currentColor'
 	>

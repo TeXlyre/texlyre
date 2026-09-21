@@ -20,7 +20,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { useProperties } from '@/hooks/useProperties';
 import { BibliographyProvider } from '@/contexts/BibliographyContext';
 import { useEditorView } from '@/hooks/editor/useEditorView';
-import LSPToggleButton from '@/components/bibliography/LSPToggleButton';
+import BibliographyToggleButton from '@/components/bibliography/BibliographyToggleButton';
 import BibliographyPanel from '@/components/bibliography/BibliographyPanel';
 import type { ViewerProps } from '@/plugins/PluginInterface';
 import { pluginRegistry } from '@/plugins/PluginRegistry';
@@ -692,6 +692,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		<>
 			<PluginControlGroup>
 				<button
+					type='button'
 					className={`${showSidebar ? 'active' : ''}`}
 					onClick={() => {
 						const next = !showSidebar;
@@ -707,6 +708,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					<CleanIcon />
 				</button>
 				<button
+					type='button'
 					className={`${viewMode === 'table' ? 'active' : ''}`}
 					onClick={() =>
 						setViewMode(viewMode === 'editor' ? 'table' : 'editor')
@@ -723,6 +725,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			<PluginControlGroup>
 				{fileId && (
 					<button
+						type='button'
 						onClick={() => {
 							if (currentView === 'original') {
 								document.dispatchEvent(
@@ -747,6 +750,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					</button>
 				)}
 				<button
+					type='button'
 					onClick={() =>
 						handleExport(
 							displayContent,
@@ -762,14 +766,14 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			{hasPluginToggles && (
 				<PluginControlGroup>
 					{availableLSPPlugins.map((plugin) => (
-						<LSPToggleButton
+						<BibliographyToggleButton
 							key={plugin.id}
 							pluginId={plugin.id}
 							className='header-lsp-button'
 						/>
 					))}
 					{availableBibPlugins.map((plugin) => (
-						<LSPToggleButton
+						<BibliographyToggleButton
 							key={plugin.id}
 							pluginId={plugin.id}
 							className='header-lsp-button'
@@ -782,7 +786,10 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
 	return (
 		<BibliographyProvider>
-			<div className='bibtex-viewer-container'>
+			<div
+				className='bibtex-viewer-container ui-viewer'
+				data-surface='secondary'
+			>
 				<PluginHeader
 					fileName={fileInfo.fileName}
 					filePath={fileInfo.filePath}
@@ -805,37 +812,59 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 						/>
 					)}
 
-					<div className='bibtex-content-area'>
+					<div
+						className='ui-panel-content'
+						data-layout='stack'
+						data-overflow='hidden'
+					>
 						{error && (
-							<div className='bib-error-message error-message'>{error}</div>
+							<div
+								className='ui-message'
+								data-tone='error'
+								data-spacing='inset'
+							>
+								{error}
+							</div>
 						)}
 
 						{warnings.length > 0 && (
-							<div className='bib-warnings-container warning-message'>
-								<h5>{t('Warnings: ')}</h5>
+							<div
+								className='ui-message'
+								data-tone='warning'
+								data-spacing='inset'
+							>
+								<h5 className='ui-panel-title'>{t('Warnings: ')}</h5>
 								{warnings.map((warning, index) => (
-									<div key={index} className='warning-item'>
+									<div key={index}>
 										{(warning as { message: string }).message}
 									</div>
 								))}
 							</div>
 						)}
 
-						<div className='editor-containers'>
+						<div className='ui-stack' data-grow='true' data-overflow='hidden'>
 							<div
-								className='editor-container'
+								className='ui-stack'
+								data-grow='true'
+								data-overflow='hidden'
 								style={{ position: 'relative' }}
 							>
-								<div className='editor-header'>
-									<div className='view-tabs'>
+								<div className='ui-section-header'>
+									<div
+										className='ui-tab-list'
+										data-role='viewer'
+										data-variant='switcher'
+									>
 										<button
-											className={`tab-button ${currentView === 'original' ? 'active' : ''}`}
+											type='button'
+											className={`ui-tab ${currentView === 'original' ? 'active' : ''}`}
 											onClick={() => setCurrentView('original')}
 										>
 											{t('Original')}
 										</button>
 										<button
-											className={`tab-button ${currentView === 'processed' ? 'active' : ''}`}
+											type='button'
+											className={`ui-tab ${currentView === 'processed' ? 'active' : ''}`}
 											onClick={() => setCurrentView('processed')}
 											disabled={!processedContent.trim()}
 										>
@@ -843,7 +872,12 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 										</button>
 									</div>
 									{currentView === 'processed' && processedContent.trim() && (
-										<div className='processed-save-notice'>
+										<div
+											className='ui-message'
+											data-tone='warning'
+											data-layout='inline'
+											data-density='compact'
+										>
 											<Trans
 												i18nKey='Not saved automatically. Click the <icon /> <strong>Save</strong> button or <strong>Ctrl+S</strong>'
 												components={{
@@ -859,12 +893,12 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 										</div>
 									)}
 									{isProcessing && (
-										<span className='processing-indicator'>
+										<span className='ui-status' data-tone='accent'>
 											{t('(Processing...)')}
 										</span>
 									)}
 									{isSaving && (
-										<span className='processing-indicator'>
+										<span className='ui-status' data-tone='accent'>
 											{t('(Saving...)')}
 										</span>
 									)}
@@ -904,7 +938,12 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 								{originalShowSaveIndicator &&
 									currentView === 'original' &&
 									viewMode === 'editor' && (
-										<div className='save-indicator'>
+										<div
+											className='ui-message'
+											data-role='save-indicator'
+											data-tone='success'
+											data-density='compact'
+										>
 											<span>{t('Saved')}</span>
 										</div>
 									)}
