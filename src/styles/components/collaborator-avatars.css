@@ -24,7 +24,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 11px;
+	font-size: var(--font-size-caption);
 	font-weight: 600;
 	color: var(--text-color);
 	flex-shrink: 0;
@@ -53,7 +53,7 @@
 .collab-avatar-overflow {
 	background-color: var(--pico-secondary-background);
 	color: var(--text-color);
-	font-size: 10px;
+	font-size: var(--font-size-micro);
 	border: 2px solid var(--accent-border);
 }
 
@@ -67,7 +67,7 @@
 	border: 1px solid var(--accent-border);
 	border-radius: var(--radius-md);
 	box-shadow: var(--shadow-md);
-	z-index: 10000;
+	z-index: 9999;
 	padding: var(--space-xs) 0;
 	box-sizing: border-box;
 }
@@ -95,7 +95,7 @@
 }
 
 .collab-avatar-tooltip-name {
-	font-size: 0.8rem;
+	font-size: var(--ui-tooltip-title-font-size, var(--font-size-small));
 	font-weight: 500;
 	color: var(--text-color);
 	white-space: nowrap;
@@ -105,13 +105,13 @@
 
 .collab-avatar-you {
 	font-weight: 400;
-	font-size: 0.7rem;
+	font-size: var(--font-size-caption);
 	color: var(--pico-secondary);
 	margin-left: var(--space-xs);
 }
 
 .collab-avatar-tooltip-email {
-	font-size: 0.7rem;
+	font-size: var(--ui-tooltip-font-size, var(--font-size-caption));
 	color: var(--pico-primary);
 	text-decoration: none;
 	white-space: nowrap;

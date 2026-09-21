@@ -1,62 +1,21 @@
-/* CodeMirror comment styles */
-.comment-open-tag,
-.comment-close-tag {
-	display: none !important;
-	width: 0 !important;
-	height: 0 !important;
-	overflow: hidden !important;
-	position: absolute !important;
-	visibility: hidden !important;
-}
-
 .highlight-comment {
 	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.2) !important;
 	transition: background-color 0.3s ease;
 }
 
-@keyframes commentBubbleFadeIn {
-	from {
-		opacity: 0;
-		transform: translateY(5px) scale(0.95);
-	}
-
-	to {
-		opacity: 1;
-		transform: translateY(0) scale(1);
-	}
-}
-
 .comment-modal {
 	width: 100%;
-}
-
-.comment-form {
-	display: flex;
-	flex-direction: column;
+	min-width: 0;
 }
 
 .comment-form textarea {
-	resize: vertical;
+	height: auto;
 	min-height: 80px;
-	font-family: inherit;
+	resize: vertical;
 }
 
-.comment-search input.comment-search-input {
-	margin-bottom: 0;
-}
-
-/* Comment panel styles */
 .comment-panel {
 	order: 3;
-	width: var(--comment-panel-width);
-	display: flex;
-	flex-direction: column;
-	border-left: 1px solid var(--accent-border);
-	background-color: var(--pico-secondary-background);
-	height: 100%;
-	position: relative;
-	overflow: hidden;
-	flex-shrink: 0;
 }
 
 .editor-main-container {
@@ -79,279 +38,29 @@
 	box-shadow: var(--shadow-md);
 }
 
-.comment-panel-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: var(--space-sm);
-	border-bottom: 1px solid var(--accent-border);
-}
-
-.comment-panel-header h3 {
-	margin: 0 var(--space-xs) 0 0;
-	font-size: 0.8rem;
-}
-
-.comment-panel-header .close-button {
-	background: none;
-	border: none;
-	font-size: 1.25rem;
-	cursor: pointer;
-	padding: 0 var(--space-sm);
-	color: var(--text-color);
-}
-
-.comment-panel-content {
-	flex: 1;
-	overflow-y: auto;
-	padding: var(--space-sm);
-}
-
-.comment-search {
-	position: relative;
-	padding: var(--space-sm);
-	border-bottom: 1px solid var(--accent-border);
-}
-
-.comment-search .clear-search-button {
-	position: absolute;
-	right: 0.5rem;
-	top: 40%;
-	transform: translateY(-50%);
-	padding: 0;
-	margin: 0;
-	background: none;
-	border: none;
-	cursor: pointer;
-	font-size: 1.2rem;
-	color: var(--pico-secondary);
-	width: 1.5rem;
-	height: 1.5rem;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.comment-toggle-button {
-	position: absolute;
-	top: 10px;
-	right: 10px;
-	margin-right: 6px;
-	z-index: 10;
-	padding: 0.3rem;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.25rem;
-	background-color: var(--pico-primary);
-	color: #fff !important;
-	border-radius: var(--space-sm);
-	height: 32px;
-	box-shadow: var(--shadow-sm);
-	cursor: pointer;
-	transition:
-		background-color var(--transition-normal),
-		opacity var(--transition-normal);
-	font-size: 0.6rem;
-	opacity: 0.4;
-	border: none;
-}
-
-.comment-toggle-button:hover {
-	background-color: var(--pico-primary-hover);
-	color: #fff !important;
-	opacity: 1;
-}
-
-.comment-toggle-button.active {
-	opacity: 1;
-	color: #fff !important;
-}
-
-.comment-count-badge {
-	background-color: var(--color-success);
-	color: #fff;
-	margin: 0.25rem 0.25rem;
-	padding: 0.225rem 0.295rem;
-	border-radius: 10px;
-	font-size: 0.55rem;
-	font-weight: 600;
-	min-width: 1.25rem;
-	text-align: center;
-	line-height: 1;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	vertical-align: middle;
-}
-
 .floating-comment-button {
 	position: absolute;
 	top: 10px;
 	right: 10px;
 	z-index: 50;
-}
-
-.no-comments {
-	text-align: center;
-	padding: var(--space-md);
-	color: var(--pico-secondary);
+	width: max-content;
+	min-width: 0;
+	height: auto;
+	min-height: 0;
+	padding: var(--space-xs) var(--space-sm);
+	font-size: var(--ui-item-time-font-size, var(--font-size-micro));
+	line-height: 1.2;
+	white-space: nowrap;
+	box-shadow: var(--shadow-sm);
 }
 
 .comment-item {
-	margin-bottom: var(--space-md);
-	padding: var(--space-sd);
-	font-size: 0.8rem;
-	border-radius: var(--radius-lg);
-	background-color: var(--pico-background);
-	border: 1px solid var(--accent-border);
 	position: relative;
 }
 
-.comment-item.resolved {
-	opacity: 0.7;
-	background-color: var(--pico-secondary-background);
-}
-
-.comment-item.resolved .comment-content {
+.comment-item[data-state="resolved"] .ui-item-content {
+	color: var(--pico-secondary);
 	text-decoration: line-through;
-	color: var(--pico-secondary);
-}
-
-.comment-item.clickable {
-	cursor: pointer;
-}
-
-.comment-item.clickable:hover {
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.05);
-}
-
-.comment-item.clickable::after {
-	content: "👆";
-	position: absolute;
-	top: 0.5rem;
-	right: 0.5rem;
-	opacity: 0;
-	transition: opacity 0.2s ease;
-	font-size: 0.8rem;
-	pointer-events: none;
-}
-
-.comment-item.clickable:hover::after {
-	opacity: 0.6;
-}
-
-.comment-header,
-.response-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: flex-start;
-	margin-bottom: var(--space-sm);
-}
-
-.comment-author-container,
-.response-author-container {
-	display: flex;
-	flex-direction: column;
-}
-
-.comment-author,
-.response-author {
-	font-weight: 500;
-	color: var(--pico-primary);
-	max-width: 150px;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.comment-time,
-.response-time {
-	font-size: 0.6rem;
-	color: var(--pico-secondary);
-	margin-top: 2px;
-}
-
-.comment-content,
-.response-content {
-	margin-bottom: var(--space-sd);
-	word-break: break-word;
-}
-
-.comment-responses {
-	margin-top: var(--space-sm);
-	margin-left: var(--space-md);
-	padding-left: var(--space-sm);
-	border-left: 2px solid var(--accent-border);
-}
-
-.response-item {
-	margin-bottom: var(--space-sm);
-	padding: var(--space-sm);
-	border-radius: var(--radius-sm);
-	background-color: var(--pico-secondary-background);
-}
-
-.delete-button {
-	background: none;
-	border: none;
-	cursor: pointer;
-	color: var(--pico-secondary);
-	font-size: 1rem;
-	padding: 0;
-	opacity: 0.7;
-	transition: opacity var(--transition-normal);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 20px;
-	height: 20px;
-	flex-shrink: 0;
-}
-
-.delete-button:hover {
-	opacity: 1;
-	color: var(--color-error);
-}
-
-.delete-button.small {
-	font-size: 0.8rem;
-	width: 16px;
-	height: 16px;
-}
-
-.resolve-button {
-	background: none;
-	border: none;
-	cursor: pointer;
-	color: var(--pico-secondary);
-	font-size: 1rem;
-	padding: 0;
-	opacity: 0.7;
-	transition: opacity var(--transition-normal);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 20px;
-	height: 20px;
-	flex-shrink: 0;
-}
-
-.resolve-button:hover {
-	opacity: 1;
-	color: var(--color-success);
-}
-
-.comment-item.resolved .resolve-button {
-	color: var(--color-success);
-	opacity: 1;
-}
-
-.comment-header-actions {
-	display: flex;
-	align-items: center;
-	gap: var(--space-sm);
 }
 
 .comment-line-section {
@@ -360,145 +69,16 @@
 	margin-bottom: var(--space-sm);
 }
 
-.comment-line-section .comment-line-button {
-	color: var(--pico-primary) !important;
-	font-weight: 500;
-	cursor: pointer;
-	padding: 0.25rem 0.5rem;
-	border-radius: 4px !important;
-	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
-	font-size: 0.55rem;
-	transition: background-color 0.2s ease;
-	border: none;
-	position: relative;
-}
-
-.comment-line-section .comment-line-button:hover {
-	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.2);
-}
-
-.comment-line-section .comment-line-button::after {
-	content: "👆";
-	position: absolute;
-	top: -0.25rem;
-	right: -0.25rem;
-	opacity: 0;
-	transition: opacity 0.2s ease;
-	font-size: 0.6rem;
-	pointer-events: none;
-}
-
-.comment-line-section .comment-line-button:hover::after {
-	opacity: 0.6;
-}
-
-.add-response-button {
-	background: none;
-	border: none;
-	cursor: pointer;
-	color: var(--pico-primary);
-	padding: 0;
-	text-align: left;
-	font-size: 0.65rem;
-}
-
-.add-response-form {
-	margin-top: var(--space-sm);
-}
-
-.add-response-form textarea {
-	width: 100%;
-	padding: var(--space-sm);
-	border: 1px solid var(--accent-border);
-	border-radius: var(--radius-sm);
-	background-color: var(--pico-background);
-	color: var(--text-color);
-	resize: vertical;
-	font-family: inherit;
-	font-size: 0.8rem;
-}
-
-.cancel-response-button,
-.submit-response-button {
-	padding: var(--space-xs) var(--space-sm);
-	border-radius: var(--radius-sm);
-	font-size: 0.8rem;
-	cursor: pointer;
-}
-
-.cancel-response-button {
-	background-color: transparent;
-	border: 1px solid var(--accent-border);
-}
-
-.submit-response-button {
-	background-color: var(--pico-primary);
-	color: var(--pico-primary-inverse) !important;
-	border: none;
-}
-
-.submit-response-button:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
 .comment-button {
 	position: absolute;
-	background-color: var(--pico-primary);
+	z-index: 10;
+	width: auto;
 	padding: var(--space-xs) var(--space-sm);
 	border-radius: var(--radius-sm);
-	font-size: 0.6rem;
-	color: #fff;
-	text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-	z-index: 10;
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+	font-size: var(--font-size-micro);
 	box-shadow: var(--shadow-sm);
 	opacity: 0.9;
-	animation: fadeIn var(--transition-normal) ease-in-out;
-}
-
-.floating-comment-button {
-	display: inline-block;
-	padding: 4px 6px;
-	background-color: var(--pico-primary);
-	color: var(--pico-primary-inverse) !important;
-	border: none;
-	border-radius: var(--radius-sm);
-	font-size: 10px;
 	cursor: pointer;
-	box-shadow: var(--shadow-sm);
-	transition: all var(--transition-normal);
-	white-space: nowrap;
-	width: auto;
-	max-width: fit-content;
-}
-
-@keyframes fadeIn {
-	from {
-		opacity: 0;
-		transform: scale(0.8);
-	}
-
-	to {
-		opacity: 1;
-		transform: scale(1);
-	}
-}
-
-.inline-view {
-	position: relative;
-}
-
-.inline-view::before {
-	content: "";
-	position: absolute;
-	left: -12px;
-	top: 50%;
-	transform: translateY(-50%);
-	width: 8px;
-	height: 8px;
-	background-color: var(--pico-primary);
-	border-radius: 50%;
 }

@@ -5,7 +5,7 @@
 :root {
 	--cm-color-keyword: #6f42c1;
 	--cm-color-def-keyword: #d73a49;
-	--cm-color-comment: var(--pico-muted-color, #6a737d);
+	--cm-color-comment: var(--pico-secondary, #6a737d);
 	--cm-color-atom: #0366d6;
 	--cm-color-atom-bg: rgba(3, 102, 214, 0.1);
 	--cm-color-property: #e36209;
@@ -13,8 +13,8 @@
 	--cm-color-number: #005cc5;
 	--cm-color-variable: #6f42c1;
 	--cm-color-operator: #d73a49;
-	--cm-color-punctuation: var(--pico-muted-color, #586069);
-	--cm-color-brace: var(--pico-color, #24292e);
+	--cm-color-punctuation: var(--pico-secondary, #586069);
+	--cm-color-brace: var(--text-color, #24292e);
 	--cm-color-ctrl: #0000cc;
 	--cm-color-env: #008800;
 	--cm-color-env-name: #990000;
@@ -22,9 +22,7 @@
 	--cm-color-meta: #d73a49;
 	--cm-color-link: #0366d6;
 	--cm-color-argument: #dd1144;
-	--cm-color-editor-text: #24292e;
-	--cm-color-gutter-text: #6a737d;
-	--cm-color-active-line-bg: rgba(0, 0, 0, 0.04);
+	--cm-color-editor-text: var(--editor-text, var(--text-color));
 }
 
 [data-theme-mode="dark"] {
@@ -47,47 +45,30 @@
 	--cm-color-meta: #ff7b86;
 	--cm-color-link: #58a6ff;
 	--cm-color-argument: #ffa198;
-	--cm-color-editor-text: #ddd;
-	--cm-color-gutter-text: #999;
-	--cm-color-active-line-bg: rgba(255, 255, 255, 0.04);
 }
 
 /* ============================================================
    Editor layout
    ============================================================ */
 
-.cm-editor .cm-panel.cm-search button {
-	border-radius: var(--radius-sm);
-	padding: var(--space-xs) var(--space-sm);
-}
-
-.cm-panel.cm-search [name="close"] {
-	position: absolute;
-	top: 0;
-	right: var(--space-md);
-	background-color: inherit;
-	border: none;
-	font: inherit;
-	padding: 0;
-	margin: 0;
-}
-
 .codemirror-editor-container {
 	width: 100%;
 	height: 100%;
-	overflow: auto;
+	min-height: 0;
+	flex: 1;
+	overflow: hidden;
 }
 
 .codemirror-editor-container .cm-editor {
+	position: relative;
 	height: 100%;
-	/* color: var(--cm-color-editor-text); */
-	background-color: var(--pico-secondary-background);
+	background-color: var(--editor-background, var(--pico-secondary-background));
+	color: var(--editor-text, var(--text-color));
 }
 
 .codemirror-editor-container .cm-editor.cm-focused {
 	outline: 2px solid var(--pico-primary);
 	outline-offset: -2px;
-	/* background-color: var(--pico-secondary-background) !important; */
 }
 
 .codemirror-editor-container .cm-scroller {
@@ -98,9 +79,7 @@
 
 .codemirror-editor-container .cm-content {
 	min-height: 100%;
-	/* white-space: pre-wrap; */
 	padding: var(--space-sm);
-	/* background-color: transparent !important; */
 }
 
 .codemirror-editor-container .cm-line {
@@ -116,12 +95,11 @@
 }
 
 .codemirror-editor-container .cm-gutters {
-	/* color: var(--cm-color-gutter-text); */
 	border-right: 1px solid var(--accent-border);
+	color: var(--pico-secondary);
 }
 
 .codemirror-editor-container .cm-lineNumbers .cm-gutterElement {
-	/* color: var(--pico-muted-color, #6a737d); */
 	padding: 0 var(--space-xs) 0 var(--space-xs);
 }
 
@@ -131,7 +109,12 @@
 
 .codemirror-editor-container .cm-completionInfo {
 	color: var(--cm-color-editor-text);
-	/* background-color: var(--pico-secondary-background); */
+}
+
+/* Annotation overlay used by disk/Git merge views. */
+.cm-annotated-span {
+	background-color: color-mix(in srgb, var(--pico-primary) 18%, transparent);
+	border-bottom: 1px solid var(--pico-primary);
 }
 
 /* ============================================================
@@ -153,11 +136,11 @@
    ============================================================ */
 
 .codemirror-editor-container .cm-foldPlaceholder {
-	background-color: var(--pico-muted-background, #e1e4e8);
-	border: 1px solid var(--pico-muted-border-color, #d1d5da);
+	background-color: var(--pico-secondary-background, #e1e4e8);
+	border: 1px solid var(--accent-border, #d1d5da);
 	border-radius: var(--radius-xs);
-	color: var(--pico-muted-color, #6a737d);
-	font-size: 10px;
+	color: var(--pico-secondary, #6a737d);
+	font-size: var(--font-size-caption);
 	margin: 0 2px;
 	padding: 0 var(--space-xs);
 }
@@ -166,13 +149,342 @@
    Search
    ============================================================ */
 
+.cm-editor:has(.cm-panel.cm-search) {
+	--cm-search-overlay-space: calc(
+		(var(--ui-field-control-height, var(--button-height-md)) * 2) +
+		(var(--space-xs) * 4) +
+		2px
+	);
+}
+
+.cm-editor:has(.cm-panel.cm-search) .cm-scroller {
+	scroll-padding-top: var(--cm-search-overlay-space);
+}
+
+.cm-editor:has(.cm-panel.cm-search) .cm-content {
+	padding-top: calc(var(--cm-search-overlay-space) + var(--space-sm));
+}
+
+.cm-editor > .cm-panels-bottom:has(> .cm-search),
+.cm-editor > .cm-panels-top:has(> .cm-search) {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: var(--z-tooltip);
+	width: 100%;
+	border: 0;
+	background: transparent;
+	pointer-events: none;
+}
+
+.cm-editor .cm-panel.cm-search {
+	--cm-search-action-size: var(
+		--ui-icon-button-size,
+		var(--control-height-compact)
+	);
+	--cm-search-field-height: var(
+		--ui-field-control-height,
+		var(--button-height-md)
+	);
+
+	display: grid;
+	grid-template-columns:
+		minmax(12rem, 1fr)
+		repeat(7, var(--cm-search-action-size));
+	gap: var(--space-xs);
+	align-items: center;
+	width: min(34rem, calc(100% - var(--space-sm)));
+	margin: var(--space-xs) var(--space-xs) 0 auto;
+	padding: var(--space-xs);
+	background: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-md);
+	color: var(--text-color);
+	font-family: var(
+		--texlyre-font-family,
+		var(
+			--slim-font-family,
+			var(
+				--mobile-font-family,
+				Inter,
+				system-ui,
+				Avenir,
+				Helvetica,
+				Arial,
+				sans-serif
+			)
+		)
+	);
+	font-size: var(--ui-field-control-font-size, var(--font-size-ui));
+	line-height: var(--ui-field-control-line-height, 1.35);
+	pointer-events: auto;
+	overflow: visible;
+}
+
+.cm-editor .cm-panel.cm-search br {
+	display: none;
+}
+
+.cm-editor
+	.cm-panel.cm-search
+	input:not([type="checkbox"]):not([type="radio"]) {
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+	height: var(--cm-search-field-height);
+	min-height: var(--cm-search-field-height);
+	margin: 0;
+	padding: 0 var(--space-sm);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--ui-field-control-radius, var(--radius-sm));
+	background: var(--pico-background);
+	color: var(--text-color);
+	font-family: inherit;
+	font-size: var(--ui-field-control-font-size, var(--font-size-ui));
+	line-height: var(--ui-field-control-line-height, 1.35);
+	box-shadow: none;
+}
+
+.cm-editor
+	.cm-panel.cm-search
+	input:not([type="checkbox"]):not([type="radio"]):focus {
+	border-color: var(--pico-primary);
+	box-shadow: 0 0 0 2px var(--pico-primary-focus);
+	outline: 0;
+}
+
+.cm-editor .cm-panel.cm-search input[name="search"] {
+	grid-column: 1;
+	grid-row: 1;
+}
+
+.cm-editor .cm-panel.cm-search input[name="replace"] {
+	grid-column: 1 / 7;
+	grid-row: 2;
+}
+
+.cm-editor .cm-panel.cm-search button,
+.cm-editor .cm-panel.cm-search label {
+	position: relative;
+	box-sizing: border-box;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--cm-search-action-size);
+	min-width: var(--cm-search-action-size);
+	height: var(--cm-search-action-size);
+	min-height: var(--cm-search-action-size);
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: var(--ui-icon-button-radius, var(--radius-sm));
+	background: transparent;
+	color: var(--pico-secondary);
+	font-family: inherit;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.cm-editor .cm-panel.cm-search button:hover:not(:disabled),
+.cm-editor .cm-panel.cm-search label:hover {
+	background: var(--pico-primary-focus);
+	color: var(--text-color);
+}
+
+.cm-editor .cm-panel.cm-search label {
+	font-size: 0;
+}
+
+.cm-editor .cm-panel.cm-search label input[type="checkbox"] {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.cm-editor .cm-panel.cm-search label:has(input:checked) {
+	background: var(--pico-primary-focus);
+	color: var(--pico-primary);
+}
+
+.cm-editor .cm-panel.cm-search label:has(input[name="case"]) {
+	grid-column: 2;
+	grid-row: 1;
+}
+
+.cm-editor .cm-panel.cm-search label:has(input[name="case"])::after {
+	content: "Aa";
+	font-size: var(--font-size-small);
+}
+
+.cm-editor .cm-panel.cm-search label:has(input[name="word"]) {
+	grid-column: 3;
+	grid-row: 1;
+}
+
+.cm-editor .cm-panel.cm-search label:has(input[name="word"])::after {
+	content: "|w|";
+	font-family: var(--editor-font-family, monospace);
+	font-size: var(--font-size-small);
+}
+
+.cm-editor .cm-panel.cm-search label:has(input[name="re"]) {
+	grid-column: 4;
+	grid-row: 1;
+}
+
+.cm-editor .cm-panel.cm-search label:has(input[name="re"])::after {
+	content: ".*";
+	font-family: var(--editor-font-family, monospace);
+	font-size: var(--font-size-small);
+}
+
+.cm-editor .cm-panel.cm-search button[name="prev"] {
+	grid-column: 5;
+	grid-row: 1;
+	font-size: 0;
+}
+
+.cm-editor .cm-panel.cm-search button[name="prev"]::after {
+	content: "↑";
+	font-size: var(--font-size-small);
+}
+
+.cm-editor .cm-panel.cm-search button[name="next"] {
+	grid-column: 6;
+	grid-row: 1;
+	font-size: 0;
+}
+
+.cm-editor .cm-panel.cm-search button[name="next"]::after {
+	content: "↓";
+	font-size: var(--font-size-small);
+}
+
+.cm-editor .cm-panel.cm-search button[name="select"] {
+	grid-column: 7;
+	grid-row: 1;
+	font-size: 0;
+}
+
+.cm-editor .cm-panel.cm-search button[name="select"]::after {
+	content: "≡";
+	font-size: var(--font-size-small);
+}
+
+.cm-editor .cm-panel.cm-search button[name="close"] {
+	grid-column: 8;
+	grid-row: 1;
+	font-size: 0;
+}
+
+.cm-editor .cm-panel.cm-search button[name="close"]::after {
+	content: "×";
+	font-size: var(--font-size-small);
+}
+
+.cm-editor .cm-panel.cm-search button[name="replace"] {
+	grid-column: 7;
+	grid-row: 2;
+	font-size: 0;
+}
+
+.cm-editor .cm-panel.cm-search button[name="replace"]::after {
+	content: "↪";
+	font-size: var(--font-size-small);
+}
+
+.cm-editor .cm-panel.cm-search button[name="replaceAll"] {
+	grid-column: 8;
+	grid-row: 2;
+	font-size: 0;
+}
+
+.cm-editor .cm-panel.cm-search button[name="replaceAll"]::after {
+	content: "⇉";
+	font-size: var(--font-size-small);
+}
+
+.cm-editor .cm-panel.cm-search :is(button, label)::before {
+	position: absolute;
+	top: calc(100% + var(--space-xs));
+	left: 50%;
+	z-index: var(--z-tooltip);
+	padding: 2px var(--space-xs);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-xs, var(--radius-sm));
+	background: var(--pico-background);
+	box-shadow: var(--shadow-md);
+	color: var(--text-color);
+	font-family: var(
+		--texlyre-font-family,
+		var(
+			--slim-font-family,
+			var(--mobile-font-family, Inter, system-ui, sans-serif)
+		)
+	);
+	font-size: var(--font-size-caption);
+	font-weight: 400;
+	line-height: 1.2;
+	white-space: nowrap;
+	transform: translateX(-50%);
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.cm-editor .cm-panel.cm-search :is(button, label):hover::before {
+	opacity: 1;
+	visibility: visible;
+}
+
+.cm-editor .cm-panel.cm-search label:has(input[name="case"])::before {
+	content: "Match case";
+}
+
+.cm-editor .cm-panel.cm-search label:has(input[name="word"])::before {
+	content: "Match whole word";
+}
+
+.cm-editor .cm-panel.cm-search label:has(input[name="re"])::before {
+	content: "Regular expression";
+}
+
+.cm-editor .cm-panel.cm-search button[name="prev"]::before {
+	content: "Previous match";
+}
+
+.cm-editor .cm-panel.cm-search button[name="next"]::before {
+	content: "Next match";
+}
+
+.cm-editor .cm-panel.cm-search button[name="select"]::before {
+	content: "All matches";
+}
+
+.cm-editor .cm-panel.cm-search button[name="close"]::before {
+	content: "Close search";
+}
+
+.cm-editor .cm-panel.cm-search button[name="replace"]::before {
+	content: "Replace";
+}
+
+.cm-editor .cm-panel.cm-search button[name="replaceAll"]::before {
+	content: "Replace all";
+}
+
 .codemirror-editor-container .cm-searchMatch {
-	background-color: rgba(255, 235, 59, 0.5);
+	background-color: color-mix(in srgb, var(--color-warning) 35%, transparent);
 	outline: 1px solid var(--color-warning);
 }
 
 .codemirror-editor-container .cm-searchMatch.cm-searchMatch-selected {
-	background-color: rgba(255, 193, 7, 0.8);
+	background-color: color-mix(in srgb, var(--color-warning) 55%, transparent);
 	outline: 1px solid var(--color-warning);
 }
 
@@ -312,13 +624,13 @@
 	cursor: pointer;
 	text-decoration: underline;
 	text-decoration-style: dotted;
-	text-decoration-color: var(--primary-color);
+	text-decoration-color: var(--pico-primary);
 	transition: all 0.2s ease;
 }
 
 .codemirror-editor-container .cm-link-hover:hover {
 	text-decoration-style: solid;
-	background-color: rgba(0, 102, 204, 0.1);
+	background-color: color-mix(in srgb, var(--pico-primary) 12%, transparent);
 }
 
 /* ============================================================
@@ -326,20 +638,38 @@
    ============================================================ */
 
 .codemirror-editor-container .cm-bibtex-tooltip,
-.codemirror-editor-container .cm-latex-tooltip {
+.codemirror-editor-container .cm-latex-tooltip,
+.codemirror-editor-container .cm-diagnostic,
+.cm-code-actions-tooltip {
 	background-color: var(--pico-background);
-	border: 1px solid var(--pico-muted-border-color);
-	border-radius: var(--radius-md);
-	box-shadow: var(--shadow-lg);
-	color: var(--pico-color);
-	font-family:
-		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
-		Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-	font-size: 12px;
-	line-height: 1.4;
-	max-width: 400px;
-	padding: 12px var(--space-md);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-md);
+	color: var(--text-color);
+	font-family: var(
+		--texlyre-font-family,
+		var(
+			--slim-font-family,
+			var(
+				--mobile-font-family,
+				Inter,
+				system-ui,
+				Avenir,
+				Helvetica,
+				Arial,
+				sans-serif
+			)
+		)
+	);
+	font-size: var(--ui-tooltip-font-size, var(--font-size-small));
+	line-height: var(--ui-tooltip-line-height, 1.4);
 	z-index: var(--z-tooltip);
+}
+
+.codemirror-editor-container .cm-bibtex-tooltip,
+.codemirror-editor-container .cm-latex-tooltip {
+	max-width: 400px;
+	padding: var(--space-sm) var(--space-md);
 }
 
 .codemirror-editor-container .cm-bibtex-tooltip-description,
@@ -356,7 +686,7 @@
 
 .codemirror-editor-container .cm-bibtex-tooltip-required {
 	margin-top: var(--space-sm);
-	font-size: 11px;
+	font-size: var(--font-size-caption);
 	color: var(--color-error);
 }
 
@@ -368,16 +698,16 @@
 
 .codemirror-editor-container .cm-bibtex-tooltip-optional {
 	margin-top: var(--space-xs);
-	font-size: 11px;
-	color: var(--pico-muted-color);
+	font-size: var(--font-size-caption);
+	color: var(--pico-secondary);
 }
 
 .codemirror-editor-container .cm-bibtex-tooltip-example-label {
 	margin-top: var(--space-sm);
 	margin-bottom: var(--space-xs);
 	font-weight: 500;
-	font-size: 11px;
-	color: var(--pico-muted-color);
+	font-size: var(--font-size-caption);
+	color: var(--pico-secondary);
 }
 
 .codemirror-editor-container .cm-bibtex-tooltip-example,
@@ -385,20 +715,20 @@
 .codemirror-editor-container .cm-latex-tooltip-example,
 .codemirror-editor-container .cm-latex-tooltip-package {
 	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-	font-size: 10px;
-	background-color: var(--pico-muted-background);
-	border: 1px solid var(--pico-muted-border-color);
+	font-size: var(--font-size-meta);
+	background-color: var(--pico-secondary-background);
+	border: 1px solid var(--accent-border);
 	border-radius: var(--radius-xs);
 	padding: 6px var(--space-sm);
 	margin: var(--space-xs) 0 0 0;
 	white-space: pre-wrap;
-	color: var(--pico-color);
+	color: var(--text-color);
 }
 
 .codemirror-editor-container .cm-bibtex-tooltip-note {
 	margin-top: 6px;
-	font-size: 11px;
-	color: var(--pico-muted-color);
+	font-size: var(--font-size-caption);
+	color: var(--pico-secondary);
 	font-style: italic;
 }
 
@@ -407,18 +737,7 @@
    ============================================================ */
 
 .codemirror-editor-container .cm-diagnostic {
-	background-color: var(--pico-background);
-	border: 1px solid var(--pico-muted-border-color);
-	border-radius: var(--radius-md);
-	box-shadow: var(--shadow-lg);
-	color: var(--pico-color);
-	font-family:
-		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
-		Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-	font-size: 12px;
-	line-height: 1.4;
-	padding: 12px var(--space-md);
-	z-index: var(--z-tooltip);
+	padding: var(--space-sm) var(--space-md);
 }
 
 .codemirror-editor-container .cm-diagnostic-error {
@@ -465,10 +784,29 @@
    ============================================================ */
 .cm-tooltip {
 	min-width: min-content;
-	border: 2px solid var(--pico-muted-border-color) !important;
+	border: 1px solid var(--accent-border) !important;
 	border-radius: var(--radius-sm);
 	padding: var(--space-sm) !important;
-	background-color: var(--pico-secondary-background) !important;
+	background-color: var(--pico-background) !important;
+	box-shadow: var(--shadow-md);
+	color: var(--text-color);
+	font-family: var(
+		--texlyre-font-family,
+		var(
+			--slim-font-family,
+			var(
+				--mobile-font-family,
+				Inter,
+				system-ui,
+				Avenir,
+				Helvetica,
+				Arial,
+				sans-serif
+			)
+		)
+	);
+	font-size: var(--font-size-small);
+	line-height: 1.4;
 }
 
 .cm-tooltip.cm-tooltip-hover {
@@ -486,11 +824,18 @@
 }
 
 .codemirror-editor-container .cm-tooltip.cm-tooltip-autocomplete > ul {
-	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-	font-size: 12px;
-	background-color: var(--pico-background);
-	border: 1px solid var(--pico-muted-border-color);
-	border-radius: var(--radius-sm);
+	font-family: var(--editor-font-family, monospace);
+	font-size: var(--font-size-small);
+	background: transparent;
+	border: 0;
+}
+
+.codemirror-editor-container
+	.cm-tooltip.cm-tooltip-autocomplete
+	> ul
+	> li[aria-selected] {
+	background-color: var(--pico-primary-focus);
+	color: var(--text-color);
 }
 
 .codemirror-editor-container .cm-completionIcon-keyword::after {
@@ -587,6 +932,10 @@
 	opacity: 0.7;
 }
 
+body:has(.cm-panel.cm-search) .floating-comment-button {
+	display: none !important;
+}
+
 .codemirror-editor-container .comment-selection-active {
 	background-color: var(
 		--comment-highlight-active-bg,
@@ -640,7 +989,7 @@
 .cm-conflict-copy-btn {
 	all: unset;
 	cursor: pointer;
-	font-size: 0.7rem;
+	font-size: var(--font-size-caption);
 	color: var(--pico-primary);
 	opacity: 0.6;
 	line-height: 1;
@@ -665,32 +1014,21 @@
    ============================================================ */
 
 .cm-code-actions-tooltip {
-	background-color: var(--pico-background);
-	border: 1px solid var(--pico-muted-border-color);
-	border-radius: var(--radius-md);
-	box-shadow: var(--shadow-lg);
-	color: var(--pico-color);
-	font-family:
-		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
-		Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-	font-size: 12px;
-	line-height: 1.4;
 	max-width: 400px;
 	padding: var(--space-sm);
-	z-index: var(--z-tooltip);
 }
 
 .cm-code-actions-source,
 .cm-tooltip-hover-source {
-	color: var(--pico-muted-color);
-	font-size: 11px;
+	color: var(--pico-secondary);
+	font-size: var(--font-size-caption);
 	font-weight: 600;
 	padding: var(--space-xs) var(--space-sm);
 	margin-bottom: var(--space-sm);
 	display: inline-flex;
 	align-items: center;
 	width: fit-content;
-	border: 1px solid var(--pico-muted-border-color);
+	border: 1px solid var(--accent-border);
 	border-radius: var(--radius-lg);
 	background-color: var(--pico-background);
 }
@@ -700,11 +1038,11 @@
 	overflow-y: auto;
 	max-height: 600px;
 	max-width: 800px;
-	font-size: small;
+	font-size: var(--font-size-small);
 }
 
 .cm-tooltip-section pre {
-	border: 1px solid var(--pico-muted-border-color);
+	border: 1px solid var(--accent-border);
 	border-radius: var(--radius-sm);
 }
 
@@ -757,20 +1095,10 @@
 }
 
 .cm-code-action-button {
-	background-color: var(--pico-background);
-	border: 1px solid var(--pico-muted-border-color);
-	border-radius: var(--radius-xs);
-	color: var(--pico-color);
-	cursor: pointer;
-	font-size: 12px;
-	line-height: 1.4;
-	padding: 3px var(--space-sm);
+	--ui-button-font-size: var(--ui-action-control-font-size);
+	--ui-button-padding: var(--ui-action-control-padding);
+	min-height: var(--ui-action-control-height);
 	white-space: nowrap;
-}
-
-.cm-code-action-button:hover {
-	background-color: var(--pico-secondary-background);
-	border-color: var(--pico-muted-color);
 }
 
 /* ============================================================
@@ -779,12 +1107,12 @@
 
 .cm-signature-tooltip {
 	background-color: var(--pico-background);
-	border: 1px solid var(--pico-muted-border-color);
-	border-radius: var(--radius-md);
-	box-shadow: var(--shadow-lg);
-	color: var(--pico-color);
-	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-	font-size: 12px;
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-md);
+	color: var(--text-color);
+	font-family: var(--editor-font-family, monospace);
+	font-size: var(--font-size-small);
 	line-height: 1.4;
 	max-width: 500px;
 	padding: var(--space-sm);
@@ -798,7 +1126,7 @@
 }
 
 .cm-signature-count {
-	color: var(--pico-muted-color);
+	color: var(--pico-secondary);
 }
 
 /* ============================================================
@@ -831,7 +1159,7 @@ math-field {
 
 .cm-math-preview-field {
 	background: var(--pico-background);
-	color: var(--pico-color);
+	color: var(--text-color);
 	border: none;
 	padding: var(--space-xs);
 	margin: 0;
@@ -845,10 +1173,13 @@ math-field {
 	position: absolute;
 	top: 1px;
 	left: 1px;
-	width: 16px;
-	height: 16px;
-	padding: calc(var(--space-sm) * 1.3);
-	border: none;
+	width: var(--ui-icon-button-size);
+	height: var(--ui-icon-button-size);
+	min-width: var(--ui-icon-button-size);
+	min-height: var(--ui-icon-button-size);
+	padding: var(--space-xs);
+	border: 0;
+	border-radius: var(--ui-icon-button-radius, var(--radius-sm));
 	cursor: pointer;
 	display: flex;
 	align-items: center;
@@ -862,10 +1193,6 @@ math-field {
 	opacity: 0.8;
 }
 
-.cm-math-edit-btn:hover {
-	transform: scale(1.1);
-}
-
 .cm-math-edit-btn svg {
 	flex: 0 0 auto;
 	display: block;
@@ -876,10 +1203,10 @@ math-field {
 	position: fixed;
 	z-index: var(--z-above-all);
 	background: var(--pico-secondary-background);
-	border: 2px solid var(--pico-primary-background);
-	border-radius: 8px;
-	padding: 15px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-md);
+	padding: var(--space-md);
+	box-shadow: var(--shadow-lg);
 	min-width: 50px;
 	max-width: calc(100vw - 32px);
 	pointer-events: auto;
@@ -893,18 +1220,12 @@ math-field {
 .cm-math-editor-field {
 	display: block;
 	max-width: 100%;
-	padding: 8px;
-	border: 1px solid var(--pico-muted-border-color);
-	border-radius: 4px;
+	padding: var(--space-sm);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
 	background: var(--pico-background);
-	color: var(--pico-color);
+	color: var(--text-color);
 	overflow-y: visible;
-	--ui-menu-bg: var(--pico-secondary-background) !important;
-	--ui-menu-text: var(--pico-color);
-	--ui-menu-bg-hover: var(--pico-primary-background) !important;
-	--ui-menu-bg-active: var(--pico-primary-background) !important;
-	--ui-menu-bg-active-muted: var(--pico-primary-background) !important;
-	--ui-menu-z-index: var(--z-above-all) !important;
 }
 
 .cm-math-editor-buttons {
@@ -915,22 +1236,9 @@ math-field {
 }
 
 .cm-math-editor-btn {
-	padding: 8px 16px;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
-	font-size: 12px;
-	font-weight: 500;
-	transition: all 0.2s ease;
-}
-
-.cm-math-editor-btn-save:hover,
-.cm-math-editor-btn-cancel:hover {
-	transform: translateY(-1px);
-}
-
-.cm-math-editor-btn:active {
-	transform: translateY(0);
+	--ui-button-font-size: var(--ui-action-control-font-size);
+	--ui-button-padding: var(--ui-action-control-padding);
+	min-height: var(--ui-action-control-height);
 }
 
 /* ============================================================
@@ -939,40 +1247,6 @@ math-field {
 
 .ML__keyboard {
 	z-index: var(--z-above-all) !important;
-
-	--keyboard-accent-color: var(--pico-primary);
-	--keyboard-background: var(--pico-secondary-background);
-	--keyboard-border: var(--pico-muted-border-color);
-	--keyboard-shadow: var(--pico-box-shadow);
-	--keyboard-text: var(--pico-color);
-
-	--keyboard-toolbar-background: var(--pico-secondary-background);
-	--keyboard-toolbar-border: var(--pico-muted-border-color);
-	--keyboard-toolbar-text: var(--pico-secondary);
-	--keyboard-toolbar-text-active: var(--pico-primary-background);
-	--keyboard-toolbar-icon: var(--pico-color);
-	--keyboard-toolbar-icon-active: var(--pico-primary-background);
-
-	--keycap-background: var(--pico-background);
-	--keycap-background-hover: var(--pico-secondary-background-hover);
-	--keycap-background-active: var(--pico-secondary-background);
-	--keycap-border: var(--pico-muted-border-color);
-	--keycap-text: var(--pico-color);
-	--keycap-text-hover: var(--pico-secondary);
-	--keycap-text-active: var(--pico-background);
-
-	--keycap-secondary-background: var(--pico-secondary-background);
-	--keycap-secondary-text: var(--pico-color);
-
-	--keycap-action-background: var(--pico-primary-background);
-	--keycap-action-background-hover: var(--pico-primary-hover-background);
-	--keycap-action-background-active: var(--pico-primary-focus);
-	--keycap-action-text: var(--pico-primary-inverse);
-
-	--keyboard-disabled-background: var(--pico-muted-background);
-	--keyboard-disabled-text: var(--pico-muted-color);
-	--keycap-disabled-background: var(--pico-muted-background);
-	--keycap-disabled-text: var(--pico-muted-color);
 }
 
 .ML__keyboard [data-tooltip]::after {
@@ -981,7 +1255,7 @@ math-field {
 
 .ML__keyboard [data-tooltip]::before {
 	background-color: var(--pico-secondary-background);
-	color: var(--pico-color);
+	color: var(--text-color);
 }
 
 /* ============================================================
@@ -993,10 +1267,10 @@ math-field {
 }
 
 .cm-symbol-search-input {
-	background-color: var(--pico-background);
-	border: 1px solid var(--accent-border);
-	border-radius: var(--radius-sm);
-	color: var(--text-color);
+	height: var(--ui-action-control-height);
+	min-height: var(--ui-action-control-height);
+	padding: var(--ui-action-control-padding);
+	font-size: var(--ui-action-control-font-size);
 }
 
 .cm-symbol-body {
@@ -1014,10 +1288,10 @@ math-field {
 }
 
 .cm-symbol-canvas {
-	border: 1px solid var(--border-color, #ccc);
-	border-radius: 4px;
+	border: 1px solid var(--accent-border, #ccc);
+	border-radius: var(--radius-sm);
 	cursor: crosshair;
-	background-color: var(--pico-secondary);
+	background-color: var(--pico-background);
 }
 
 .cm-symbol-results {
@@ -1030,17 +1304,6 @@ math-field {
 }
 
 .cm-symbol-result-label {
-	border: 1px solid var(--cm-color-atom);
-}
-
-/* ============================================================
-   Loading state
-   ============================================================ */
-
-.loading-state {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	height: 100%;
 	color: var(--pico-secondary);
+	font-size: var(--font-size-caption);
 }
