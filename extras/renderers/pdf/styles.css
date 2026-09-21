@@ -1,7 +1,7 @@
 /* extras/renderers/pdf/styles.css */
-/* Do not globally change box-sizing inside the PDF.js viewer. PDF.js positions
-   canvas, textLayer, and annotationLayer from its own CSS and expects those
-   boxes to remain untouched. */
+@import "../shared/toolbar.css";
+@import "../shared/layout.css";
+
 .pdf-renderer-container,
 .pdf-renderer-container *,
 .pdf-renderer-container *::before,
@@ -16,293 +16,6 @@
 	box-sizing: revert;
 }
 
-.pdf-renderer-container {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	width: 100%;
-	background-color: var(--pico-background);
-	overflow: hidden;
-	position: relative;
-}
-
-.pdf-renderer-container:focus {
-	outline: none;
-}
-
-.pdf-toolbar {
-	display: flex;
-	min-height: 40px;
-	background-color: var(--pico-secondary-background);
-	border-bottom: 1px solid var(--accent-border, #333);
-	z-index: 10;
-	flex-shrink: 0;
-	overflow-x: auto;
-	overflow-y: hidden;
-	scrollbar-width: thin;
-	scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
-}
-
-.toolbar {
-	display: flex;
-	width: 100%;
-	align-items: center;
-	gap: 10px;
-	min-width: min-content;
-}
-
-.pdf-toolbar #toolbarLeft {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	flex-shrink: 0;
-}
-
-.pdf-toolbar #toolbarRight {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	flex-shrink: 0;
-	margin-left: 0;
-	margin-right: 0;
-}
-
-.pdf-toolbar .toolbar.toolbar-no-left #toolbarRight {
-	margin-left: auto;
-	margin-right: auto;
-}
-
-.pdf-toolbar #toolbarRight .plugin-header,
-.pdf-toolbar #toolbarRight .plugin-header .file-info,
-.pdf-toolbar #toolbarRight .plugin-header .filepath-info {
-	border: none;
-	background-color: transparent;
-	min-width: 0;
-}
-
-.pdf-toolbar #toolbarRight .plugin-header .filepath-info > span {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	min-width: 0;
-}
-
-.toolbarButtonGroup {
-	display: flex;
-	align-items: center;
-	gap: 5px;
-}
-
-.toolbarField {
-	min-width: min-content;
-	height: 28px !important;
-	margin: 0 !important;
-	padding: 0 !important;
-}
-
-.toolbarButton {
-	height: 28px;
-	padding: 0 0.5rem;
-	font-size: 0.9rem;
-	background-color: var(--pico-background);
-	border: 1px solid var(--accent-border, #444);
-	border-radius: 4px;
-	color: var(--text-color);
-	cursor: pointer;
-	transition: background-color 0.2s;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	vertical-align: middle;
-	box-sizing: border-box;
-}
-
-.toolbarButton:hover:not(:disabled) {
-	background-color: var(--pico-primary-focus);
-}
-
-.toolbarButton:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.toolbarZoomSelect {
-	height: 28px;
-	min-width: min-content;
-	text-align: center;
-	padding: 0 0.4rem;
-	font-size: 0.9rem;
-	background-color: var(--pico-background);
-	border: 1px solid var(--accent-border, #444);
-	border-radius: 4px;
-	color: var(--text-color);
-	cursor: pointer;
-	transition: background-color 0.2s;
-	margin: 0;
-	line-height: 0.7;
-	vertical-align: middle;
-	box-sizing: border-box;
-}
-
-.toolbarZoomSelect:hover:not(:disabled) {
-	background-color: var(--pico-primary-focus);
-}
-
-.toolbarZoomSelect:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.toolbarZoomSelect option {
-	background-color: var(--pico-background);
-	color: var(--text-color);
-}
-
-.pageNumber {
-	display: flex;
-	align-items: center;
-	gap: 5px;
-	margin: 0 5px;
-}
-
-.pageNumber input {
-	width: 3em;
-	height: 28px;
-	text-align: center;
-	padding: 0;
-	margin: 0;
-	border: 1px solid var(--accent-border, #444);
-	border-radius: 4px;
-	background-color: var(--pico-background);
-	color: var(--text-color);
-	vertical-align: middle;
-	box-sizing: border-box;
-	line-height: 1;
-}
-
-.pdf-renderer-content {
-	flex: 1 1 auto;
-	overflow: hidden;
-	background-color: var(--pico-background);
-	position: relative;
-}
-
-.pdf-page-scroll {
-	display: flex;
-	justify-content: center;
-	background-color: var(--pico-background) !important;
-	padding: 10px 0;
-	min-width: min-content;
-	width: 100%;
-	scroll-margin-top: 56px;
-}
-
-.pdf-renderer-loading {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	padding: 1rem 2rem;
-	background-color: var(--pico-background);
-	border-radius: 4px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-	color: var(--text-color);
-	z-index: 100;
-}
-
-.pdf-renderer-error {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	padding: 1rem 2rem;
-	background-color: rgba(220, 53, 69, 0.1);
-	border: 1px solid rgba(220, 53, 69, 0.3);
-	border-radius: 4px;
-	color: var(--color-error);
-	max-width: 80%;
-	text-align: center;
-	z-index: 100;
-}
-
-.pdf-renderer-content.fullscreen {
-	overflow-y: auto;
-	scrollbar-width: none;
-}
-
-.pdf-renderer-content.fullscreen::-webkit-scrollbar {
-	width: 0;
-	height: 0;
-}
-
-.pdf-renderer-content.fullscreen:hover {
-	scrollbar-width: thin;
-	scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
-}
-
-.pdf-renderer-content.fullscreen:hover::-webkit-scrollbar {
-	width: 8px;
-	height: 8px;
-}
-
-.pdf-renderer-content.fullscreen:hover::-webkit-scrollbar-thumb {
-	background: rgba(100, 100, 100, 0.5);
-	border-radius: 4px;
-}
-
-.pdf-renderer-content.fullscreen:hover::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-/* PDF.js owns textLayer and annotationLayer geometry. Do not set position,
-   inset, dimensions, padding, font-size, or box-sizing on those layers here. */
-.pdf-full-viewer-container {
-	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	overflow: auto;
-	background-color: var(--pico-background);
-}
-
-.pdf-full-viewer-container .pdfViewer {
-	position: relative;
-}
-
-.pdf-full-viewer-container .pdfViewer .page {
-	margin: 10px auto;
-}
-
-.pdf-full-viewer-container .annotationLayer .buttonWidgetAnnotation,
-.pdf-full-viewer-container .annotationLayer .buttonWidgetAnnotation *,
-.pdf-full-viewer-container .annotationLayer .linkAnnotation,
-.pdf-full-viewer-container .annotationLayer .linkAnnotation * {
-	cursor: pointer;
-}
-
-.pdf-mode-badge {
-	margin-left: 0.5rem;
-	font-size: 0.75rem;
-	opacity: 0.75;
-}
-
-@keyframes source-map-highlight-pulse {
-	0% {
-		opacity: 0;
-		transform: scale(1.2);
-	}
-
-	30% {
-		opacity: 1;
-		transform: scale(1);
-	}
-
-	100% {
-		opacity: 0.4;
-		transform: scale(1);
-	}
-}
-
 .pdf-latex-ocg-enabled {
 	position: relative;
 }
@@ -311,16 +24,16 @@
 	position: sticky;
 	top: 0;
 	z-index: 20;
-	margin: 0 auto 0.5rem;
+	margin: 0 auto var(--space-sm);
 	padding: 0.35rem 0.65rem;
 	width: fit-content;
 	max-width: min(90%, 720px);
-	font-size: 0.75rem;
-	line-height: 1.25;
+	font-size: var(--ui-note-font-size, var(--font-size-meta));
+	line-height: var(--ui-note-line-height, 1.25);
 	color: var(--text-color);
 	background: var(--pico-secondary-background);
 	border: 1px solid var(--accent-border, #444);
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	box-shadow: 0 2px 8px var(--color-shadow);
 }
 
@@ -328,53 +41,38 @@
 	position: sticky;
 	top: 2.4rem;
 	z-index: 19;
-	margin: 0 auto 0.5rem;
-	padding: 0.5rem;
+	margin: 0 auto var(--space-sm);
+	padding: var(--space-sm);
 	width: fit-content;
 	max-width: min(90%, 720px);
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 0.5rem;
-	font-size: 0.75rem;
+	gap: var(--space-sm);
+	font-size: var(--ui-note-font-size, var(--font-size-meta));
+	line-height: var(--ui-note-line-height, 1.25);
 	color: var(--text-color);
 	background: var(--pico-background);
 	border: 1px solid var(--accent-border, #444);
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	box-shadow: 0 2px 8px var(--color-shadow);
 }
 
 .pdf-latex-ocg-title {
 	font-weight: 600;
-	margin-right: 0.25rem;
+	margin-right: var(--space-xs);
 }
 
 .pdf-latex-ocg-toggle {
 	display: inline-flex;
 	align-items: center;
-	gap: 0.25rem;
+	gap: var(--space-xs);
 	margin: 0;
 	cursor: pointer;
 }
 
 .pdf-latex-ocg-toggle input {
 	margin: 0;
-}
-
-.pdf-page-highlight {
-	position: absolute;
-	pointer-events: none;
-	background-color: rgba(255, 235, 59, 0.4);
-	border: 2px solid rgba(255, 193, 7, 0.8);
-	border-radius: 2px;
-	animation: source-map-highlight-pulse 1.5s ease-out;
-	z-index: 6;
-}
-
-/* PDF.js full viewer layout. PDF.js BaseViewer requires the container itself to be absolutely positioned. */
-.pdf-renderer-content {
-	position: relative;
-	overflow: hidden;
 }
 
 .pdf-full-viewer-container {
@@ -396,8 +94,6 @@
 	box-shadow: 0 2px 8px var(--color-shadow);
 }
 
-/* Keep PDF.js layer geometry pristine. These overrides intentionally only undo
-   broad app styles; pdf_viewer.css remains the source of truth. */
 .pdf-full-viewer-container .page,
 .pdf-full-viewer-container .canvasWrapper,
 .pdf-full-viewer-container canvas,

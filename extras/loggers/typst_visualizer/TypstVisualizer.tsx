@@ -8,7 +8,7 @@ import type { LoggerProps } from '@/plugins/PluginInterface';
 import { formatFileSize } from '@/utils/fileUtils';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './TypstVisualizerPlugin';
 import { type ParsedDiagnostic, parseTypstLog } from './parser';
-import './styles.css';
+import '../shared/styles.css';
 
 const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	const [parsedDiagnostics, setParsedDiagnostics] = useState<
@@ -38,7 +38,7 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 
 	const handleDiagnosticClick = (diagnostic: ParsedDiagnostic) => {
 		if (diagnostic.line && onLineClick) {
-			onLineClick(diagnostic.line);
+			onLineClick(diagnostic.line, diagnostic.file);
 		}
 	};
 
@@ -97,9 +97,10 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	];
 
 	const headerControls = (
-		<div className='error-stats'>
+		<div className='log-filter-stats'>
 			<span
-				className={`error-count ${filter === 'error' ? 'active' : ''}`}
+				className={`log-filter-count ${filter === 'error' ? 'active' : ''}`}
+				data-kind='error'
 				onClick={() => handleFilterClick('error')}
 				title={t('Click to filter errors')}
 			>
@@ -107,7 +108,8 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 				{parsedDiagnostics.filter((d) => d.type === 'error').length}
 			</span>
 			<span
-				className={`warning-count ${filter === 'warning' ? 'active' : ''}`}
+				className={`log-filter-count ${filter === 'warning' ? 'active' : ''}`}
+				data-kind='warning'
 				onClick={() => handleFilterClick('warning')}
 				title={t('Click to filter warnings')}
 			>
@@ -118,7 +120,7 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	);
 
 	return (
-		<div className='typst-visualizer'>
+		<div className='log-visualizer'>
 			<PluginHeader
 				fileName='Typst Log'
 				filePath='Typst Compilation Output'
@@ -128,27 +130,27 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 				controls={headerControls}
 			/>
 
-			<div className='typst-visualizer-content'>
+			<div className='log-visualizer-content'>
 				{filteredDiagnostics.length === 0 ? (
-					<div className='no-errors'>
-						<div className='success-icon'>✓</div>
-						<div>
+					<div className='log-empty-state'>
+						<div className='log-empty-icon'>✓</div>
+						<div className='log-empty-title'>
 							{parsedDiagnostics.length === 0
 								? t('No errors or warnings found.')
 								: t('No {filter} found.', { filter })}
 						</div>
-						<div className='success-subtitle'>
+						<div className='log-empty-subtitle'>
 							{parsedDiagnostics.length === 0
 								? t('Compilation appears successful!')
 								: t('Showing {filter} items only.', { filter })}
 						</div>
 					</div>
 				) : (
-					<ul className='diagnostic-list'>
+					<ul className='log-diagnostic-list ui-list' data-gap='md'>
 						{filteredDiagnostics.map((diagnostic, index) => (
 							<li
 								key={index}
-								className={`diagnostic-item ${diagnostic.type} ${diagnostic.line ? 'clickable' : ''}`}
+								className={`log-diagnostic-item ${diagnostic.type} ${diagnostic.line ? 'clickable' : ''}`}
 								onClick={() => handleDiagnosticClick(diagnostic)}
 								title={
 									diagnostic.line
@@ -158,19 +160,17 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 										: undefined
 								}
 							>
-								<div className='diagnostic-header'>
-									<span className='diagnostic-type-badge'>
-										<span className='diagnostic-icon'>
+								<div className='log-diagnostic-header'>
+									<span className='log-diagnostic-type-badge'>
+										<span className='log-diagnostic-icon'>
 											{getTypeIcon(diagnostic.type)}
 										</span>
-										<span className='diagnostic-type-text'>
-											{t(diagnostic.type)}
-										</span>
+										<span>{t(diagnostic.type)}</span>
 									</span>
-									<div className='diagnostic-location'>
+									<div className='log-diagnostic-location'>
 										{diagnostic.file && (
 											<span
-												className='diagnostic-file'
+												className='log-diagnostic-file'
 												title={t('File: {errorFile}', {
 													errorFile: diagnostic.file,
 												})}
@@ -181,21 +181,31 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 											</span>
 										)}
 										{diagnostic.line && (
-											<span className='diagnostic-line'>
-												{t('Line')}
-												{diagnostic.line}
-											</span>
+											<button
+												type='button'
+												className='button secondary'
+												onClick={(event) => {
+													event.stopPropagation();
+													handleDiagnosticClick(diagnostic);
+												}}
+												title={t('Go to line {line}', {
+													line: diagnostic.line,
+												})}
+											>
+												{t('Line {line}', { line: diagnostic.line })}
+											</button>
 										)}
 									</div>
 								</div>
-								<div className='typst-diagnostic-message'>
+								<div className='log-diagnostic-message'>
 									{diagnostic.fullMessage || diagnostic.message}
 								</div>
 								{diagnostic.hints && diagnostic.hints.length > 0 && (
-									<div className='diagnostic-hints'>
+									<div className='ui-stack' data-gap='sm'>
 										<button
 											type='button'
-											className='diagnostic-hints-toggle'
+											className='button'
+											data-variant='text'
 											onClick={(e) => {
 												e.stopPropagation();
 												toggleHints(index);
@@ -205,17 +215,22 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 											{t('{count} hint', {
 												count: diagnostic.hints.length,
 											})}
-											<span className='diagnostic-hints-chevron'>
+											<span className='ui-note'>
 												{expandedHints.has(index) ? '▾' : '▸'}
 											</span>
 										</button>
 										{expandedHints.has(index) && (
-											<div className='diagnostic-hints-body'>
+											<div className='ui-stack' data-gap='sm'>
 												{diagnostic.hints.map((hint, hintIndex) => (
-													<div key={hintIndex} className='diagnostic-hint'>
+													<div
+														key={hintIndex}
+														className='ui-message'
+														data-tone='info'
+														data-density='compact'
+													>
 														{hint.text && renderHint(hint.text)}
 														{hint.items && (
-															<ul className='diagnostic-hint-items'>
+															<ul>
 																{hint.items.map((item, itemIndex) => (
 																	<li key={itemIndex}>{item}</li>
 																))}

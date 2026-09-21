@@ -1,0 +1,270 @@
+/* Shared LaTeX/Typst diagnostic visualizer structure. */
+.log-visualizer {
+	--ui-log-body-font-size: var(
+		--ui-thread-item-font-size,
+		var(--font-size-small)
+	);
+	--ui-log-meta-font-size: var(
+		--ui-item-time-font-size,
+		var(--font-size-micro)
+	);
+	--ui-log-control-font-size: var(
+		--ui-thread-item-font-size,
+		var(--font-size-small)
+	);
+	--ui-log-title-font-size: var(
+		--ui-panel-title-font-size,
+		var(--font-size-small)
+	);
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	background-color: var(--pico-background);
+	color: var(--text-color);
+	border-radius: var(--radius-lg);
+}
+
+.log-filter-stats {
+	display: flex;
+	gap: var(--ui-log-filter-gap, var(--space-md));
+	font-size: var(--ui-log-control-font-size);
+	font-weight: 500;
+}
+
+.log-filter-count {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+	cursor: pointer;
+	padding: var(--space-xs) var(--space-sm);
+	border-radius: var(--radius-sm);
+	transition: background-color 0.2s ease;
+}
+
+.log-filter-count[data-kind="error"] {
+	--log-tone: var(--color-error);
+}
+
+.log-filter-count[data-kind="warning"] {
+	--log-tone: var(--color-warning);
+}
+
+.log-filter-count {
+	color: var(--log-tone);
+}
+
+.log-filter-count:hover {
+	background-color: color-mix(in srgb, var(--log-tone) 10%, transparent);
+}
+
+.log-filter-count.active {
+	background-color: color-mix(in srgb, var(--log-tone) 15%, transparent);
+	font-weight: 600;
+}
+
+.log-visualizer-content {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding: var(--ui-log-content-padding, var(--space-md));
+	max-height: calc(100vh - 120px);
+}
+
+.log-empty-state {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-lg) var(--space-md) 0;
+	color: var(--pico-secondary);
+	text-align: center;
+}
+
+.log-empty-icon {
+	font-size: var(--font-size-display-xl);
+	line-height: 1;
+	color: var(--pico-primary);
+}
+
+.log-empty-title {
+	margin: 0;
+	font-size: var(--ui-log-title-font-size);
+	font-weight: 600;
+	color: var(--text-color);
+}
+
+.log-empty-subtitle {
+	margin: 0;
+	font-size: var(--ui-log-meta-font-size);
+	color: var(--pico-secondary);
+	text-align: center;
+}
+
+.log-diagnostic-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.log-diagnostic-item {
+	padding: var(--ui-log-item-padding, var(--space-md));
+	border-radius: var(--ui-log-item-radius, var(--radius-lg));
+	border-left: var(--ui-log-item-accent-width, 4px) solid var(--log-tone);
+	background-color: color-mix(
+		in srgb,
+		var(--log-tone) 5%,
+		var(--accent-background)
+	);
+	transition:
+		background-color 0.2s ease,
+		box-shadow 0.2s ease;
+	position: relative;
+	box-sizing: border-box;
+}
+
+.log-diagnostic-item.error {
+	--log-tone: var(--color-error);
+}
+
+.log-diagnostic-item.warning {
+	--log-tone: var(--color-warning);
+}
+
+.log-diagnostic-item.info {
+	--log-tone: var(--pico-primary);
+}
+
+.log-diagnostic-item.clickable {
+	cursor: pointer;
+}
+
+.log-diagnostic-item.clickable:hover {
+	background-color: color-mix(
+		in srgb,
+		var(--log-tone) 10%,
+		var(--accent-background)
+	);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.log-diagnostic-header {
+	display: flex;
+	gap: var(--log-diagnostic-header-gap, 0);
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: var(--ui-log-header-margin-bottom, var(--space-sm));
+	font-size: var(--ui-log-body-font-size);
+	font-weight: 500;
+}
+
+.log-diagnostic-type-badge {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-xs) var(--space-sm);
+	border-radius: var(--radius-sm);
+	font-size: var(--ui-log-meta-font-size);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.025em;
+}
+
+.log-diagnostic-type-badge {
+	background-color: color-mix(in srgb, var(--log-tone) 15%, transparent);
+	color: var(--log-tone);
+}
+
+.log-diagnostic-icon {
+	font-size: var(--ui-log-body-font-size);
+}
+
+.log-diagnostic-message {
+	margin-bottom: var(--ui-log-message-margin-bottom, var(--space-sm));
+	font-size: var(--ui-log-body-font-size);
+	line-height: 1.4;
+	color: var(--text-color);
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+.log-diagnostic-location {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	flex-wrap: wrap;
+}
+
+.log-diagnostic-file {
+	color: var(--pico-secondary);
+	font-weight: 500;
+	font-size: var(--ui-log-meta-font-size);
+	padding: var(--space-xs) var(--space-sm);
+	border-radius: var(--radius-sm);
+	background-color: rgba(var(--pico-secondary-rgb, 108, 117, 125), 0.1);
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+	cursor: default;
+}
+
+.log-diagnostic-file:hover {
+	background-color: rgba(var(--pico-secondary-rgb, 108, 117, 125), 0.15);
+}
+
+.log-visualizer-content::-webkit-scrollbar {
+	width: 8px;
+}
+
+.log-visualizer-content::-webkit-scrollbar-track {
+	background: var(--accent-background);
+}
+
+.log-visualizer-content::-webkit-scrollbar-thumb {
+	background: var(--accent-border);
+	border-radius: var(--radius-sm);
+}
+
+.log-visualizer-content::-webkit-scrollbar-thumb:hover {
+	background: var(--pico-primary);
+}
+
+@media (max-width: 768px) {
+	.log-filter-stats {
+		justify-content: center;
+	}
+
+	.log-diagnostic-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-sm);
+	}
+
+	.log-diagnostic-location {
+		width: 100%;
+		justify-content: flex-start;
+	}
+
+	.log-diagnostic-item {
+		padding: var(--space-sd);
+	}
+}
+
+@media (prefers-contrast: high) {
+	.log-diagnostic-item {
+		border: 2px solid var(--accent-border);
+		border-left-width: 6px;
+	}
+
+	.log-diagnostic-item {
+		border-color: var(--log-tone);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.log-diagnostic-item,
+	.log-filter-count {
+		transition: none;
+	}
+}

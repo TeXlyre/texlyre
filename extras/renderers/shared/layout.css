@@ -1,0 +1,123 @@
+/* Shared structure for PDF and canvas renderers. */
+.renderer-toolbar {
+	--renderer-toolbar-gap: 10px;
+	display: flex;
+	min-height: var(--ui-panel-header-min-height, var(--button-height-md));
+	background-color: var(--pico-secondary-background);
+	border-bottom: 1px solid var(--accent-border, #333);
+	z-index: 10;
+	flex-shrink: 0;
+	overflow-x: auto;
+	overflow-y: hidden;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
+}
+
+.renderer-toolbar-content {
+	width: 100%;
+	gap: var(--renderer-toolbar-gap);
+	min-width: min-content;
+}
+
+.renderer-content {
+	display: block;
+	flex: 1 1 auto;
+	min-width: 0;
+	min-height: 0;
+	position: relative;
+}
+
+.renderer-toolbar-left {
+	display: flex;
+	align-items: center;
+	flex: 1 1 auto;
+	min-width: min-content;
+	overflow: hidden;
+}
+
+.renderer-toolbar-left > .ui-panel-header {
+	min-width: 0;
+	border: 0;
+	background: transparent;
+}
+
+.renderer-toolbar-left > .ui-panel-header .ui-list-content,
+.renderer-toolbar-left > .ui-panel-header .ui-toolbar {
+	min-width: 0;
+}
+
+.renderer-toolbar-left > .ui-panel-header .ui-toolbar > :first-child {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.renderer-toolbar-right {
+	display: flex;
+	align-items: center;
+	gap: var(--renderer-toolbar-gap);
+	flex-shrink: 0;
+	margin-left: 0;
+	margin-right: 0;
+}
+
+.renderer-toolbar-content[data-no-left="true"] .renderer-toolbar-right {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.renderer-content.fullscreen {
+	overflow-y: auto;
+	scrollbar-gutter: var(--ui-scrollbar-gutter, stable);
+	scrollbar-width: thin;
+	scrollbar-color: transparent transparent;
+}
+
+.renderer-content.fullscreen::-webkit-scrollbar {
+	width: var(--ui-scrollbar-renderer-size, 8px);
+	height: var(--ui-scrollbar-renderer-size, 8px);
+}
+
+.renderer-content.fullscreen::-webkit-scrollbar-thumb {
+	background: transparent;
+	border-radius: var(--radius-sm);
+}
+
+.renderer-content.fullscreen::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.renderer-content.fullscreen:hover {
+	scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
+}
+
+.renderer-content.fullscreen:hover::-webkit-scrollbar-thumb {
+	background: rgba(100, 100, 100, 0.5);
+}
+
+.renderer-page-highlight {
+	position: absolute;
+	pointer-events: none;
+	background-color: rgba(255, 235, 59, 0.4);
+	border: 2px solid rgba(255, 193, 7, 0.8);
+	border-radius: 2px;
+	animation: source-map-highlight-pulse 1.5s ease-out;
+	z-index: 6;
+}
+
+@keyframes source-map-highlight-pulse {
+	0% {
+		opacity: 0;
+		transform: scale(1.2);
+	}
+
+	30% {
+		opacity: 1;
+		transform: scale(1);
+	}
+
+	100% {
+		opacity: 0.4;
+		transform: scale(1);
+	}
+}
