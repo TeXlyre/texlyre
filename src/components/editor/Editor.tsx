@@ -56,7 +56,7 @@ import ReviewPanel from '../review/ReviewPanel';
 import ReviewToggleButton, {
 	TrackChangesButton,
 } from '../review/ReviewToggleButton';
-import LSPToggleButton from '../bibliography/LSPToggleButton';
+import BibliographyToggleButton from '../bibliography/BibliographyToggleButton';
 import BibliographyPanel from '../bibliography/BibliographyPanel';
 import CommentModal from '../comments/CommentModal';
 import ContentFormatterButton from './ContentFormatterButton';
@@ -158,7 +158,7 @@ const CollaborativeViewerBridge: React.FC<{
 const EMPTY_TOOLBAR_ITEMS: ToolbarEntry[] = [];
 
 const EditorContent: React.FC<{
-	editorRef: React.RefObject<HTMLDivElement>;
+	editorRef: React.RefObject<HTMLDivElement | null>;
 	textContent: string;
 	onUpdateContent: (content: string) => void;
 	documentId: string;
@@ -556,20 +556,21 @@ const EditorContent: React.FC<{
 		isEditingFile && fileName ? (
 			<>
 				{hasToolbarSupport(fileType) && !isViewOnly && (
-					<PluginControlGroup>
-						<button
-							onClick={() => onToolbarToggle?.(!toolbarVisible)}
-							title={toolbarVisible ? t('Hide Toolbar') : t('Show Toolbar')}
-							className={`control-button ${toolbarVisible ? 'active' : ''}`}
-						>
-							<ToolbarShowIcon />
-						</button>
+					<>
+						<PluginControlGroup>
+							<button
+								type='button'
+								onClick={() => onToolbarToggle?.(!toolbarVisible)}
+								title={toolbarVisible ? t('Hide Toolbar') : t('Show Toolbar')}
+								className={`button ${toolbarVisible ? 'active' : ''}`}
+							>
+								<ToolbarShowIcon />
+							</button>
+						</PluginControlGroup>
 
 						{(isLatexFile(filePath) || isTypstFile(filePath)) && (
 							<>
-								{isSourceMapAvailable && (
-									<SourceMapButton onForwardSync={handleForwardSync} />
-								)}
+								<SourceMapButton onForwardSync={handleForwardSync} />
 
 								<ContentFormatterButton
 									getCurrentContent={() =>
@@ -580,7 +581,7 @@ const EditorContent: React.FC<{
 								/>
 							</>
 						)}
-					</PluginControlGroup>
+					</>
 				)}
 
 				<LSPNavigationButton fileName={fileName} />
@@ -588,31 +589,34 @@ const EditorContent: React.FC<{
 				<PluginControlGroup>
 					{!isViewOnly && onSave && (
 						<button
+							type='button'
 							onClick={onSave}
 							title={t('Save File (Ctrl+S)')}
-							className='control-button'
+							className='button'
 						>
 							<SaveIcon />
 						</button>
 					)}
 					<button
+						type='button'
 						onClick={() => {
 							const content =
 								viewRef.current?.state.doc.toString() || textContent;
 							copyCleanTextToClipboard(content);
 						}}
 						title={t('Copy Text')}
-						className='control-button'
+						className='button'
 					>
 						<CopyIcon />
 					</button>
 					{onExport && (
 						<button
+							type='button'
 							onClick={() =>
 								onExport?.(() => viewRef.current?.state.doc.toString() || '')
 							}
 							title={t('Download File')}
-							className='control-button'
+							className='button'
 						>
 							<DownloadIcon />
 						</button>
@@ -632,14 +636,14 @@ const EditorContent: React.FC<{
 				{hasPluginToggles && (
 					<PluginControlGroup>
 						{availableLSPPlugins.map((plugin) => (
-							<LSPToggleButton
+							<BibliographyToggleButton
 								key={plugin.id}
 								pluginId={plugin.id}
 								className='header-lsp-button'
 							/>
 						))}
 						{availableBibPlugins.map((plugin) => (
-							<LSPToggleButton
+							<BibliographyToggleButton
 								key={plugin.id}
 								pluginId={plugin.id}
 								className='header-lsp-button'
@@ -652,21 +656,21 @@ const EditorContent: React.FC<{
 			<>
 				{hasToolbarSupport(detectFileType(linkedFileInfo.filePath)) &&
 					!isViewOnly && (
-						<PluginControlGroup>
-							<button
-								onClick={() => onToolbarToggle?.(!toolbarVisible)}
-								title={toolbarVisible ? t('Hide Toolbar') : t('Show Toolbar')}
-								className={`control-button ${toolbarVisible ? 'active' : ''}`}
-							>
-								<ToolbarShowIcon />
-							</button>
-
+						<>
+							<PluginControlGroup>
+								<button
+									type='button'
+									onClick={() => onToolbarToggle?.(!toolbarVisible)}
+									title={toolbarVisible ? t('Hide Toolbar') : t('Show Toolbar')}
+									className={`button ${toolbarVisible ? 'active' : ''}`}
+								>
+									<ToolbarShowIcon />
+								</button>
+							</PluginControlGroup>
 							{(isLatexFile(linkedFileInfo.filePath) ||
 								isTypstFile(linkedFileInfo.filePath)) && (
 								<>
-									{isSourceMapAvailable && (
-										<SourceMapButton onForwardSync={handleForwardSync} />
-									)}
+									<SourceMapButton onForwardSync={handleForwardSync} />
 
 									<ContentFormatterButton
 										getCurrentContent={() =>
@@ -677,7 +681,7 @@ const EditorContent: React.FC<{
 									/>
 								</>
 							)}
-						</PluginControlGroup>
+						</>
 					)}
 
 				{linkedFileInfo.fileName && (
@@ -687,28 +691,31 @@ const EditorContent: React.FC<{
 				<PluginControlGroup>
 					{onSaveDocument && (
 						<button
+							type='button'
 							onClick={onSaveDocument}
 							title={t('Save document to linked file (Ctrl+S)')}
-							className='control-button'
+							className='button'
 						>
 							<SaveIcon />
 						</button>
 					)}
 					<button
+						type='button'
 						onClick={handleCopyLinkedFile}
 						title={t('Copy text from linked file: {fileName}', {
 							fileName: linkedFileInfo.fileName,
 						})}
-						className='control-button'
+						className='button'
 					>
 						<CopyIcon />
 					</button>
 					<button
+						type='button'
 						onClick={handleDownloadLinkedFile}
 						title={t('Download linked file: {fileName}', {
 							fileName: linkedFileInfo.fileName,
 						})}
-						className='control-button'
+						className='button'
 					>
 						<DownloadIcon />
 					</button>
@@ -730,7 +737,9 @@ const EditorContent: React.FC<{
 							.pop()
 							?.toLowerCase();
 						const { lsp: linkedLSPPlugins, bib: linkedBibPlugins } =
-							getPluginToggleButtons([linkedFileExtension]);
+							getPluginToggleButtons(
+								linkedFileExtension ? [linkedFileExtension] : undefined,
+							);
 						const hasLinkedPlugins =
 							linkedLSPPlugins.length > 0 || linkedBibPlugins.length > 0;
 
@@ -738,14 +747,14 @@ const EditorContent: React.FC<{
 							hasLinkedPlugins && (
 								<PluginControlGroup>
 									{linkedLSPPlugins.map((plugin) => (
-										<LSPToggleButton
+										<BibliographyToggleButton
 											key={plugin.id}
 											pluginId={plugin.id}
 											className='header-lsp-button'
 										/>
 									))}
 									{linkedBibPlugins.map((plugin) => (
-										<LSPToggleButton
+										<BibliographyToggleButton
 											key={plugin.id}
 											pluginId={plugin.id}
 											className='header-lsp-button'
@@ -760,13 +769,14 @@ const EditorContent: React.FC<{
 			<>
 				<PluginControlGroup>
 					<button
+						type='button'
 						onClick={() => {
 							const content =
 								viewRef.current?.state.doc.toString() || textContent;
 							copyCleanTextToClipboard(content);
 						}}
 						title={t('Copy Text')}
-						className='control-button'
+						className='button'
 					>
 						<CopyIcon />
 					</button>
@@ -800,14 +810,14 @@ const EditorContent: React.FC<{
 							hasSupportedPlugins && (
 								<PluginControlGroup>
 									{supportedLSPPlugins.map((plugin) => (
-										<LSPToggleButton
+										<BibliographyToggleButton
 											key={plugin.id}
 											pluginId={plugin.id}
 											className='header-lsp-button'
 										/>
 									))}
 									{supportedBibPlugins.map((plugin) => (
-										<LSPToggleButton
+										<BibliographyToggleButton
 											key={plugin.id}
 											pluginId={plugin.id}
 											className='header-lsp-button'
@@ -859,7 +869,8 @@ const EditorContent: React.FC<{
 						</span>
 						<div className='linked-file-actions'>
 							<button
-								className='link-button'
+								type='button'
+								className='button link-button'
 								onClick={onDocumentNavigation}
 								title={t('Navigate to linked document')}
 							>
@@ -874,7 +885,7 @@ const EditorContent: React.FC<{
 					<UnlinkedDocumentNotice
 						documentId={documentId}
 						documentName={
-							documents.find((d) => d.id === documentId)?.name || 'Untitled'
+							documents?.find((d) => d.id === documentId)?.name || 'Untitled'
 						}
 						projectType={doc?.projectMetadata?.type || 'latex'}
 						onDeleteDocument={(docId) => {
@@ -901,7 +912,9 @@ const EditorContent: React.FC<{
 								}
 							});
 
-							const remainingDocs = documents.filter((d) => d.id !== docId);
+							const remainingDocs = (documents ?? []).filter(
+								(d) => d.id !== docId,
+							);
 							if (remainingDocs.length > 0 && onSelectDocument) {
 								const newSelectedId = remainingDocs[0].id;
 								onSelectDocument(newSelectedId);
@@ -945,7 +958,12 @@ const EditorContent: React.FC<{
 					<div ref={editorRef} className='codemirror-editor-container' />
 
 					{showSaveIndicator && (
-						<div className={`save-indicator ${isViewOnly ? 'read-only' : ''}`}>
+						<div
+							className='ui-message'
+							data-role='save-indicator'
+							data-tone={isViewOnly ? 'error' : 'success'}
+							data-density='compact'
+						>
 							<span>
 								{isViewOnly ? t('Cannot Save Read-Only') : t('Saved')}
 							</span>
@@ -1267,7 +1285,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 
 	if (!isDocumentSelected) {
 		return (
-			<div className='editor-container empty-state'>
+			<div className='editor-container empty-state ui-empty-state'>
 				<p>{t('Select a file or create a new one to start editing.')}</p>
 
 				<br />
@@ -1293,8 +1311,9 @@ const Editor: React.FC<EditorComponentProps> = ({
 		);
 	}
 
-	const isViewOnly =
-		isEditingFile && linkedDocumentId && !collaborativeViewerPlugin;
+	const isViewOnly = Boolean(
+		isEditingFile && linkedDocumentId && !collaborativeViewerPlugin,
+	);
 
 	const handleContentUpdate = (newContent: string) => {
 		if (!isUpdatingRef.current && !isViewOnly) {
@@ -1350,4 +1369,4 @@ const Editor: React.FC<EditorComponentProps> = ({
 	);
 };
 
-export default Editor;
+export default React.memo(Editor);
