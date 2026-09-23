@@ -21,7 +21,8 @@ const SourceMapFloatingButton: React.FC<SourceMapFloatingButtonsProps> = ({
 	return (
 		<div className={`sourcemap-floating-buttons ${className}`}>
 			<button
-				className='sourcemap-floating-btn'
+				type='button'
+				className='button sourcemap-floating-btn'
 				onClick={onForwardSync}
 				title={t('Jump to PDF location from current editor position (SyncTeX)')}
 			>

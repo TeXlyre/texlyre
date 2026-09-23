@@ -14,7 +14,7 @@ interface PopoutViewerToggleButtonProps {
 
 const PopoutViewerToggleButton: React.FC<PopoutViewerToggleButtonProps> = ({
 	className = '',
-	buttonClassName = 'latex-button',
+	buttonClassName = '',
 	projectId,
 	title = 'Open in new window',
 }) => {
@@ -46,8 +46,10 @@ const PopoutViewerToggleButton: React.FC<PopoutViewerToggleButtonProps> = ({
 
 	return (
 		<button
-			className={`${buttonClassName} popout-viewer-toggle ${className} ${isWindowOpen ? 'active' : ''}`}
+			type='button'
+			className={`${buttonClassName} ${className}`.trim()}
 			onClick={handleToggle}
+			aria-pressed={isWindowOpen}
 			title={title}
 		>
 			<ExternalLinkIcon />

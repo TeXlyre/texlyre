@@ -15,6 +15,24 @@ export const getPdfRendererSettings = (): Setting[] => [
 		defaultValue: true,
 	},
 	{
+		id: 'pdf-renderer-notifications',
+		category: t('Renderers'),
+		subcategory: t('PDF Output'),
+		type: 'select',
+		label: t('Compilation notifications'),
+		description: t(
+			'Choose which compilation notifications to show for output using this renderer',
+		),
+		defaultValue: 'all',
+		dependsOn: { id: 'pdf-renderer-enable', value: true, nest: true },
+		disabledReason: t('Requires: Enhanced PDF Renderer'),
+		options: [
+			{ label: t('All notifications'), value: 'all' },
+			{ label: t('Errors only'), value: 'errors' },
+			{ label: t('Off'), value: 'off' },
+		],
+	},
+	{
 		id: 'pdf-renderer-initial-zoom',
 		category: t('Renderers'),
 		subcategory: t('PDF Output'),

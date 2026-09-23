@@ -66,10 +66,16 @@ const getContentHash = (buffer: ArrayBuffer): string => {
 	return `${buffer.byteLength}-${start}-${end}`;
 };
 
-const toArrayBuffer = (content: ArrayBuffer | string): ArrayBuffer =>
-	typeof content === 'string'
-		? new TextEncoder().encode(content).buffer
-		: content;
+const toArrayBuffer = (
+	content: ArrayBuffer | Uint8Array | string,
+): ArrayBuffer => {
+	if (content instanceof ArrayBuffer) return content;
+	if (typeof content === 'string')
+		return new TextEncoder().encode(content).buffer;
+	const copy = new Uint8Array(content.byteLength);
+	copy.set(content);
+	return copy.buffer;
+};
 
 const loadPdfDocument = async (pdfData: Uint8Array) => {
 	const loadingTask = pdfjs.getDocument({
@@ -93,6 +99,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	onLocationClick,
 	headerLabel,
 	headerTitle,
+	memoryOptimized = false,
 }) => {
 	const { getSetting } = useSettings();
 	const { getProperty, setProperty, registerProperty } = useProperties();
@@ -143,7 +150,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	useEffect(() => {
 		return () => {
-			pdfDocument?.destroy?.();
+			pdfDocument?.loadingTask?.destroy?.();
 		};
 	}, [pdfDocument]);
 
@@ -185,65 +192,72 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		[setPage],
 	);
 
-	const setPdfContent = useCallback((buffer: ArrayBuffer) => {
-		if (!buffer || buffer.byteLength === 0) {
-			setPdfDocument((previous: any) => {
-				previous?.destroy?.();
-				return null;
-			});
-			originalContentRef.current = null;
-			contentHashRef.current = '';
-			pageSizes.current.clear();
-			setNumPages(0);
-			setError(t('No PDF content available'));
-			setIsLoading(false);
-			return;
-		}
-
-		try {
-			const nextHash = getContentHash(buffer);
-			if (contentHashRef.current === nextHash) return;
-
-			const dataCopy = new Uint8Array(new Uint8Array(buffer));
-			pendingRestorePageRef.current = lastStablePageRef.current;
-			pendingRestoreScrollTopRef.current =
-				fullViewerRef.current?.getScrollTop() ?? null;
-			originalContentRef.current = dataCopy.buffer.slice(0);
-			contentHashRef.current = nextHash;
-			pageSizes.current.clear();
-			setError(null);
-			setIsLoading(true);
-
-			loadPdfDocument(dataCopy)
-				.then((nextDocument) => {
-					setPdfDocument((previous: any) => {
-						previous?.destroy?.();
-						return nextDocument;
-					});
-				})
-				.catch((error) => {
-					setError(
-						t('Failed to load PDF: {error}', {
-							error: error instanceof Error ? error.message : String(error),
-						}),
-					);
-					setIsLoading(false);
+	const setPdfContent = useCallback(
+		(buffer: ArrayBuffer) => {
+			if (!buffer || buffer.byteLength === 0) {
+				setPdfDocument((previous: any) => {
+					previous?.loadingTask?.destroy?.();
+					return null;
 				});
-		} catch (error) {
-			moduleLog.error('Error creating PDF data:', error);
-			setError(
-				t('Failed to process PDF content: {error}', {
-					error: error instanceof Error ? error.message : t('Unknown error'),
-				}),
-			);
-			setIsLoading(false);
-		}
-	}, []);
+				originalContentRef.current = null;
+				contentHashRef.current = '';
+				pageSizes.current.clear();
+				setNumPages(0);
+				setError(t('No PDF content available'));
+				setIsLoading(false);
+				return;
+			}
+
+			try {
+				const nextHash = getContentHash(buffer);
+				if (contentHashRef.current === nextHash) return;
+
+				const dataCopy = memoryOptimized
+					? new Uint8Array(buffer)
+					: new Uint8Array(new Uint8Array(buffer));
+				pendingRestorePageRef.current = lastStablePageRef.current;
+				pendingRestoreScrollTopRef.current =
+					fullViewerRef.current?.getScrollTop() ?? null;
+				originalContentRef.current = memoryOptimized
+					? buffer
+					: dataCopy.buffer.slice(0);
+				contentHashRef.current = nextHash;
+				pageSizes.current.clear();
+				setError(null);
+				setIsLoading(true);
+
+				loadPdfDocument(dataCopy)
+					.then((nextDocument) => {
+						setPdfDocument((previous: any) => {
+							previous?.loadingTask?.destroy?.();
+							return nextDocument;
+						});
+					})
+					.catch((error) => {
+						setError(
+							t('Failed to load PDF: {error}', {
+								error: error instanceof Error ? error.message : String(error),
+							}),
+						);
+						setIsLoading(false);
+					});
+			} catch (error) {
+				moduleLog.error('Error creating PDF data:', error);
+				setError(
+					t('Failed to process PDF content: {error}', {
+						error: error instanceof Error ? error.message : t('Unknown error'),
+					}),
+				);
+				setIsLoading(false);
+			}
+		},
+		[memoryOptimized],
+	);
 
 	useImperativeHandle(
 		controllerRef,
 		() => ({
-			updateContent: (nextContent: ArrayBuffer | string) => {
+			updateContent: (nextContent: ArrayBuffer | Uint8Array | string) => {
 				setPdfContent(toArrayBuffer(nextContent));
 			},
 			updatePdfContent: (nextContent: ArrayBuffer | string) => {
@@ -527,8 +541,12 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	if (!pdfRendererEnable) {
 		return (
-			<div className='pdf-renderer-container'>
-				<div className='pdf-renderer-error'>
+			<div className='pdf-renderer-container ui-viewer' data-surface='base'>
+				<div
+					className='ui-message'
+					data-placement='overlay-center'
+					data-variant='error'
+				>
 					{t(
 						'Enhanced PDF renderer is disabled. Please enable it in settings to use this renderer.',
 					)}
@@ -549,7 +567,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	return (
 		<div
-			className='pdf-renderer-container'
+			className='pdf-renderer-container ui-viewer'
+			data-surface='base'
 			ref={containerRef}
 			onMouseEnter={() => {
 				pointerInsideRef.current = true;
@@ -558,12 +577,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				pointerInsideRef.current = false;
 			}}
 		>
-			<div
-				className={`pdf-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}
-			>
-				<div className={`toolbar ${!headerLabel ? 'toolbar-no-left' : ''}`}>
+			<div className='renderer-toolbar'>
+				<div
+					className='renderer-toolbar-content ui-toolbar'
+					data-no-left={!headerLabel ? 'true' : undefined}
+				>
 					{headerLabel && (
-						<div id='toolbarLeft'>
+						<div className='renderer-toolbar-left'>
 							<PluginHeader
 								fileName={headerLabel}
 								filePath={headerTitle}
@@ -571,19 +591,23 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							/>
 						</div>
 					)}
-					<div id='toolbarRight'>
-						<div className='toolbarButtonGroup'>
+					<div className='renderer-toolbar-right'>
+						<div className='ui-toolbar-section' data-gap='control'>
 							<button
+								type='button'
 								onClick={handlePreviousPage}
-								className='toolbarButton'
+								className='ui-icon-button'
+								data-variant='control'
 								title={t('Previous Page')}
 								disabled={currentPage <= 1 || isLoading}
 							>
 								<ChevronLeftIcon />
 							</button>
 							<button
+								type='button'
 								onClick={handleNextPage}
-								className='toolbarButton'
+								className='ui-icon-button'
+								data-variant='control'
 								title={t('Next Page')}
 								disabled={currentPage >= numPages || isLoading}
 							>
@@ -591,8 +615,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							</button>
 						</div>
 
-						<div className='toolbarButtonGroup'>
-							<div className='pageNumber'>
+						<div className='ui-toolbar-section' data-gap='control'>
+							<div className='ui-control-cluster'>
 								<input
 									type='number'
 									value={pageInput}
@@ -603,7 +627,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 										setIsEditingPageInput(false);
 										setPageInput(String(currentPage));
 									}}
-									className='toolbarField'
+									className='ui-field-control'
+									data-width='numeric'
 									min={1}
 									max={numPages}
 									disabled={isLoading}
@@ -613,10 +638,12 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							</div>
 						</div>
 
-						<div className='toolbarButtonGroup'>
+						<div className='ui-toolbar-section' data-gap='control'>
 							<button
+								type='button'
 								onClick={() => commitZoom(scale - ZOOM_STEP)}
-								className='toolbarButton'
+								className='ui-icon-button'
+								data-variant='control'
 								title={t('Zoom Out')}
 								disabled={isLoading}
 							>
@@ -627,7 +654,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 								value={hasCustomZoom ? 'custom' : currentZoom}
 								onChange={handleZoomChange}
 								disabled={isLoading}
-								className='toolbarZoomSelect'
+								className='renderer-toolbar-select ui-field-control'
 								title={t('Zoom Level')}
 							>
 								{zoomOptions.map((option) => (
@@ -644,8 +671,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							</select>
 
 							<button
+								type='button'
 								onClick={() => commitZoom(scale + ZOOM_STEP)}
-								className='toolbarButton'
+								className='ui-icon-button'
+								data-variant='control'
 								title={t('Zoom In')}
 								disabled={isLoading}
 							>
@@ -653,10 +682,12 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							</button>
 						</div>
 
-						<div className='toolbarButtonGroup'>
+						<div className='ui-toolbar-section' data-gap='control'>
 							<button
+								type='button'
 								onClick={handleFitToggle}
-								className='toolbarButton'
+								className='ui-icon-button'
+								data-variant='control'
 								title={
 									fitMode === 'fit-width'
 										? t('Fit to Height')
@@ -672,8 +703,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							</button>
 
 							<button
+								type='button'
 								onClick={handleToggleView}
-								className='toolbarButton'
+								className='ui-icon-button'
+								data-variant='control'
 								title={scrollView ? t('Single Page View') : t('Scroll View')}
 								disabled={isLoading}
 							>
@@ -681,8 +714,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							</button>
 
 							<button
+								type='button'
 								onClick={handleToggleFullscreen}
-								className='toolbarButton'
+								className='ui-icon-button'
+								data-variant='control'
 								title={isFullscreen ? t('Exit Fullscreen') : t('Fullscreen')}
 								disabled={isLoading}
 							>
@@ -690,10 +725,12 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							</button>
 						</div>
 
-						<div className='toolbarButtonGroup'>
+						<div className='ui-toolbar-section' data-gap='control'>
 							<button
+								type='button'
 								onClick={handleExport}
-								className='toolbarButton'
+								className='ui-icon-button'
+								data-variant='control'
 								title={t('Download')}
 								disabled={isLoading}
 							>
@@ -705,7 +742,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			</div>
 
 			<div
-				className={`pdf-renderer-content ${isFullscreen ? 'fullscreen' : ''}`}
+				className={`ui-viewer-content renderer-content ${isFullscreen ? 'fullscreen' : ''}`}
+				data-layout='fill'
 				ref={contentElRef}
 			>
 				{pdfDocument && (
@@ -728,17 +766,30 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							);
 							setIsLoading(false);
 						}}
+						memoryOptimized={memoryOptimized}
 					/>
 				)}
 
 				{isLoading && !pdfDocument && (
-					<div className='pdf-renderer-loading'>
+					<div
+						className='ui-message'
+						data-placement='overlay-center'
+						data-variant='loading'
+					>
 						{t('Loading PDF document...')}
 					</div>
 				)}
 			</div>
 
-			{error && <div className='pdf-renderer-error'>{error}</div>}
+			{error && (
+				<div
+					className='ui-message'
+					data-placement='overlay-center'
+					data-variant='error'
+				>
+					{error}
+				</div>
+			)}
 		</div>
 	);
 };

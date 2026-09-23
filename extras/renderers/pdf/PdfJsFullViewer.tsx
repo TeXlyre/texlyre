@@ -42,6 +42,7 @@ type Props = {
 	onPageSize: (page: number, size: PageSize) => void;
 	onLocationClick?: (page: number, x: number, y: number) => void;
 	onError: (error: Error) => void;
+	memoryOptimized?: boolean;
 };
 
 export type PdfJsFullViewerHandle = {
@@ -92,7 +93,7 @@ function getPageDiv(pdfViewer: any, page: number): HTMLElement | null {
 }
 
 function clearHighlight(root: HTMLElement | null): void {
-	root?.querySelectorAll('.pdf-page-highlight').forEach((element) => {
+	root?.querySelectorAll('.renderer-page-highlight').forEach((element) => {
 		element.remove();
 	});
 }
@@ -109,7 +110,7 @@ function renderHighlight(pdfViewer: any, highlight: Highlight): void {
 
 	for (const rect of highlight.rects) {
 		const el = document.createElement('div');
-		el.className = 'pdf-page-highlight';
+		el.className = 'renderer-page-highlight';
 		el.style.left = `${rect.x * viewport.scale}px`;
 		el.style.top = `${rect.y * viewport.scale}px`;
 		el.style.width = `${Math.max(rect.width, 0) * viewport.scale}px`;
@@ -133,6 +134,7 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 			onPageSize,
 			onLocationClick,
 			onError,
+			memoryOptimized = false,
 		},
 		ref,
 	) => {
@@ -417,6 +419,7 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 						onWarning: (message, detail) => {
 							moduleLog.warn(`${message}`, detail);
 						},
+						memoryOptimized,
 					},
 				);
 
@@ -489,7 +492,9 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 					const count = getPagesCount(pdfViewer, pdfDocument) || pagesCount;
 					propsRef.current.onDocumentReady(count);
 
-					for (let page = 1; page <= count; page++) collectPageSize(page);
+					if (!memoryOptimized) {
+						for (let page = 1; page <= count; page++) collectPageSize(page);
+					}
 					requestAnimationFrame(() =>
 						renderHighlight(pdfViewer, propsRef.current.highlight),
 					);
@@ -589,6 +594,7 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 			cancelScaleDebounce,
 			setViewerPage,
 			scrollToPageDom,
+			memoryOptimized,
 		]);
 
 		useEffect(() => {
