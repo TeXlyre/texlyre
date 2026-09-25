@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
 import { fileStoreService } from '../../services/FileStoreService';
+import { filePathCacheService } from '../../services/FilePathCacheService';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useTypst } from '../../hooks/useTypst';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
@@ -51,14 +52,17 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 }) => {
 	const {
 		compileLog,
+		compileGeneration,
 		compiledPdf,
 		// compiledSvg,
 		compiledCanvas,
+		compiledCanvasSource,
 		currentView,
 		logIndicator,
 		toggleOutputView,
 		currentFormat,
 		compileDocument,
+		exportDocument,
 	} = useTypst();
 
 	const projectId = fileStoreService.getCurrentProjectId() || undefined;
@@ -109,14 +113,8 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 	}[logIndicator ?? 'idle'];
 
 	useEffect(() => {
-		if (
-			compiledCanvas &&
-			(effectiveFormat === 'canvas' || effectiveFormat === 'canvas-pdf') &&
-			canvasControllerRef.current?.updateContent
-		) {
-			canvasControllerRef.current.updateContent(compiledCanvas);
-		}
-	}, [compiledCanvas, effectiveFormat]);
+		if (compileGeneration > 0) canvasControllerRef.current?.cancelPending?.();
+	}, [compileGeneration]);
 
 	useEffect(() => {
 		if (propertiesRegistered.current) return;
@@ -172,42 +170,42 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 			return typstFiles;
 		};
 
-		const allTypstFiles = findTypstFiles(fileTree);
-
-		const findMainFile = async () => {
-			if (
-				selectedDocId &&
-				linkedFileInfo?.filePath &&
-				isTypstFile(linkedFileInfo.filePath)
-			) {
-				setAutoMainFile(linkedFileInfo.filePath);
-				return;
-			}
-
-			if (selectedFileId) {
-				const file = await getFile(selectedFileId);
-				if (file && isTypstFile(file.path)) {
-					setAutoMainFile(file.path);
-					return;
+		const findFileById = (
+			nodes: FileNode[],
+			fileId: string,
+		): FileNode | undefined => {
+			for (const node of nodes) {
+				if (node.id === fileId) return node;
+				if (node.children) {
+					const match = findFileById(node.children, fileId);
+					if (match) return match;
 				}
 			}
-
-			if (autoMainFile && allTypstFiles.includes(autoMainFile)) {
-				return;
-			}
-
-			setAutoMainFile(allTypstFiles[0]);
+			return undefined;
 		};
 
-		findMainFile();
-	}, [
-		fileTree,
-		selectedFileId,
-		selectedDocId,
-		linkedFileInfo,
-		getFile,
-		autoMainFile,
-	]);
+		const allTypstFiles = findTypstFiles(fileTree);
+
+		if (
+			selectedDocId &&
+			linkedFileInfo?.filePath &&
+			isTypstFile(linkedFileInfo.filePath)
+		) {
+			setAutoMainFile(linkedFileInfo.filePath);
+			return;
+		}
+
+		if (selectedFileId) {
+			const file = findFileById(fileTree, selectedFileId);
+			if (file && isTypstFile(file.path)) {
+				setAutoMainFile(file.path);
+				return;
+			}
+		}
+
+		if (autoMainFile && allTypstFiles.includes(autoMainFile)) return;
+		setAutoMainFile(allTypstFiles[0]);
+	}, [fileTree, selectedFileId, selectedDocId, linkedFileInfo, autoMainFile]);
 
 	useEffect(() => {
 		const storedHeight = getProperty('typst-log-visualizer-height');
@@ -273,9 +271,39 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 		[reverseClickEnabled, reverseClickMode, reverseSync],
 	);
 
-	const handleLineClick = async (line: number) => {
-		if (!selectedFileId) return;
+	const handleLineClick = async (line: number, filePath?: string) => {
 		try {
+			if (filePath) {
+				const targetFile = await filePathCacheService.findFileByPath(
+					effectiveMainFile ?? '',
+					filePath,
+				);
+				if (!targetFile) {
+					moduleLog.warn(`Diagnostic file not found: ${filePath}`);
+					return;
+				}
+
+				const target = targetFile.documentId
+					? { kind: 'document' as const, documentId: targetFile.documentId }
+					: { kind: 'file' as const, fileId: targetFile.id };
+				const isCurrent = targetFile.documentId
+					? selectedDocId === targetFile.documentId
+					: selectedFileId === targetFile.id;
+
+				if (isCurrent) {
+					gotoEditor(target, { line });
+				} else {
+					gotoEditor(target, { line }, { waitForReady: true });
+					document.dispatchEvent(
+						new CustomEvent('navigate-to-compiled-file', {
+							detail: { filePath: targetFile.path },
+						}),
+					);
+				}
+				return;
+			}
+
+			if (!selectedFileId) return;
 			const file = await getFile(selectedFileId);
 			if (!file || !isTypstFile(file.path)) return;
 			gotoEditor({ kind: 'file', fileId: selectedFileId }, { line });
@@ -334,6 +362,15 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 		selectedFileId,
 		getFile,
 	]);
+
+	const handleDownloadCanvasSvg = useCallback(
+		async (_fileName: string) => {
+			const mainFile = await resolveCompileTarget();
+			if (!mainFile) return;
+			await exportDocument(mainFile, { format: 'svg' });
+		},
+		[resolveCompileTarget, exportDocument],
+	);
 
 	const handleTabSwitch = useCallback(
 		async (format: TypstOutputFormat) => {
@@ -400,15 +437,23 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 					{canvasRenderer ? (
 						React.createElement(canvasRenderer.renderOutput, {
 							content: compiledCanvas || new ArrayBuffer(0),
+							pagedSource:
+								effectiveFormat === 'canvas'
+									? (compiledCanvasSource ?? undefined)
+									: undefined,
 							mimeType:
 								effectiveFormat === 'canvas-pdf'
 									? 'application/pdf'
-									: 'image/svg+xml',
+									: 'application/x-texlyre-typst-vector',
 							fileName:
 								effectiveFormat === 'canvas-pdf' ? 'output.pdf' : 'output.svg',
 							controllerRef: (controller) => {
 								canvasControllerRef.current = controller;
 							},
+							onDownload:
+								effectiveFormat === 'canvas'
+									? handleDownloadCanvasSvg
+									: undefined,
 							onLocationClick: handleLocationClick,
 						})
 					) : (
@@ -426,23 +471,31 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 		compiledPdf,
 		// compiledSvg,
 		compiledCanvas,
+		compiledCanvasSource,
 		useEnhancedRenderer,
 		handleSavePdf,
+		handleDownloadCanvasSvg,
 		handleLocationClick,
 	]);
 
 	const hasAnyOutput = compiledPdf || compiledCanvas;
 
 	return (
-		<div className={`typst-output ${className}`}>
-			<div className='output-header'>
-				<div className='view-tabs scroll-x' ref={outputTabsRef}>
+		<div className={`ui-viewer ${className}`} data-role='typeset-output'>
+			<div className='ui-panel-header' data-role='output' data-shrink='true'>
+				<div
+					className='ui-tab-list scroll-x'
+					data-role='output'
+					data-variant='switcher'
+					ref={outputTabsRef}
+				>
 					<button
-						className={`tab-button ${currentView === 'log' ? 'active' : ''}`}
+						type='button'
+						className={`ui-tab ${currentView === 'log' ? 'active' : ''}`}
 						onClick={() => currentView !== 'log' && toggleOutputView()}
 					>
 						<div
-							className='status-dot'
+							className='ui-status-dot'
 							style={{ backgroundColor: indicatorColor }}
 						/>
 						{t('Log')}
@@ -450,20 +503,23 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 					{currentView === 'output' && (
 						<>
 							<button
-								className={`tab-button ${currentView === 'output' && effectiveFormat === 'pdf' ? 'active' : ''}`}
+								type='button'
+								className={`ui-tab ${currentView === 'output' && effectiveFormat === 'pdf' ? 'active' : ''}`}
 								onClick={() => handleTabSwitch('pdf')}
 							>
 								{t('PDF')}
 							</button>
 
 							<button
-								className={`tab-button ${currentView === 'output' && effectiveFormat === 'canvas-pdf' ? 'active' : ''}`}
+								type='button'
+								className={`ui-tab ${currentView === 'output' && effectiveFormat === 'canvas-pdf' ? 'active' : ''}`}
 								onClick={() => handleTabSwitch('canvas-pdf')}
 							>
 								{t('Canvas (PDF)')}
 							</button>
 							<button
-								className={`tab-button ${currentView === 'output' && effectiveFormat === 'canvas' ? 'active' : ''}`}
+								type='button'
+								className={`ui-tab ${currentView === 'output' && effectiveFormat === 'canvas' ? 'active' : ''}`}
 								onClick={() => handleTabSwitch('canvas')}
 							>
 								{t('Canvas (SVG)')}
@@ -472,7 +528,8 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 					)}
 					{currentView === 'log' && (
 						<button
-							className={'tab-button'}
+							type='button'
+							className='ui-tab'
 							onClick={() => toggleOutputView()}
 							disabled={!hasAnyOutput}
 						>
@@ -494,7 +551,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 			</div>
 
 			{!compileLog && !hasAnyOutput ? (
-				<div className='empty-state'>
+				<div className='empty-state ui-empty-state'>
 					<p>
 						{t(
 							'No output available. Compile a {typesetter} document to see results.',
@@ -527,11 +584,13 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 										</div>
 									</ResizablePanel>
 									<div className='raw-log-panel'>
-										<pre className='log-viewer'>{compileLog}</pre>
+										<pre className='log-viewer ui-code-block' data-wrap='true'>
+											{compileLog}
+										</pre>
 									</div>
 								</div>
 							) : (
-								<div className='log-viewer'>
+								<div className='log-viewer ui-code-block' data-wrap='true'>
 									<pre>{compileLog}</pre>
 								</div>
 							)}
