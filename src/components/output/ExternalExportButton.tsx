@@ -187,7 +187,7 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 
 		if (field.kind === 'boolean') {
 			return (
-				<label className='dropdown-checkbox' key={field.key}>
+				<label className='ui-menu-item checkbox-control' key={field.key}>
 					<input
 						type='checkbox'
 						checked={value === true}
@@ -201,12 +201,14 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 
 		if (field.kind === 'select') {
 			return (
-				<div className='dropdown-section' key={field.key}>
-					<div className='dropdown-title'>{resolveLabel(field.label)}</div>
+				<div className='ui-menu-section' data-variant='control' key={field.key}>
+					<div className='ui-menu-title' data-variant='control'>
+						{resolveLabel(field.label)}
+					</div>
 					<select
 						value={String(value)}
 						onChange={(e) => writeValue(field.key, e.target.value)}
-						className='dropdown-select'
+						className='ui-field-control'
 						disabled={isExporting}
 					>
 						{(field.options ?? []).map((option) => (
@@ -220,8 +222,10 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 		}
 
 		return (
-			<div className='dropdown-section' key={field.key}>
-				<div className='dropdown-title'>{resolveLabel(field.label)}</div>
+			<div className='ui-menu-section' data-variant='control' key={field.key}>
+				<div className='ui-menu-title' data-variant='control'>
+					{resolveLabel(field.label)}
+				</div>
 				<input
 					type={field.kind === 'number' ? 'number' : 'text'}
 					value={String(value)}
@@ -231,7 +235,7 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 							field.kind === 'number' ? Number(e.target.value) : e.target.value,
 						)
 					}
-					className='dropdown-select'
+					className='ui-field-control'
 					disabled={isExporting}
 				/>
 			</div>
@@ -239,10 +243,16 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 	};
 
 	return (
-		<div className={`external-export-buttons ${className}`} ref={dropdownRef}>
-			<div className='compile-button-group'>
+		<div className={`ui-control-cluster ${className}`} ref={dropdownRef}>
+			<div
+				className='ui-button-group ui-split-button'
+				data-variant='joined'
+				data-size='control'
+				data-trigger-group='true'
+			>
 				<button
-					className={`external-button export-button ${isExporting ? 'exporting' : ''}`}
+					type='button'
+					className={`ui-split-main export-button ${isExporting ? 'exporting' : ''}`}
 					onClick={handleExport}
 					disabled={isDisabled}
 					title={exportLabel}
@@ -251,7 +261,8 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 				</button>
 
 				<button
-					className='external-button dropdown-toggle'
+					type='button'
+					className='ui-split-toggle dropdown-toggle'
 					onClick={toggleDropdown}
 					title={t('Export Options')}
 				>
@@ -266,27 +277,33 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 				isOpen={isDropdownOpen}
 				triggerElement={
 					dropdownRef.current?.querySelector(
-						'.compile-button-group',
+						'[data-trigger-group]',
 					) as HTMLElement
 				}
 				className='external-dropdown'
 			>
-				<div className='dropdown-section'>
-					<div className='dropdown-title'>{t('Main File:')}</div>
-					<div className='dropdown-value' title={effectiveMainFile}>
+				<div className='ui-menu-section' data-variant='control'>
+					<div className='ui-menu-title' data-variant='control'>
+						{t('Main File:')}
+					</div>
+					<div className='ui-menu-value' title={effectiveMainFile}>
 						{getFilenameFromPath(effectiveMainFile, '.tex') ||
 							t('No input file')}
 					</div>
 				</div>
 
 				{(ungroupedFields.length > 0 || groupedFields.length > 0) && (
-					<div className='dropdown-section'>
+					<div className='ui-menu-section' data-variant='control'>
 						{ungroupedFields.map(renderField)}
 						{groupedFields.length > 0 && (
-							<div className='format-selector-header'>
-								<div className='dropdown-title'>{resolveLabel(groupLabel)}</div>
+							<div className='ui-toolbar' data-justify='between' data-gap='sm'>
+								<div className='ui-menu-title' data-variant='control'>
+									{resolveLabel(groupLabel)}
+								</div>
 								<button
-									className={`pdf-options-toggle ${isGroupOpen ? 'active' : ''}`}
+									type='button'
+									className={`ui-icon-button ${isGroupOpen ? 'active' : ''}`}
+									data-variant='control'
 									onClick={() => setIsGroupOpen(!isGroupOpen)}
 									title={t('Options')}
 									disabled={isExporting}
@@ -296,9 +313,14 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 							</div>
 						)}
 						{groupedFields.length > 0 && isGroupOpen && (
-							<div className='pdf-options-section'>
+							<div
+								className='ui-card ui-stack'
+								data-surface='secondary'
+								data-padding='sm'
+								data-gap='sm'
+							>
 								{groupedFields.map((field) => (
-									<div className='pdf-option' key={field.key}>
+									<div className='ui-field' key={field.key}>
 										{renderField(field)}
 									</div>
 								))}
@@ -307,10 +329,10 @@ const ExternalExportButton: React.FC<ExternalExportButtonProps> = ({
 					</div>
 				)}
 
-				<div className='dropdown-section'>
+				<div className='ui-menu-section' data-variant='control'>
 					<button
 						type='button'
-						className='dropdown-button'
+						className='button primary'
 						onClick={handleExport}
 						disabled={isDisabled}
 					>

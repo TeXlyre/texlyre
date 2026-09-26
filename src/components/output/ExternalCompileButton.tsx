@@ -7,9 +7,11 @@ import PositionedDropdown from '../common/PositionedDropdown';
 import PopoutViewerToggleButton from './PopoutViewerToggleButton';
 import { useExternalTypesetter } from '../../hooks/useExternalTypesetter';
 import { useFileTree } from '../../hooks/useFileTree';
+import { useSettings } from '../../hooks/useSettings';
 import { useProperties } from '../../hooks/useProperties';
 import { fileStoreService } from '../../services/FileStoreService';
 import { genericTypesetterService } from '../../services/GenericTypesetterService';
+import type { FileNode } from '../../types/files';
 import type {
 	TypesetterProvider,
 	TypesetterUIField,
@@ -36,23 +38,44 @@ interface ExternalCompileButtonProps {
 	provider: TypesetterProvider;
 	className?: string;
 	onExpandExternalOutput?: () => void;
+	onNavigateToLinkedFile?: () => void;
+	selectedDocId?: string | null;
 	linkedFileInfo?: {
 		fileName?: string;
 		filePath?: string;
 	} | null;
+	shouldNavigateOnCompile?: boolean;
 	useSharedSettings?: boolean;
 }
+
+const findFileById = (
+	nodes: FileNode[],
+	fileId: string,
+): FileNode | undefined => {
+	for (const node of nodes) {
+		if (node.id === fileId) return node;
+		if (node.children) {
+			const match = findFileById(node.children, fileId);
+			if (match) return match;
+		}
+	}
+	return undefined;
+};
 
 const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 	provider,
 	className = '',
 	onExpandExternalOutput,
+	onNavigateToLinkedFile,
+	selectedDocId,
 	linkedFileInfo,
+	shouldNavigateOnCompile = false,
 	useSharedSettings = false,
 }) => {
 	const { isCompiling, isExporting, compileDocument, clearCache } =
 		useExternalTypesetter();
-	const { selectedFileId, getFile, fileTree } = useFileTree();
+	const { selectedFileId, fileTree } = useFileTree();
+	const { getSetting } = useSettings();
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const [isGroupOpen, setIsGroupOpen] = useState(false);
@@ -73,6 +96,10 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 		() => findInputFiles(fileTree, provider.inputExtensions),
 		[fileTree, provider.inputExtensions],
 	);
+	const selectedLinkedFilePath =
+		selectedDocId === undefined || selectedDocId
+			? linkedFileInfo?.filePath
+			: undefined;
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: One-time registration guarded by ref; fields and provider metadata are read for initial registration only. */
 	useEffect(() => {
@@ -104,25 +131,31 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 	}, [registerProperty]);
 
 	useEffect(() => {
-		const resolveAuto = async () => {
-			if (
-				linkedFileInfo?.filePath &&
-				availableFiles.includes(linkedFileInfo.filePath)
-			) {
-				setAutoMainFile(linkedFileInfo.filePath);
+		if (
+			selectedLinkedFilePath &&
+			availableFiles.includes(selectedLinkedFilePath)
+		) {
+			setAutoMainFile(selectedLinkedFilePath);
+			return;
+		}
+
+		if (selectedFileId) {
+			const file = findFileById(fileTree, selectedFileId);
+			if (file && availableFiles.includes(file.path)) {
+				setAutoMainFile(file.path);
 				return;
 			}
-			if (selectedFileId) {
-				const file = await getFile(selectedFileId);
-				if (file && availableFiles.includes(file.path)) {
-					setAutoMainFile(file.path);
-					return;
-				}
-			}
-			setAutoMainFile(availableFiles[0]);
-		};
-		resolveAuto();
-	}, [selectedFileId, getFile, availableFiles, linkedFileInfo]);
+		}
+
+		if (autoMainFile && availableFiles.includes(autoMainFile)) return;
+		setAutoMainFile(availableFiles[0]);
+	}, [
+		selectedLinkedFilePath,
+		selectedFileId,
+		fileTree,
+		availableFiles,
+		autoMainFile,
+	]);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -168,30 +201,91 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 		);
 	};
 
-	const handleCompile = useCallback(async () => {
-		if (!effectiveMainFile) return;
+	const shouldNavigateToMain = useCallback((): boolean => {
+		const navigationSetting =
+			(getSetting('external-typesetter-auto-navigate-to-main')
+				?.value as string) ?? 'conditional';
 
-		onExpandExternalOutput?.();
+		if (navigationSetting === 'never') return false;
+		if (navigationSetting === 'always') return true;
 
-		const { format, options } = collectValues(fields, readValue);
-		const resolvedFormat = format ?? provider.outputFormats[0]?.id ?? 'pdf';
-		await compileDocument(
-			provider.id,
-			effectiveMainFile,
-			resolvedFormat,
-			options,
-		);
+		if (navigationSetting === 'conditional') {
+			if (selectedFileId) {
+				const currentFile = findFileById(fileTree, selectedFileId);
+				if (currentFile && availableFiles.includes(currentFile.path)) {
+					return false;
+				}
+			}
+
+			if (
+				selectedLinkedFilePath &&
+				availableFiles.includes(selectedLinkedFilePath)
+			) {
+				return false;
+			}
+
+			return true;
+		}
+
+		return false;
 	}, [
-		effectiveMainFile,
-		fields,
-		readValue,
-		provider,
-		compileDocument,
-		onExpandExternalOutput,
+		getSetting,
+		selectedFileId,
+		fileTree,
+		availableFiles,
+		selectedLinkedFilePath,
 	]);
 
-	const compileStateRef = useRef({ isCompiling, handleCompile });
-	compileStateRef.current = { isCompiling, handleCompile };
+	const runCompile = useCallback(
+		async (navigateToMain: boolean) => {
+			if (!effectiveMainFile) return;
+
+			onExpandExternalOutput?.();
+
+			if (navigateToMain && shouldNavigateOnCompile && shouldNavigateToMain()) {
+				if (
+					linkedFileInfo?.filePath === effectiveMainFile &&
+					onNavigateToLinkedFile
+				) {
+					onNavigateToLinkedFile();
+				} else {
+					document.dispatchEvent(
+						new CustomEvent('navigate-to-compiled-file', {
+							detail: { filePath: effectiveMainFile },
+						}),
+					);
+				}
+			}
+
+			const { format, options } = collectValues(fields, readValue);
+			const resolvedFormat = format ?? provider.outputFormats[0]?.id ?? 'pdf';
+			await compileDocument(
+				provider.id,
+				effectiveMainFile,
+				resolvedFormat,
+				options,
+			);
+		},
+		[
+			effectiveMainFile,
+			onExpandExternalOutput,
+			shouldNavigateOnCompile,
+			shouldNavigateToMain,
+			linkedFileInfo,
+			onNavigateToLinkedFile,
+			fields,
+			readValue,
+			provider,
+			compileDocument,
+		],
+	);
+
+	const handleCompile = useCallback(async () => {
+		await runCompile(true);
+	}, [runCompile]);
+
+	const compileStateRef = useRef({ isCompiling, runCompile });
+	compileStateRef.current = { isCompiling, runCompile };
 
 	useEffect(() => {
 		if (!useSharedSettings || !effectiveAutoCompileOnSave) return;
@@ -199,7 +293,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 		const handleFileSaved = async () => {
 			const state = compileStateRef.current;
 			if (state.isCompiling) return;
-			await state.handleCompile();
+			await state.runCompile(false);
 		};
 
 		document.addEventListener('file-saved', handleFileSaved);
@@ -261,7 +355,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 
 		if (field.kind === 'boolean') {
 			return (
-				<label className='dropdown-checkbox' key={field.key}>
+				<label className='ui-menu-item checkbox-control' key={field.key}>
 					<br />
 					<input
 						type='checkbox'
@@ -276,12 +370,14 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 
 		if (field.kind === 'select') {
 			return (
-				<div className='dropdown-section' key={field.key}>
-					<div className='dropdown-title'>{resolveLabel(field.label)}</div>
+				<div className='ui-menu-section' data-variant='control' key={field.key}>
+					<div className='ui-menu-title' data-variant='control'>
+						{resolveLabel(field.label)}
+					</div>
 					<select
 						value={String(value)}
 						onChange={(e) => writeValue(field.key, e.target.value)}
-						className='dropdown-select'
+						className='ui-field-control'
 						disabled={isCompiling}
 					>
 						{(field.options ?? []).map((option) => (
@@ -295,8 +391,10 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 		}
 
 		return (
-			<div className='dropdown-section' key={field.key}>
-				<div className='dropdown-title'>{resolveLabel(field.label)}</div>
+			<div className='ui-menu-section' data-variant='control' key={field.key}>
+				<div className='ui-menu-title' data-variant='control'>
+					{resolveLabel(field.label)}
+				</div>
 				<input
 					type={field.kind === 'number' ? 'number' : 'text'}
 					value={String(value)}
@@ -306,7 +404,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 							field.kind === 'number' ? Number(e.target.value) : e.target.value,
 						)
 					}
-					className='dropdown-select'
+					className='ui-field-control'
 					disabled={isCompiling}
 				/>
 			</div>
@@ -314,10 +412,16 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 	};
 
 	return (
-		<div className={`external-compile-buttons ${className}`} ref={dropdownRef}>
-			<div className='compile-button-group'>
+		<div className={`ui-control-cluster ${className}`} ref={dropdownRef}>
+			<div
+				className='ui-button-group ui-split-button'
+				data-variant='joined'
+				data-size='control'
+				data-trigger-group='true'
+			>
 				<button
-					className={`external-button compile-button ${isCompiling ? 'compiling' : ''}`}
+					type='button'
+					className={`ui-split-main compile-button ${isCompiling ? 'compiling' : ''}`}
 					onClick={handleCompile}
 					disabled={isDisabled}
 					title={
@@ -332,13 +436,13 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 
 				<PopoutViewerToggleButton
 					className='popout-viewer-button'
-					buttonClassName='external-button'
 					projectId={projectId || 'default'}
 					title={t('Open output in new window')}
 				/>
 
 				<button
-					className='external-button dropdown-toggle'
+					type='button'
+					className='ui-split-toggle dropdown-toggle'
 					onClick={toggleDropdown}
 					title={t('Compilation Options')}
 				>
@@ -353,21 +457,23 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 				isOpen={isDropdownOpen}
 				triggerElement={
 					dropdownRef.current?.querySelector(
-						'.compile-button-group',
+						'[data-trigger-group]',
 					) as HTMLElement
 				}
 				className='external-dropdown'
 			>
-				<div className='dropdown-section'>
-					<div className='dropdown-title'>{t('Main File:')}</div>
-					<div className='dropdown-value' title={effectiveMainFile}>
+				<div className='ui-menu-section' data-variant='control'>
+					<div className='ui-menu-title' data-variant='control'>
+						{t('Main File:')}
+					</div>
+					<div className='ui-menu-value' title={effectiveMainFile}>
 						{getFilenameFromPath(effectiveMainFile, '.tex') ||
 							t('No input file')}
 					</div>
 					<select
 						value={propMainFile || 'auto'}
 						onChange={(e) => handleMainFileChange(e.target.value)}
-						className='dropdown-select'
+						className='ui-field-control'
 						disabled={isCompiling}
 					>
 						<option value='auto'>{t('Auto-detect')}</option>
@@ -380,13 +486,17 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 				</div>
 
 				{(ungroupedFields.length > 0 || groupedFields.length > 0) && (
-					<div className='dropdown-section'>
+					<div className='ui-menu-section' data-variant='control'>
 						{ungroupedFields.map(renderField)}
 						{groupedFields.length > 0 && (
-							<div className='format-selector-header'>
-								<div className='dropdown-title'>{resolveLabel(groupLabel)}</div>
+							<div className='ui-toolbar' data-justify='between' data-gap='sm'>
+								<div className='ui-menu-title' data-variant='control'>
+									{resolveLabel(groupLabel)}
+								</div>
 								<button
-									className={`pdf-options-toggle ${isGroupOpen ? 'active' : ''}`}
+									type='button'
+									className={`ui-icon-button ${isGroupOpen ? 'active' : ''}`}
+									data-variant='control'
 									onClick={() => setIsGroupOpen(!isGroupOpen)}
 									title={t('Options')}
 									disabled={isCompiling}
@@ -396,9 +506,14 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 							</div>
 						)}
 						{groupedFields.length > 0 && isGroupOpen && (
-							<div className='pdf-options-section'>
+							<div
+								className='ui-card ui-stack'
+								data-surface='secondary'
+								data-padding='sm'
+								data-gap='sm'
+							>
 								{groupedFields.map((field) => (
-									<div className='pdf-option' key={field.key}>
+									<div className='ui-field' key={field.key}>
 										{renderField(field)}
 									</div>
 								))}
@@ -407,9 +522,9 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 					</div>
 				)}
 
-				<div className='dropdown-section'>
+				<div className='ui-menu-section' data-variant='control'>
 					{useSharedSettings && (
-						<label className='dropdown-checkbox'>
+						<label className='ui-menu-item checkbox-control'>
 							<input
 								type='checkbox'
 								checked={effectiveAutoCompileOnSave}
@@ -424,7 +539,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 					)}
 
 					<div
-						className='cache-item'
+						className='ui-menu-item'
 						onClick={handleClearCache}
 						title={t('Clear compilation cache')}
 					>
@@ -432,7 +547,7 @@ const ExternalCompileButton: React.FC<ExternalCompileButtonProps> = ({
 						{t('Clear Cache')}
 					</div>
 					<div
-						className='cache-item'
+						className='ui-menu-item'
 						onClick={handleClearAndCompile}
 						title={t('Clear cache and compile')}
 					>
