@@ -8,6 +8,14 @@ const Dirname = path.dirname(Filename);
 const ROOT_DIR = path.resolve(Dirname, '..');
 const MANIFEST_PATH = path.resolve(ROOT_DIR, 'public/manifest.json');
 
+interface WebManifest {
+	share_target?: {
+		params?: {
+			files?: Array<{ accept?: string[] }>;
+		};
+	};
+}
+
 function extractSupportedExtensions(
 	source: string,
 ): Array<{ extension?: string; mimeType?: string }> {
@@ -117,7 +125,7 @@ export async function updateManifestExtensions(config: any) {
 		return;
 	}
 
-	const manifest = await fs.readJson(MANIFEST_PATH);
+	const manifest = await fs.readJson<WebManifest>(MANIFEST_PATH);
 	const acceptArray: string[] | undefined =
 		manifest?.share_target?.params?.files?.[0]?.accept;
 

@@ -16,7 +16,7 @@ describe.skip('FileStoreService', () => {
             }
             await fileStoreService.cleanup();
         } catch (error) {
-            // Ignore cleanup errors
+            // Ignore cleanup errors.
         }
     });
 

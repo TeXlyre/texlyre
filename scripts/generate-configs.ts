@@ -211,7 +211,6 @@ function generateIndexHtml(config: any) {
 				`${pwaColorHead}\n`,
 			);
 		} else {
-			// Remove the legacy single theme-color tag before adding the managed block.
 			indexContent = indexContent.replace(
 				/[ \t]*<meta\s+name=["']theme-color["'][^>]*>[ \t]*\n?/g,
 				'',
@@ -231,7 +230,6 @@ function generateManifest(config: any) {
 		return;
 	}
 
-	// Resolve manifest path relative to public/
 	const manifestRel = config.pwa.manifest.startsWith('./')
 		? config.pwa.manifest.slice(2)
 		: config.pwa.manifest;
@@ -272,8 +270,6 @@ function generateManifest(config: any) {
 
 	manifest.display = config.pwa.display ?? manifest.display ?? 'standalone';
 
-	// The Web App Manifest only supports one static color. For adaptive config
-	// objects, use their explicit fallback (or light if fallback is omitted).
 	manifest.background_color = normalizePwaColor(
 		config.pwa.backgroundColor,
 		manifest.background_color ?? '#ffffff',
