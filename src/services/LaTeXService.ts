@@ -15,6 +15,7 @@ import { downloadFiles } from '../utils/archiveUtils';
 import { fileStoreService } from './FileStoreService';
 import {
 	notificationService,
+	shouldShowNotification,
 	type NotificationOptions,
 } from './NotificationService';
 
@@ -41,6 +42,7 @@ class LaTeXService {
 	private currentEngineType: EngineType = 'pdftex';
 	private statusListeners: Set<() => void> = new Set();
 	private currentOperationId: string | null = null;
+	private compileGeneration = 0;
 	private texliveEndpoint = '';
 
 	setTexliveEndpoint(endpoint: string): void {
@@ -133,10 +135,14 @@ class LaTeXService {
 		fileTree: FileNode[],
 		format: string = 'pdf',
 	): Promise<CompileResult> {
+		const generation = ++this.compileGeneration;
 		const operationId = `latex-compile-${nanoid()}`;
 		this.currentOperationId = operationId;
 
 		await this.ensureEngineReady(this.currentEngineType, operationId, format);
+		if (generation !== this.compileGeneration) {
+			return this.stoppedCompileResult();
+		}
 
 		try {
 			this.showLoadingNotification(
@@ -152,9 +158,18 @@ class LaTeXService {
 				mainFileName,
 				fileTree,
 			);
+
+			if (generation !== this.compileGeneration) {
+				return this.stoppedCompileResult();
+			}
+
 			this.reportCompileOutcome(result, operationId, format);
 			return result;
 		} catch (error) {
+			if (generation !== this.compileGeneration) {
+				return this.stoppedCompileResult();
+			}
+
 			return this.handleCompileError(
 				error,
 				this.activeEngine().getStatus(),
@@ -204,6 +219,7 @@ class LaTeXService {
 	}
 
 	stopCompilation(): void {
+		this.compileGeneration += 1;
 		this.activeEngine().stopCompilation();
 	}
 
@@ -277,7 +293,7 @@ class LaTeXService {
 		operationId?: string,
 		format?: string,
 	): void {
-		if (this.canNotify(format))
+		if (this.canNotify('loading', format))
 			notificationService.showLoading(message, operationId);
 	}
 
@@ -285,7 +301,7 @@ class LaTeXService {
 		message: string,
 		options: LaTeXNotificationOptions = {},
 	): void {
-		if (this.canNotify(options.format))
+		if (this.canNotify('success', options.format))
 			notificationService.showSuccess(message, options);
 	}
 
@@ -293,7 +309,7 @@ class LaTeXService {
 		message: string,
 		options: LaTeXNotificationOptions = {},
 	): void {
-		if (this.canNotify(options.format))
+		if (this.canNotify('error', options.format))
 			notificationService.showError(message, options);
 	}
 
@@ -301,7 +317,7 @@ class LaTeXService {
 		message: string,
 		options: LaTeXNotificationOptions = {},
 	): void {
-		if (this.canNotify(options.format))
+		if (this.canNotify('info', options.format))
 			notificationService.showInfo(message, options);
 	}
 
@@ -530,6 +546,14 @@ class LaTeXService {
 		throw error;
 	}
 
+	private stoppedCompileResult(): CompileResult {
+		return {
+			pdf: undefined,
+			status: -1,
+			log: 'Compilation stopped by user.',
+		};
+	}
+
 	private collectAllFiles(nodes: FileNode[]): FileNode[] {
 		const result: FileNode[] = [];
 		for (const n of nodes) {
@@ -559,22 +583,16 @@ class LaTeXService {
 		return name.includes('.') ? name.split('.').slice(0, -1).join('.') : name;
 	}
 
-	private canNotify(format?: string): boolean {
-		if (!this.areNotificationsEnabled()) return false;
-		return !format?.toLowerCase().includes('canvas');
-	}
-
-	private areNotificationsEnabled(): boolean {
-		const userId = localStorage.getItem('texlyre-current-user');
-		const storageKey = userId
-			? `texlyre-user-${userId}-settings`
-			: 'texlyre-settings';
-		try {
-			const settings = JSON.parse(localStorage.getItem(storageKey) || '{}');
-			return settings['latex-notifications'] !== false;
-		} catch {
-			return true;
-		}
+	private canNotify(
+		type: 'loading' | 'success' | 'error' | 'info',
+		format?: string,
+	): boolean {
+		const canvas = format?.toLowerCase().includes('canvas') ?? false;
+		return shouldShowNotification(
+			canvas ? 'canvas-renderer-notifications' : 'pdf-renderer-notifications',
+			type,
+			canvas ? 'off' : 'all',
+		);
 	}
 }
 

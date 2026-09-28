@@ -5,6 +5,7 @@ import {
 	createContext,
 	useEffect,
 	useCallback,
+	useRef,
 	useState,
 } from 'react';
 
@@ -35,7 +36,7 @@ interface LaTeXProviderProps {
 }
 
 export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
-	const { fileTree, refreshFileTree } = useFileTree();
+	const { fileTree } = useFileTree();
 	const { getSetting } = useSettings();
 	const [isCompiling, setIsCompiling] = useState<boolean>(false);
 	const [isInitializing, setIsInitializing] = useState(false);
@@ -50,6 +51,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		'idle' | 'success' | 'error'
 	>('idle');
 	const [activeCompiler, setActiveCompiler] = useState<string | null>(null);
+	const compileInProgressRef = useRef(false);
+	const requestRef = useRef(0);
 
 	const latexEngine =
 		(getSetting('latex-engine')?.value as LaTeXEngine) ?? 'pdftex';
@@ -102,14 +105,29 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		mainFileName: string,
 		format: LaTeXOutputFormat = currentFormat,
 	): Promise<void> => {
+		if (compileInProgressRef.current) return;
+
+		const requestId = ++requestRef.current;
+		compileInProgressRef.current = true;
+
 		try {
 			const engineToUse = latexService.getCurrentEngineType();
 			if (!latexService.isReady()) {
 				await latexService.initialize(engineToUse);
 			}
+
+			if (requestId !== requestRef.current) return;
+		} catch (error) {
+			if (requestId !== requestRef.current) return;
+			compileInProgressRef.current = false;
+			throw error;
 		} finally {
-			setIsInitializing(false);
+			if (requestId === requestRef.current) {
+				setIsInitializing(false);
+			}
 		}
+
+		if (requestId !== requestRef.current) return;
 
 		setIsCompiling(true);
 		setCompileError(null);
@@ -124,6 +142,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 				fileTree,
 				format,
 			);
+
+			if (requestId !== requestRef.current) return;
 
 			setCompileLog(result.log);
 			if (result.status === 0 && result.pdf) {
@@ -173,9 +193,9 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 				setLogIndicator('error');
 				popoutViewerService.sendCompileResult(result.status, result.log);
 			}
-
-			await refreshFileTree();
 		} catch (error) {
+			if (requestId !== requestRef.current) return;
+
 			setCompileError(
 				error instanceof Error ? error.message : t('Unknown error'),
 			);
@@ -187,13 +207,16 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 				error instanceof Error ? error.message : t('Unknown error'),
 			);
 		} finally {
-			setIsCompiling(false);
+			if (requestId === requestRef.current) {
+				setIsCompiling(false);
+				compileInProgressRef.current = false;
+			}
 		}
 	};
 
 	const handleSetLatexEngine = useCallback(
 		async (_engine: LaTeXEngine): Promise<void> => {
-			// NOTE (fabawi): no-op since engine is now driven by project properties with global setting fallback
+			// NOTE (fabawi): no-op since engine is now driven by project properties with global setting fallback.
 		},
 		[],
 	);
@@ -223,12 +246,17 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 	}, [getSetting, hasAutoCompiled]);
 
 	const stopCompilation = () => {
-		if (isCompiling && latexService.isCompiling()) {
-			latexService.stopCompilation();
-			latexService.dismissCurrentNotification();
-			setIsCompiling(false);
-			setCompileError(t('Compilation stopped by user'));
-		}
+		if (!isCompiling && !compileInProgressRef.current) return;
+
+		requestRef.current += 1;
+		compileInProgressRef.current = false;
+
+		latexService.stopCompilation();
+		latexService.dismissCurrentNotification();
+
+		setIsCompiling(false);
+		setIsInitializing(false);
+		setCompileError(t('Compilation stopped by user'));
 	};
 
 	const exportDocument = async (
@@ -256,7 +284,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 	const clearCache = async (): Promise<void> => {
 		try {
 			await latexService.clearCacheDirectories();
-			await refreshFileTree();
 		} catch (error) {
 			moduleLog.error('Failed to clear cache:', error);
 			setCompileError('Failed to clear cache');
@@ -267,14 +294,29 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		mainFileName: string,
 		format: LaTeXOutputFormat = currentFormat,
 	): Promise<void> => {
+		if (compileInProgressRef.current) return;
+
+		const requestId = ++requestRef.current;
+		compileInProgressRef.current = true;
+
 		try {
 			const engineToUse = latexService.getCurrentEngineType();
 			if (!latexService.isReady()) {
 				await latexService.initialize(engineToUse);
 			}
+
+			if (requestId !== requestRef.current) return;
+		} catch (error) {
+			if (requestId !== requestRef.current) return;
+			compileInProgressRef.current = false;
+			throw error;
 		} finally {
-			setIsInitializing(false);
+			if (requestId === requestRef.current) {
+				setIsInitializing(false);
+			}
 		}
+
+		if (requestId !== requestRef.current) return;
 
 		setIsCompiling(true);
 		setCompileError(null);
@@ -284,11 +326,16 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		setCompiledCanvas(null);
 
 		try {
-			const result = await latexService.clearCacheAndCompile(
+			await latexService.clearCacheDirectories();
+			if (requestId !== requestRef.current) return;
+
+			const result = await latexService.compileLaTeX(
 				mainFileName,
 				fileTree,
 				format,
 			);
+
+			if (requestId !== requestRef.current) return;
 
 			setCompileLog(result.log);
 			if (result.status === 0 && result.pdf) {
@@ -338,9 +385,9 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 				setLogIndicator('error');
 				popoutViewerService.sendCompileResult(result.status, result.log);
 			}
-
-			await refreshFileTree();
 		} catch (error) {
+			if (requestId !== requestRef.current) return;
+
 			setCompileError(
 				error instanceof Error ? error.message : t('Unknown error'),
 			);
@@ -352,7 +399,10 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 				error instanceof Error ? error.message : t('Unknown error'),
 			);
 		} finally {
-			setIsCompiling(false);
+			if (requestId === requestRef.current) {
+				setIsCompiling(false);
+				compileInProgressRef.current = false;
+			}
 		}
 	};
 

@@ -87,7 +87,7 @@ export abstract class BaseEngine {
 			await this.loadScripts();
 			this.engine = this.createEngine();
 
-			// Set up the engine without calling methods that might send messages
+			// NOTE (fabawi): Set up the engine without calling methods that might send messages resulting in errors
 			await this.engine.loadEngine();
 
 			this.setStatus('ready');
@@ -115,14 +115,8 @@ export abstract class BaseEngine {
 	}
 
 	stopCompilation(): void {
-		if (this.isCompiling() && this.engine) {
-			try {
-				this.engine.closeWorker();
-				this.setStatus('error');
-				this.status = 'ready';
-			} catch (error) {
-				moduleLog.warn('Error stopping compilation:', error);
-			}
-		}
+		if (!this.isCompiling() || !this.engine) return;
+
+		this.cleanup();
 	}
 }

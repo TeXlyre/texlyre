@@ -246,43 +246,43 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 			return texFiles;
 		};
 
+		const findFileById = (
+			nodes: FileNode[],
+			fileId: string,
+		): FileNode | undefined => {
+			for (const node of nodes) {
+				if (node.id === fileId) return node;
+				if (node.children) {
+					const match = findFileById(node.children, fileId);
+					if (match) return match;
+				}
+			}
+			return undefined;
+		};
+
 		const allTexFiles = findTexFiles(fileTree);
 		setAvailableTexFiles(allTexFiles);
 
-		const findMainFile = async () => {
-			if (
-				selectedDocId &&
-				linkedFileInfo?.filePath &&
-				isLatexMainFile(linkedFileInfo.filePath)
-			) {
-				setAutoMainFile(linkedFileInfo.filePath);
+		if (
+			selectedDocId &&
+			linkedFileInfo?.filePath &&
+			isLatexMainFile(linkedFileInfo.filePath)
+		) {
+			setAutoMainFile(linkedFileInfo.filePath);
+			return;
+		}
+
+		if (selectedFileId) {
+			const file = findFileById(fileTree, selectedFileId);
+			if (file && isLatexMainFile(file.path)) {
+				setAutoMainFile(file.path);
 				return;
 			}
+		}
 
-			if (selectedFileId) {
-				const file = await getFile(selectedFileId);
-				if (file && isLatexMainFile(file.path)) {
-					setAutoMainFile(file.path);
-					return;
-				}
-			}
-
-			if (autoMainFile && allTexFiles.includes(autoMainFile)) {
-				return;
-			}
-
-			setAutoMainFile(allTexFiles[0]);
-		};
-
-		findMainFile();
-	}, [
-		selectedFileId,
-		getFile,
-		fileTree,
-		selectedDocId,
-		linkedFileInfo,
-		autoMainFile,
-	]);
+		if (autoMainFile && allTexFiles.includes(autoMainFile)) return;
+		setAutoMainFile(allTexFiles[0]);
+	}, [selectedFileId, fileTree, selectedDocId, linkedFileInfo, autoMainFile]);
 
 	useEffect(() => {
 		if (effectiveMainFile) {
@@ -397,13 +397,13 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
 		document.addEventListener(
 			'trigger-compile-with-engine',
-			handleCompileWithEngine as EventListener,
+			handleCompileWithEngine,
 		);
 
 		return () => {
 			document.removeEventListener(
 				'trigger-compile-with-engine',
-				handleCompileWithEngine as EventListener,
+				handleCompileWithEngine,
 			);
 		};
 	}, [
@@ -705,10 +705,16 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		(!isCompiling && (!effectiveMainFile || isChangingEngine));
 
 	return (
-		<div className={`latex-compile-buttons ${className}`} ref={dropdownRef}>
-			<div className='compile-button-group'>
+		<div className={`ui-control-cluster ${className}`} ref={dropdownRef}>
+			<div
+				className='ui-button-group ui-split-button'
+				data-variant='joined'
+				data-size='control'
+				data-trigger-group='true'
+			>
 				<button
-					className={`latex-button compile-button ${isCompiling ? 'compiling' : ''} ${isInitializing ? 'initializing' : ''} ${isChangingEngine ? 'loading' : ''}`}
+					type='button'
+					className={`ui-split-main compile-button ${isCompiling ? 'compiling' : ''} ${isInitializing ? 'initializing' : ''} ${isChangingEngine ? 'loading' : ''}`}
 					onClick={handleCompileOrStop}
 					disabled={isDisabled}
 					title={
@@ -748,7 +754,8 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 				/>
 
 				<button
-					className='latex-button dropdown-toggle'
+					type='button'
+					className='ui-split-toggle dropdown-toggle'
 					onClick={toggleDropdown}
 					disabled={isChangingEngine}
 					title={t('Compilation Options')}
@@ -761,16 +768,20 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 				isOpen={isDropdownOpen}
 				triggerElement={
 					dropdownRef.current?.querySelector(
-						'.compile-button-group',
+						'[data-trigger-group]',
 					) as HTMLElement
 				}
 				className='latex-dropdown'
 			>
-				<div className='dropdown-section'>
-					<div className='format-selector-header'>
-						<div className='dropdown-title'>{t('Main File:')}</div>
+				<div className='ui-menu-section' data-variant='control'>
+					<div className='ui-toolbar' data-justify='between' data-gap='sm'>
+						<div className='ui-menu-title' data-variant='control'>
+							{t('Main File:')}
+						</div>
 						<button
-							className='pdf-options-toggle'
+							type='button'
+							className='ui-icon-button'
+							data-variant='control'
 							onClick={handleResetProperties}
 							title={t('Reset to global settings')}
 							disabled={isChangingEngine || isCompiling}
@@ -778,20 +789,22 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 							<ResetIcon />
 						</button>
 					</div>
-					<div className='dropdown-value' title={effectiveMainFile}>
+					<div className='ui-menu-value' title={effectiveMainFile}>
 						{getDisplayName(effectiveMainFile)}
 						{projectMainFile && (
-							<span className='shared-indicator'>{t('(shared)')}</span>
+							<span className='ui-status' data-tone='accent'>
+								{t('(shared)')}
+							</span>
 						)}
 					</div>
 				</div>
 				{useSharedSettings && (
-					<div className='dropdown-section'>
-						<div className='dropdown-label'>{t('Select main file:')}</div>
+					<div className='ui-menu-section' data-variant='control'>
+						<div className='ui-menu-label'>{t('Select main file:')}</div>
 						<select
 							value={projectMainFile || propMainFile || 'auto'}
 							onChange={(e) => handleMainFileChange(e.target.value)}
-							className='dropdown-select'
+							className='ui-field-control'
 							disabled={isChangingEngine || isCompiling}
 						>
 							<option value='auto'>{t('Auto-detect')}</option>
@@ -801,7 +814,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 								</option>
 							))}
 						</select>
-						<label className='dropdown-checkbox'>
+						<label className='ui-menu-item checkbox-control'>
 							<input
 								type='checkbox'
 								checked={!!projectMainFile}
@@ -813,17 +826,17 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 					</div>
 				)}
 
-				<div className='dropdown-section'>
-					<div className='format-selector-header'>
-						<div className='dropdown-title'>
+				<div className='ui-menu-section' data-variant='control'>
+					<div className='ui-toolbar' data-justify='between' data-gap='sm'>
+						<div className='ui-menu-title' data-variant='control'>
 							{t('{typesetter} Engine:', { typesetter: t('LaTeX') })}
 						</div>
 					</div>
-					<div className='format-selector-group'>
+					<div className='ui-toolbar' data-gap='sm'>
 						<select
 							value={effectiveEngine}
 							onChange={(e) => handleEngineChange(e.target.value)}
-							className='dropdown-select'
+							className='ui-field-control'
 							disabled={isChangingEngine || isCompiling}
 						>
 							<optgroup label={t('SwiftLaTeX (TeX Live 2020)')}>
@@ -843,7 +856,9 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 						</select>
 						{isBusyTeX && (
 							<button
-								className={`pdf-options-toggle ${isCacheOptionsOpen ? 'active' : ''}`}
+								type='button'
+								className={`ui-icon-button ${isCacheOptionsOpen ? 'active' : ''}`}
+								data-variant='control'
 								onClick={() => setIsCacheOptionsOpen(!isCacheOptionsOpen)}
 								title={t('Bundle Cache Options')}
 								disabled={isChangingEngine || isCompiling}
@@ -853,14 +868,19 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 						)}
 					</div>
 					{isBusyTeX && isCacheOptionsOpen && (
-						<div className='pdf-options-section'>
-							<div className='dropdown-label'>
+						<div
+							className='ui-card ui-stack'
+							data-surface='secondary'
+							data-padding='sm'
+							data-gap='sm'
+						>
+							<div className='ui-menu-label'>
 								{t('Bundle for next compile:')}
 							</div>
 							<select
 								value={effectiveBundle}
 								onChange={(e) => handleBundleChange(e.target.value)}
-								className='dropdown-select'
+								className='ui-field-control'
 								disabled={isChangingEngine || isCompiling}
 							>
 								{Object.entries(BUSYTEX_BUNDLE_LABELS).map(([id, label]) => (
@@ -870,17 +890,24 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 								))}
 							</select>
 							<div
-								className='dropdown-label'
+								className='ui-menu-label'
 								style={{ marginTop: 'var(--space-sm)' }}
 							>
 								{t('Cached bundles:')}
 							</div>
 							{Object.entries(BUSYTEX_BUNDLE_LABELS).map(
 								([bundleId, label]) => (
-									<div key={bundleId} className='bundle-cache-row'>
-										<span className='bundle-label'>{t(label)}</span>
+									<div
+										key={bundleId}
+										className='ui-toolbar ui-meta'
+										data-gap='sm'
+									>
+										<span className='ui-control-label'>{t(label)}</span>
 										<span
-											className={`bundle-status ${bundleCacheStatus[bundleId] ? 'cached' : 'not-cached'}`}
+											className='ui-status'
+											data-tone={
+												bundleCacheStatus[bundleId] ? 'success' : 'muted'
+											}
 										>
 											{bundleCacheStatus[bundleId]
 												? t('cached')
@@ -888,7 +915,10 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 										</span>
 										{bundleCacheStatus[bundleId] && (
 											<button
-												className='bundle-delete-btn'
+												type='button'
+												className='ui-icon-button'
+												data-variant='ghost'
+												data-tone='danger'
 												onClick={() => handleDeleteBundle(bundleId)}
 												disabled={isDeletingBundle === bundleId || isCompiling}
 												title={t('Delete cached bundle')}
@@ -902,7 +932,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 						</div>
 					)}
 					{useSharedSettings && (
-						<label className='dropdown-checkbox'>
+						<label className='ui-menu-item checkbox-control'>
 							<input
 								type='checkbox'
 								checked={!!projectEngine}
@@ -917,11 +947,13 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 					)}
 				</div>
 
-				<div className='dropdown-section'>
-					<div className='format-selector-header'>
-						<div className='dropdown-title'>{t('Output Format:')}</div>
+				<div className='ui-menu-section' data-variant='control'>
+					<div className='ui-toolbar' data-justify='between' data-gap='sm'>
+						<div className='ui-menu-title' data-variant='control'>
+							{t('Output Format:')}
+						</div>
 					</div>
-					<div className='format-selector-group'>
+					<div className='ui-toolbar' data-gap='sm'>
 						<select
 							value={effectiveFormat}
 							onChange={(e) => {
@@ -941,7 +973,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 									});
 								}
 							}}
-							className='dropdown-select'
+							className='ui-field-control'
 							disabled={isChangingEngine || isCompiling}
 						>
 							<option value='pdf'>{t('PDF')}</option>
@@ -950,7 +982,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 					</div>
 					{/* TODO (fabawi): disabled for now as it conflicts with the output setting from tabs*/}
 					{/* {useSharedSettings &&
-            <label className="dropdown-checkbox">
+            <label className='ui-menu-item checkbox-control'>
               <input
                 type="checkbox"
                 checked={!!projectFormat}
@@ -961,9 +993,9 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
           } */}
 				</div>
 
-				<div className='dropdown-section'>
+				<div className='ui-menu-section' data-variant='control'>
 					{useSharedSettings && (
-						<label className='dropdown-checkbox'>
+						<label className='ui-menu-item checkbox-control'>
 							<input
 								type='checkbox'
 								checked={effectiveAutoCompileOnSave}
@@ -978,7 +1010,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 					)}
 
 					<div
-						className='cache-item'
+						className='ui-menu-item'
 						onClick={handleClearCache}
 						title={t('Clear compilation cache and source files')}
 					>
@@ -986,7 +1018,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 						{t('Clear Cache')}
 					</div>
 					<div
-						className='cache-item'
+						className='ui-menu-item'
 						onClick={handleClearCacheAndCompile}
 						title={`${t('Clear cache and compile')} ${useSharedSettings ? t('(Shift+F9)') : ''}`}
 					>
