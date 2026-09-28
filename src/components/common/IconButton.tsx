@@ -55,7 +55,6 @@ const IconButton: React.FC<IconButtonProps> = ({
 	return (
 		<span
 			ref={wrapperRef}
-			className='icon-button-wrapper'
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 			onFocus={() => setHovered(true)}
@@ -63,7 +62,7 @@ const IconButton: React.FC<IconButtonProps> = ({
 		>
 			<button
 				type='button'
-				className={`button icon-only${variant ? ` ${variant}` : ''}`}
+				className={`button icon-only ui-icon-button${variant ? ` ${variant}` : ''}`}
 				aria-label={label}
 				disabled={disabled}
 				onClick={handleTrigger}
@@ -74,53 +73,57 @@ const IconButton: React.FC<IconButtonProps> = ({
 			<Popover
 				anchor={wrapperRef}
 				open={hovered && !confirming}
-				className='icon-button-tooltip'
+				className='ui-tooltip'
 				side='start'
+				style={{ pointerEvents: 'none' }}
 			>
-				<strong>{label}</strong>
+				<strong className='ui-tooltip-title'>{label}</strong>
 				{tooltip && <span>{tooltip}</span>}
 			</Popover>
 
 			<Popover
 				anchor={wrapperRef}
 				open={confirming}
-				className='icon-button-confirm'
+				className='ui-menu'
 				side='start'
 				clampHeight
+				style={{ width: 280, maxWidth: 'calc(100vw - 32px)' }}
 				onClose={() => setConfirming(false)}
 			>
-				<strong className='icon-button-confirm-title'>
-					{confirm?.title ?? label}
-				</strong>
-				{confirm?.message && <p>{confirm.message}</p>}
-				{confirm?.items && confirm.items.length > 0 && (
-					<ul>
-						{confirm.items.map((item) => (
-							<li key={item}>{item}</li>
-						))}
-					</ul>
-				)}
-				<p className='icon-button-confirm-warning'>
-					{confirm?.warning ?? t('This action cannot be undone.')}
-				</p>
-				<div className='icon-button-confirm-actions'>
-					<button
-						type='button'
-						className='button secondary smaller'
-						onClick={() => {
-							setHovered(false);
-							setConfirming(false);
-						}}
-					>
-						{t('Cancel')}
-					</button>
-					<button
-						type='button'
-						className='button danger smaller'
-						onClick={handleConfirm}
-					>
-						{confirm?.confirmLabel ?? t('Confirm')}
-					</button>
+				<div className='ui-stack' data-gap='sm'>
+					<strong className='ui-tooltip-title'>
+						{confirm?.title ?? label}
+					</strong>
+					{confirm?.message && <p>{confirm.message}</p>}
+					{confirm?.items && confirm.items.length > 0 && (
+						<ul>
+							{confirm.items.map((item) => (
+								<li key={item}>{item}</li>
+							))}
+						</ul>
+					)}
+					<p className='ui-message' data-tone='warning' data-density='compact'>
+						{confirm?.warning ?? t('This action cannot be undone.')}
+					</p>
+					<div className='ui-actions' data-align='end'>
+						<button
+							type='button'
+							className='button secondary '
+							onClick={() => {
+								setHovered(false);
+								setConfirming(false);
+							}}
+						>
+							{t('Cancel')}
+						</button>
+						<button
+							type='button'
+							className='button danger '
+							onClick={handleConfirm}
+						>
+							{confirm?.confirmLabel ?? t('Confirm')}
+						</button>
+					</div>
 				</div>
 			</Popover>
 		</span>

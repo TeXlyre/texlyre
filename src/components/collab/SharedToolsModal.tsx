@@ -59,20 +59,33 @@ const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 		icon={ShareIcon}
 		size='medium'
 	>
-		<div className='shared-tools-modal'>
-			<section className='shared-tools-section'>
+		<div className='ui-stack' data-gap='lg'>
+			<section
+				className='ui-card ui-stack'
+				data-gap='sm'
+				data-padding='md'
+				data-surface='secondary'
+			>
 				<h4>{t('From collaborators')}</h4>
 				{offers.length === 0 ? (
-					<p className='shared-tools-empty'>
+					<p className='ui-note'>
 						{t('No collaborators are currently sharing tools.')}
 					</p>
 				) : (
-					<div className='shared-tools-list'>
+					<div className='ui-list' data-gap='sm'>
 						{offers.map((offer) => (
-							<div className='shared-tool-row' key={offer.identity}>
-								<div className='shared-tool-info'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-justify='between'
+								data-gap='md'
+								data-padding='sm'
+								data-responsive='stack'
+								key={offer.identity}
+							>
+								<div className='ui-stack' data-gap='xs'>
 									<strong>{offer.name}</strong>
-									<span>
+									<span className='ui-note'>
 										{offer.ownerName}
 										{offer.advertiserId !== offer.ownerId
 											? ` · ${t('via')} ${offer.advertiserName}`
@@ -83,13 +96,24 @@ const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 											: t('Language Server')}
 									</span>
 								</div>
-								<div className='shared-tool-actions'>
-									<span className={`shared-tool-status ${offer.status}`}>
+								<div className='ui-actions' data-wrap='true'>
+									<span
+										className='ui-status'
+										data-tone={
+											offer.status === 'accepted' ||
+											offer.status === 'using-existing'
+												? 'success'
+												: offer.status === 'ignored'
+													? 'muted'
+													: 'warning'
+										}
+									>
 										{statusLabel(offer)}
 									</span>
 									{offer.status === 'accepted' && (
 										<button
-											className='button secondary smaller'
+											type='button'
+											className='button secondary '
 											onClick={() => onIgnore(offer)}
 										>
 											{t('Ignore')}
@@ -97,7 +121,8 @@ const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 									)}
 									{offer.status === 'ignored' && (
 										<button
-											className='button primary smaller'
+											type='button'
+											className='button primary '
 											onClick={() => onAccept(offer)}
 										>
 											{acceptLabel(offer)}
@@ -106,13 +131,15 @@ const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 									{offer.status === 'new' && (
 										<>
 											<button
-												className='button primary smaller'
+												type='button'
+												className='button primary '
 												onClick={() => onAccept(offer)}
 											>
 												{acceptLabel(offer)}
 											</button>
 											<button
-												className='button secondary smaller'
+												type='button'
+												className='button secondary '
 												onClick={() => onIgnore(offer)}
 											>
 												{ignoreLabel(offer)}
@@ -126,9 +153,14 @@ const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 				)}
 			</section>
 
-			<section className='shared-tools-section'>
+			<section
+				className='ui-card ui-stack'
+				data-gap='sm'
+				data-padding='md'
+				data-surface='secondary'
+			>
 				<h4>{t('Shared by me')}</h4>
-				<label className='checkbox-control shared-project-tools-toggle'>
+				<label className='checkbox-control'>
 					<input
 						type='checkbox'
 						checked={projectShareEnabled}
@@ -138,23 +170,28 @@ const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 				</label>
 
 				{sharedByMe.length === 0 ? (
-					<p className='shared-tools-empty'>{t('No tools are shared here.')}</p>
+					<p className='ui-note'>{t('No tools are shared here.')}</p>
 				) : (
-					<div className='shared-tools-list'>
+					<div className='ui-list' data-gap='sm'>
 						{sharedByMe.map((tool) => (
 							<div
-								className='shared-tool-row compact'
+								className='ui-list-item'
+								data-align='center'
+								data-justify='between'
+								data-gap='md'
+								data-padding='xs'
+								data-responsive='stack'
 								key={`${tool.kind}:${tool.config.id}`}
 							>
-								<div className='shared-tool-info'>
+								<div className='ui-stack' data-gap='xs'>
 									<strong>{tool.config.name}</strong>
-									<span>
+									<span className='ui-note'>
 										{tool.kind === 'typesetter'
 											? t('Typesetter')
 											: t('Language Server')}
 									</span>
 								</div>
-								<span className='shared-tool-scope'>
+								<span className='ui-note'>
 									{tool.scope === 'all'
 										? t('All collaborators')
 										: t('This project')}

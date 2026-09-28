@@ -5,6 +5,7 @@ import type React from 'react';
 import { useRef, useState } from 'react';
 
 import { useBibliography } from '../../hooks/useBibliography';
+import Modal from '../common/Modal';
 import PositionedDropdown from '../common/PositionedDropdown';
 import {
 	SyncIcon,
@@ -14,6 +15,7 @@ import {
 	OptionsIcon,
 	ImportIcon,
 	TrashIcon,
+	InfoIcon,
 	CheckIcon,
 	SearchIcon,
 } from '../common/Icons';
@@ -22,6 +24,10 @@ import type { BibEntry } from '../../types/bibliography';
 interface BibliographyPanelProps {
 	className?: string;
 }
+
+type PendingBibliographyDelete =
+	| { kind: 'entry'; entry: BibEntry }
+	| { kind: 'selected'; count: number };
 
 const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 	className = '',
@@ -47,19 +53,14 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 		isLoading,
 		importingEntries,
 		currentProvider,
-		citationStyle,
-		autoImport,
 		handleRefresh,
 		handleProviderSelect,
 		handleItemSelect,
 		handleBackToList,
-		handleEntryClick,
 		handleImportEntry,
 		handleTargetFileChange,
 		handleDeleteEntry,
 		handleUpdateEntry,
-		getConnectionStatus,
-		getStatusColor,
 		showToolbar,
 		setShowToolbar,
 		sortField,
@@ -89,7 +90,10 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 	const [expandedEntries, setExpandedEntries] = useState<Set<string>>(
 		new Set(),
 	);
-	const providerGroupRef = useRef<HTMLDivElement>(null);
+	const [pendingDelete, setPendingDelete] =
+		useState<PendingBibliographyDelete | null>(null);
+	const [isDeleting, setIsDeleting] = useState(false);
+	const providerGroupRef = useRef<HTMLButtonElement>(null);
 	const toolbarRef = useRef<HTMLDivElement>(null);
 
 	const isOnDemand = currentProvider?.searchMode === 'on-demand';
@@ -194,9 +198,28 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 	const canUpdateSelected = filteredEntries.some(
 		(e) => selectedEntryKeys.has(e.key) && hasUpdateAvailable(e),
 	);
-	const canDeleteSelected = filteredEntries.some(
-		(e) => selectedEntryKeys.has(e.key) && e.source === 'local',
-	);
+	const deletableSelectedCount = filteredEntries.filter(
+		(e) =>
+			selectedEntryKeys.has(e.key) &&
+			e.source === 'local' &&
+			Boolean(e.filePath),
+	).length;
+	const canDeleteSelected = deletableSelectedCount > 0;
+
+	const confirmDelete = async () => {
+		if (!pendingDelete || isDeleting) return;
+		setIsDeleting(true);
+		try {
+			if (pendingDelete.kind === 'entry') {
+				await handleDeleteEntry(pendingDelete.entry);
+			} else {
+				await deleteSelectedEntries();
+			}
+			setPendingDelete(null);
+		} finally {
+			setIsDeleting(false);
+		}
+	};
 
 	if (!showPanel) return null;
 
@@ -205,18 +228,21 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 			isOpen={showDropdown}
 			triggerElement={providerGroupRef.current}
 			className='bib-dropdown'
+			align='left'
+			onClose={() => setShowDropdown(false)}
 		>
 			{availableProviders.length > 1 && (
 				<div
-					className='bib-dropdown-item'
+					className='ui-menu-item'
+					data-density='compact'
 					onClick={() => handleProviderSelect('all')}
 				>
-					<span className='service-indicator' />
 					{t('All Sources')}
 				</div>
 			)}
 			<div
-				className='bib-dropdown-item'
+				className='ui-menu-item'
+				data-density='compact'
 				onClick={() => handleProviderSelect('local')}
 			>
 				<BibliographyIcon />
@@ -227,21 +253,10 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 				return (
 					<div
 						key={provider.id}
-						className='bib-dropdown-item'
+						className='ui-menu-item'
+						data-density='compact'
 						onClick={() => handleProviderSelect(provider.id)}
 					>
-						<span
-							className='service-indicator'
-							style={{
-								fontSize: '8px',
-								color:
-									provider.getConnectionStatus() === 'connected'
-										? '#28a745'
-										: '#666',
-							}}
-						>
-							●
-						</span>
 						{IconComponent && <IconComponent />}
 						{provider.name}
 					</div>
@@ -256,15 +271,18 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 			triggerElement={toolbarRef.current}
 			className='bib-toolbar-dropdown'
 			align='right'
+			onClose={() => setShowToolbar(false)}
 		>
-			<div className='bib-toolbar-content'>
+			<div className='ui-menu-content'>
 				{selectedProvider !== 'local' && !isOnDemand && (
-					<div className='bib-toolbar-section'>
-						<div className='bib-toolbar-label'>{t('Target Bib File')}</div>
+					<div className='ui-menu-section' data-gap='xs' data-divided='true'>
+						<div className='ui-menu-title' data-tone='secondary' data-size='sm'>
+							{t('Target Bib File')}
+						</div>
 						<select
 							value={targetBibFile}
 							onChange={(e) => handleTargetFileChange(e.target.value)}
-							className='bib-toolbar-select'
+							className='ui-field-control ui-menu-control'
 						>
 							<option value=''>{t('Select file...')}</option>
 							<option value='CREATE_NEW'>{t('+ Create new...')}</option>
@@ -278,12 +296,14 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 				)}
 
 				{selectedProvider !== 'local' && isOnDemand && (
-					<div className='bib-toolbar-section'>
-						<div className='bib-toolbar-label'>{t('Target Bib File')}</div>
+					<div className='ui-menu-section' data-gap='xs' data-divided='true'>
+						<div className='ui-menu-title' data-tone='secondary' data-size='sm'>
+							{t('Target Bib File')}
+						</div>
 						<select
 							value={targetBibFile}
 							onChange={(e) => handleTargetFileChange(e.target.value)}
-							className='bib-toolbar-select'
+							className='ui-field-control ui-menu-control'
 						>
 							<option value=''>{t('Select file...')}</option>
 							<option value='CREATE_NEW'>{t('+ Create new...')}</option>
@@ -297,12 +317,14 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 				)}
 
 				{availableCollections.length > 0 && (
-					<div className='bib-toolbar-section'>
-						<div className='bib-toolbar-label'>{t('Collection')}</div>
+					<div className='ui-menu-section' data-gap='xs' data-divided='true'>
+						<div className='ui-menu-title' data-tone='secondary' data-size='sm'>
+							{t('Collection')}
+						</div>
 						<select
 							value={selectedCollection}
 							onChange={(e) => setSelectedCollection(e.target.value)}
-							className='bib-toolbar-select'
+							className='ui-field-control ui-menu-control'
 						>
 							<option value='all'>{t('All Collections')}</option>
 							{availableCollections.map((c) => (
@@ -314,12 +336,14 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 					</div>
 				)}
 
-				<div className='bib-toolbar-section'>
-					<div className='bib-toolbar-label'>{t('Entry Type')}</div>
+				<div className='ui-menu-section' data-gap='xs' data-divided='true'>
+					<div className='ui-menu-title' data-tone='secondary' data-size='sm'>
+						{t('Entry Type')}
+					</div>
 					<select
 						value={entryTypeFilter}
 						onChange={(e) => setEntryTypeFilter(e.target.value as any)}
-						className='bib-toolbar-select'
+						className='ui-field-control ui-menu-control'
 					>
 						<option value='all'>{t('All Types')}</option>
 						<option value='article'>{t('Article')}</option>
@@ -332,12 +356,14 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 					</select>
 				</div>
 
-				<div className='bib-toolbar-section'>
-					<div className='bib-toolbar-label'>{t('Source')}</div>
+				<div className='ui-menu-section' data-gap='xs' data-divided='true'>
+					<div className='ui-menu-title' data-tone='secondary' data-size='sm'>
+						{t('Source')}
+					</div>
 					<select
 						value={sourceFilter}
 						onChange={(e) => setSourceFilter(e.target.value as any)}
-						className='bib-toolbar-select'
+						className='ui-field-control ui-menu-control'
 					>
 						<option value='all'>{t('All Sources')}</option>
 						<option value='local'>{t('Local Only')}</option>
@@ -349,13 +375,15 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 					</select>
 				</div>
 
-				<div className='bib-toolbar-section bib-toolbar-sort'>
-					<div className='bib-toolbar-label'>{t('Sort')}</div>
-					<div className='bib-toolbar-sort-row'>
+				<div className='ui-menu-section' data-gap='xs' data-divided='true'>
+					<div className='ui-menu-title' data-tone='secondary' data-size='sm'>
+						{t('Sort')}
+					</div>
+					<div className='ui-menu-sort-row'>
 						<select
 							value={sortField}
 							onChange={(e) => setSortField(e.target.value as any)}
-							className='bib-toolbar-select bib-toolbar-sort-field'
+							className='ui-field-control ui-menu-control ui-menu-sort-field'
 						>
 							<option value='key'>{t('Key')}</option>
 							<option value='title'>{t('Title')}</option>
@@ -363,7 +391,8 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 							<option value='year'>{t('Year')}</option>
 						</select>
 						<button
-							className={`bib-sort-order-toggle ${sortOrder === 'desc' ? 'desc' : ''}`}
+							type='button'
+							className={`ui-menu-sort-toggle ${sortOrder === 'desc' ? 'desc' : ''}`}
 							onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
 							title={sortOrder === 'asc' ? t('Ascending') : t('Descending')}
 						>
@@ -375,93 +404,75 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 		</PositionedDropdown>
 	);
 
-	const renderControls = () => (
-		<div className='bib-controls'>
-			<div className='bib-button-group' ref={providerGroupRef}>
-				<div
-					className={`bib-status-indicator main-button ${getConnectionStatus()}`}
-					onClick={() => setShowDropdown(!showDropdown)}
+	const renderPanelActions = () => (
+		<div className='ui-toolbar-actions' data-gap='xs'>
+			<div ref={toolbarRef}>
+				<button
+					type='button'
+					className={`ui-icon-button ${showToolbar || hasActiveFilters ? 'active' : ''}`}
+					data-variant='subtle'
+					data-size='sm'
+					onClick={() => setShowToolbar(!showToolbar)}
+					title={t('Filters & Options')}
 				>
-					<div
-						className='status-dot'
-						style={{ backgroundColor: getStatusColor() }}
-					/>
-					{selectedProvider === 'all' ? (
-						<span className='bib-label'>{t('All Sources')}</span>
-					) : selectedProvider === 'local' ? (
-						<span className='bib-label'>
-							<BibliographyIcon />
-							{t('Local')}
-						</span>
-					) : currentProvider ? (
-						<>
-							{currentProvider.icon && <currentProvider.icon />}
-							<span className='bib-label'>{currentProvider.name}</span>
-						</>
-					) : (
-						<span className='bib-label'>{t('No Source')}</span>
+					<OptionsIcon />
+					{hasActiveFilters && (
+						<span
+							className='ui-status-dot'
+							data-tone='accent'
+							data-placement='corner'
+						/>
 					)}
-				</div>
-				<button
-					className={`bib-dropdown-toggle ${getConnectionStatus()}`}
-					onClick={() => setShowDropdown(!showDropdown)}
-				>
-					<ChevronDownIcon />
 				</button>
 			</div>
 
-			{renderProviderDropdown()}
+			<button
+				type='button'
+				className={`ui-icon-button ${isMultiSelectMode ? 'active' : ''}`}
+				data-variant='subtle'
+				data-size='sm'
+				onClick={() => {
+					setIsMultiSelectMode(!isMultiSelectMode);
+					clearSelection();
+				}}
+				title={t('Multi-select')}
+			>
+				<CheckIcon />
+			</button>
 
-			<div className='bib-secondary-actions'>
-				<div ref={toolbarRef}>
-					<button
-						className={`bib-icon-button ${showToolbar || hasActiveFilters ? 'active' : ''}`}
-						onClick={() => setShowToolbar(!showToolbar)}
-						title={t('Filters & Options')}
-					>
-						<OptionsIcon />
-						{hasActiveFilters && <span className='bib-filter-badge' />}
-					</button>
-				</div>
-
-				<button
-					className={`bib-icon-button ${isMultiSelectMode ? 'active' : ''}`}
-					onClick={() => {
-						setIsMultiSelectMode(!isMultiSelectMode);
-						clearSelection();
-					}}
-					title={t('Multi-select')}
-				>
-					<CheckIcon />
-				</button>
-
-				<button
-					className='bib-icon-button'
-					onClick={handleRefresh}
-					disabled={isRefreshing}
-					title={t('Refresh')}
-				>
-					<SyncIcon />
-				</button>
-			</div>
-
-			{renderToolbar()}
+			<button
+				type='button'
+				className='ui-icon-button'
+				data-variant='subtle'
+				data-size='sm'
+				onClick={handleRefresh}
+				disabled={isRefreshing}
+				title={t('Refresh')}
+			>
+				<SyncIcon />
+			</button>
 		</div>
 	);
 
 	const renderSearchBar = () => {
 		if (isMultiSelectMode) {
 			return (
-				<div className='bib-multiselect-bar'>
+				<div className='bib-multiselect-bar ui-panel-controls'>
 					<span className='bib-select-count'>
 						{selectedCount > 0
 							? `${selectedCount} ${t('selected')}`
 							: t('None selected')}
 					</span>
-					<div className='bib-multiselect-actions'>
+					<div
+						className='ui-toolbar-actions'
+						data-gap='xs'
+						data-wrap='true'
+						data-align='end'
+					>
 						{canImportSelected && (
 							<button
-								className='bib-action-button import'
+								type='button'
+								className='button '
 								onClick={importSelectedEntries}
 								disabled={isBulkOperating || !targetBibFile}
 							>
@@ -471,7 +482,8 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 						)}
 						{canUpdateSelected && (
 							<button
-								className='bib-action-button update'
+								type='button'
+								className='button warn'
 								onClick={updateSelectedEntries}
 								disabled={isBulkOperating}
 							>
@@ -481,8 +493,14 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 						)}
 						{canDeleteSelected && (
 							<button
-								className='bib-action-button delete'
-								onClick={deleteSelectedEntries}
+								type='button'
+								className='button danger'
+								onClick={() =>
+									setPendingDelete({
+										kind: 'selected',
+										count: deletableSelectedCount,
+									})
+								}
 								disabled={isBulkOperating}
 							>
 								<TrashIcon />
@@ -490,7 +508,8 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 							</button>
 						)}
 						<button
-							className='bib-multiselect-select-all'
+							type='button'
+							className='button '
 							onClick={
 								selectedCount === filteredEntries.length
 									? clearSelection
@@ -502,14 +521,16 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 								: t('Select All')}
 						</button>
 					</div>
+					{renderPanelActions()}
+					{renderToolbar()}
 				</div>
 			);
 		}
 
 		return (
 			<>
-				<div className='bib-panel-search search-input-container'>
-					<div className='bib-search-input-wrapper'>
+				<div className='ui-panel-controls' data-gap='xs'>
+					<div className='bib-search-input-wrapper ui-search-field'>
 						<input
 							type='text'
 							placeholder={
@@ -526,12 +547,13 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 							onKeyDown={(e) => {
 								if (isOnDemand && e.key === 'Enter') triggerSearch();
 							}}
-							className='bib-search-input'
+							className='bib-search-input ui-field-control ui-search-control'
 						/>
 						{searchQuery && (
 							<button
+								type='button'
 								aria-label={t('Clear search')}
-								className='bib-clear-search-button'
+								className='bib-clear-search-button ui-search-clear'
 								onClick={() => setSearchQuery('')}
 								title={t('Clear search')}
 							>
@@ -541,7 +563,8 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 					</div>
 					{isOnDemand && (
 						<button
-							className='bib-search-submit-button icon-only'
+							type='button'
+							className='button primary icon-only'
 							onClick={triggerSearch}
 							disabled={isLoading || !searchQuery.trim()}
 							title={t('Search')}
@@ -549,9 +572,11 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 							{isLoading ? '…' : <SearchIcon />}
 						</button>
 					)}
+					{renderPanelActions()}
+					{renderToolbar()}
 				</div>
 				{selectedProvider !== 'local' && !targetBibFile && (
-					<div className='warning-message'>
+					<div className='ui-message' data-tone='warning'>
 						<Trans
 							i18nKey='To import entries, select a target .bib file by clicking the <icon /> button above.'
 							components={{
@@ -582,13 +607,17 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 				key={key}
 				className={[
 					'bib-entry-item',
+					'ui-list-item',
 					isExternal ? 'external-entry' : '',
-					isExpanded ? 'expanded' : '',
-					isSelected ? 'selected' : '',
 					isMultiSelectMode ? 'multiselect' : '',
 				]
 					.filter(Boolean)
 					.join(' ')}
+				data-direction='column'
+				data-interactive='true'
+				data-hover='outline'
+				data-expanded={isExpanded ? 'true' : undefined}
+				data-selected={isSelected ? 'true' : undefined}
 				onClick={(e) => {
 					if (isMultiSelectMode) {
 						toggleEntrySelection(entry.key);
@@ -605,19 +634,19 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 					</div>
 				)}
 
-				<div className='bib-entry-collapsed'>
-					<span
-						className={`bib-entry-type-pill ${entry.entryType.toLowerCase()}`}
-					>
+				<div className='bib-entry-collapsed ui-toolbar' data-gap='xs'>
+					<span className='ui-badge' data-variant='label' data-tone='accent'>
 						{getEntryTypeLabel(entry.entryType)}
 					</span>
 					<span className='bib-entry-key'>{entry.key}</span>
-					<div className='bib-entry-meta'>
-						{year && <span className='bib-entry-year'>{year}</span>}
+					<div className='bib-entry-meta ui-toolbar' data-gap='xs'>
+						{year && <span className='bib-entry-year ui-note'>{year}</span>}
 						{isExternal && (
 							<>
 								<span
-									className='bib-entry-source-badge external'
+									className='bib-entry-source-badge ui-badge'
+									data-variant='label'
+									data-tone='warning'
 									title={targetBibFile || t('No target file selected')}
 								>
 									{targetBibFile
@@ -625,7 +654,9 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 										: '⚠️'}
 								</span>
 								<span
-									className='bib-entry-source-badge external'
+									className='bib-entry-source-badge ui-badge'
+									data-variant='label'
+									data-tone='warning'
 									title={t('Not imported')}
 								>
 									↓
@@ -634,7 +665,9 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 						)}
 						{entry.source === 'local' && (
 							<span
-								className='bib-entry-source-badge local'
+								className='bib-entry-source-badge ui-badge'
+								data-variant='label'
+								data-tone='success'
 								title={entry.filePath || t('Local')}
 							>
 								{entry.filePath
@@ -644,7 +677,9 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 						)}
 						{hasUpdate && (
 							<span
-								className='bib-entry-source-badge update'
+								className='bib-entry-source-badge ui-badge'
+								data-variant='label'
+								data-tone='accent'
 								title={t('Update available')}
 							>
 								↻
@@ -661,31 +696,32 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 						<div className='bib-entry-expanded-title'>
 							{getDisplayTitle(entry)}
 						</div>
-						<div className='bib-entry-expanded-authors'>
+						<div className='bib-entry-expanded-authors ui-note'>
 							{getDisplayAuthors(entry)}
 						</div>
 						{getDisplayVenue(entry) && (
-							<div className='bib-entry-expanded-venue'>
+							<div className='ui-note'>
 								<em>{getDisplayVenue(entry)}</em>
 							</div>
 						)}
 						{entry.fields.volume && entry.fields.pages && (
-							<div className='bib-entry-expanded-detail'>
+							<div className='ui-note'>
 								{t('Vol.')} {entry.fields.volume}
 								{entry.fields.number ? `, No. ${entry.fields.number}` : ''}
 								{t(', pp.')} {entry.fields.pages}
 							</div>
 						)}
 						{entry.fields.doi && (
-							<div className='bib-entry-expanded-doi'>
+							<div className='bib-entry-expanded-doi ui-note'>
 								DOI: {entry.fields.doi}
 							</div>
 						)}
 
-						<div className='bib-entry-hover-actions'>
+						<div className='bib-entry-hover-actions ui-toolbar-actions'>
 							{isExternal && (
 								<button
-									className='bib-action-button import'
+									type='button'
+									className='button '
 									disabled={importingEntries.has(entry.key) || !targetBibFile}
 									onClick={(e) => {
 										e.stopPropagation();
@@ -700,19 +736,25 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 							)}
 							{entry.source === 'local' && (
 								<button
-									className='bib-action-button delete'
+									type='button'
+									className='ui-icon-button'
+									data-variant='ghost'
+									data-tone='danger'
+									data-size='sm'
 									onClick={(e) => {
 										e.stopPropagation();
-										handleDeleteEntry(entry);
+										setPendingDelete({ kind: 'entry', entry });
 									}}
+									title={t('Delete')}
+									aria-label={t('Delete')}
 								>
 									<TrashIcon />
-									{t('Delete')}
 								</button>
 							)}
 							{hasUpdate && (
 								<button
-									className='bib-action-button update'
+									type='button'
+									className='button warn'
 									onClick={(e) => {
 										e.stopPropagation();
 										const remote = getRemoteEntry(entry);
@@ -724,7 +766,10 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 								</button>
 							)}
 							<button
-								className='bib-action-button detail'
+								type='button'
+								className='ui-icon-button'
+								data-variant='ghost'
+								data-size='sm'
 								onClick={(e) => {
 									e.stopPropagation();
 									handleItemSelect({
@@ -739,8 +784,10 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 											entry.fields.journal || entry.fields.booktitle || '',
 									});
 								}}
+								title={t('Detail')}
+								aria-label={t('Detail')}
 							>
-								{t('Detail')}
+								<InfoIcon />
 							</button>
 						</div>
 					</div>
@@ -756,7 +803,9 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 			!currentProvider
 		) {
 			return (
-				<div className='bib-loading-indicator'>{t('Initializing...')}</div>
+				<div className='ui-empty-state' data-style='empty'>
+					{t('Initializing...')}
+				</div>
 			);
 		}
 		if (
@@ -765,24 +814,29 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 			selectedProvider !== 'all'
 		) {
 			return (
-				<div className='bib-loading-indicator'>
-					{t('Connecting...')} ({t(currentProvider?.getConnectionStatus())})
+				<div className='ui-empty-state' data-style='empty'>
+					{t('Connecting...')} (
+					{t(currentProvider?.getConnectionStatus() ?? 'disconnected')})
 				</div>
 			);
 		}
 		if (isLoading) {
-			return <div className='bib-loading-indicator'>{t('Loading...')}</div>;
+			return (
+				<div className='ui-empty-state' data-style='empty'>
+					{t('Loading...')}
+				</div>
+			);
 		}
 		if (filteredEntries.length === 0) {
 			return (
-				<div className='bib-no-entries'>
+				<div className='ui-empty-state' data-style='empty'>
 					{isOnDemand && !searchQuery
 						? t('Enter a search query above to find works.')
 						: searchQuery
 							? t('No entries match your search')
 							: t('No entries available')}
 					{localEntries.length === 0 && !searchQuery && !isOnDemand && (
-						<div className='bib-no-entries-hint'>
+						<div className='ui-note'>
 							{t(
 								'Add .bib files to your project to see local bibliography entries.',
 							)}
@@ -793,7 +847,7 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 		}
 
 		return (
-			<div className='bib-entries-list'>
+			<div className='ui-list'>
 				{filteredEntries.map((entry, index) => renderEntryCard(entry, index))}
 			</div>
 		);
@@ -802,7 +856,7 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 	const renderDetailView = () => {
 		if (!selectedItem) {
 			return (
-				<div className='no-selection'>
+				<div className='ui-empty-state' data-style='empty'>
 					{t('Select an entry from the Items tab')}
 				</div>
 			);
@@ -839,7 +893,9 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 								<p>
 									<strong>{displayKey}:</strong>
 								</p>
-								<pre className='raw-entry'>{String(value)}</pre>
+								<pre className='ui-code-block' data-wrap='true'>
+									{String(value)}
+								</pre>
 							</div>
 						);
 					}
@@ -872,6 +928,14 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 		);
 	};
 
+	const providerTitle =
+		selectedProvider === 'local' || selectedProvider === 'all'
+			? t('Bibliography')
+			: currentProvider?.name ||
+				availableProviders.find((provider) => provider.id === selectedProvider)
+					?.name ||
+				t('Bibliography');
+
 	const footerStats =
 		selectedProvider === 'all'
 			? t('{count} entries, {sources} sources', {
@@ -890,66 +954,160 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({
 						});
 
 	return (
-		<div className={`bib-panel ${className}`}>
-			<div className='bib-panel-header'>
-				<h3>{t('Bibliography')}</h3>
-				<div className='view-tabs'>
-					<button
-						className={`tab-button ${activeTab === 'list' ? 'active' : ''}`}
-						onClick={() => setActiveTab('list')}
+		<>
+			<div
+				className={`bib-panel ui-panel ${className}`}
+				data-role='bibliography'
+			>
+				<div
+					className='ui-panel-header'
+					data-role='bibliography'
+					data-shrink='true'
+					data-gap='sm'
+				>
+					<div className='ui-panel-heading'>
+						<h3 className='ui-panel-title' data-shrink='true'>
+							{providerTitle}
+						</h3>
+						<button
+							type='button'
+							ref={providerGroupRef}
+							className='ui-icon-button'
+							data-variant='ghost'
+							data-size='sm'
+							onClick={() => setShowDropdown(!showDropdown)}
+							title={t('Source')}
+							aria-label={t('Source')}
+							aria-expanded={showDropdown}
+						>
+							<ChevronDownIcon />
+						</button>
+						{renderProviderDropdown()}
+					</div>
+					<div
+						className='ui-tab-list'
+						data-role='panel'
+						data-variant='switcher'
 					>
-						{t('Items')}
-					</button>
-					<button
-						className={`tab-button ${activeTab === 'detail' ? 'active' : ''}`}
-						onClick={() => setActiveTab('detail')}
-						disabled={!selectedItem}
-					>
-						{t('Detail')}
-					</button>
+						<button
+							type='button'
+							className={`ui-tab ${activeTab === 'list' ? 'active' : ''}`}
+							onClick={() => setActiveTab('list')}
+						>
+							{t('Items')}
+						</button>
+						<button
+							type='button'
+							className={`ui-tab ${activeTab === 'detail' ? 'active' : ''}`}
+							onClick={() => setActiveTab('detail')}
+							disabled={!selectedItem}
+						>
+							{t('Detail')}
+						</button>
+					</div>
+				</div>
+
+				<div
+					className='ui-panel-content'
+					data-overflow='hidden'
+					data-layout='stack'
+				>
+					{activeTab === 'list' ? (
+						<div className='ui-stack' data-grow='true' data-overflow='hidden'>
+							{selectedProvider !== 'all' &&
+								selectedProvider !== 'local' &&
+								currentProvider?.renderPanel && (
+									<div className='provider-panel-container'>
+										<currentProvider.renderPanel
+											className='provider-panel'
+											pluginInstance={currentProvider}
+										/>
+									</div>
+								)}
+							{renderSearchBar()}
+							<div className='ui-panel-content' data-overflow='y'>
+								{renderList()}
+							</div>
+							<div className='bib-panel-footer'>
+								<span className='bib-entry-count ui-note'>{footerStats}</span>
+							</div>
+						</div>
+					) : (
+						<div className='ui-stack' data-grow='true' data-overflow='hidden'>
+							<div className='ui-panel-header'>
+								<button
+									type='button'
+									className='button'
+									onClick={handleBackToList}
+								>
+									{t('←')} {t('Back to Items')}
+								</button>
+							</div>
+							<div
+								className='ui-panel-content'
+								data-overflow='y'
+								data-padding='sm'
+							>
+								{renderDetailView()}
+							</div>
+						</div>
+					)}
 				</div>
 			</div>
 
-			<div className='bib-panel-content'>
-				{renderControls()}
-
-				{activeTab === 'list' ? (
-					<div className='bib-provider-panel'>
-						{selectedProvider !== 'all' &&
-							selectedProvider !== 'local' &&
-							currentProvider?.renderPanel && (
-								<div className='provider-panel-container'>
-									<currentProvider.renderPanel
-										className='provider-panel'
-										pluginInstance={currentProvider}
-									/>
-								</div>
-							)}
-						{renderSearchBar()}
-						<div className='bib-list-container'>{renderList()}</div>
-						<div className='bib-panel-footer'>
-							<span className='bib-entry-count'>{footerStats}</span>
+			<Modal
+				isOpen={pendingDelete !== null}
+				onClose={() => {
+					if (!isDeleting) setPendingDelete(null);
+				}}
+				title={
+					pendingDelete?.kind === 'selected'
+						? t('Delete bibliography items?')
+						: t('Delete bibliography item?')
+				}
+				size='small'
+			>
+				{pendingDelete && (
+					<div>
+						<p>
+							{pendingDelete.kind === 'entry'
+								? t('Delete “{title}” from its bibliography file?', {
+										title: getDisplayTitle(pendingDelete.entry),
+									})
+								: t('Delete {count} selected bibliography items?', {
+										count: pendingDelete.count,
+									})}
+						</p>
+						<div className='ui-message' data-tone='warning'>
+							{t('This action cannot be undone.')}
 						</div>
-					</div>
-				) : (
-					<div className='bib-detail-view'>
-						<div className='detail-header'>
-							<button className='back-button' onClick={handleBackToList}>
-								{t('←')} {t('Back to Items')}
+						<div
+							className='ui-actions'
+							data-variant='modal'
+							data-align='end'
+							data-cross='stretch'
+						>
+							<button
+								type='button'
+								className='button secondary'
+								onClick={() => setPendingDelete(null)}
+								disabled={isDeleting}
+							>
+								{t('Cancel')}
+							</button>
+							<button
+								type='button'
+								className='button danger'
+								onClick={() => void confirmDelete()}
+								disabled={isDeleting}
+							>
+								{t('Delete')}
 							</button>
 						</div>
-						<div className='detail-content'>{renderDetailView()}</div>
 					</div>
 				)}
-			</div>
-
-			{showDropdown && (
-				<div
-					className='dropdown-overlay'
-					onClick={() => setShowDropdown(false)}
-				/>
-			)}
-		</div>
+			</Modal>
+		</>
 	);
 };
 

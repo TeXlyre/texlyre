@@ -139,7 +139,7 @@ const moduleLog = {
 		cursor.style.cssText = `
 		position: fixed;
 		pointer-events: none;
-		z-index: 10000;
+		z-index: 9999;
 		transition: transform 0.1s ease-out;
 		transform-origin: 0 0;
 		left: 0;

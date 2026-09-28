@@ -86,7 +86,9 @@ const ToolConfigImport: React.FC<ToolConfigImportProps> = ({
 	return (
 		<div
 			ref={dropRef}
-			className={`tool-config-import${isDragging ? ' dragging' : ''}`}
+			className='ui-stack ui-drop-target'
+			data-active={isDragging ? 'true' : undefined}
+			data-gap='sm'
 			onDragOver={(e) => {
 				e.preventDefault();
 				setIsDragging(true);
@@ -102,8 +104,8 @@ const ToolConfigImport: React.FC<ToolConfigImportProps> = ({
 				void handleFiles(e.dataTransfer.files);
 			}}
 		>
-			<div className='tool-config-import-options'>
-				<label className='import-option-button'>
+			<div className='ui-stack' data-gap='sm'>
+				<label className='ui-choice-card' data-direction='row'>
 					<UploadIcon />
 					<div>
 						<strong>{t('From file')}</strong>
@@ -119,7 +121,8 @@ const ToolConfigImport: React.FC<ToolConfigImportProps> = ({
 				</label>
 
 				<label
-					className='import-option-button'
+					className='ui-choice-card'
+					data-direction='row'
 					onClick={() => setSource(source === 'url' ? null : 'url')}
 				>
 					<UrlIcon />
@@ -130,7 +133,8 @@ const ToolConfigImport: React.FC<ToolConfigImportProps> = ({
 				</label>
 
 				<label
-					className='import-option-button'
+					className='ui-choice-card'
+					data-direction='row'
 					onClick={() => setSource(source === 'json' ? null : 'json')}
 				>
 					<FileIcon />
@@ -141,10 +145,14 @@ const ToolConfigImport: React.FC<ToolConfigImportProps> = ({
 				</label>
 			</div>
 
-			{error && <div className='error-message'>{error}</div>}
+			{error && (
+				<div className='ui-message' data-tone='error'>
+					{error}
+				</div>
+			)}
 
 			{source === 'url' && (
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<label htmlFor='tool-config-import-url'>{t('Recipe URL')}</label>
 					<input
 						id='tool-config-import-url'
@@ -155,6 +163,7 @@ const ToolConfigImport: React.FC<ToolConfigImportProps> = ({
 						onChange={(e) => setUrl(e.target.value)}
 					/>
 					<button
+						type='button'
 						className='button primary'
 						disabled={!url.trim() || isFetching}
 						onClick={() => void handleUrlImport()}
@@ -165,10 +174,11 @@ const ToolConfigImport: React.FC<ToolConfigImportProps> = ({
 			)}
 
 			{source === 'json' && (
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<label>{t('Recipe JSON')}</label>
 					<ToolConfigJsonEditor value={draft} height={10} onChange={setDraft} />
 					<button
+						type='button'
 						className='button primary'
 						disabled={!draft.trim()}
 						onClick={() => applyText(draft)}
@@ -178,8 +188,13 @@ const ToolConfigImport: React.FC<ToolConfigImportProps> = ({
 				</div>
 			)}
 
-			<div className='form-actions'>
-				<button className='button secondary' onClick={onCancel}>
+			<div
+				className='ui-actions'
+				data-variant='form'
+				data-align='end'
+				data-cross='stretch'
+			>
+				<button type='button' className='button secondary' onClick={onCancel}>
 					{t('Cancel')}
 				</button>
 			</div>

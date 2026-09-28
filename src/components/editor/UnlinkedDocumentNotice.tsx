@@ -41,7 +41,8 @@ const UnlinkedDocumentNotice: React.FC<UnlinkedDocumentNoticeProps> = ({
 				</span>
 				<div className='unlinked-document-actions'>
 					<button
-						className='link-button'
+						type='button'
+						className='button link-button'
 						onClick={() => setShowLinkModal(true)}
 						title={t('Link to new file')}
 					>
@@ -49,7 +50,8 @@ const UnlinkedDocumentNotice: React.FC<UnlinkedDocumentNoticeProps> = ({
 						{t('Link to file')}
 					</button>
 					<button
-						className='link-button delete-action'
+						type='button'
+						className='button link-button delete-action'
 						onClick={() => setShowDeleteDialog(true)}
 						title={t('Delete document')}
 					>
@@ -87,13 +89,18 @@ const UnlinkedDocumentNotice: React.FC<UnlinkedDocumentNoticeProps> = ({
 							{t('"?')}
 						</p>
 
-						<div className='warning-message'>
+						<div className='ui-message' data-tone='warning'>
 							{t(
 								'This action cannot be undone. The document will be permanently removed.',
 							)}
 						</div>
 
-						<div className='modal-actions'>
+						<div
+							className='ui-actions'
+							data-variant='modal'
+							data-align='end'
+							data-cross='stretch'
+						>
 							<button
 								type='button'
 								className='button secondary'

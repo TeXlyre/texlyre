@@ -48,12 +48,19 @@ const SettingControl: React.FC<SettingControlProps> = ({
 
 			case 'select':
 				return (
-					<div className='select-control'>
+					<div className='select-control ui-field' data-gap='xs'>
 						<label>{setting.label}</label>
 						<select
 							value={String(value)}
 							disabled={disabled}
-							onChange={(e) => handleChange(e.target.value)}
+							onChange={(e) => {
+								const selectedOption = setting.options?.find(
+									(option) => String(option.value) === e.target.value,
+								);
+								handleChange(
+									selectedOption ? selectedOption.value : e.target.value,
+								);
+							}}
 						>
 							{setting.options?.map((option) => (
 								<option key={String(option.value)} value={String(option.value)}>
@@ -66,7 +73,7 @@ const SettingControl: React.FC<SettingControlProps> = ({
 
 			case 'text':
 				return (
-					<div className='text-control'>
+					<div className='text-control ui-field' data-gap='xs'>
 						<label>{setting.label}</label>
 						<input
 							type='text'
@@ -108,7 +115,7 @@ const SettingControl: React.FC<SettingControlProps> = ({
 
 			case 'number':
 				return (
-					<div className='number-control'>
+					<div className='number-control ui-field' data-gap='xs'>
 						<label>{setting.label}</label>
 						<NumberInput
 							value={Number(value)}
@@ -123,9 +130,11 @@ const SettingControl: React.FC<SettingControlProps> = ({
 
 			case 'color':
 				return (
-					<div className='color-control'>
+					<div className='ui-field' data-gap='xs'>
 						<label>{setting.label}</label>
 						<input
+							className='ui-field-control'
+							data-width='short'
 							type='color'
 							value={String(value)}
 							disabled={disabled}
@@ -145,13 +154,19 @@ const SettingControl: React.FC<SettingControlProps> = ({
 	};
 
 	return (
-		<div className={`setting-control${disabled ? ' disabled' : ''}`}>
+		<div
+			className='ui-stack'
+			data-gap='xs'
+			data-disabled={disabled ? 'true' : undefined}
+		>
 			{renderControl()}
 			{disabled && setting.disabledReason && (
-				<div className='setting-dependency-badge'>{setting.disabledReason}</div>
+				<div className='ui-badge' data-variant='label' data-tone='warning'>
+					{setting.disabledReason}
+				</div>
 			)}
 			{setting.description && setting.type !== 'language-select' && (
-				<div className='setting-description'>{setting.description}</div>
+				<div className='ui-note ui-field-hint'>{setting.description}</div>
 			)}
 		</div>
 	);

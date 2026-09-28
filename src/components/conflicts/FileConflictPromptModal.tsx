@@ -201,7 +201,7 @@ const FileConflictPromptModal: React.FC = () => {
 				})}
 				size='medium'
 			>
-				<div className='file-conflict-content'>
+				<div className='ui-stack' data-gap='md'>
 					<p>
 						{t(
 							'Multiple files already exist at their target locations. Choose how to handle conflicts:',
@@ -209,9 +209,14 @@ const FileConflictPromptModal: React.FC = () => {
 					</p>
 
 					<div className='file-comparison'>
-						<div className='file-info existing'>
+						<div
+							className='ui-card ui-stack'
+							data-gap='sm'
+							data-padding='md'
+							data-surface='secondary'
+						>
 							<h4>{t('Existing File')}</h4>
-							<div className='file-details'>
+							<div className='ui-stack' data-gap='xs'>
 								<strong>{existingFile.name}</strong>
 								<span>
 									{t('Size')}: {formatFileSize(existingFile.size)}
@@ -220,16 +225,25 @@ const FileConflictPromptModal: React.FC = () => {
 									{t('Modified')}: {formatDate(existingFile.lastModified)}
 								</span>
 								{isTemporaryFile(existingFile.path) && (
-									<span className='temp-file-indicator'>
+									<span
+										className='ui-badge'
+										data-variant='label'
+										data-tone='accent'
+									>
 										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
 							</div>
 						</div>
 
-						<div className='file-info new'>
+						<div
+							className='ui-card ui-stack'
+							data-gap='sm'
+							data-padding='md'
+							data-surface='secondary'
+						>
 							<h4>{t('New File')}</h4>
-							<div className='file-details'>
+							<div className='ui-stack' data-gap='xs'>
 								<strong>{newFile.name}</strong>
 								<span>
 									{t('Size')}: {formatFileSize(newFile.size)}
@@ -238,7 +252,11 @@ const FileConflictPromptModal: React.FC = () => {
 									{t('Modified')}: {formatDate(newFile.lastModified)}
 								</span>
 								{isTemporaryFile(newFile.path) && (
-									<span className='temp-file-indicator'>
+									<span
+										className='ui-badge'
+										data-variant='label'
+										data-tone='accent'
+									>
 										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
@@ -247,11 +265,18 @@ const FileConflictPromptModal: React.FC = () => {
 					</div>
 
 					{operationWarning && (
-						<div className='warning-message'>{operationWarning}</div>
+						<div className='ui-message' data-tone='warning'>
+							{operationWarning}
+						</div>
 					)}
 
-					<div className='modal-actions'>
-						<div className='single-actions'>
+					<div
+						className='ui-actions'
+						data-variant='modal'
+						data-align='end'
+						data-cross='stretch'
+					>
+						<div className='ui-actions' data-wrap='true' data-align='end'>
 							<button
 								type='button'
 								className='button secondary'
@@ -282,7 +307,7 @@ const FileConflictPromptModal: React.FC = () => {
 							</button>
 						</div>
 					</div>
-					<div className='batch-conflict-info'>
+					<div className='ui-message' data-tone='info' data-density='compact'>
 						<p>
 							<strong>{t('Current conflict')}:</strong> {existingFile.name}
 						</p>
@@ -292,37 +317,42 @@ const FileConflictPromptModal: React.FC = () => {
 						</p>
 					</div>
 
-					<div className='modal-actions'>
+					<div
+						className='ui-actions'
+						data-variant='modal'
+						data-align='end'
+						data-cross='stretch'
+					>
 						<p>
 							{' '}
 							{t('Apply to all {count} conflicts', { count: conflictCount })}:{' '}
 						</p>
-						<div className='batch-actions'>
+						<div className='ui-actions' data-wrap='true' data-align='center'>
 							<div style={{ display: 'flex', gap: '0.5rem' }}>
 								<button
 									type='button'
-									className='button secondary small'
+									className='button secondary '
 									onClick={() => handleResolution('cancel-all')}
 								>
 									{t('Cancel All')}
 								</button>
 								<button
 									type='button'
-									className='button secondary small'
+									className='button secondary '
 									onClick={() => handleResolution('keep-both-all')}
 								>
 									{t('Keep Both (All)')}
 								</button>
 								<button
 									type='button'
-									className='button secondary small'
+									className='button secondary '
 									onClick={() => handleResolution('merge-all')}
 								>
 									{t('Merge All')}
 								</button>
 								<button
 									type='button'
-									className='button primary small'
+									className='button primary '
 									onClick={() => handleResolution('overwrite-all')}
 								>
 									{t('Replace All')}
@@ -343,21 +373,32 @@ const FileConflictPromptModal: React.FC = () => {
 				title={t('Confirm Deletion')}
 				size='medium'
 			>
-				<div className='file-conflict-content'>
+				<div className='ui-stack' data-gap='md'>
 					<p>
 						{t('Are you sure you want to delete {count} file?', {
 							count: files.length,
 						})}
 					</p>
 
-					<div className='batch-files-list'>
+					<div className='ui-list' data-scroll='short'>
 						{files.slice(0, 10).map((file) => (
-							<div key={file.id} className='batch-file-item'>
+							<div
+								key={file.id}
+								className='ui-list-item'
+								data-direction='column'
+								data-gap='xs'
+								data-padding='sm'
+								data-appearance='flat'
+							>
 								<strong>{file.name}</strong>
-								<div className='batch-file-meta'>
+								<div className='ui-meta'>
 									{file.path} • {formatFileSize(file.size)}
 									{isTemporaryFile(file.path) && (
-										<span className='temp-file-indicator'>
+										<span
+											className='ui-badge'
+											data-variant='label'
+											data-tone='accent'
+										>
 											{' '}
 											• <TempFileIcon /> {t('Temporary')}
 										</span>
@@ -366,21 +407,28 @@ const FileConflictPromptModal: React.FC = () => {
 							</div>
 						))}
 						{files.length > 10 && (
-							<div className='batch-files-overflow'>
+							<div className='ui-empty-state' data-style='empty'>
 								{t('... and {count} more files', { count: files.length - 10 })}
 							</div>
 						)}
 					</div>
 
 					{operationWarning && (
-						<div className='warning-message'>{operationWarning}</div>
+						<div className='ui-message' data-tone='warning'>
+							{operationWarning}
+						</div>
 					)}
 
-					<div className='warning-message'>
+					<div className='ui-message' data-tone='warning'>
 						{t('This action cannot be undone.')}
 					</div>
 
-					<div className='modal-actions'>
+					<div
+						className='ui-actions'
+						data-variant='modal'
+						data-align='end'
+						data-cross='stretch'
+					>
 						<button
 							type='button'
 							className='button secondary'
@@ -411,7 +459,7 @@ const FileConflictPromptModal: React.FC = () => {
 				title={t('Confirm Batch Unlink')}
 				size='medium'
 			>
-				<div className='file-conflict-content'>
+				<div className='ui-stack' data-gap='md'>
 					<p>
 						{t(
 							'Are you sure you want to unlink {count} files from their documents?',
@@ -419,14 +467,25 @@ const FileConflictPromptModal: React.FC = () => {
 						)}
 					</p>
 
-					<div className='batch-files-list'>
+					<div className='ui-list' data-scroll='short'>
 						{linkedFiles.slice(0, 10).map((file) => (
-							<div key={file.id} className='batch-file-item'>
+							<div
+								key={file.id}
+								className='ui-list-item'
+								data-direction='column'
+								data-gap='xs'
+								data-padding='sm'
+								data-appearance='flat'
+							>
 								<strong>{file.name}</strong>
-								<div className='batch-file-meta'>
+								<div className='ui-meta'>
 									{file.path} • {t('Linked to')}: {file.documentId}
 									{isTemporaryFile(file.path) && (
-										<span className='temp-file-indicator'>
+										<span
+											className='ui-badge'
+											data-variant='label'
+											data-tone='accent'
+										>
 											{' '}
 											• <TempFileIcon /> {t('Temporary')}
 										</span>
@@ -435,7 +494,7 @@ const FileConflictPromptModal: React.FC = () => {
 							</div>
 						))}
 						{linkedFiles.length > 10 && (
-							<div className='batch-files-overflow'>
+							<div className='ui-empty-state' data-style='empty'>
 								{t('... and {count} more files', {
 									count: linkedFiles.length - 10,
 								})}
@@ -444,16 +503,23 @@ const FileConflictPromptModal: React.FC = () => {
 					</div>
 
 					{operationWarning && (
-						<div className='warning-message'>{operationWarning}</div>
+						<div className='ui-message' data-tone='warning'>
+							{operationWarning}
+						</div>
 					)}
 
-					<div className='warning-message'>
+					<div className='ui-message' data-tone='warning'>
 						{t(
 							'Note: The page will refresh after unlinking and any unsaved changes may be lost.',
 						)}
 					</div>
 
-					<div className='modal-actions'>
+					<div
+						className='ui-actions'
+						data-variant='modal'
+						data-align='end'
+						data-cross='stretch'
+					>
 						<button
 							type='button'
 							className='button secondary'
@@ -482,17 +548,22 @@ const FileConflictPromptModal: React.FC = () => {
 				title={t('Delete File')}
 				size='medium'
 			>
-				<div className='file-conflict-content'>
+				<div className='ui-stack' data-gap='md'>
 					<p>
 						{t('Are you sure you want to delete "{name}"?', {
 							name: existingFile.name,
 						})}
 					</p>
 
-					<div className='file-info'>
-						<div className='file-details'>
+					<div
+						className='ui-card ui-stack'
+						data-gap='sm'
+						data-padding='md'
+						data-surface='secondary'
+					>
+						<div className='ui-stack' data-gap='xs'>
 							<strong>{existingFile.name}</strong>
-							<div className='file-meta'>
+							<div className='ui-meta ui-stack' data-gap='xs'>
 								<span>
 									{t('Path')}: {existingFile.path}
 								</span>
@@ -503,7 +574,11 @@ const FileConflictPromptModal: React.FC = () => {
 									{t('Modified')}: {formatDate(existingFile.lastModified)}
 								</span>
 								{isTemporaryFile(existingFile.path) && (
-									<span className='temp-file-indicator'>
+									<span
+										className='ui-badge'
+										data-variant='label'
+										data-tone='accent'
+									>
 										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
@@ -512,14 +587,21 @@ const FileConflictPromptModal: React.FC = () => {
 					</div>
 
 					{operationWarning && (
-						<div className='warning-message'>{operationWarning}</div>
+						<div className='ui-message' data-tone='warning'>
+							{operationWarning}
+						</div>
 					)}
 
-					<div className='warning-message'>
+					<div className='ui-message' data-tone='warning'>
 						{t('This action cannot be undone.')}
 					</div>
 
-					<div className='modal-actions'>
+					<div
+						className='ui-actions'
+						data-variant='modal'
+						data-align='end'
+						data-cross='stretch'
+					>
 						<button
 							type='button'
 							className='button secondary'
@@ -548,7 +630,7 @@ const FileConflictPromptModal: React.FC = () => {
 				title={t('Link File to Document')}
 				size='medium'
 			>
-				<div className='file-conflict-content'>
+				<div className='ui-stack' data-gap='md'>
 					<p>
 						{t(
 							'Linking "{name}" will create a collaborative document that syncs with this file.',
@@ -556,10 +638,15 @@ const FileConflictPromptModal: React.FC = () => {
 						)}
 					</p>
 
-					<div className='file-info'>
-						<div className='file-details'>
+					<div
+						className='ui-card ui-stack'
+						data-gap='sm'
+						data-padding='md'
+						data-surface='secondary'
+					>
+						<div className='ui-stack' data-gap='xs'>
 							<strong>{existingFile.name}</strong>
-							<div className='file-meta'>
+							<div className='ui-meta ui-stack' data-gap='xs'>
 								<span>
 									{t('Path')}: {existingFile.path}
 								</span>
@@ -570,7 +657,11 @@ const FileConflictPromptModal: React.FC = () => {
 									{t('Modified')}: {formatDate(existingFile.lastModified)}
 								</span>
 								{isTemporaryFile(existingFile.path) && (
-									<span className='temp-file-indicator'>
+									<span
+										className='ui-badge'
+										data-variant='label'
+										data-tone='accent'
+									>
 										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
@@ -579,10 +670,12 @@ const FileConflictPromptModal: React.FC = () => {
 					</div>
 
 					{operationWarning && (
-						<div className='warning-message'>{operationWarning}</div>
+						<div className='ui-message' data-tone='warning'>
+							{operationWarning}
+						</div>
 					)}
 
-					<div className='warning-message'>
+					<div className='ui-message' data-tone='warning'>
 						{t(
 							'Note: The page will refresh after linking and any unsaved changes may be lost.',
 						)}
@@ -593,7 +686,12 @@ const FileConflictPromptModal: React.FC = () => {
 						</p>
 					</div>
 
-					<div className='modal-actions'>
+					<div
+						className='ui-actions'
+						data-variant='modal'
+						data-align='end'
+						data-cross='stretch'
+					>
 						<button
 							type='button'
 							className='button secondary'
@@ -629,7 +727,7 @@ const FileConflictPromptModal: React.FC = () => {
 				title={t('Unlink File from Document')}
 				size='medium'
 			>
-				<div className='file-conflict-content'>
+				<div className='ui-stack' data-gap='md'>
 					<p>
 						{t(
 							'Unlinking "{name}" will remove the connection between this file and its collaborative document.',
@@ -637,10 +735,15 @@ const FileConflictPromptModal: React.FC = () => {
 						)}
 					</p>
 
-					<div className='file-info'>
-						<div className='file-details'>
+					<div
+						className='ui-card ui-stack'
+						data-gap='sm'
+						data-padding='md'
+						data-surface='secondary'
+					>
+						<div className='ui-stack' data-gap='xs'>
 							<strong>{existingFile.name}</strong>
-							<div className='file-meta'>
+							<div className='ui-meta ui-stack' data-gap='xs'>
 								<span>
 									{t('Path')}: {existingFile.path}
 								</span>
@@ -651,7 +754,11 @@ const FileConflictPromptModal: React.FC = () => {
 									{t('Modified')}: {formatDate(existingFile.lastModified)}
 								</span>
 								{isTemporaryFile(existingFile.path) && (
-									<span className='temp-file-indicator'>
+									<span
+										className='ui-badge'
+										data-variant='label'
+										data-tone='accent'
+									>
 										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
@@ -659,16 +766,23 @@ const FileConflictPromptModal: React.FC = () => {
 						</div>
 					</div>
 					{operationWarning && (
-						<div className='warning-message'>{operationWarning}</div>
+						<div className='ui-message' data-tone='warning'>
+							{operationWarning}
+						</div>
 					)}
 
-					<div className='warning-message'>
+					<div className='ui-message' data-tone='warning'>
 						{t(
 							'Note: The page will refresh after unlinking and any unsaved changes may be lost.',
 						)}
 					</div>
 
-					<div className='modal-actions'>
+					<div
+						className='ui-actions'
+						data-variant='modal'
+						data-align='end'
+						data-cross='stretch'
+					>
 						<button
 							type='button'
 							className='button secondary'
@@ -697,7 +811,7 @@ const FileConflictPromptModal: React.FC = () => {
 				title={t('Disconnect File from Disk')}
 				size='medium'
 			>
-				<div className='file-conflict-content'>
+				<div className='ui-stack' data-gap='md'>
 					<p>
 						{t(
 							'Disconnecting "{name}" will stop syncing it with the file opened from your device.',
@@ -705,10 +819,15 @@ const FileConflictPromptModal: React.FC = () => {
 						)}
 					</p>
 
-					<div className='file-info'>
-						<div className='file-details'>
+					<div
+						className='ui-card ui-stack'
+						data-gap='sm'
+						data-padding='md'
+						data-surface='secondary'
+					>
+						<div className='ui-stack' data-gap='xs'>
 							<strong>{existingFile.name}</strong>
-							<div className='file-meta'>
+							<div className='ui-meta ui-stack' data-gap='xs'>
 								<span>
 									{t('Path')}: {existingFile.path}
 								</span>
@@ -722,7 +841,12 @@ const FileConflictPromptModal: React.FC = () => {
 						</div>
 					</div>
 
-					<div className='modal-actions'>
+					<div
+						className='ui-actions'
+						data-variant='modal'
+						data-align='end'
+						data-cross='stretch'
+					>
 						<button
 							type='button'
 							className='button secondary'
@@ -772,16 +896,21 @@ const FileConflictPromptModal: React.FC = () => {
 				title={t('{action} Linked File', { action: actionCapitalized })}
 				size='medium'
 			>
-				<div className='file-conflict-content'>
+				<div className='ui-stack' data-gap='md'>
 					<p>
 						{actionMessage} "{existingFile.name}"{' '}
 						{t('because it is linked to a collaborative document.')}
 					</p>
 
-					<div className='file-info'>
-						<div className='file-details'>
+					<div
+						className='ui-card ui-stack'
+						data-gap='sm'
+						data-padding='md'
+						data-surface='secondary'
+					>
+						<div className='ui-stack' data-gap='xs'>
 							<strong>{existingFile.name}</strong>
-							<div className='file-meta'>
+							<div className='ui-meta ui-stack' data-gap='xs'>
 								<span>
 									{t('Path')}: {existingFile.path}
 								</span>
@@ -795,7 +924,11 @@ const FileConflictPromptModal: React.FC = () => {
 									{t('Linked to document')}: {t('Yes')}
 								</span>
 								{isTemporaryFile(existingFile.path) && (
-									<span className='temp-file-indicator'>
+									<span
+										className='ui-badge'
+										data-variant='label'
+										data-tone='accent'
+									>
 										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
@@ -804,17 +937,24 @@ const FileConflictPromptModal: React.FC = () => {
 					</div>
 
 					{operationWarning && (
-						<div className='warning-message'>{operationWarning}</div>
+						<div className='ui-message' data-tone='warning'>
+							{operationWarning}
+						</div>
 					)}
 
-					<div className='warning-message'>
+					<div className='ui-message' data-tone='warning'>
 						{t(
 							'To {action} this file, you must first unlink it from its document. After unlinking, you can try the {action} operation again.',
 							{ action: actionVerb },
 						)}
 					</div>
 
-					<div className='modal-actions'>
+					<div
+						className='ui-actions'
+						data-variant='modal'
+						data-align='end'
+						data-cross='stretch'
+					>
 						<button
 							type='button'
 							className='button secondary'
@@ -843,7 +983,7 @@ const FileConflictPromptModal: React.FC = () => {
 				title={t('File Already Exists')}
 				size='medium'
 			>
-				<div className='file-conflict-content'>
+				<div className='ui-stack' data-gap='md'>
 					<p>
 						{t(
 							'A file with the name "{name}" already exists at this location.',
@@ -852,9 +992,14 @@ const FileConflictPromptModal: React.FC = () => {
 					</p>
 
 					<div className='file-comparison'>
-						<div className='file-info existing'>
+						<div
+							className='ui-card ui-stack'
+							data-gap='sm'
+							data-padding='md'
+							data-surface='secondary'
+						>
 							<h4>{t('Existing File')}</h4>
-							<div className='file-details'>
+							<div className='ui-stack' data-gap='xs'>
 								<span>
 									{t('Size')}: {formatFileSize(existingFile.size)}
 								</span>
@@ -862,16 +1007,25 @@ const FileConflictPromptModal: React.FC = () => {
 									{t('Modified')}: {formatDate(existingFile.lastModified)}
 								</span>
 								{isTemporaryFile(existingFile.path) && (
-									<span className='temp-file-indicator'>
+									<span
+										className='ui-badge'
+										data-variant='label'
+										data-tone='accent'
+									>
 										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
 							</div>
 						</div>
 
-						<div className='file-info new'>
+						<div
+							className='ui-card ui-stack'
+							data-gap='sm'
+							data-padding='md'
+							data-surface='secondary'
+						>
 							<h4>{t('New File')}</h4>
-							<div className='file-details'>
+							<div className='ui-stack' data-gap='xs'>
 								<span>
 									{t('Size')}: {formatFileSize(newFile.size)}
 								</span>
@@ -879,7 +1033,11 @@ const FileConflictPromptModal: React.FC = () => {
 									{t('Modified')}: {formatDate(newFile.lastModified)}
 								</span>
 								{isTemporaryFile(newFile.path) && (
-									<span className='temp-file-indicator'>
+									<span
+										className='ui-badge'
+										data-variant='label'
+										data-tone='accent'
+									>
 										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
@@ -888,10 +1046,17 @@ const FileConflictPromptModal: React.FC = () => {
 					</div>
 
 					{operationWarning && (
-						<div className='warning-message'>{operationWarning}</div>
+						<div className='ui-message' data-tone='warning'>
+							{operationWarning}
+						</div>
 					)}
 
-					<div className='modal-actions'>
+					<div
+						className='ui-actions'
+						data-variant='modal'
+						data-align='end'
+						data-cross='stretch'
+					>
 						<button
 							type='button'
 							className='button secondary'

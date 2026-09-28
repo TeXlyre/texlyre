@@ -68,94 +68,114 @@ const SettingsLanguage: React.FC<SettingsLanguageProps> = ({
 	if (!currentLanguage) return null;
 
 	return (
-		<div className='settings-language'>
-			<div className='language-selector-wrapper'>
+		<div className='ui-stack' data-gap='lg'>
+			<div className='ui-field'>
 				<label>{setting.label}</label>
-				<div className='searchable-language-dropdown' ref={dropdownRef}>
-					<div className='dropdown-trigger' onClick={() => setIsOpen(!isOpen)}>
-						<div className='selected-language'>
-							<span className='language-text'>
+				<div className='ui-menu-anchor' ref={dropdownRef}>
+					<button
+						type='button'
+						className='ui-field-control ui-control-trigger'
+						aria-haspopup='listbox'
+						aria-expanded={isOpen}
+						onClick={() => setIsOpen(!isOpen)}
+					>
+						<span className='ui-control-content'>
+							<span className='ui-control-label'>
 								{currentLanguage.nativeName} ({currentLanguage.name})
 							</span>
-							<div className='coverage-inline'>
-								<div className='coverage-bar-small'>
-									<div
-										className='coverage-fill-small'
-										style={{
-											width: `${currentLanguage.coverage}%`,
-											backgroundColor: getCoverageColor(
-												currentLanguage.coverage,
-											),
-										}}
-									/>
-								</div>
+							<span className='ui-actions' data-gap='sm'>
+								<progress
+									className='ui-progress'
+									value={currentLanguage.coverage}
+									max={100}
+									style={{
+										accentColor: getCoverageColor(currentLanguage.coverage),
+									}}
+								/>
 								<span
-									className='coverage-percentage-small'
+									className='ui-note'
 									style={{ color: getCoverageColor(currentLanguage.coverage) }}
 								>
 									{currentLanguage.coverage}%
 								</span>
-							</div>
-						</div>
-						<span className='dropdown-arrow'>
+							</span>
+						</span>
+						<span className='ui-icon' data-tone='muted'>
 							{isOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
 						</span>
-					</div>
+					</button>
 
 					{isOpen && (
-						<div className='dropdown-menu'>
-							<div className='dropdown-search'>
+						<div
+							className='ui-menu'
+							data-layout='column'
+							data-position='below'
+							role='listbox'
+						>
+							<div className='ui-menu-search'>
 								<input
 									ref={searchInputRef}
 									type='text'
 									placeholder={t('Search languages...')}
 									value={searchQuery}
 									onChange={(e) => setSearchQuery(e.target.value)}
-									className='dropdown-search-input'
+									className='ui-field-control'
 								/>
 							</div>
-							<div className='dropdown-options'>
+							<div className='ui-menu-scroll'>
 								{filteredLanguages.map((lang) => (
-									<div
+									<button
+										type='button'
 										key={lang.code}
-										className={`dropdown-option ${currentLanguage.code === lang.code ? 'selected' : ''}`}
+										className='ui-menu-item'
+										data-active={
+											currentLanguage.code === lang.code ? 'true' : undefined
+										}
+										role='option'
+										aria-selected={currentLanguage.code === lang.code}
 										onClick={() => handleSelect(lang.code)}
 									>
-										<div className='option-header'>
-											<span className='option-name'>
-												{lang.nativeName} ({lang.name})
+										<span className='ui-stack' data-gap='xs' data-grow='true'>
+											<span className='ui-actions'>
+												<span>
+													{lang.nativeName} ({lang.name})
+												</span>
+												<span
+													className='ui-note'
+													style={{
+														marginLeft: 'auto',
+														color: getCoverageColor(lang.coverage),
+													}}
+												>
+													{lang.coverage}%
+												</span>
 											</span>
-											<span
-												className='option-coverage'
-												style={{ color: getCoverageColor(lang.coverage) }}
-											>
-												{lang.coverage}%
-											</span>
-										</div>
-										<div className='coverage-bar-option'>
-											<div
-												className='coverage-fill-option'
-												style={{
-													width: `${lang.coverage}%`,
-													backgroundColor: getCoverageColor(lang.coverage),
-												}}
+											<progress
+												className='ui-progress'
+												value={lang.coverage}
+												max={100}
+												style={{ accentColor: getCoverageColor(lang.coverage) }}
 											/>
-										</div>
-										<div className='option-details'>
-											{lang.translatedKeys} / {lang.totalKeys}{' '}
-											{t('{count}phrase translated', { count: lang.totalKeys })}
-										</div>
-									</div>
+											<span className='ui-note'>
+												{lang.translatedKeys} / {lang.totalKeys}{' '}
+												{t('{count}phrase translated', {
+													count: lang.totalKeys,
+												})}
+											</span>
+										</span>
+									</button>
 								))}
 								{filteredLanguages.length === 0 && (
-									<div className='no-options'>{t('No languages found')}</div>
+									<div className='ui-empty-state'>
+										{t('No languages found')}
+									</div>
 								)}
 							</div>
 						</div>
 					)}
 				</div>
 				{setting.description && (
-					<div className='setting-description'>{setting.description}</div>
+					<div className='ui-note ui-field-hint'>{setting.description}</div>
 				)}
 			</div>
 		</div>

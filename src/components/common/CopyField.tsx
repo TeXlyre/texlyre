@@ -53,25 +53,27 @@ const CopyField: React.FC<CopyFieldProps> = ({
 				: idleLabel;
 
 	return (
-		<div className='copy-field'>
+		<div className='ui-field'>
 			{label && <label htmlFor={id}>{label}</label>}
-			<div className='copy-field-input-group'>
+			<div className='ui-control-cluster'>
 				<input
 					id={id}
 					type='text'
 					value={value}
 					readOnly
-					className={`copy-field-input${mono ? ' mono' : ''}`}
+					className='ui-field-control'
+					data-font={mono ? 'mono' : undefined}
 					onFocus={(e) => e.target.select()}
 				/>
 				<button
 					type='button'
 					onClick={handleCopy}
-					className={`button smaller copy-field-button copy-field-button--${status}`}
+					className='button '
+					data-nowrap='true'
 					disabled={disabled || status === 'copied'}
 				>
 					{icon}
-					<span className='copy-field-button-label'>{buttonLabel}</span>
+					<span>{buttonLabel}</span>
 				</button>
 			</div>
 		</div>

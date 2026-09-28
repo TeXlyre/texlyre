@@ -56,10 +56,14 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 			title={t('Delete Projects')}
 			size='medium'
 		>
-			<div className='project-delete-modal'>
-				{error && <div className='error-message'>{error}</div>}
+			<div className='ui-stack' data-gap='md'>
+				{error && (
+					<div className='ui-message' data-tone='error'>
+						{error}
+					</div>
+				)}
 
-				<div className='delete-info'>
+				<div className='ui-message' data-tone='warning'>
 					<p>
 						{t('Are you sure you want to delete {count} project?', {
 							count: selectedProjects.length,
@@ -67,14 +71,19 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 					</p>
 				</div>
 
-				<div className='selected-projects-list'>
+				<div className='ui-list' data-scroll='short'>
 					{selectedProjects.map((project) => (
-						<div key={project.id} className='delete-project-item'>
+						<div
+							key={project.id}
+							className='ui-list-item'
+							data-appearance='flat'
+							data-padding='sm'
+						>
 							<strong>{project.name}</strong>
-							<div className='delete-project-details'>
+							<div className='ui-note'>
 								{project.description || t('No description')}
 							</div>
-							<div className='delete-project-details'>
+							<div className='ui-note'>
 								{t('Last Modified: {lastModified}', {
 									lastModified: formatDate(project.updatedAt),
 								})}
@@ -83,16 +92,21 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 					))}
 				</div>
 
-				<div className='warning-message'>
+				<div className='ui-message' data-tone='warning'>
 					{t(
 						'All documents, files, and collaboration data for these projects will be permanently deleted.',
 					)}
 				</div>
-				<div className='warning-message'>
+				<div className='ui-message' data-tone='warning'>
 					{t('This action cannot be undone.')}
 				</div>
 
-				<div className='modal-actions'>
+				<div
+					className='ui-actions'
+					data-variant='modal'
+					data-align='end'
+					data-cross='stretch'
+				>
 					<button
 						type='button'
 						className='button secondary'

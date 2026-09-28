@@ -234,7 +234,6 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 				{selectionMode && (
 					<input
 						type='checkbox'
-						className='file-select-checkbox'
 						checked={selectedNodeIds?.has(node.id) ?? false}
 						onClick={(e) => e.stopPropagation()}
 						onChange={() => onToggleSelection?.(node)}
@@ -253,7 +252,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
 				{isRenaming ? (
 					<div className='file-name-input-container'>
-						<div className='file-name-input-row'>
+						<div className='file-name-input-row ui-field-with-action'>
 							<input
 								type='text'
 								value={renameValue}
@@ -264,11 +263,12 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 								onBlur={() => onSaveRename(node)}
 								onKeyDown={(e) => onRenameKeyDown(e, node)}
 								onClick={(e) => e.stopPropagation()}
-								className={`file-name-input ${nameError ? 'invalid' : ''}`}
+								className={`file-name-input ui-field-control ${nameError ? 'invalid' : ''}`}
 							/>
 							<button
+								type='button'
 								aria-label={t('Cancel renaming')}
-								className='cancel-input-button'
+								className='ui-field-clear'
 								onMouseDown={(e) => {
 									e.preventDefault();
 									e.stopPropagation();
@@ -294,8 +294,11 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 								</span>
 							)}
 							{node.launchHandle && (
-								<span
-									className='file-disk-indicator'
+								<button
+									type='button'
+									className='ui-icon-button'
+									data-variant='subtle'
+									data-size='xs'
 									title={t('Connected to a file opened from your device')}
 									onClick={(event) => {
 										event.stopPropagation();
@@ -303,7 +306,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 									}}
 								>
 									<DiskLinkedIcon />
-								</span>
+								</button>
 							)}
 						</span>
 						{(() => {
@@ -330,7 +333,9 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 					{shouldShowLinkButton &&
 						(!hasDocument ? (
 							<button
-								className='action-btn'
+								type='button'
+								className='ui-icon-button'
+								data-variant='subtle'
 								title={
 									isTemporaryFile(node.path)
 										? t('Link Document (Not recommended for temporary files)')
@@ -348,7 +353,9 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							</button>
 						) : (
 							<button
-								className='action-btn'
+								type='button'
+								className='ui-icon-button'
+								data-variant='subtle'
 								title={t('Unlink Document')}
 								onClick={(e) => {
 									e.stopPropagation();
@@ -370,7 +377,9 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 						}}
 					>
 						<button
-							className='action-btn menu-trigger'
+							type='button'
+							className='ui-icon-button'
+							data-variant='subtle'
 							title={t('Options')}
 							onClick={(e) => {
 								e.stopPropagation();
@@ -389,7 +398,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							onClose={() => onSetActiveMenu(null)}
 						>
 							<button
-								className='dropdown-item'
+								type='button'
+								className='ui-menu-item'
 								onClick={(e) => {
 									e.stopPropagation();
 									onStartRename(node);
@@ -401,7 +411,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
 							{enableInternalDragDrop && (
 								<button
-									className='dropdown-item'
+									type='button'
+									className='ui-menu-item'
 									onClick={(e) => {
 										e.stopPropagation();
 										onMoveFile(node);
@@ -415,7 +426,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							{node.type === 'file' && (
 								<>
 									<button
-										className='dropdown-item'
+										type='button'
+										className='ui-menu-item'
 										onClick={(e) => {
 											e.stopPropagation();
 											onDuplicateFile(node);
@@ -426,7 +438,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 									</button>
 
 									<button
-										className='dropdown-item'
+										type='button'
+										className='ui-menu-item'
 										onClick={(e) => {
 											e.stopPropagation();
 											onCopyPath(node);
@@ -437,7 +450,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 									</button>
 
 									<button
-										className='dropdown-item'
+										type='button'
+										className='ui-menu-item'
 										onClick={(e) => {
 											e.stopPropagation();
 											onExportFile(node);
@@ -452,7 +466,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							{node.type === 'directory' && (
 								<>
 									<button
-										className='dropdown-item'
+										type='button'
+										className='ui-menu-item'
 										onClick={(e) => {
 											e.stopPropagation();
 											onUploadToFolder(node.path);
@@ -463,7 +478,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 									</button>
 
 									<button
-										className='dropdown-item'
+										type='button'
+										className='ui-menu-item'
 										onClick={(e) => {
 											e.stopPropagation();
 											onCreateFileInFolder(node.id, node.path);
@@ -474,7 +490,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 									</button>
 
 									<button
-										className='dropdown-item'
+										type='button'
+										className='ui-menu-item'
 										onClick={(e) => {
 											e.stopPropagation();
 											onCreateSubfolder(node.path);
@@ -485,7 +502,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 									</button>
 
 									<button
-										className='dropdown-item'
+										type='button'
+										className='ui-menu-item'
 										onClick={(e) => {
 											e.stopPropagation();
 											onExpandAllSubfolders(node);
@@ -496,7 +514,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 									</button>
 
 									<button
-										className='dropdown-item'
+										type='button'
+										className='ui-menu-item'
 										onClick={(e) => {
 											e.stopPropagation();
 											onCollapseAllSubfolders(node);
@@ -506,7 +525,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 										<span>{t('Collapse All')}</span>
 									</button>
 									<button
-										className='dropdown-item'
+										type='button'
+										className='ui-menu-item'
 										onClick={(e) => {
 											e.stopPropagation();
 											onExportFolder(node);
@@ -519,7 +539,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							)}
 
 							<button
-								className='dropdown-item'
+								type='button'
+								className='ui-menu-item'
 								onClick={(e) => {
 									e.stopPropagation();
 									onShowProperties(node);
@@ -530,7 +551,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							</button>
 
 							<button
-								className='dropdown-item'
+								type='button'
+								className='ui-menu-item'
 								onClick={(e) => {
 									e.stopPropagation();
 									onDeleteFileOrDirectory(node.id);
@@ -582,7 +604,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 								)}
 							</span>
 							<div className='file-name-input-container'>
-								<div className='file-name-input-row'>
+								<div className='file-name-input-row ui-field-with-action'>
 									<input
 										type='text'
 										value={newItemName}
@@ -592,12 +614,13 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 										}}
 										onBlur={onConfirmNewItem}
 										onKeyDown={onNewItemKeyDown}
-										className={`file-name-input ${nameError ? 'invalid' : ''}`}
+										className={`file-name-input ui-field-control ${nameError ? 'invalid' : ''}`}
 									/>
 
 									<button
+										type='button'
 										aria-label={t('Cancel new item')}
-										className='cancel-input-button'
+										className='ui-field-clear'
 										onMouseDown={(e) => {
 											e.preventDefault();
 											e.stopPropagation();

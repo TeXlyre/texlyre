@@ -57,39 +57,44 @@ export const TagInput: React.FC<TagInputProps> = ({
 	};
 
 	return (
-		<div className='tag-input-field'>
-			<div className='tag-input-tags'>
-				{values.map((tag) => (
-					<span
-						key={tag}
-						className='tag-input-tag'
-						onClick={(e) => e.stopPropagation()}
-					>
-						{tag}
-						{!disabled && (
-							<button
-								type='button'
-								aria-label={t('Remove {tag}', { tag })}
-								onClick={() => removeTag(tag)}
-								className='tag-input-remove'
-								title={t('Remove {tag}', { tag })}
-							>
-								<span aria-hidden='true'>×</span>
-							</button>
-						)}
-					</span>
-				))}
-				{!disabled && (
-					<input
-						type='text'
-						value={inputValue}
-						onChange={handleChange}
-						onKeyDown={handleKeyDown}
-						placeholder={values.length === 0 ? placeholder : undefined}
-						className='tag-input-inner'
-					/>
-				)}
-			</div>
+		<div
+			className='ui-token-field'
+			data-disabled={disabled ? 'true' : undefined}
+		>
+			{values.map((tag) => (
+				<span
+					key={tag}
+					className='ui-badge'
+					data-variant='tag'
+					onClick={(e) => e.stopPropagation()}
+				>
+					{tag}
+					{!disabled && (
+						<button
+							type='button'
+							aria-label={t('Remove {tag}', { tag })}
+							onClick={() => removeTag(tag)}
+							className='ui-icon-button'
+							data-variant='ghost'
+							data-size='xs'
+							title={t('Remove {tag}', { tag })}
+						>
+							<span aria-hidden='true'>×</span>
+						</button>
+					)}
+				</span>
+			))}
+			{!disabled && (
+				<input
+					type='text'
+					value={inputValue}
+					onChange={handleChange}
+					onKeyDown={handleKeyDown}
+					placeholder={values.length === 0 ? placeholder : undefined}
+					className='ui-field-control'
+					data-appearance='bare'
+				/>
+			)}
 		</div>
 	);
 };

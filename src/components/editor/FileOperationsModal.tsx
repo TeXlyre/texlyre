@@ -216,12 +216,18 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 					}
 					size='medium'
 				>
-					<div className='move-dialog-content'>
+					<div className='ui-stack' data-gap='md'>
 						<p>{t('Select destination folder')}:</p>
 
-						<div className='directory-tree'>
+						<div className='ui-list ui-card' data-scroll='medium'>
 							<div
-								className={`directory-option ${selectedTargetPath === '/' ? 'selected' : ''}`}
+								className='ui-list-item'
+								data-align='center'
+								data-gap='sm'
+								data-padding='sm'
+								data-appearance='flat'
+								data-interactive='true'
+								data-selected={selectedTargetPath === '/' ? 'true' : undefined}
 								onClick={() => onSetSelectedTargetPath('/')}
 							>
 								<FolderIcon />
@@ -231,14 +237,24 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 							{moveDirectoryOptions.map((dir) => (
 								<div
 									key={dir.path}
-									className={`directory-option ${selectedTargetPath === dir.path ? 'selected' : ''}`}
+									className='ui-list-item'
+									data-align='center'
+									data-gap='sm'
+									data-padding='sm'
+									data-appearance='flat'
+									data-interactive='true'
+									data-selected={
+										selectedTargetPath === dir.path ? 'true' : undefined
+									}
 									onClick={() => onSetSelectedTargetPath(dir.path)}
 								>
 									<FolderIcon />
 									<span>{dir.path}</span>
 									{isTemporaryFile(dir.path) && (
 										<span
-											className='temp-indicator'
+											className='ui-badge'
+											data-variant='label'
+											data-tone='accent'
 											title={t('Temporary folder')}
 										>
 											<TempFileIcon />
@@ -249,12 +265,17 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 						</div>
 
 						{moveWarning && (
-							<div className='warning-message' style={{ marginTop: '1rem' }}>
+							<div className='ui-message' data-tone='warning'>
 								{moveWarning}
 							</div>
 						)}
 
-						<div className='modal-actions'>
+						<div
+							className='ui-actions'
+							data-variant='modal'
+							data-align='end'
+							data-cross='stretch'
+						>
 							<button
 								type='button'
 								className='button secondary'
@@ -297,7 +318,11 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 							<div className='move-source'>
 								<strong>{t('From')}:</strong> {dragDropFile.path}
 								{isTemporaryFile(dragDropFile.path) && (
-									<span className='temp-file-indicator'>
+									<span
+										className='ui-badge'
+										data-variant='label'
+										data-tone='accent'
+									>
 										{' '}
 										<TempFileIcon /> {t('Temporary')}
 									</span>
@@ -307,7 +332,11 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 								<strong>{t('To')}:</strong>{' '}
 								{dragDropTargetPath === '/' ? '/' : dragDropTargetPath}
 								{isTemporaryFile(dragDropTargetPath) && (
-									<span className='temp-file-indicator'>
+									<span
+										className='ui-badge'
+										data-variant='label'
+										data-tone='accent'
+									>
 										{' '}
 										<TempFileIcon /> {t('Temporary')}
 									</span>
@@ -316,10 +345,17 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 						</div>
 
 						{dragDropWarning && (
-							<div className='warning-message'>{dragDropWarning}</div>
+							<div className='ui-message' data-tone='warning'>
+								{dragDropWarning}
+							</div>
 						)}
 
-						<div className='modal-actions'>
+						<div
+							className='ui-actions'
+							data-variant='modal'
+							data-align='end'
+							data-cross='stretch'
+						>
 							<button
 								type='button'
 								className='button secondary'

@@ -62,21 +62,27 @@ const ReviewItemBase = forwardRef<HTMLDivElement, ReviewItemProps>(
 
 		return (
 			<div
-				className={`review-item ${review.resolved ? 'resolved' : ''}`}
+				className='review-item ui-card'
+				data-role='thread-item'
+				data-state={review.resolved ? 'resolved' : undefined}
 				data-review-id={review.id}
 				ref={ref}
 				style={top === undefined ? undefined : { top: `${top}px` }}
 			>
-				<div className='review-header'>
-					<div className='review-author-container'>
-						<div className='review-author' title={review.user}>
+				<div className='ui-item-header'>
+					<div className='ui-item-author-group'>
+						<div className='ui-item-author' title={review.user}>
 							{truncateUsername(review.user)}
 						</div>
-						<div className='review-time'>{formatDate(review.timestamp)}</div>
+						<div className='ui-item-time'>{formatDate(review.timestamp)}</div>
 					</div>
-					<div className='review-header-actions'>
+					<div className='ui-actions'>
 						<button
-							className='resolve-button'
+							type='button'
+							className='ui-icon-button'
+							data-variant='ghost'
+							data-tone='success'
+							data-size='sm'
 							onClick={() => resolveReview(review.id)}
 							title={
 								review.resolved
@@ -87,14 +93,22 @@ const ReviewItemBase = forwardRef<HTMLDivElement, ReviewItemProps>(
 							<ResolveIcon />
 						</button>
 						<button
-							className='accept-button'
+							type='button'
+							className='ui-icon-button'
+							data-variant='ghost'
+							data-tone='success'
+							data-size='sm'
 							onClick={() => acceptReview(review.id)}
 							title={t('Accept change')}
 						>
 							<CheckIcon />
 						</button>
 						<button
-							className='reject-button'
+							type='button'
+							className='ui-icon-button'
+							data-variant='ghost'
+							data-tone='danger'
+							data-size='sm'
 							onClick={() => rejectReview(review.id)}
 							title={t('Reject change')}
 						>
@@ -104,6 +118,7 @@ const ReviewItemBase = forwardRef<HTMLDivElement, ReviewItemProps>(
 				</div>
 
 				<button
+					type='button'
 					className='review-diff'
 					onClick={() => gotoEditor(null, { line: review.line })}
 					title={t('Go to line {line}', { line: review.line })}
@@ -119,27 +134,31 @@ const ReviewItemBase = forwardRef<HTMLDivElement, ReviewItemProps>(
 				</button>
 
 				{review.responses.length > 0 && (
-					<div className='review-responses'>
+					<div className='ui-thread'>
 						{review.responses.map((response) => (
-							<div key={response.id} className='response-item'>
-								<div className='response-header'>
-									<div className='response-author-container'>
-										<div className='response-author' title={response.user}>
+							<div key={response.id} className='ui-thread-item'>
+								<div className='ui-item-header'>
+									<div className='ui-item-author-group'>
+										<div className='ui-item-author' title={response.user}>
 											{truncateUsername(response.user)}
 										</div>
-										<div className='response-time'>
+										<div className='ui-item-time'>
 											{formatDate(response.timestamp)}
 										</div>
 									</div>
 									<button
-										className='delete-button small'
+										type='button'
+										className='ui-icon-button'
+										data-variant='ghost'
+										data-tone='danger'
+										data-size='xs'
 										onClick={() => deleteResponse(review.id, response.id)}
 										title={t('Delete response')}
 									>
 										<TrashIcon />
 									</button>
 								</div>
-								<div className='response-content'>{response.content}</div>
+								<div className='ui-item-content'>{response.content}</div>
 							</div>
 						))}
 					</div>
@@ -147,7 +166,7 @@ const ReviewItemBase = forwardRef<HTMLDivElement, ReviewItemProps>(
 
 				{!review.resolved &&
 					(isAddingResponse ? (
-						<div className='add-response-form'>
+						<div className='ui-stack' data-gap='sm'>
 							<textarea
 								value={newResponse}
 								onChange={(event) => setNewResponse(event.target.value)}
@@ -156,9 +175,15 @@ const ReviewItemBase = forwardRef<HTMLDivElement, ReviewItemProps>(
 								rows={2}
 							/>
 
-							<div className='form-actions'>
+							<div
+								className='ui-actions'
+								data-variant='form'
+								data-align='end'
+								data-cross='stretch'
+							>
 								<button
-									className='cancel-response-button'
+									type='button'
+									className='button secondary'
 									onClick={() => {
 										setIsAddingResponse(false);
 										setNewResponse('');
@@ -167,7 +192,8 @@ const ReviewItemBase = forwardRef<HTMLDivElement, ReviewItemProps>(
 									{t('Cancel')}
 								</button>
 								<button
-									className='submit-response-button'
+									type='button'
+									className='button primary'
 									onClick={handleAddResponse}
 									disabled={!newResponse.trim()}
 								>
@@ -177,7 +203,8 @@ const ReviewItemBase = forwardRef<HTMLDivElement, ReviewItemProps>(
 						</div>
 					) : (
 						<button
-							className='add-response-button'
+							type='button'
+							className='button secondary'
 							onClick={() => setIsAddingResponse(true)}
 						>
 							{t('Add response')}

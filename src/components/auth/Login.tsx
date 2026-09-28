@@ -167,10 +167,14 @@ const Login: React.FC<LoginProps> = ({
 			<div className='auth-form-container'>
 				<h2>{t('Log in')}</h2>
 
-				{error && <div className='auth-error'>{error}</div>}
+				{error && (
+					<div className='ui-message' data-tone='error'>
+						{error}
+					</div>
+				)}
 
-				<form onSubmit={handleSubmit} className='auth-form'>
-					<div className='form-group'>
+				<form onSubmit={handleSubmit} className='ui-stack'>
+					<div className='ui-field' data-spacing='section'>
 						<label htmlFor='username'>{t('Username')}</label>
 						<input
 							type='text'
@@ -185,7 +189,7 @@ const Login: React.FC<LoginProps> = ({
 						/>
 					</div>
 
-					<div className='form-group'>
+					<div className='ui-field' data-spacing='section'>
 						<label htmlFor='password'>{t('Password')}</label>
 						<input
 							type='password'
@@ -199,7 +203,8 @@ const Login: React.FC<LoginProps> = ({
 
 					<button
 						type='submit'
-						className={`auth-button ${isLoading ? 'loading' : ''}`}
+						className='button primary'
+						data-state={isLoading ? 'loading' : undefined}
 						disabled={isLoading}
 						hidden={getTempPrf() !== null}
 					>
@@ -209,12 +214,18 @@ const Login: React.FC<LoginProps> = ({
 					{!confirmCreate ? (
 						<button
 							type='button'
-							className={`auth-button chelys-button ${isLoading ? 'loading' : ''}`}
+							className='button'
+							data-tone='accent'
+							data-state={isLoading ? 'loading' : undefined}
 							onClick={handleChelysSubmit}
 							disabled={isLoading}
 						>
 							<span>{t('Log in to Chelys')}</span>
-							<span className='passkey-badge'>
+							<span
+								className='ui-badge'
+								data-variant='label'
+								data-tone='accent'
+							>
 								{getTempPrf() ? (
 									<>{t('Temporary')} </>
 								) : (
@@ -233,7 +244,12 @@ const Login: React.FC<LoginProps> = ({
 									{ username },
 								)}
 							</p>
-							<div className='modal-actions'>
+							<div
+								className='ui-actions'
+								data-variant='modal'
+								data-align='end'
+								data-cross='stretch'
+							>
 								<button
 									type='button'
 									className='button secondary'
@@ -262,7 +278,8 @@ const Login: React.FC<LoginProps> = ({
 							</div>
 							<button
 								type='button'
-								className='auth-button guest-button'
+								className='button'
+								data-width='full'
 								onClick={() => setShowGuestModal(true)}
 								disabled={isLoading}
 							>
@@ -270,10 +287,12 @@ const Login: React.FC<LoginProps> = ({
 							</button>
 						</div>
 
-						<div className='auth-alt-action'>
+						<div className='ui-actions' data-align='center' data-wrap='true'>
 							<span>{t("Don't have an account?")}</span>
 							<button
-								className='text-button'
+								type='button'
+								className='button'
+								data-variant='text'
 								onClick={onSwitchToRegister}
 								disabled={isLoading}
 							>
@@ -281,7 +300,10 @@ const Login: React.FC<LoginProps> = ({
 							</button>
 							<span className='auth-separator'>{t('or')}</span>
 							<button
-								className='text-button'
+								type='button'
+								className='button'
+								data-variant='text'
+								data-role='auth-import-account'
 								onClick={onSwitchToImport}
 								disabled={isLoading}
 							>

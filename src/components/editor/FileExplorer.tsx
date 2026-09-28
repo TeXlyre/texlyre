@@ -12,7 +12,10 @@ import {
 	fileConflictPromptService,
 } from '../../services/FileConflictPromptService';
 import { fileHandlerService } from '../../services/FileHandlerService';
-import { fileStoreService } from '../../services/FileStoreService';
+import {
+	fileStoreService,
+	type FileStorageChange,
+} from '../../services/FileStoreService';
 import type { FileNode, FilePropertiesInfo } from '../../types/files';
 import type { ProjectType } from '../../types/projects';
 import {
@@ -59,6 +62,30 @@ const moduleLog = createNamedLogger('FileExplorer');
 
 const TEXT_METRICS_SIZE_LIMIT = 2 * 1024 * 1024;
 
+type FileContentMetadata = Pick<FileStorageChange, 'size' | 'lastModified'>;
+
+type FileExplorerWindow = Window & {
+	tempZipModalResolve?: () => void;
+};
+
+const applyContentMetadata = (
+	nodes: FileNode[],
+	metadata: Map<string, FileContentMetadata>,
+): FileNode[] => {
+	let changed = false;
+	const next = nodes.map((node) => {
+		const update = metadata.get(node.id);
+		const children = node.children
+			? applyContentMetadata(node.children, metadata)
+			: undefined;
+
+		if (!update && children === node.children) return node;
+		changed = true;
+		return { ...node, ...update, ...(children ? { children } : {}) };
+	});
+	return changed ? next : nodes;
+};
+
 interface FileExplorerProps {
 	onFileSelect: (
 		fileId: string,
@@ -80,7 +107,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	initialExpandedPaths,
 	currentProjectId,
 	onExportCurrentProject,
-	projectType,
+	projectType = 'latex',
 	collabProjectId,
 	docsWithPeers,
 }) => {
@@ -110,6 +137,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [sortField, setSortField] = useState<FileSortField>('name');
 	const [sortDirection, setSortDirection] = useState<FileSortDirection>('asc');
+	const [contentMetadata, setContentMetadata] = useState<
+		Map<string, FileContentMetadata>
+	>(new Map());
+	const previousFileTreeRef = useRef(fileTree);
 	const [showTemporaryFiles, setShowTemporaryFiles] = useState(true);
 	const [showOptionsMenu, setShowOptionsMenu] = useState(false);
 	const optionsButtonRef = useRef<HTMLDivElement>(null);
@@ -216,12 +247,46 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		setPropertiesLoaded(true);
 	}, [getProperty, propertiesLoaded]);
 
+	useEffect(() => {
+		if (previousFileTreeRef.current === fileTree) return;
+		previousFileTreeRef.current = fileTree;
+		setContentMetadata(new Map());
+	}, [fileTree]);
+
+	useEffect(() => {
+		const handleContentChanged = (event: Event) => {
+			const { detail } = event as CustomEvent<FileStorageChange>;
+			const fileId = detail.fileId;
+			if (!fileId) return;
+			setContentMetadata((current) => {
+				const next = new Map(current);
+				next.set(fileId, {
+					size: detail.size,
+					lastModified: detail.lastModified,
+				});
+				return next;
+			});
+		};
+
+		document.addEventListener('file-content-changed', handleContentChanged);
+		return () => {
+			document.removeEventListener(
+				'file-content-changed',
+				handleContentChanged,
+			);
+		};
+	}, []);
+
 	const sortedFileTree = useMemo(() => {
 		const visible = showTemporaryFiles
 			? fileTree
 			: filterTemporaryFiles(fileTree);
-		return sortFileTree(visible, sortField, sortDirection);
-	}, [fileTree, showTemporaryFiles, sortField, sortDirection]);
+		const current =
+			contentMetadata.size > 0
+				? applyContentMetadata(visible, contentMetadata)
+				: visible;
+		return sortFileTree(current, sortField, sortDirection);
+	}, [fileTree, contentMetadata, showTemporaryFiles, sortField, sortDirection]);
 
 	const selectedNodes = useMemo(() => {
 		const collect = (nodes: FileNode[]): FileNode[] =>
@@ -290,7 +355,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			setZipTargetPath(targetPath);
 			setShowZipModal(true);
 
-			(window as any).tempZipModalResolve = resolve;
+			(window as FileExplorerWindow).tempZipModalResolve = resolve;
 		});
 	};
 
@@ -320,9 +385,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		setShowZipModal(false);
 		setPendingZipFile(null);
 
-		if ((window as any).tempZipModalResolve) {
-			(window as any).tempZipModalResolve();
-			(window as any).tempZipModalResolve = undefined;
+		const modalWindow = window as FileExplorerWindow;
+		if (modalWindow.tempZipModalResolve) {
+			modalWindow.tempZipModalResolve();
+			modalWindow.tempZipModalResolve = undefined;
 		}
 	};
 
@@ -387,8 +453,18 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		parentPath = '/',
 		triggerElement?: HTMLElement,
 	) => {
+		const trigger = triggerElement || fileCreationButtonRef.current;
+		if (
+			showFileCreationMenu &&
+			fileCreationParentPath === parentPath &&
+			fileCreationTrigger === trigger
+		) {
+			setShowFileCreationMenu(false);
+			return;
+		}
+
 		setFileCreationParentPath(parentPath);
-		setFileCreationTrigger(triggerElement || fileCreationButtonRef.current);
+		setFileCreationTrigger(trigger);
 		setShowFileCreationMenu(true);
 		setActiveMenu(null);
 	};
@@ -767,7 +843,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			name: node.name,
 			path: node.path,
 			type: node.type,
-			isBinary: node.isBinary,
+			isBinary: node.isBinary ?? false,
 			documentId: node.documentId,
 			createdAt: node.createdAt ?? node.lastModified,
 			lastModified: node.lastModified,
@@ -1142,13 +1218,22 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	};
 
 	if (isLoading) {
-		return <div className='file-explorer loading'>{t('Loading files...')}</div>;
+		return (
+			<div
+				className='ui-panel ui-loading-state'
+				data-fill='true'
+				data-role='explorer'
+			>
+				{t('Loading files...')}
+			</div>
+		);
 	}
 
 	return (
 		<>
 			<div
-				className={`file-explorer ${!isEditingFileName && isDragging ? 'dragging' : ''} ${!isEditingFileName && dragOverTarget === 'root' ? 'root-drag-over' : ''}`}
+				className={`ui-panel ${!isEditingFileName && isDragging ? 'dragging' : ''} ${!isEditingFileName && dragOverTarget === 'root' ? 'root-drag-over' : ''}`}
+				data-role='explorer'
 				ref={dropRef}
 				onDragEnter={handleDragEnter}
 				onDragOver={(e) => handleDragOver(e)}
@@ -1159,14 +1244,24 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				}}
 				onDrop={(e) => handleDropOnRoot(e)}
 			>
-				<div className='file-explorer-header'>
-					<h3>{t('Files')}</h3>
+				<div
+					className='ui-panel-header'
+					data-role='explorer'
+					data-position='top'
+				>
+					<h3 className='ui-panel-title' data-size='body' data-shrink='true'>
+						{t('Files')}
+					</h3>
 					<div
-						className='file-explorer-actions scroll-x'
+						className='ui-toolbar-actions scroll-x'
+						data-gap='sm'
+						data-active-style='filled'
 						ref={headerActionsRef}
 					>
 						<button
-							className='action-btn'
+							type='button'
+							className='ui-icon-button'
+							data-variant='subtle'
 							title={t('Refresh File Tree')}
 							onClick={() => refreshFileTree()}
 						>
@@ -1175,7 +1270,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
 						<div ref={optionsButtonRef}>
 							<button
-								className={`action-btn ${showOptionsMenu ? 'active' : ''}`}
+								type='button'
+								className={`ui-icon-button ${showOptionsMenu ? 'active' : ''}`}
+								data-variant='subtle'
 								title={t('Options')}
 								onClick={() => setShowOptionsMenu(!showOptionsMenu)}
 							>
@@ -1184,7 +1281,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 						</div>
 
 						<button
-							className={`action-btn ${selectionMode ? 'active' : ''}`}
+							type='button'
+							className={`ui-icon-button ${selectionMode ? 'active' : ''}`}
+							data-variant='subtle'
 							title={t('Multi-select')}
 							onClick={handleToggleSelectionMode}
 						>
@@ -1194,7 +1293,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 						<div className='action-separator'></div>
 
 						<button
-							className='action-btn'
+							type='button'
+							className='ui-icon-button'
+							data-variant='subtle'
 							title={t('Export Current Project')}
 							onClick={handleExportCurrentProject}
 							disabled={!currentProjectId}
@@ -1203,7 +1304,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 						</button>
 
 						<button
-							className='action-btn'
+							type='button'
+							className='ui-icon-button'
+							data-variant='subtle'
 							title={t('Open Folder from Disk')}
 							onClick={handleOpenFolder}
 							disabled={!currentProjectId || !workspaceService.isSupported()}
@@ -1212,9 +1315,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 						</button>
 
 						<button
-							className='action-btn'
+							type='button'
+							className='ui-icon-button'
+							data-variant='subtle'
 							title={t('Upload Files')}
-							onClick={() => document.getElementById('file-input').click()}
+							onClick={() => document.getElementById('file-input')?.click()}
 						>
 							<UploadIcon />
 						</button>
@@ -1228,8 +1333,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 						/>
 
 						<button
+							type='button'
 							ref={fileCreationButtonRef}
-							className='action-btn'
+							className='ui-icon-button'
+							data-variant='subtle'
 							title={t('New File')}
 							onClick={(e) => handleStartCreateFile('/', e.currentTarget)}
 						>
@@ -1237,7 +1344,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 						</button>
 
 						<button
-							className='action-btn'
+							type='button'
+							className='ui-icon-button'
+							data-variant='subtle'
 							title={t('New Folder')}
 							onClick={() => handleStartCreateDirectory('/')}
 						>
@@ -1269,13 +1378,18 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				</div>
 
 				{selectionMode && (
-					<div className='file-selection-bar'>
-						<span>
+					<div className='ui-panel-controls'>
+						<span className='ui-meta'>
 							{t('{count} selected', { count: selectedNodeIds.size })}
 						</span>
-						<div className='file-selection-actions'>
+						<div
+							className='file-selection-actions ui-toolbar-actions'
+							data-gap='sm'
+						>
 							<button
-								className='action-btn'
+								type='button'
+								className='ui-icon-button'
+								data-variant='subtle'
 								title={t('Move Selected')}
 								disabled={selectedNodeIds.size === 0}
 								onClick={handleMoveSelected}
@@ -1283,7 +1397,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 								<MoveIcon />
 							</button>
 							<button
-								className='action-btn'
+								type='button'
+								className='ui-icon-button'
+								data-variant='subtle'
 								title={t('Delete Selected')}
 								disabled={selectedNodeIds.size === 0}
 								onClick={handleDeleteSelected}
@@ -1291,7 +1407,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 								<TrashIcon />
 							</button>
 							<button
-								className='action-btn'
+								type='button'
+								className='ui-icon-button'
+								data-variant='subtle'
 								title={t('Exit selection mode')}
 								onClick={handleToggleSelectionMode}
 							>
@@ -1312,7 +1430,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 								)}
 							</span>
 							<div className='file-name-input-container'>
-								<div className='file-name-input-row'>
+								<div className='file-name-input-row ui-field-with-action'>
 									<input
 										type='text'
 										value={newItemName}
@@ -1322,11 +1440,12 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 										}}
 										onBlur={handleConfirmNewItem}
 										onKeyDown={handleNewItemKeyDown}
-										className={`file-name-input ${nameError ? 'invalid' : ''}`}
+										className={`file-name-input ui-field-control ${nameError ? 'invalid' : ''}`}
 									/>
 									<button
+										type='button'
 										aria-label={t('Cancel new item')}
-										className='cancel-input-button'
+										className='ui-field-clear'
 										onMouseDown={(e) => {
 											e.preventDefault();
 											e.stopPropagation();
@@ -1407,13 +1526,17 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 							))}
 
 							{dragOverTarget === 'root' && (
-								<div className='root-drop-indicator-note'>
+								<div
+									className='ui-message'
+									data-tone='info'
+									data-density='compact'
+								>
 									{t('Drop here to move to root directory')}
 								</div>
 							)}
 						</div>
 					) : (
-						<div className='empty-state'>
+						<div className='empty-state ui-empty-state'>
 							{t(
 								'No files. Upload or create files to get started. Drag any files here to upload them.',
 							)}
@@ -1441,14 +1564,16 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				onConfirmDragDrop={handleConfirmDragDrop}
 			/>
 
-			<ZipHandlingModal
-				isOpen={showZipModal}
-				onClose={handleZipModalClose}
-				zipFile={pendingZipFile!}
-				targetPath={zipTargetPath}
-				onExtract={handleExtractZip}
-				onKeepAsZip={handleKeepZip}
-			/>
+			{pendingZipFile && (
+				<ZipHandlingModal
+					isOpen={showZipModal}
+					onClose={handleZipModalClose}
+					zipFile={pendingZipFile}
+					targetPath={zipTargetPath}
+					onExtract={handleExtractZip}
+					onKeepAsZip={handleKeepZip}
+				/>
+			)}
 		</>
 	);
 };

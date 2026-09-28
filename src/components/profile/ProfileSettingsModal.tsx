@@ -41,17 +41,17 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 			size='medium'
 			icon={UserIcon}
 		>
-			<div className='view-tabs'>
+			<div className='ui-tab-list' data-role='panel' data-variant='switcher'>
 				<button
 					type='button'
-					className={`tab-button ${tab === 'account' ? 'active' : ''}`}
+					className={`ui-tab ${tab === 'account' ? 'active' : ''}`}
 					onClick={() => setTab('account')}
 				>
 					{t('Account')}
 				</button>
 				<button
 					type='button'
-					className={`tab-button ${tab === 'data' ? 'active' : ''}`}
+					className={`ui-tab ${tab === 'data' ? 'active' : ''}`}
 					onClick={() => setTab('data')}
 				>
 					{t('Data')}
@@ -60,9 +60,15 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
 			<br />
 
-			{error && <div className='error-message'>{error}</div>}
+			{error && (
+				<div className='ui-message' data-tone='error'>
+					{error}
+				</div>
+			)}
 			{successMessage && (
-				<div className='success-message'>{successMessage}</div>
+				<div className='ui-message' data-tone='success'>
+					{successMessage}
+				</div>
 			)}
 
 			{tab === 'account' ? (

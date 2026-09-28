@@ -157,7 +157,10 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 				size='large'
 				headerActions={
 					<button
-						className='modal-close-button'
+						type='button'
+						className='ui-icon-button'
+						data-role='modal-close'
+						data-variant='subtle'
 						onClick={() => setShowSettings(true)}
 						title={t('Import Settings')}
 					>
@@ -165,14 +168,14 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 					</button>
 				}
 			>
-				<div className='url-import-modal'>
+				<div className='ui-stack' data-gap='md'>
 					{!hasAttemptedFetch ? (
-						<div className='url-input-section'>
-							<div className='form-group'>
+						<div className='ui-stack' data-gap='lg'>
+							<div className='ui-field' data-spacing='section'>
 								<label htmlFor='repository-url'>
 									{t('Repository or ZIP URL')}
 								</label>
-								<p className='field-description'>
+								<p className='ui-field-hint'>
 									{t(
 										'Enter a GitHub, GitLab, Codeberg, or Gitea repository URL, or a direct link to a ZIP file',
 									)}
@@ -187,7 +190,12 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 								/>
 							</div>
 
-							<div className='modal-actions'>
+							<div
+								className='ui-actions'
+								data-variant='modal'
+								data-align='end'
+								data-cross='stretch'
+							>
 								<button
 									type='button'
 									className='button secondary'
@@ -209,18 +217,18 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 					) : (
 						<>
 							{loading && (
-								<div className='url-loading'>
+								<div className='ui-loading-state'>
 									<div className='loading-spinner' />
 									<p>{t('Fetching repository metadata...')}</p>
 								</div>
 							)}
 
 							{error && (
-								<div className='error-message'>
+								<div className='ui-message' data-tone='error'>
 									<p>{error}</p>
 									<button
 										type='button'
-										className='button secondary smaller'
+										className='button secondary '
 										onClick={() => {
 											setHasAttemptedFetch(false);
 											setUrl('');
@@ -233,8 +241,8 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 
 							{metadata && !loading && (
 								<div className='url-import-content'>
-									<div className='url-import-form'>
-										<div className='form-group'>
+									<div className='ui-stack' data-gap='md'>
+										<div className='ui-field' data-spacing='section'>
 											<label htmlFor='project-name'>
 												{t('Project Name')}
 												<span className='required'>*</span>
@@ -249,7 +257,7 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 											/>
 										</div>
 
-										<div className='form-group'>
+										<div className='ui-field' data-spacing='section'>
 											<label htmlFor='project-description'>
 												{t('Description')}
 											</label>
@@ -264,7 +272,7 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 											/>
 										</div>
 
-										<div className='form-group'>
+										<div className='ui-field' data-spacing='section'>
 											<label htmlFor='project-type'>
 												{t('Typesetter Type')}
 											</label>
@@ -280,9 +288,9 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 											</select>
 										</div>
 
-										<div className='form-group'>
+										<div className='ui-field' data-spacing='section'>
 											<label htmlFor='project-tags'>{t('Tags')}</label>
-											<div className='tag-input-container'>
+											<div className='ui-control-cluster'>
 												<input
 													type='text'
 													id='project-tags'
@@ -303,25 +311,32 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 											</div>
 
 											{tags.length > 0 && (
-												<div className='tags-container'>
+												<div className='ui-tags' data-spacing='top'>
 													{tags.map((tag, index) => (
-														<div key={index} className='tag'>
+														<span
+															key={index}
+															className='ui-badge'
+															data-variant='tag'
+														>
 															<span>{tag}</span>
 															<button
 																type='button'
+																className='ui-icon-button'
+																data-variant='ghost'
+																data-size='xs'
 																aria-label={t('Remove tag')}
 																onClick={() => handleRemoveTag(tag)}
 																title={t('Remove tag')}
 															>
 																<span aria-hidden='true'>×</span>
 															</button>
-														</div>
+														</span>
 													))}
 												</div>
 											)}
 										</div>
 
-										<div className='form-group'>
+										<div className='ui-field' data-spacing='section'>
 											<label htmlFor='zip-url'>
 												{t('ZIP Download URL')}
 												<span className='required'>*</span>
@@ -337,35 +352,39 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 										</div>
 									</div>
 
-									<div className='url-import-preview'>
+									<div className='url-import-preview ui-stack' data-gap='md'>
 										{metadata.image ? (
-											<div className='preview-image-container'>
+											<div
+												className='url-preview-image ui-card'
+												data-radius='lg'
+											>
 												<img
 													src={metadata.image}
 													alt={t('Repository preview')}
-													className='preview-image'
 												/>
 
-												<div className='preview-type-badge'>
+												<div
+													className='ui-badge url-preview-type'
+													data-variant='label'
+												>
 													<TypesetterInfo type={type} />
 												</div>
 											</div>
 										) : (
-											<div className='preview-placeholder'>
+											<div className='ui-preview-placeholder'>
 												<FolderIcon />
 												<span>{t('No preview available')}</span>
 											</div>
 										)}
 
-										<div className='preview-details'>
-											<div className='preview-detail-item'>
+										<div
+											className='ui-card'
+											data-surface='secondary'
+											data-padding='md'
+										>
+											<div className='ui-stack' data-gap='xs'>
 												<strong>{t('Source: ')}</strong>
-												<a
-													href={url}
-													target='_blank'
-													rel='noopener noreferrer'
-													className='preview-link'
-												>
+												<a href={url} target='_blank' rel='noopener noreferrer'>
 													{url}
 												</a>
 											</div>
@@ -375,7 +394,12 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 							)}
 
 							{metadata && !loading && (
-								<div className='modal-actions'>
+								<div
+									className='ui-actions'
+									data-variant='modal'
+									data-align='end'
+									data-cross='stretch'
+								>
 									<button
 										type='button'
 										className='button secondary'

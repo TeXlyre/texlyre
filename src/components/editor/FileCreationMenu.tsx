@@ -84,33 +84,37 @@ const FileCreationMenu: React.FC<FileCreationMenuProps> = ({
 			maxHeight={400}
 			className='file-creation-dropdown'
 		>
-			<div className='dropdown-section'>
+			<div className='ui-menu-section' data-variant='control'>
 				{projectFiles.map((template, idx) => (
 					<button
+						type='button'
 						key={`project-${idx}`}
-						className='dropdown-item'
+						className='ui-menu-item'
 						onClick={() => handleCreateFile(template.extension)}
 					>
 						{template.icon ? <template.icon /> : <FilePlusIcon />}
-						<span className='dropdown-label'>{t(template.label)}</span>
-						<span className='dropdown-value'>{template.extension}</span>
+						<span className='ui-menu-label'>{t(template.label)}</span>
+						<span className='ui-menu-value'>{template.extension}</span>
 					</button>
 				))}
 			</div>
 
 			{viewerFiles.length > 0 && (
 				<>
-					<div className='dropdown-section'>
-						<div className='dropdown-title'>{t('Editable Viewers')}</div>
+					<div className='ui-menu-section' data-variant='control'>
+						<div className='ui-menu-title' data-variant='control'>
+							{t('Editable Viewers')}
+						</div>
 						{viewerFiles.map((template, idx) => (
 							<button
+								type='button'
 								key={`viewer-${idx}`}
-								className='dropdown-item'
+								className='ui-menu-item'
 								onClick={() => handleCreateFile(template.extension)}
 							>
 								{template.icon ? <template.icon /> : <FilePlusIcon />}
-								<span className='dropdown-label'>{t(template.label)}</span>
-								<span className='dropdown-value'>{template.extension}</span>
+								<span className='ui-menu-label'>{t(template.label)}</span>
+								<span className='ui-menu-value'>{template.extension}</span>
 							</button>
 						))}
 					</div>

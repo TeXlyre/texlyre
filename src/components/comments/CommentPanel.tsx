@@ -50,18 +50,22 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
 	}
 
 	return (
-		<div className={`comment-panel ${className}`}>
-			<div className='comment-panel-header'>
-				<h3>{t('Comments')}</h3>
-				<div className='view-tabs'>
+		<div className={`comment-panel ui-panel ${className}`} data-role='thread'>
+			<div className='ui-panel-header' data-role='thread' data-shrink='true'>
+				<h3 className='ui-panel-title' data-spacing='end-xs'>
+					{t('Comments')}
+				</h3>
+				<div className='ui-tab-list' data-role='panel' data-variant='switcher'>
 					<button
-						className={`tab-button ${activeTab === 'list' ? 'active' : ''}`}
+						type='button'
+						className={`ui-tab ${activeTab === 'list' ? 'active' : ''}`}
 						onClick={() => setActiveTab('list')}
 					>
 						{t('Active')}
 					</button>
 					<button
-						className={`tab-button ${activeTab === 'resolved' ? 'active' : ''}`}
+						type='button'
+						className={`ui-tab ${activeTab === 'resolved' ? 'active' : ''}`}
 						onClick={() => setActiveTab('resolved')}
 					>
 						{t('Resolved')}
@@ -69,29 +73,36 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
 				</div>
 			</div>
 
-			<div className='comment-search'>
-				<input
-					type='text'
-					className={'comment-search-input'}
-					placeholder={t('Search comments...')}
-					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
-				/>
+			<div className='ui-panel-controls'>
+				<div className='ui-search-field'>
+					<input
+						type='text'
+						className={'ui-field-control ui-search-control'}
+						placeholder={t('Search comments...')}
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
 
-				{searchQuery && (
-					<button
-						aria-label={t('Clear search')}
-						className='clear-search-button'
-						onClick={() => setSearchQuery('')}
-					>
-						<span aria-hidden='true'>×</span>
-					</button>
-				)}
+					{searchQuery && (
+						<button
+							type='button'
+							aria-label={t('Clear search')}
+							className='clear-search-button ui-search-clear'
+							onClick={() => setSearchQuery('')}
+						>
+							<span aria-hidden='true'>×</span>
+						</button>
+					)}
+				</div>
 			</div>
 
-			<div className='comment-panel-content'>
+			<div
+				className='ui-panel-content'
+				data-overflow='y'
+				data-padding={filteredComments.length === 0 ? undefined : 'sm'}
+			>
 				{filteredComments.length === 0 ? (
-					<div className='no-comments'>
+					<div className='no-comments ui-empty-state'>
 						{searchQuery
 							? t('No comments found matching the search criteria')
 							: activeTab === 'resolved'

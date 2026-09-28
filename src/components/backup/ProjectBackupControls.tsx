@@ -44,9 +44,10 @@ const ProjectBackupControls: React.FC<ProjectBackupControlsProps> = ({
 	const isSyncing = status.status === 'syncing' || isProjectSyncing;
 
 	return (
-		<div className={`project-backup-controls ${className}`}>
+		<div className={`project-backup-controls ui-actions ${className}`}>
 			<button
-				className='action-button'
+				type='button'
+				className='button'
 				onClick={handleExport}
 				disabled={isSyncing}
 				title={t('Export project to file system (write to PC)')}
@@ -55,7 +56,8 @@ const ProjectBackupControls: React.FC<ProjectBackupControlsProps> = ({
 				<span className='backup-control-label'>{t('Export')}</span>
 			</button>
 			<button
-				className='action-button'
+				type='button'
+				className='button'
 				onClick={handleImport}
 				disabled={isSyncing}
 				title={t('Import changes from file system (read from PC)')}

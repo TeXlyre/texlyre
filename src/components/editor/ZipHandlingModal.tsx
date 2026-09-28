@@ -48,7 +48,7 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
 			title={t('Archive File Detected')}
 			size='medium'
 		>
-			<div className='file-conflict-content zip-handling-content'>
+			<div className='zip-handling-content ui-stack' data-gap='md'>
 				<p>
 					{t(
 						'You are adding "{fileName}" to {targetPath}. How would you like to handle this archive?',
@@ -59,8 +59,13 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
 					)}
 				</p>
 
-				<div className='file-info zip-file-info'>
-					<div className='file-details'>
+				<div
+					className='ui-card ui-stack'
+					data-gap='sm'
+					data-padding='md'
+					data-surface='secondary'
+				>
+					<div className='ui-meta ui-stack' data-gap='xs'>
 						<strong>{zipFile.name}</strong>
 						<span>
 							{t('Target')}: {getTargetDisplayPath()}
@@ -68,9 +73,15 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
 					</div>
 				</div>
 
-				<div className='zip-handling-options'>
+				<div className='ui-list' data-gap='sm'>
 					<label
-						className={`zip-option ${selectedAction === 'extract' ? 'selected' : ''}`}
+						className='ui-list-item'
+						data-align='center'
+						data-gap='sm'
+						data-padding='md'
+						data-surface='secondary'
+						data-interactive='true'
+						data-selected={selectedAction === 'extract' ? 'true' : undefined}
 					>
 						<input
 							type='radio'
@@ -80,13 +91,13 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
 							onChange={() => setSelectedAction('extract')}
 						/>
 
-						<div className='zip-option-content'>
-							<div className='zip-option-header'>
+						<div className='ui-list-content' data-grow='true' data-gap='xs'>
+							<div className='ui-actions'>
 								<FolderIcon />
 								<strong>{t('Extract contents')}</strong>
 							</div>
 
-							<p>
+							<p className='ui-note'>
 								{t('Extract all files from the archive into {targetPath}', {
 									targetPath: getTargetDisplayPath(),
 								})}
@@ -95,7 +106,13 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
 					</label>
 
 					<label
-						className={`zip-option ${selectedAction === 'keep' ? 'selected' : ''}`}
+						className='ui-list-item'
+						data-align='center'
+						data-gap='sm'
+						data-padding='md'
+						data-surface='secondary'
+						data-interactive='true'
+						data-selected={selectedAction === 'keep' ? 'true' : undefined}
 					>
 						<input
 							type='radio'
@@ -105,13 +122,13 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
 							onChange={() => setSelectedAction('keep')}
 						/>
 
-						<div className='zip-option-content'>
-							<div className='zip-option-header'>
+						<div className='ui-list-content' data-grow='true' data-gap='xs'>
+							<div className='ui-actions'>
 								<FileIcon />
 								<strong>{t('Keep as archive file')}</strong>
 							</div>
 
-							<p>
+							<p className='ui-note'>
 								{t('Add the archive file as-is to {targetPath}', {
 									targetPath: getTargetDisplayPath(),
 								})}
@@ -120,7 +137,12 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
 					</label>
 				</div>
 
-				<div className='modal-actions'>
+				<div
+					className='ui-actions'
+					data-variant='modal'
+					data-align='end'
+					data-cross='stretch'
+				>
 					<button type='button' className='button secondary' onClick={onClose}>
 						{t('Cancel')}
 					</button>

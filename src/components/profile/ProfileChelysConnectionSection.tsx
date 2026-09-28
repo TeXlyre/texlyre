@@ -113,7 +113,7 @@ const ChelysConnectionSection: React.FC<ChelysConnectionSectionProps> = ({
 	};
 
 	const passwordField = (
-		<div className='form-group'>
+		<div className='ui-field' data-spacing='section'>
 			<label htmlFor='chelys-password'>{t('Current Password')}</label>
 			<input
 				type='password'
@@ -130,15 +130,19 @@ const ChelysConnectionSection: React.FC<ChelysConnectionSectionProps> = ({
 		<>
 			<h3 style={{ paddingTop: '1rem' }}>{t('Chelys Connection')}</h3>
 
-			{chelysError && <div className='error-message'>{chelysError}</div>}
+			{chelysError && (
+				<div className='ui-message' data-tone='error'>
+					{chelysError}
+				</div>
+			)}
 
 			{!isEnrolled && (
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<p>{t('Set up Chelys to connect with your local Chelys app.')}</p>
 					{passwordRevealed && (
 						<>
 							{passwordField}
-							<div className='warning-message'>
+							<div className='ui-message' data-tone='warning'>
 								<p>
 									{t(
 										'Registering creates a new passkey for this username and may overwrite an existing passkey with the same label. If you already have a passkey, use "Log in to Chelys" instead.',
@@ -147,10 +151,10 @@ const ChelysConnectionSection: React.FC<ChelysConnectionSectionProps> = ({
 							</div>
 						</>
 					)}
-					<div className='storage-action-buttons'>
+					<div className='ui-actions' data-gap='xs'>
 						<button
 							type='button'
-							className='button warn smaller'
+							className='button warn '
 							onClick={handleRegister}
 							disabled={isSubmitting || (passwordRevealed && !password)}
 						>
@@ -158,7 +162,7 @@ const ChelysConnectionSection: React.FC<ChelysConnectionSectionProps> = ({
 						</button>
 						<button
 							type='button'
-							className='button primary smaller'
+							className='button primary '
 							onClick={handleLogin}
 							disabled={isSubmitting || (passwordRevealed && !password)}
 						>
@@ -169,18 +173,18 @@ const ChelysConnectionSection: React.FC<ChelysConnectionSectionProps> = ({
 			)}
 
 			{isEnrolled && (
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<p>
 						{isLoggedIn
 							? t('Chelys is connected and logged in for this session.')
 							: t('Chelys is connected but not logged in for this session.')}
 					</p>
 					{!isLoggedIn && passwordRevealed && passwordField}
-					<div className='storage-action-buttons'>
+					<div className='ui-actions' data-gap='xs'>
 						{!isLoggedIn && (
 							<button
 								type='button'
-								className='button primary smaller'
+								className='button primary '
 								onClick={handleLogin}
 								disabled={isSubmitting || (passwordRevealed && !password)}
 							>
@@ -189,7 +193,7 @@ const ChelysConnectionSection: React.FC<ChelysConnectionSectionProps> = ({
 						)}
 						<button
 							type='button'
-							className='button secondary smaller'
+							className='button secondary '
 							onClick={handleGetPrfHex}
 							disabled={isSubmitting}
 						>
@@ -197,7 +201,7 @@ const ChelysConnectionSection: React.FC<ChelysConnectionSectionProps> = ({
 						</button>
 						<button
 							type='button'
-							className='button danger smaller'
+							className='button danger '
 							onClick={handleDisconnect}
 							disabled={isSubmitting}
 						>

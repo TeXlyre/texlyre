@@ -39,7 +39,11 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 
 	return (
 		<div className={`auth-container ${currentThemePlugin?.id || 'default'}`}>
-			<div className='auth-box'>
+			<div
+				className='auth-box ui-card'
+				data-surface='secondary'
+				data-radius='lg'
+			>
 				<div className='auth-header'>
 					<div className='auth-logo-wrapper'>
 						<img
@@ -49,7 +53,7 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 						/>
 					</div>
 					<h1>{t('TeXlyre')}</h1>
-					<div className='auth-header-controls'>
+					<div className='auth-header-controls ui-actions'>
 						<LanguageToggleButton className='auth-language-toggle' />
 						<ThemeToggleButton className='auth-theme-toggle' />
 					</div>
@@ -74,7 +78,12 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 					/>
 				)}
 
-				<div className='auth-privacy-note'>
+				<div
+					className='ui-message'
+					data-tone='info'
+					data-density='compact'
+					data-align='center'
+				>
 					<p>
 						{t(
 							'Your account and projects stay private in this browser. TeXlyre is',

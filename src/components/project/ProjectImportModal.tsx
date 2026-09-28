@@ -138,7 +138,10 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 			const compileSuffix = template.compile
 				? `&compile:${encodeURIComponent(template.compile)}`
 				: '';
-			const templateUrl = `${window.location.origin}${window.location.pathname}#newProjectName:${encodeURIComponent(template.name)}&newProjectDescription:${encodeURIComponent(template.description)}&newProjectType:${encodeURIComponent(template.type)}&newProjectTags:${encodeURIComponent(template.tags.join(','))}&newProjectFiles:${encodeURIComponent(template.downloadUrl)}${fileSuffix}${compileSuffix}`;
+			const typeSuffix = template.type
+				? `&newProjectType:${encodeURIComponent(template.type)}`
+				: '';
+			const templateUrl = `${window.location.origin}${window.location.pathname}#newProjectName:${encodeURIComponent(template.name)}&newProjectDescription:${encodeURIComponent(template.description)}${typeSuffix}&newProjectTags:${encodeURIComponent(template.tags.join(','))}&newProjectFiles:${encodeURIComponent(template.downloadUrl)}${fileSuffix}${compileSuffix}`;
 
 			window.location.replace(templateUrl);
 			window.location.reload();
@@ -277,21 +280,25 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 				icon={ImportIcon}
 				size='large'
 			>
-				<div className='project-import-modal'>
+				<div className='ui-stack' data-gap='md'>
 					{error && (
-						<div className='error-message' style={{ marginBottom: '1rem' }}>
+						<div
+							className='ui-message'
+							data-tone='error'
+							style={{ marginBottom: '1rem' }}
+						>
 							{error}
 						</div>
 					)}
 
 					{!importSource && (
 						<div className='import-source-selection'>
-							<h3>{t('Choose Import Source')}</h3>
+							<h3 className='ui-section-title'>{t('Choose Import Source')}</h3>
 
 							<div className='import-options'>
 								{workspaceService.isSupported() && (
 									<label
-										className='import-option-button'
+										className='ui-choice-card'
 										onClick={handleFolderImport}
 										style={{
 											pointerEvents:
@@ -312,7 +319,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 								)}
 
 								<label
-									className='import-option-button'
+									className='ui-choice-card'
 									onClick={handleTemplateImport}
 									style={{
 										pointerEvents: isScanning || isImporting ? 'none' : 'auto',
@@ -331,7 +338,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 								</label>
 
 								<label
-									className='import-option-button'
+									className='ui-choice-card'
 									onClick={handleYjsLinkImport}
 									style={{
 										pointerEvents: isScanning || isImporting ? 'none' : 'auto',
@@ -346,7 +353,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 								</label>
 
 								<label
-									className='import-option-button'
+									className='ui-choice-card'
 									onClick={handleUrlImport}
 									style={{
 										pointerEvents: isScanning || isImporting ? 'none' : 'auto',
@@ -364,7 +371,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 									</div>
 								</label>
 
-								<label className='import-option-button'>
+								<label className='ui-choice-card'>
 									<ZipFileIcon />
 									<div>
 										<strong>{t('From Archive File')}</strong>
@@ -386,7 +393,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 							</div>
 
 							{isScanning && (
-								<div className='scanning-indicator'>
+								<div className='ui-loading-state'>
 									<div className='loading-spinner' />
 									<p>{t('Scanning for projects...')}</p>
 								</div>
@@ -395,13 +402,14 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 					)}
 
 					{importSource && availableProjects.length > 0 && (
-						<div className='project-selection'>
-							<div className='selection-header'>
-								<h3>
+						<div className='ui-stack' data-gap='md'>
+							<div className='ui-section-header'>
+								<h3 className='ui-section-title'>
 									{t('Available Projects (')}
 									{availableProjects.length})
 								</h3>
 								<button
+									type='button'
 									className='button secondary'
 									onClick={handleSelectAll}
 									disabled={isImporting}
@@ -412,8 +420,13 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 								</button>
 							</div>
 
-							<div className='import-options-panel'>
-								<div className='option-group'>
+							<div
+								className='ui-card ui-stack'
+								data-surface='accent'
+								data-padding='md'
+								data-gap='md'
+							>
+								<div className='ui-field'>
 									<label>{t('Conflict resolution strategy:')}</label>
 									<select
 										value={conflictResolution}
@@ -434,8 +447,8 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 									</select>
 								</div>
 
-								<div className='option-group'>
-									<label>
+								<div className='ui-field'>
+									<label className='checkbox-control'>
 										<input
 											type='checkbox'
 											checked={makeCollaborator}
@@ -447,11 +460,18 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 								</div>
 							</div>
 
-							<div className='projects-compact-list'>
+							<div className='ui-list' data-scroll='medium'>
 								{availableProjects.map((project) => (
 									<div
 										key={project.id}
-										className={`project-item ${selectedProjects.has(project.id) ? 'selected' : ''}`}
+										className='ui-list-item'
+										data-appearance='flat'
+										data-align='center'
+										data-padding='md'
+										data-interactive='true'
+										data-selected={
+											selectedProjects.has(project.id) ? 'true' : undefined
+										}
 										onClick={() =>
 											!isImporting && handleProjectToggle(project.id)
 										}
@@ -463,12 +483,16 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 											disabled={isImporting}
 										/>
 
-										<div className='project-details'>
-											<div className='project-name'>{project.name}</div>
-											<div className='project-description'>
+										<div
+											className='ui-list-content'
+											data-grow='true'
+											data-gap='xs'
+										>
+											<strong>{project.name}</strong>
+											<span className='ui-note'>
 												{project.description || t('No description')}
-											</div>
-											<div className='project-meta'>
+											</span>
+											<div className='ui-meta' data-layout='row'>
 												<span>
 													{t('Last Modified: {lastModified}', {
 														lastModified: formatDate(project.lastModified),
@@ -481,7 +505,12 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 								))}
 							</div>
 
-							<div className='modal-actions'>
+							<div
+								className='ui-actions'
+								data-variant='modal'
+								data-align='end'
+								data-cross='stretch'
+							>
 								<button
 									type='button'
 									className='button secondary'
@@ -505,11 +534,12 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 					)}
 
 					{importSource && availableProjects.length === 0 && !isScanning && (
-						<div className='no-projects'>
+						<div className='ui-empty-state'>
 							<p>
 								{t('No importable projects found in the selected archive.')}
 							</p>
 							<button
+								type='button'
 								className='button secondary'
 								onClick={() => setImportSource(null)}
 							>

@@ -153,7 +153,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
 	return (
 		<div
-			className={`project-card ${isSelectionMode ? 'selection-mode' : ''} ${isSelected ? 'selected' : ''}`}
+			className='ui-card'
+			data-role='project'
+			data-padding='md'
+			data-hover={isSelectionMode ? undefined : 'lift'}
+			data-interactive={isSelectionMode ? 'true' : undefined}
+			data-selected={isSelected ? 'true' : undefined}
 			onClick={handleCardClick}
 		>
 			{isSelectionMode && (
@@ -169,9 +174,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
 			{!isSelectionMode && <ProjectBackupControls projectId={project.id} />}
 
-			<div className='project-card-header'>
+			<div className='ui-toolbar' data-justify='between'>
 				<h3
-					className={`project-title ${isSelectionMode ? 'selection-mode' : ''}`}
+					className='ui-panel-title'
+					data-size='body'
 					onClick={(e) => {
 						if (!isSelectionMode) {
 							e.stopPropagation();
@@ -182,8 +188,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 					{project.name}
 				</h3>
 
-				<div className='project-card-header-actions'>
-					<div className='project-type-info'>
+				<div
+					className='ui-toolbar-actions'
+					data-role='project-header-actions'
+					data-gap='sm'
+				>
+					<div className='ui-badge' data-variant='label'>
 						<TypesetterInfo
 							type={project.type}
 							provider={typesetterRegistryService.resolve(
@@ -194,7 +204,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 					</div>
 					{project.isDiskLinked && (
 						<span
-							className='project-disk-badge'
+							className='ui-icon'
+							data-tone='accent'
 							title={t('Mirrored with a folder on your device')}
 						>
 							<FolderOpenIcon />
@@ -202,7 +213,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 					)}
 					{!isSelectionMode && (
 						<button
-							className={`favorite-button ${project.isFavorite ? 'favorited' : ''}`}
+							type='button'
+							className='ui-icon-button'
+							data-variant='subtle'
+							data-tone={project.isFavorite ? 'warning' : undefined}
+							data-size='sm'
 							onClick={(e) => {
 								e.stopPropagation();
 								onToggleFavorite(project.id);
@@ -219,11 +234,16 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 				</div>
 			</div>
 
-			<p className='project-description'>
+			<p className='project-card-description'>
 				{project.description || t('No description provided')}
 			</p>
 
-			<div className='project-meta'>
+			<div
+				className='ui-meta'
+				data-role='project-meta'
+				data-layout='row'
+				data-justify='between'
+			>
 				<span title={formatDate(project.createdAt)}>
 					{t('Created: {createdAt}', {
 						createdAt: formatDate(project.createdAt),
@@ -237,11 +257,24 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 			</div>
 
 			{!isSelectionMode && (
-				<div className='project-actions'>
-					<div className='project-open-buttons' ref={openDropdownRef}>
-						<div className='open-button-group'>
+				<div
+					className='ui-toolbar-actions'
+					data-role='project-actions'
+					data-gap='sm'
+				>
+					<div
+						className='ui-menu-anchor'
+						data-role='project-open'
+						data-width='content'
+						ref={openDropdownRef}
+					>
+						<div
+							className='ui-button-group ui-split-button'
+							data-variant='joined'
+						>
 							<button
-								className='action-button primary open-button'
+								type='button'
+								className='button primary ui-split-main'
 								onClick={handleDefaultOpen}
 								title={getDropdownDisplayText()}
 							>
@@ -249,7 +282,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 								{t('Open')}
 							</button>
 							<button
-								className='action-button primary dropdown-toggle'
+								type='button'
+								className='button primary ui-split-toggle'
 								onClick={toggleOpenDropdown}
 								title={t('Open Options')}
 							>
@@ -257,11 +291,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 							</button>
 						</div>
 						{isOpenDropdownOpen && (
-							<div className='open-dropdown'>
-								<div className='open-dropdown-item' onClick={handleDefaultOpen}>
+							<div className='ui-menu' data-position='below'>
+								<div className='ui-menu-item' onClick={handleDefaultOpen}>
 									{getDropdownContent()}
 								</div>
-								<div className='open-dropdown-item' onClick={handleProjectOpen}>
+								<div className='ui-menu-item' onClick={handleProjectOpen}>
 									<FolderIcon />
 									<span>{t('Open Project')}</span>
 								</div>
@@ -269,7 +303,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 						)}
 					</div>
 					<button
-						className='action-button'
+						type='button'
+						className='button'
 						onClick={(e) => {
 							e.stopPropagation();
 							onEdit(project);
@@ -279,7 +314,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 						<EditIcon />
 					</button>
 					<button
-						className='action-button danger'
+						type='button'
+						className='button danger'
 						onClick={(e) => {
 							e.stopPropagation();
 							onDelete(project);
@@ -291,9 +327,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 				</div>
 			)}
 
-			<div className='project-tags'>
+			<div className='ui-tags' data-role='project-tags'>
 				{project.tags?.map((tag, index) => (
-					<span key={index} className='project-tag'>
+					<span key={index} className='ui-badge' data-variant='tag'>
 						{tag}
 					</span>
 				))}

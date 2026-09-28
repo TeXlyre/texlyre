@@ -303,7 +303,6 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 					href={browserStorageHelp.storageUrl}
 					target='_blank'
 					rel='noopener noreferrer'
-					className='dropdown-link'
 				>
 					{t('Open {browser} site-data instructions', {
 						browser: browserName,
@@ -319,7 +318,6 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 						href={browserStorageHelp.appUrl}
 						target='_blank'
 						rel='noopener noreferrer'
-						className='dropdown-link'
 					>
 						{t('Open app uninstall instructions')}
 					</a>
@@ -354,11 +352,11 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 			<h3 style={{ paddingTop: '1rem' }}>{t('Browser Storage')}</h3>
 
 			{!isSupported ? (
-				<p className='storage-notice'>
+				<p className='ui-message' data-tone='info' data-density='compact'>
 					{t('Your browser does not report how much storage is available')}
 				</p>
 			) : (
-				<div className='browser-storage-summary'>
+				<div className='ui-stack' data-gap='sm'>
 					<div className='browser-storage-figures'>
 						<span>
 							{t('{used} used of about {total}', {
@@ -392,7 +390,7 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 					</div>
 
 					{displaySegments.length > 0 && (
-						<div className='storage-meter-legend'>
+						<div className='ui-actions ui-meta' data-gap='md' data-wrap='true'>
 							{displaySegments.map((segment) => (
 								<span key={segment.id}>
 									<i
@@ -407,7 +405,13 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 						</div>
 					)}
 
-					<div className='browser-storage-persistence'>
+					<div
+						className='ui-list-item'
+						data-appearance='flat'
+						data-padding='sm'
+						data-align='center'
+						data-gap='sm'
+					>
 						<LockIcon />
 						<span>
 							{isPersisted
@@ -415,10 +419,7 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 								: t('Your browser may delete this data when space runs low')}
 						</span>
 
-						<div
-							className='browser-storage-persistence-actions'
-							style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}
-						>
+						<div className='ui-actions' style={{ flexShrink: 0 }}>
 							{isPersisted ? (
 								<InfoTooltip
 									content={protectedStorageHelp}
@@ -428,7 +429,7 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 								<>
 									<button
 										type='button'
-										className='button secondary smaller'
+										className='button secondary '
 										style={{ margin: 0 }}
 										onClick={handleRequestPersistence}
 										disabled={isSubmitting || !canKeepData}
@@ -443,9 +444,15 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 				</div>
 			)}
 
-			<div className='local-storage-actions'>
-				<div className='storage-action-group'>
-					<div className='storage-action-info'>
+			<div className='ui-stack' data-gap='md'>
+				<div
+					className='ui-list-item'
+					data-surface='secondary'
+					data-padding='md'
+					data-align='center'
+					data-justify='between'
+				>
+					<div className='ui-list-content' data-grow='true' data-gap='xs'>
 						<strong>
 							{t('Browser: ')} {browserName}
 						</strong>
@@ -454,7 +461,6 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 							href={browserStorageHelp.storageUrl}
 							target='_blank'
 							rel='noopener noreferrer'
-							className='dropdown-link'
 						>
 							{t('Learn more about managing site data in {browser}', {
 								browser: browserName,
@@ -467,7 +473,6 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 									href={browserStorageHelp.appUrl}
 									target='_blank'
 									rel='noopener noreferrer'
-									className='dropdown-link'
 								>
 									{t('Learn more about installed apps in {browser}', {
 										browser: browserName,
@@ -486,12 +491,19 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 							(hasProjectTypesetterCache || hasTypstCache));
 
 					return (
-						<div className='storage-action-group' key={group.kind}>
-							<div className='storage-action-info'>
+						<div
+							className='ui-list-item'
+							data-surface='secondary'
+							data-padding='md'
+							data-align='center'
+							data-justify='between'
+							key={group.kind}
+						>
+							<div className='ui-list-content' data-grow='true' data-gap='xs'>
 								<strong>{group.title}</strong>
 								<p>{group.description}</p>
 							</div>
-							<div className='storage-action-buttons'>
+							<div className='ui-actions' data-gap='xs'>
 								<IconButton
 									icon={<TrashIcon />}
 									label={t('Clear {name}', { name: group.title })}

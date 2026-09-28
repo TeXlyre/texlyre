@@ -306,8 +306,8 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 		);
 
 		return (
-			<div className='template-pagination'>
-				<div className='pagination-info'>
+			<div className='ui-pagination' data-responsive='stack'>
+				<div className='ui-meta'>
 					{t('Showing {startItem}-{endItem} of {count} template', {
 						startItem,
 						endItem,
@@ -315,9 +315,10 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 					})}
 				</div>
 
-				<div className='pagination-controls'>
+				<div className='ui-actions' data-wrap='true'>
 					<button
-						className='pagination-button'
+						type='button'
+						className='button '
 						onClick={() => handlePageChange(currentPage - 1)}
 						disabled={currentPage === 1 || isLoading}
 					>
@@ -327,22 +328,22 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 					{currentPage > 2 && (
 						<>
 							<button
-								className='pagination-button'
+								type='button'
+								className='button '
 								onClick={() => handlePageChange(1)}
 								disabled={isLoading}
 							>
 								1
 							</button>
-							{currentPage > 3 && (
-								<span className='pagination-ellipsis'>{t('...')}</span>
-							)}
+							{currentPage > 3 && <span className='ui-meta'>{t('...')}</span>}
 						</>
 					)}
 
 					{getVisiblePages().map((page) => (
 						<button
+							type='button'
 							key={page}
-							className={`pagination-button ${page === currentPage ? 'active' : ''}`}
+							className={`button ${page === currentPage ? 'active' : ''}`}
 							onClick={() => handlePageChange(page)}
 							disabled={isLoading}
 						>
@@ -353,10 +354,11 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 					{currentPage < totalPages - 1 && (
 						<>
 							{currentPage < totalPages - 2 && (
-								<span className='pagination-ellipsis'>{t('...')}</span>
+								<span className='ui-meta'>{t('...')}</span>
 							)}
 							<button
-								className='pagination-button'
+								type='button'
+								className='button '
 								onClick={() => handlePageChange(totalPages)}
 								disabled={isLoading}
 							>
@@ -366,7 +368,8 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 					)}
 
 					<button
-						className='pagination-button'
+						type='button'
+						className='button '
 						onClick={() => handlePageChange(currentPage + 1)}
 						disabled={currentPage === totalPages || isLoading}
 					>
@@ -387,7 +390,10 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 				size='large'
 				headerActions={
 					<button
-						className='modal-close-button'
+						type='button'
+						className='ui-icon-button'
+						data-role='modal-close'
+						data-variant='subtle'
 						onClick={() => setShowSettings(true)}
 						title={t('File System Settings')}
 					>
@@ -395,9 +401,13 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 					</button>
 				}
 			>
-				<div className='template-import-modal'>
+				<div className='template-import-modal ui-stack' data-gap='md'>
 					{error && (
-						<div className='error-message' style={{ marginBottom: '1rem' }}>
+						<div
+							className='ui-message'
+							data-tone='error'
+							style={{ marginBottom: '1rem' }}
+						>
 							{error}
 						</div>
 					)}
@@ -409,14 +419,14 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 								placeholder={t('Search templates...')}
 								value={searchQuery}
 								onChange={(e) => handleSearchChange(e.target.value)}
-								className='template-search-input'
+								className='template-search-input ui-field-control'
 								disabled={isLoading}
 							/>
 
 							<select
 								value={selectedCategory}
 								onChange={(e) => handleCategoryChange(e.target.value)}
-								className='template-category-select'
+								className='template-category-select ui-field-control'
 								disabled={isLoading}
 							>
 								<option value='all'>{t('All Categories')}</option>
@@ -430,7 +440,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 							<select
 								value={selectedType}
 								onChange={(e) => handleTypeChange(e.target.value)}
-								className='template-type-select'
+								className='template-type-select ui-field-control'
 								disabled={isLoading}
 							>
 								<option value='all'>{t('All Types')}</option>
@@ -441,21 +451,22 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 					</div>
 
 					{isLoading ? (
-						<div className='template-loading'>
+						<div className='ui-loading-state'>
 							<div className='loading-spinner' />
 							<p>{t('Loading templates...')}</p>
 						</div>
 					) : (
-						<div className='template-list'>
+						<div className='ui-panel-content' data-overflow='y'>
 							{filteredTemplates.length === 0 ? (
-								<div className='no-templates'>
-									<p>{t('No templates found matching your criteria.')}</p>
+								<div className='ui-empty-state' data-style='empty'>
+									{t('No templates found matching your criteria.')}
 								</div>
 							) : selectedTemplate ? (
-								<div className='template-detail-view'>
+								<div className='ui-stack' data-gap='lg' data-padding='md'>
 									<div className='template-detail-header'>
 										<button
-											className='back-button'
+											type='button'
+											className='button'
 											onClick={() => setSelectedTemplate(null)}
 										>
 											{t('←')} {t('Back to Templates')}
@@ -477,7 +488,10 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 															}}
 														/>
 
-														<div className='template-type-info'>
+														<div
+															className='ui-badge template-type-info'
+															data-variant='label'
+														>
 															<TypesetterInfo
 																type={selectedTemplate.type || 'latex'}
 															/>
@@ -490,16 +504,16 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 													</div>
 												)
 											) : (
-												<div className='template-preview-placeholder'>
+												<div className='ui-preview-placeholder'>
 													<FolderIcon />
 													<span>{t('No preview available')}</span>
 												</div>
 											)}
 										</div>
 
-										<div className='template-detail-info'>
-											<div className='template-detail-meta'>
-												<span className='template-category'>
+										<div className='ui-stack' data-gap='md'>
+											<div className='ui-actions' data-gap='sm'>
+												<span className='ui-badge' data-variant='label'>
 													{selectedTemplate.category}
 												</span>
 											</div>
@@ -509,24 +523,33 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 											</p>
 
 											{selectedTemplate.tags.length > 0 && (
-												<div className='template-tags'>
+												<div className='ui-tags' data-push='end'>
 													{selectedTemplate.tags.map((tag) => (
-														<span key={tag} className='template-tag'>
+														<span
+															key={tag}
+															className='ui-badge'
+															data-variant='tag'
+															data-size='xs'
+														>
 															{tag}
 														</span>
 													))}
 												</div>
 											)}
 
-											<div className='template-detail-footer'>
+											<div
+												className='ui-toolbar ui-meta'
+												data-justify='between'
+												data-divided='true'
+											>
 												{selectedTemplate.author && (
-													<span className='template-author'>
+													<span>
 														{t('by {author}', {
 															author: selectedTemplate.author,
 														})}
 													</span>
 												)}
-												<span className='template-updated'>
+												<span>
 													{t('Last Updated: {lastUpdated}', {
 														lastUpdated: formatLastModified(
 															selectedVersionEntry?.lastUpdated ??
@@ -536,9 +559,9 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 												</span>
 											</div>
 
-											<div className='template-detail-meta'>
+											<div className='ui-actions' data-gap='sm'>
 												<select
-													className='template-version-select'
+													className='template-version-select ui-field-control'
 													value={selectedVersion ?? ''}
 													disabled={
 														(selectedTemplate.versions?.length ?? 1) <= 1
@@ -560,14 +583,16 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 													))}
 												</select>
 											</div>
-											<div className='template-actions'>
+											<div className='ui-toolbar-actions' data-gap='md'>
 												<button
+													type='button'
 													className='button secondary'
 													onClick={() => setSelectedTemplate(null)}
 												>
 													{t('Cancel')}
 												</button>
 												<button
+													type='button'
 													className='button primary'
 													onClick={handleTemplateConfirm}
 												>
@@ -584,7 +609,11 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 										{paginatedTemplates.map((template) => (
 											<div
 												key={template.id}
-												className='template-card'
+												className='ui-card ui-stack'
+												data-radius='lg'
+												data-overflow='hidden'
+												data-interactive='true'
+												data-hover='lift'
 												onClick={() => handleTemplateSelect(template)}
 											>
 												{template.previewImage ? (
@@ -601,7 +630,10 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 																	}}
 																/>
 
-																<div className='template-type-info'>
+																<div
+																	className='ui-badge template-type-info'
+																	data-variant='label'
+																>
 																	<TypesetterInfo
 																		type={template.type || 'latex'}
 																	/>
@@ -615,55 +647,77 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 													</div>
 												) : (
 													<div className='template-preview'>
-														<div className='template-preview-placeholder'>
+														<div className='ui-preview-placeholder'>
 															<FolderIcon />
 														</div>
-														<div className='template-type-info'>
+														<div
+															className='ui-badge template-type-info'
+															data-variant='label'
+														>
 															<TypesetterInfo type={template.type || 'latex'} />
 														</div>
 													</div>
 												)}
 
-												<div className='template-content'>
-													<div className='template-header'>
-														<h3 className='template-name'>{template.name}</h3>
-														<span className='template-category'>
+												<div
+													className='ui-stack'
+													data-gap='sm'
+													data-padding='md'
+												>
+													<div
+														className='ui-toolbar'
+														data-justify='between'
+														data-gap='sm'
+													>
+														<h3 className='ui-panel-title' data-size='body'>
+															{template.name}
+														</h3>
+														<span className='ui-badge' data-variant='label'>
 															{template.category}
 														</span>
 														{template.version && (
-															<span className='template-version'>
+															<span className='ui-badge' data-variant='label'>
 																v{template.version}
 															</span>
 														)}
 													</div>
 
-													<p className='template-description'>
+													<p className='ui-note' data-grow='true'>
 														{template.description}
 													</p>
 
 													{template.tags.length > 0 && (
-														<div className='template-tags'>
+														<div className='ui-tags' data-push='end'>
 															{template.tags.slice(0, 3).map((tag) => (
-																<span key={tag} className='template-tag'>
+																<span
+																	key={tag}
+																	className='ui-badge'
+																	data-variant='tag'
+																	data-size='xs'
+																>
 																	{tag}
 																</span>
 															))}
 															{template.tags.length > 3 && (
-																<span className='template-tag-more'>
+																<span className='ui-note'>
 																	+{template.tags.length - 3}
 																</span>
 															)}
 														</div>
 													)}
 
-													<div className='template-meta'>
+													<div
+														className='ui-toolbar ui-meta'
+														data-justify='between'
+														data-divided='true'
+													>
 														{template.author && (
-															<span className='template-author'>
+															<span>
 																{t('by')}
 																{template.author}
 															</span>
 														)}
-														<span className='template-updated'>
+														<span>
 															{t('Last Updated: {lastUpdated}', {
 																lastUpdated: formatLastModified(
 																	template.lastUpdated,
@@ -673,7 +727,10 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 													</div>
 												</div>
 
-												<div className='template-action'>
+												<div
+													className='template-action ui-actions'
+													data-align='center'
+												>
 													<FolderIcon />
 													{t('View Details')}
 												</div>

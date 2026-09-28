@@ -47,15 +47,20 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
 
 	return (
 		<div
-			className={`chat-panel ${isCollapsed ? 'collapsed' : 'expanded'} ${className}`}
+			className={`ui-panel ${isCollapsed ? 'collapsed' : 'expanded'} ${className}`}
+			data-role='chat'
 		>
-			<div className='chat-panel-header' onClick={toggleCollapsed}>
-				<span className='chat-panel-title'>{t('Project Chat')}</span>
-				<div className='chat-panel-status'>
-					<div
-						className={`connection-indicator ${
-							isConnected && !isCollabOfflineMode ? 'connected' : 'offline'
-						}`}
+			<div
+				className='ui-panel-header'
+				data-role='chat'
+				onClick={toggleCollapsed}
+			>
+				<div className='ui-panel-heading'>
+					<span
+						className='ui-status-dot'
+						data-tone={
+							isConnected && !isCollabOfflineMode ? 'success' : 'muted'
+						}
 						title={
 							isCollabOfflineMode
 								? t('Collaboration offline')
@@ -64,20 +69,35 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
 									: t('Disconnected')
 						}
 					/>
+					<span className='ui-panel-title'>{t('Project Chat')}</span>
 					{messages.length > 0 && (
-						<span className='message-count'>{messages.length}</span>
+						<span
+							className='ui-badge'
+							data-role='chat-count'
+							data-variant='count'
+						>
+							{messages.length}
+						</span>
 					)}
-					<button className='collapse-toggle'>
+				</div>
+				<div className='ui-toolbar-actions' data-gap='sm'>
+					<button
+						type='button'
+						className='ui-icon-button'
+						data-role='chat-collapse'
+						data-variant='ghost'
+						data-size='xs'
+					>
 						{isCollapsed ? <ChevronUpIcon /> : <ChevronDownIcon />}
 					</button>
 				</div>
 			</div>
 
 			{!isCollapsed && (
-				<div className='chat-panel-content'>
-					<div className='chat-panel-messages'>
+				<div className='ui-panel-content' data-role='chat'>
+					<div className='ui-list' data-role='chat-messages'>
 						{messages.length === 0 ? (
-							<div className='empty-chat'>
+							<div className='empty-chat ui-empty-state'>
 								<p>{t('Welcome to the project chat!')}</p>
 								<br />
 								<p>{t('Start a conversation with your collaborators.')}</p>
@@ -94,23 +114,25 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
 						<div ref={messagesEndRef} />
 					</div>
 
-					<div className='chat-panel-input-container'>
+					<div className='ui-toolbar' data-role='chat-input'>
 						<textarea
 							value={inputValue}
 							onChange={(e) => setInputValue(e.target.value)}
 							onKeyDown={handleKeyDown}
 							placeholder={t('Type a message...')}
-							className='chat-panel-input'
+							className='ui-field-control'
+							data-role='chat-input'
 							disabled={!isConnected || isCollabOfflineMode}
 							rows={1}
 						/>
 
 						<button
+							type='button'
 							onClick={handleSendMessage}
 							disabled={
 								!inputValue.trim() || !isConnected || isCollabOfflineMode
 							}
-							className='chat-panel-send-button'
+							className='button primary'
 						>
 							{t('Send')}
 						</button>

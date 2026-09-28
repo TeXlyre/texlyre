@@ -16,17 +16,20 @@ const CommentToggleButton: React.FC<CommentToggleButtonProps> = ({
 
 	return (
 		<button
-			className={`control-button ${className} ${showComments ? 'active' : ''}`}
+			type='button'
+			className={`button ui-count-control ${className} ${showComments ? 'active' : ''}`}
 			onClick={toggleComments}
 			title={t('{action} Comments{numComments}', {
 				action: showComments ? t('Hide') : t('Show'),
 				numComments: comments.length > 0 ? ` (${comments.length})` : '',
 			})}
 		>
-			<div className='comment-button-container'>
+			<div className='comment-button-container ui-count-inline'>
 				<CommentIcon />
 				{comments.length > 0 && (
-					<span className='comment-count-badge'>{comments.length}</span>
+					<span className='ui-badge' data-variant='count'>
+						{comments.length}
+					</span>
 				)}
 			</div>
 		</button>
