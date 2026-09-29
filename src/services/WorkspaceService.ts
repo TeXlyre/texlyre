@@ -19,6 +19,20 @@ import { authService } from './AuthService';
 import { DirectoryTarget } from './WriteTargetService';
 
 const moduleLog = createNamedLogger('WorkspaceService');
+
+type DirectoryPicker = (options?: {
+	id?: string;
+	mode?: 'read' | 'readwrite';
+}) => Promise<FileSystemDirectoryHandle>;
+
+type DirectoryPickerWindow = Window & {
+	showDirectoryPicker?: DirectoryPicker;
+};
+
+const getDirectoryPicker = (): DirectoryPicker | null => {
+	const picker = (window as DirectoryPickerWindow).showDirectoryPicker;
+	return typeof picker === 'function' ? picker.bind(window) : null;
+};
 const IGNORED_DIRECTORIES = new Set([
 	'.git',
 	'.svn',
@@ -72,7 +86,7 @@ class WorkspaceService {
 	private lastSyncedAt: number | null = null;
 
 	isSupported(): boolean {
-		return typeof window !== 'undefined' && 'showDirectoryPicker' in window;
+		return typeof window !== 'undefined' && getDirectoryPicker() !== null;
 	}
 
 	getStatus(): WorkspaceStatus {
@@ -157,11 +171,12 @@ class WorkspaceService {
 	}
 
 	async pickFolder(): Promise<FileSystemDirectoryHandle | null> {
-		if (!this.isSupported()) {
+		const showDirectoryPicker = getDirectoryPicker();
+		if (!showDirectoryPicker) {
 			throw new Error(t('File System Access API not supported'));
 		}
 
-		return (window as any).showDirectoryPicker({
+		return showDirectoryPicker({
 			mode: 'readwrite',
 			id: 'texlyre-workspace',
 		});
@@ -341,7 +356,11 @@ class WorkspaceService {
 			typeof existing.content === 'string' &&
 			typeof incoming.content === 'string'
 		) {
-			if (stripAnnotations(existing.content) === incoming.content) {
+			if (existing.content === incoming.content) return 'identical';
+			if (
+				fileHandlerService.getWorkspaceCleanAnnotations() &&
+				stripAnnotations(existing.content) === incoming.content
+			) {
 				return 'identical';
 			}
 		} else if (

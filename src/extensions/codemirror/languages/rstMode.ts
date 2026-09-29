@@ -3,11 +3,44 @@
 // Marijn Haverbeke and others) to a CodeMirror 6 stream parser.
 // @codemirror/legacy-modes does not ship an rst mode because the original
 // relies on the overlay addon and on nested python/stex modes.
-import type { StreamParser } from '@codemirror/language';
+import type { StreamParser, StringStream } from '@codemirror/language';
 import { python } from '@codemirror/legacy-modes/mode/python';
 import { stex } from '@codemirror/legacy-modes/mode/stex';
 
 type AnyParser = StreamParser<any>;
+type TokenStyle = string | null;
+
+interface InnerModeState {
+	mode: AnyParser;
+	local: unknown;
+}
+
+interface RstContext {
+	phase?: RegExp;
+	stage?: number;
+	mode?: AnyParser;
+	local?: unknown;
+}
+
+interface RstState {
+	tok: RstTokenizer;
+	ctx: RstContext;
+	tmp?: InnerModeState;
+	tmp_stex?: boolean;
+	tmp_py?: boolean;
+}
+
+type RstTokenizer = (stream: StringStream, state: RstState) => TokenStyle;
+
+interface OverlayState {
+	base: unknown;
+	overlay: unknown;
+	basePos: number;
+	baseCur: TokenStyle;
+	overlayPos: number;
+	overlayCur: TokenStyle;
+	streamSeen: StringStream | null;
+}
 
 let currentIndentUnit = 2;
 
@@ -91,7 +124,7 @@ function createRstBase(): AnyParser {
 	///////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 
-	function toNormal(stream, state) {
+	function toNormal(stream: StringStream, state: RstState): TokenStyle {
 		let token = null;
 
 		if (stream.sol() && stream.match(rxExamples, false)) {
@@ -245,18 +278,21 @@ function createRstBase(): AnyParser {
 			token = 'quote';
 		} else if (stream.match(rxLinkRef1)) {
 			change(state, toNormal);
-			if (!stream.peek() || stream.peek().match(/^\W$/)) {
+			const next = stream.peek();
+			if (!next || /^\W$/.test(next)) {
 				token = 'link';
 			}
 		} else if (phase(state) === rxLinkRef2 || stream.match(rxLinkRef2, false)) {
 			switch (stage(state)) {
-				case 0:
-					if (!stream.peek() || stream.peek().match(/^\W$/)) {
+				case 0: {
+					const next = stream.peek();
+					if (!next || /^\W$/.test(next)) {
 						change(state, toNormal, context(rxLinkRef2, 1));
 					} else {
 						stream.match(rxLinkRef2);
 					}
 					break;
+				}
 				case 1:
 					change(state, toNormal, context(rxLinkRef2, 2));
 					stream.match(/^`/);
@@ -286,7 +322,7 @@ function createRstBase(): AnyParser {
 	///////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 
-	function toExplicit(stream, state) {
+	function toExplicit(stream: StringStream, state: RstState): TokenStyle {
 		let token = null;
 
 		if (
@@ -394,15 +430,19 @@ function createRstBase(): AnyParser {
 	///////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 
-	function toComment(stream, state) {
+	function toComment(stream: StringStream, state: RstState): TokenStyle {
 		return asBlock(stream, state, 'comment');
 	}
 
-	function toVerbatim(stream, state) {
+	function toVerbatim(stream: StringStream, state: RstState): TokenStyle {
 		return asBlock(stream, state, 'meta');
 	}
 
-	function asBlock(stream, state, token) {
+	function asBlock(
+		stream: StringStream,
+		state: RstState,
+		token: string,
+	): TokenStyle {
 		if (stream.eol() || stream.eatSpace()) {
 			stream.skipToEnd();
 			return token;
@@ -415,7 +455,7 @@ function createRstBase(): AnyParser {
 	///////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 
-	function toMode(stream, state) {
+	function toMode(stream: StringStream, state: RstState): TokenStyle {
 		if (state.ctx.mode && state.ctx.local) {
 			if (stream.sol()) {
 				if (!stream.eatSpace()) change(state, toNormal);
@@ -432,20 +472,25 @@ function createRstBase(): AnyParser {
 	///////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 
-	function context(phase?: any, stage?: any, mode?: any, local?: any) {
+	function context(
+		phase?: RegExp,
+		stage?: number,
+		mode?: AnyParser,
+		local?: unknown,
+	): RstContext {
 		return { phase: phase, stage: stage, mode: mode, local: local };
 	}
 
-	function change(state: any, tok: any, ctx?: any) {
+	function change(state: RstState, tok: RstTokenizer, ctx?: RstContext) {
 		state.tok = tok;
 		state.ctx = ctx || {};
 	}
 
-	function stage(state) {
+	function stage(state: RstState): number {
 		return state.ctx.stage || 0;
 	}
 
-	function phase(state) {
+	function phase(state: RstState): RegExp | undefined {
 		return state.ctx.phase;
 	}
 
@@ -453,21 +498,21 @@ function createRstBase(): AnyParser {
 	///////////////////////////////////////////////////////////////////////////
 
 	return {
-		startState: (indentUnit) => {
+		startState: (indentUnit: number): RstState => {
 			currentIndentUnit = indentUnit;
 			return { tok: toNormal, ctx: context(undefined, 0) };
 		},
 
-		copyState: (state) => {
+		copyState: (state: RstState): RstState => {
 			let ctx = state.ctx,
 				tmp = state.tmp;
-			if (ctx.local)
+			if (ctx.mode && ctx.local !== undefined)
 				ctx = { mode: ctx.mode, local: copyInner(ctx.mode, ctx.local) };
 			if (tmp) tmp = { mode: tmp.mode, local: copyInner(tmp.mode, tmp.local) };
 			return { tok: state.tok, ctx: ctx, tmp: tmp };
 		},
 
-		token: (stream, state) => state.tok(stream, state),
+		token: (stream: StringStream, state: RstState) => state.tok(stream, state),
 	};
 }
 
@@ -486,7 +531,7 @@ function createRstOverlay(): AnyParser {
 	const rxUri = new RegExp(`^${rxUriProtocol}${rxUriDomain}${rxUriPath}`);
 
 	const overlay = {
-		token: (stream) => {
+		token: (stream: StringStream) => {
 			if (stream.match(rxStrong) && stream.match(/\W+|$/, false))
 				return 'strong';
 			if (stream.match(rxEmphasis) && stream.match(/\W+|$/, false))
@@ -520,7 +565,7 @@ function withOverlay(base: AnyParser, over: AnyParser): AnyParser {
 		name: 'rst',
 		startState(indentUnit: number) {
 			return {
-				base: base.startState(indentUnit),
+				base: base.startState ? base.startState(indentUnit) : {},
 				overlay: startInner(over),
 				basePos: 0,
 				baseCur: null,
@@ -529,7 +574,7 @@ function withOverlay(base: AnyParser, over: AnyParser): AnyParser {
 				streamSeen: null,
 			};
 		},
-		copyState(state: any) {
+		copyState(state: OverlayState): OverlayState {
 			return {
 				base: copyInner(base, state.base),
 				overlay: copyInner(over, state.overlay),
@@ -540,7 +585,7 @@ function withOverlay(base: AnyParser, over: AnyParser): AnyParser {
 				streamSeen: null,
 			};
 		},
-		token(stream: any, state: any) {
+		token(stream: StringStream, state: OverlayState) {
 			if (
 				stream !== state.streamSeen ||
 				Math.min(state.basePos, state.overlayPos) < stream.start

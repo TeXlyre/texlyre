@@ -3,7 +3,6 @@ import {
 	StateField,
 	type ChangeSet,
 	type Text,
-	type Transaction,
 } from '@codemirror/state';
 import {
 	Decoration,
@@ -70,7 +69,7 @@ function cachedSegments(
 	return segments;
 }
 
-class DeletedTextWidget extends WidgetType {
+export class DeletedTextWidget extends WidgetType {
 	constructor(
 		readonly text: string,
 		readonly id: string,
@@ -570,8 +569,6 @@ export function createReviewReporter(field: StateField<ReviewChunk[]>) {
 				if (active && (update.docChanged || update.geometryChanged)) {
 					schedule();
 				} else if (!active && structureChanged) {
-					// Keep the hidden-panel count badge correct without doing per-key
-					// snapshot/layout work for body-only edits.
 					requested = true;
 					schedule();
 				}

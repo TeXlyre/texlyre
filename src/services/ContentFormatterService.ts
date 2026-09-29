@@ -3,7 +3,10 @@ import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
 import { WasmToolsEngine } from '../extensions/wasm-tools/WasmToolsEngine';
 import type { TypstyleOptions } from '../extensions/wasm-tools/TypstyleEngine';
-import { notificationService } from './NotificationService';
+import {
+	notificationService,
+	shouldShowNotification,
+} from './NotificationService';
 
 const moduleLog = createNamedLogger('ContentFormatterService');
 
@@ -14,7 +17,7 @@ export interface LatexFormatOptions {
 	usetabs: boolean;
 }
 
-export interface TypstFormatOptions extends TypstyleOptions {}
+export type TypstFormatOptions = Required<TypstyleOptions>;
 
 class ContentFormatterService {
 	private engine: WasmToolsEngine | null = null;
@@ -74,7 +77,7 @@ class ContentFormatterService {
 		operationId?: string,
 		type?: 'latex' | 'typst',
 	): void {
-		if (this.areNotificationsEnabled(type)) {
+		if (this.canNotify(type, 'loading')) {
 			notificationService.showLoading(message, operationId);
 		}
 	}
@@ -87,7 +90,7 @@ class ContentFormatterService {
 			type?: 'latex' | 'typst';
 		} = {},
 	): void {
-		if (this.areNotificationsEnabled(options.type)) {
+		if (this.canNotify(options.type, 'success')) {
 			notificationService.showSuccess(message, options);
 		}
 	}
@@ -100,31 +103,28 @@ class ContentFormatterService {
 			type?: 'latex' | 'typst';
 		} = {},
 	): void {
-		if (this.areNotificationsEnabled(options.type)) {
+		if (this.canNotify(options.type, 'error')) {
 			notificationService.showError(message, options);
 		}
 	}
 
-	private areNotificationsEnabled(type?: 'latex' | 'typst'): boolean {
-		const userId = localStorage.getItem('texlyre-current-user');
-		const storageKey = userId
-			? `texlyre-user-${userId}-settings`
-			: 'texlyre-settings';
-		try {
-			const settings = JSON.parse(localStorage.getItem(storageKey) || '{}');
-			if (type === 'latex') {
-				return settings['formatter-latex-notifications'] !== false;
-			}
-			if (type === 'typst') {
-				return settings['formatter-typst-notifications'] !== false;
-			}
-			return (
-				settings['formatter-latex-notifications'] !== false ||
-				settings['formatter-typst-notifications'] !== false
+	private canNotify(
+		type: 'latex' | 'typst' | undefined,
+		notificationType: 'loading' | 'success' | 'error',
+	): boolean {
+		if (type) {
+			return shouldShowNotification(
+				`formatter-${type}-notifications`,
+				notificationType,
 			);
-		} catch {
-			return true;
 		}
+		return (
+			shouldShowNotification(
+				'formatter-latex-notifications',
+				notificationType,
+			) ||
+			shouldShowNotification('formatter-typst-notifications', notificationType)
+		);
 	}
 }
 

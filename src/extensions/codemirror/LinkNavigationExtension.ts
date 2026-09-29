@@ -301,9 +301,9 @@ export function updateLinkNavigationFilePath(
 
 export function updateLinkNavigationFileName(
 	view: EditorView,
-	fileName: string,
+	fileName?: string,
 ): void {
 	view.dispatch({
-		effects: setFileName.of(fileName),
+		effects: setFileName.of(fileName ?? ''),
 	});
 }

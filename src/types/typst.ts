@@ -1,4 +1,5 @@
 // src/types/typst.ts
+import type { PagedRendererSource } from '../plugins/PluginInterface';
 
 export type TypstOutputFormat = 'pdf' | 'svg' | 'canvas' | 'canvas-pdf';
 
@@ -26,11 +27,13 @@ export interface TypstCompileResult {
 
 export interface TypstContextType {
 	isCompiling: boolean;
+	compileGeneration: number;
 	isInitializing: boolean;
 	compileError: string | null;
 	compiledPdf: Uint8Array | null;
 	compiledSvg: string | null;
 	compiledCanvas: Uint8Array | null;
+	compiledCanvasSource: PagedRendererSource | null;
 	compileLog: string;
 	currentFormat: TypstOutputFormat;
 	compileDocument: (

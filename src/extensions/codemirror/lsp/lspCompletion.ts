@@ -93,7 +93,12 @@ function applySnippetEdit(
 		} catch {}
 	}
 
-	snippet(template.replace(/\$(\d+)/g, '${$1}'))(view, completion, start, end);
+	snippet(template.replace(/\$(\d+)/g, (_match, index) => `\${${index}}`))(
+		view,
+		completion,
+		start,
+		end,
+	);
 }
 
 function toCompletionContext(

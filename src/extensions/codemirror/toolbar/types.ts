@@ -7,3 +7,8 @@ export interface ToolbarItem {
 	icon?: string;
 	command: (view: EditorView) => boolean;
 }
+
+export type ToolbarSourceEntry =
+	| ToolbarItem
+	| { type: 'split' }
+	| { type: 'space' };

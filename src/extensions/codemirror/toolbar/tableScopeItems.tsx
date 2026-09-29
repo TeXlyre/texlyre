@@ -166,18 +166,13 @@ function removeTypstColumn(view: EditorView, info: TableInfo): boolean {
 		changes.push({ from: start, to: end, insert: '' });
 	}
 
-	// Sort changes by position (descending) to apply from end to beginning
 	changes.sort((a, b) => b.from - a.from);
 
-	// Apply each change individually, starting from the end of the document
-	// This way, earlier positions remain valid
+	// This applies each change individually, starting from the end of the document to keep earlier positions valid
 	for (let i = 0; i < changes.length; i++) {
 		const change = changes[i];
-
-		// Get current document state
 		const currentDoc = view.state.doc.toString();
 
-		// Verify the change is still valid
 		if (
 			change.from >= 0 &&
 			change.to <= currentDoc.length &&

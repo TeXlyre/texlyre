@@ -17,6 +17,7 @@ import { detectTableScope } from './toolbar/tableScope';
 import * as ColorScopeItems from './toolbar/colorScopeItems';
 import { detectColorScope } from './toolbar/colorScope';
 import { buildToolbarEntries } from './toolbar/toolbarItems';
+import type { ToolbarSourceEntry } from './toolbar/types';
 
 export type FileType =
 	| 'latex'
@@ -48,7 +49,7 @@ const commandsByView = new WeakMap<
 	Map<string, (view: EditorView) => boolean>
 >();
 
-function registerCommands(view: EditorView, entries) {
+function registerCommands(view: EditorView, entries: ToolbarSourceEntry[]) {
 	const commands = commandsByView.get(view) ?? new Map();
 	for (const entry of entries) {
 		if (!('type' in entry)) commands.set(entry.key, entry.command);
@@ -60,7 +61,7 @@ export function runToolbarCommand(view: EditorView, key: string): boolean {
 	return commandsByView.get(view)?.get(key)?.(view) ?? false;
 }
 
-const toButtons = (entries: ToolbarEntry[]): ToolbarEntry[] =>
+const toButtons = (entries: ToolbarSourceEntry[]): ToolbarEntry[] =>
 	entries.map((entry) =>
 		'type' in entry
 			? entry

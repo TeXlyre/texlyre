@@ -1,7 +1,7 @@
 // src/extensions/codemirror/toolbar/toolbarItems.ts
 import type { UndoManager } from 'yjs';
 
-import type { ToolbarEntry } from '../../../components/common/PluginToolbar';
+import type { ToolbarSourceEntry } from './types';
 import type * as CodeMirrorItemsNS from './codemirrorItems';
 import type * as LaTeXItemsNS from './latexItems';
 import type * as TypstItemsNS from './typstItems';
@@ -43,7 +43,7 @@ const space = { type: 'space' as const };
 const tableScopeEntries = (
 	fileType: ScopedFileType,
 	I: typeof TableScopeItemsNS,
-): ToolbarEntry[] => [
+): ToolbarSourceEntry[] => [
 	split,
 	I.createRowAddBefore(fileType),
 	I.createRowAddAfter(fileType),
@@ -57,7 +57,7 @@ const tableScopeEntries = (
 const colorScopeEntries = (
 	fileType: ScopedFileType,
 	I: typeof ColorScopeItemsNS,
-): ToolbarEntry[] => [
+): ToolbarSourceEntry[] => [
 	split,
 	I.createColorEdit(fileType),
 	I.createColorRemove(fileType),
@@ -67,7 +67,7 @@ const endEntries = (
 	isFullScreen: boolean,
 	I: typeof CodeMirrorItemsNS,
 	undoManager?: UndoManager,
-): ToolbarEntry[] => [
+): ToolbarSourceEntry[] => [
 	space,
 	I.createUndo(undoManager),
 	I.createRedo(undoManager),
@@ -79,7 +79,7 @@ export function buildToolbarEntries(
 	fileType: FileType,
 	scope: { inTable: boolean; inColor: boolean; isFullScreen: boolean },
 	f: Factories,
-): ToolbarEntry[] {
+): ToolbarSourceEntry[] {
 	const scopedType: ScopedFileType | null =
 		fileType === 'latex' || fileType === 'typst' ? fileType : null;
 

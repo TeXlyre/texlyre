@@ -20,12 +20,18 @@ export const LATEX_ENGINES = [
 
 export type LaTeXEngine = (typeof LATEX_ENGINES)[number];
 
+declare global {
+	interface DocumentEventMap {
+		'trigger-compile-with-engine': CustomEvent<{ engine: LaTeXEngine }>;
+	}
+}
+
 export interface LaTeXContextType {
 	isCompiling: boolean;
 	isInitializing: boolean;
-	setIsInitializing: (boolean) => void;
+	setIsInitializing: (value: boolean) => void;
 	isExporting: boolean;
-	setIsExporting: (boolean) => void;
+	setIsExporting: (value: boolean) => void;
 	compileError: string | null;
 	compiledPdf: Uint8Array | null;
 	compiledCanvas: Uint8Array | null;

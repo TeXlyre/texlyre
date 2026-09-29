@@ -6,7 +6,12 @@ import * as Y from 'yjs';
 import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
 import type { User } from '../types/auth';
-import type { Project, ProjectType, ProjectGroup } from '../types/projects';
+import type {
+	Project,
+	ProjectCreateInput,
+	ProjectGroup,
+	ProjectType,
+} from '../types/projects';
 import { generateRandomColor } from '../utils/colorUtils';
 import { cleanupProjectDatabases } from '../utils/dbDeleteUtils';
 import { generateYjsProjectId } from '../utils/urlUtils';
@@ -86,6 +91,12 @@ class AuthService {
 		}
 	}
 
+	private async getDatabase(): Promise<IDBPDatabase> {
+		if (!this.db) await this.initialize();
+		if (!this.db) throw new Error(t('Database not initialized'));
+		return this.db;
+	}
+
 	async hashPassword(password: string): Promise<string> {
 		const msgBuffer = new TextEncoder().encode(password);
 		const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -112,7 +123,6 @@ class AuthService {
 			await this.initialize();
 		}
 
-		// Clean up any existing expired guests first
 		await this.cleanupExpiredGuests();
 
 		const sessionId = this.generateSessionId();
@@ -206,7 +216,7 @@ class AuthService {
 			expiresAt: undefined,
 		};
 
-		// Transfer ownership of all guest projects to the new user
+		// This transfers ownership of all guest projects to the new user
 		await this.transferGuestProjects(oldGuestId, newUserId);
 		await this.db?.put(this.USER_STORE, upgradedUser);
 		await this.db?.delete(this.USER_STORE, oldGuestId);
@@ -303,7 +313,6 @@ class AuthService {
 				}
 			}
 
-			// Remove projects from database
 			if (guestProjects.length > 0) {
 				const projectTx = this.db.transaction(this.PROJECT_STORE, 'readwrite');
 				for (const project of guestProjects) {
@@ -315,7 +324,6 @@ class AuthService {
 				}
 			}
 
-			// Remove user from database
 			const userTx = this.db.transaction(this.USER_STORE, 'readwrite');
 			await userTx.objectStore('users').delete(guestUser.id);
 
@@ -332,7 +340,6 @@ class AuthService {
 	): Promise<User> {
 		if (!this.db) await this.initialize();
 
-		// Check for existing non-guest users only
 		const existingUser = await this.db?.getFromIndex(
 			this.USER_STORE,
 			'username',
@@ -400,17 +407,29 @@ class AuthService {
 	}
 
 	async logout(): Promise<void> {
-		if (this.currentUser && this.isGuestUser(this.currentUser)) {
-			await this.cleanupExpiredGuest(this.currentUser);
-		}
-
-		if (this.currentUser) {
-			const { chelysService } = await import('./ChelysService');
-			chelysService.logoutChelys(this.currentUser.id);
-		}
-
+		const user = this.currentUser;
 		this.currentUser = null;
 		localStorage.removeItem('texlyre-current-user');
+
+		if (!user) return;
+
+		if (this.isGuestUser(user)) {
+			try {
+				await this.db?.put(this.USER_STORE, {
+					...user,
+					expiresAt: Date.now() - 1,
+				});
+			} catch (error) {
+				moduleLog.warn('Failed to mark guest session for cleanup:', error);
+			}
+		}
+
+		try {
+			const { chelysService } = await import('./ChelysService');
+			chelysService.logoutChelys(user.id);
+		} catch (error) {
+			moduleLog.warn('Failed to clear Chelys session:', error);
+		}
 	}
 
 	async updateUser(user: User): Promise<User> {
@@ -556,12 +575,10 @@ class AuthService {
 		}
 	}
 
-	async createProject(
-		project: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>,
-		requireAuth = true,
-	): Promise<Project> {
-		if (!this.db) await this.initialize();
-		if (requireAuth && !this.currentUser) {
+	async createProject(project: ProjectCreateInput): Promise<Project> {
+		const db = await this.getDatabase();
+		const currentUser = this.currentUser;
+		if (!currentUser) {
 			throw new Error('User not authenticated');
 		}
 
@@ -588,10 +605,10 @@ class AuthService {
 			id: projectId,
 			createdAt: now,
 			updatedAt: now,
-			ownerId: this.currentUser.id,
+			ownerId: currentUser.id,
 		};
 
-		await this.db?.put(this.PROJECT_STORE, newProject);
+		await db.put(this.PROJECT_STORE, newProject);
 
 		if (shouldAutoSync()) {
 			diskBackupService.synchronize(newProject.id).catch(console.error);
@@ -630,17 +647,26 @@ class AuthService {
 		project: Project,
 		requireAuth = true,
 	): Promise<Project> {
-		if (!this.db) await this.initialize();
+		const db = await this.getDatabase();
 
-		if (requireAuth && !this.currentUser) {
+		if (!requireAuth) {
+			const importedProject: Project = {
+				...project,
+				updatedAt: Date.now(),
+			};
+			await db.put(this.PROJECT_STORE, importedProject);
+			return importedProject;
+		}
+
+		const currentUser = this.currentUser;
+		if (!currentUser) {
 			throw new Error(t('User not authenticated'));
 		}
 
 		if (project.id) {
 			return this.updateProject({
 				...project,
-				id: project.id,
-				ownerId: this.currentUser.id,
+				ownerId: currentUser.id,
 			});
 		}
 		return this.createProject({
@@ -675,14 +701,14 @@ class AuthService {
 	}
 
 	async getProjectsByUser(userId?: string): Promise<Project[]> {
-		if (!this.db) await this.initialize();
+		const db = await this.getDatabase();
 
 		const targetUserId = userId || this.currentUser?.id;
 		if (!targetUserId) {
 			return [];
 		}
 
-		const tx = this.db?.transaction(this.PROJECT_STORE, 'readonly');
+		const tx = db.transaction(this.PROJECT_STORE, 'readonly');
 		const index = tx.store.index('ownerId');
 		return index.getAll(targetUserId);
 	}
@@ -697,13 +723,13 @@ class AuthService {
 	}
 
 	async getProjectsByTag(tag: string): Promise<Project[]> {
-		if (!this.db) await this.initialize();
+		const db = await this.getDatabase();
 
 		if (!this.currentUser) {
 			return [];
 		}
 
-		const tx = this.db?.transaction(this.PROJECT_STORE, 'readonly');
+		const tx = db.transaction(this.PROJECT_STORE, 'readonly');
 		const index = tx.store.index('tags');
 		const projects = await index.getAll(tag);
 
@@ -713,12 +739,12 @@ class AuthService {
 	}
 
 	async getProjectsByType(type: ProjectType): Promise<Project[]> {
-		if (!this.db) await this.initialize();
+		const db = await this.getDatabase();
 
 		if (!this.currentUser) {
 			return [];
 		}
-		const tx = this.db?.transaction(this.PROJECT_STORE, 'readonly');
+		const tx = db.transaction(this.PROJECT_STORE, 'readonly');
 		const projects: Project[] = await tx.store.getAll();
 
 		return projects.filter(
@@ -728,13 +754,13 @@ class AuthService {
 	}
 
 	async getProjectsByGroup(group: ProjectGroup): Promise<Project[]> {
-		if (!this.db) await this.initialize();
+		const db = await this.getDatabase();
 
 		if (!this.currentUser) {
 			return [];
 		}
 
-		const tx = this.db?.transaction(this.PROJECT_STORE, 'readonly');
+		const tx = db.transaction(this.PROJECT_STORE, 'readonly');
 		const projects: Project[] = await tx.store.getAll();
 
 		return projects.filter(
@@ -745,13 +771,13 @@ class AuthService {
 	}
 
 	async searchProjects(query: string): Promise<Project[]> {
-		if (!this.db) await this.initialize();
+		const db = await this.getDatabase();
 
 		if (!this.currentUser) {
 			return [];
 		}
 
-		const tx = this.db?.transaction(this.PROJECT_STORE, 'readonly');
+		const tx = db.transaction(this.PROJECT_STORE, 'readonly');
 		const projects: Project[] = await tx.store.getAll();
 
 		const lowerQuery = query.toLowerCase();
@@ -772,13 +798,13 @@ class AuthService {
 		type: ProjectType | '' = '',
 		group: ProjectGroup | '' = '',
 	): Promise<Project[]> {
-		if (!this.db) await this.initialize();
+		const db = await this.getDatabase();
 
 		if (!this.currentUser) {
 			return [];
 		}
 
-		const tx = this.db?.transaction(this.PROJECT_STORE, 'readonly');
+		const tx = db.transaction(this.PROJECT_STORE, 'readonly');
 		const projects: Project[] = await tx.store.getAll();
 		const lowerQuery = query.trim().toLowerCase();
 

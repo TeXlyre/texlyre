@@ -51,8 +51,6 @@ const visibleText = (text: string) =>
 	stripAnnotationTagTokens(text, ['comment']);
 
 function stripReviewSyntax(change: EditChange): EditChange {
-	// Normal typing cannot possibly contain a review tag. Avoid constructing and
-	// running the tag-stripping regex on every held-key transaction.
 	if (!change.insert.includes('<')) return change;
 
 	const beforeCursor = change.insert.slice(0, change.cursorOffset);

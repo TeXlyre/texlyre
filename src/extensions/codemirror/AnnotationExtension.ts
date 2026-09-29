@@ -2,7 +2,7 @@
 import { annotationMaskingExtension } from './annotations/annotationMasking';
 import { createTagProtection } from './annotations/tagProtection';
 
-/** Shared syntax handling installed once for comments and reviews. */
+// This is a shared handler both for comments and reviews
 export const annotationSystemExtension = [
 	annotationMaskingExtension,
 	createTagProtection(),

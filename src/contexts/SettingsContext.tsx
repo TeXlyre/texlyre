@@ -32,7 +32,7 @@ const isEqual = (a: unknown, b: unknown): boolean =>
 
 export interface SettingOption {
 	label: string;
-	value: string | number | boolean;
+	value: string | number | boolean | null;
 }
 
 export interface SettingCodeMirrorOptions {
@@ -149,7 +149,14 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 			localStorageSettingsRef.current &&
 			localStorageSettingsRef.current[setting.id] !== undefined
 		) {
-			return localStorageSettingsRef.current[setting.id];
+			const storedValue = localStorageSettingsRef.current[setting.id];
+			if (
+				setting.type === 'select' &&
+				setting.id.endsWith('-notifications') &&
+				typeof storedValue === 'boolean'
+			)
+				return storedValue ? 'all' : 'off';
+			return storedValue;
 		}
 		return setting.defaultValue;
 	}, []);

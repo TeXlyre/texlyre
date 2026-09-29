@@ -534,6 +534,37 @@ class CollabService {
 		};
 	}
 
+	public async getDocumentContent(
+		projectUrl: YjsDocUrl,
+		documentId: string,
+	): Promise<string> {
+		const projectId = projectUrl.startsWith('yjs:')
+			? projectUrl.slice(4)
+			: projectUrl;
+		const dbName = `texlyre-project-${projectId}`;
+		const collectionName = `${dbName}-yjs_${documentId}`;
+		const doc = new Y.Doc();
+		const persistence = new IndexeddbPersistence(collectionName, doc);
+
+		try {
+			await new Promise<void>((resolve) => {
+				const timeout = setTimeout(resolve, 2000);
+				persistence.once('synced', () => {
+					clearTimeout(timeout);
+					resolve();
+				});
+			});
+
+			return doc.getText('codemirror').toString();
+		} catch (error) {
+			moduleLog.error('Error getting document content:', error);
+			return '';
+		} finally {
+			persistence.destroy();
+			doc.destroy();
+		}
+	}
+
 	public async updateDocumentContent(
 		projectId: string,
 		documentId: string,

@@ -1,6 +1,6 @@
 // src/services/GitBackupSyncService.ts
 import { t } from '@/i18n';
-import { mergeAnnotatedSources } from '../utils/annotationMerge';
+import { mergeAnnotatedSources } from '../utils/annotationMergeUtils';
 import { stripAnnotationTagsWithSpans } from '../utils/annotationTagUtils';
 import {
 	gitContentToText,

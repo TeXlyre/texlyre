@@ -5,7 +5,12 @@ import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
 import { stripAnnotations, processFile } from '../utils/fileCommentUtils';
 import { authService } from './AuthService';
-import { UnifiedDataStructureService } from './BackupLayoutService';
+import {
+	type BackupLayoutService,
+	type SerializedProjectDocuments,
+	type SerializedProjectFiles,
+	UnifiedDataStructureService,
+} from './BackupLayoutService';
 import { ProjectDataService } from './ProjectDataService';
 import { WriteTargetService, ZipTarget } from './WriteTargetService';
 import { importUserData, exportUserData } from '../utils/userDataUtils';
@@ -103,15 +108,22 @@ class AccountExportService {
 			);
 
 			const manifest = this.unifiedService.createManifest('export');
-			const projectData = new Map();
+			const projectData: BackupLayoutService['projectData'] = new Map();
 
 			for (const project of projects) {
 				if (options.projectIds && !options.projectIds.includes(project.id)) {
 					continue;
 				}
 
-				let documents = { documents: [], documentContents: new Map() };
-				let files = { files: [], fileContents: new Map() };
+				let documents: SerializedProjectDocuments = {
+					documents: [],
+					documentContents: new Map(),
+				};
+				let files: SerializedProjectFiles = {
+					files: [],
+					fileContents: new Map(),
+					deletedFiles: [],
+				};
 
 				if (options.includeDocuments) {
 					documents = await this.dataSerializer.serializeProjectDocuments({
@@ -217,7 +229,7 @@ class AccountExportService {
 
 	private async writeFilesOnlyStructure(
 		adapter: ZipTarget,
-		data: any,
+		data: BackupLayoutService,
 		options?: ExportOptions,
 	): Promise<void> {
 		const { fileStoreService } = await import('./FileStoreService');
@@ -256,7 +268,6 @@ class AccountExportService {
 
 			let filesExported = false;
 
-			// Try to use live FileStoreService first
 			if (!fileStoreService.isConnectedToProject(actualProjectId)) {
 				try {
 					await fileStoreService.initialize(`yjs:${actualProjectId}`);
@@ -286,7 +297,6 @@ class AccountExportService {
 								? file.path.slice(1)
 								: file.path;
 
-							// Handle empty projectPath for single project exports
 							const exportPath = projectPath
 								? `${projectPath}/${cleanPath}`
 								: cleanPath;
@@ -311,7 +321,7 @@ class AccountExportService {
 				}
 			}
 
-			// Fallback to serialized data if live service didn't work or no files were exported
+			// NOTE (fabawi): Fallback to serialized data if live service didn't work or no files were exported
 			if (!filesExported && projectData.files && projectData.files.length > 0) {
 				try {
 					let filesToProcess = projectData.files.filter(
@@ -335,7 +345,6 @@ class AccountExportService {
 									? file.path.slice(1)
 									: file.path;
 
-								// Handle empty projectPath for single project exports
 								const exportPath = projectPath
 									? `${projectPath}/${cleanPath}`
 									: cleanPath;

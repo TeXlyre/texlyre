@@ -216,9 +216,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 		(p) => p.id === selectedProvider,
 	);
 
-	// Refs allow fetchExternalEntries to read current values without being
-	// listed as dependencies, preventing the connection/retry effect from
-	// re-firing on every keystroke.
 	const searchQueryRef = useRef(searchQuery);
 	const currentProviderRef = useRef(currentProvider);
 	searchQueryRef.current = searchQuery;
@@ -559,11 +556,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 		setLocalEntries(result);
 	}, [getLocalEntriesAsync]);
 
-	// searchQuery is intentionally excluded from deps. Callers that need the
-	// current query pass it explicitly (triggerSearch, instant debounce).
-	// The connection/retry effect and refresh handler pass nothing, causing
-	// on-demand providers to receive an empty string and fall through to
-	// their linked-entry sync path rather than firing a search fetch.
 	const fetchExternalEntries = useCallback(
 		async (query?: string) => {
 			const provider = currentProviderRef.current;
@@ -605,7 +597,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 		fetchExternalEntries(searchQueryRef.current);
 	}, [fetchExternalEntries]);
 
-	// Only fires for providers that explicitly declare searchMode: 'instant'.
+	// This only fires for providers that explicitly declare searchMode: 'instant'.
 	// On-demand providers are excluded, so typing never triggers a fetch for them.
 	useEffect(() => {
 		const provider = currentProviderRef.current;

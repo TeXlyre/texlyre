@@ -44,7 +44,7 @@ class CommentService {
 			return {
 				id: match.id,
 				user: userMatch ? userMatch[1].trim() : 'Anonymous',
-				timestamp: timeMatch ? Number.parseInt(timeMatch[1]) : Date.now(),
+				timestamp: timeMatch ? Number.parseInt(timeMatch[1], 10) : Date.now(),
 				content: parseAnnotationTextField(match.openTagContent, 'content'),
 				responses: parseAnnotationResponses(match.openTagContent),
 				startPosition: match.openTagStart,

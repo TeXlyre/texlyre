@@ -1,15 +1,43 @@
 // src/services/NotificationService.ts
-export type NotificationType =
-	| 'loading'
-	| 'success'
-	| 'error'
-	| 'info'
-	| 'sync';
+import type { NotificationType, ToastEventType } from '../types/notifications';
+
+export type { NotificationType } from '../types/notifications';
+
+export type NotificationMode = 'all' | 'errors' | 'off';
+
+export function normalizeNotificationMode(
+	value: unknown,
+	fallback: NotificationMode = 'all',
+): NotificationMode {
+	if (value === true) return 'all';
+	if (value === false) return 'off';
+	return value === 'all' || value === 'errors' || value === 'off'
+		? value
+		: fallback;
+}
+
+export function shouldShowNotification(
+	settingId: string,
+	type: NotificationType,
+	fallback: NotificationMode = 'all',
+): boolean {
+	try {
+		const userId = localStorage.getItem('texlyre-current-user');
+		const storageKey = userId
+			? `texlyre-user-${userId}-settings`
+			: 'texlyre-settings';
+		const settings = JSON.parse(localStorage.getItem(storageKey) || '{}');
+		const mode = normalizeNotificationMode(settings[settingId], fallback);
+		return mode === 'all' || (mode === 'errors' && type === 'error');
+	} catch {
+		return fallback === 'all' || (fallback === 'errors' && type === 'error');
+	}
+}
 
 export interface NotificationOptions<F extends string = string> {
 	operationId?: string;
 	duration?: number;
-	data?: Record<string, any>;
+	data?: Record<string, unknown>;
 	format?: F;
 }
 
@@ -80,11 +108,11 @@ class NotificationService {
 	}
 
 	private emit(
-		type: string,
+		type: ToastEventType,
 		message: string,
 		operationId?: string,
 		duration?: number,
-		data?: Record<string, any>,
+		data?: Record<string, unknown>,
 	): void {
 		document.dispatchEvent(
 			new CustomEvent('toast-notification', {

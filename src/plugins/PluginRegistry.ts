@@ -2,6 +2,7 @@
 import { createNamedLogger } from '@/logging';
 import plugins from './index';
 import type { Setting } from '../contexts/SettingsContext';
+import type { GitRemoteProvider } from '../types/gitRemote';
 import type {
 	BackupPlugin,
 	CollaborativeViewerPlugin,
@@ -16,7 +17,6 @@ import type {
 } from './PluginInterface';
 
 const moduleLog = createNamedLogger('PluginRegistry');
-
 
 export const pluginSettings: Setting[] = [];
 
@@ -38,87 +38,25 @@ class PluginRegistryManager {
 
 	private loadPlugins() {
 		try {
-			if (plugins.viewers && Object.keys(plugins.viewers).length > 0) {
-				moduleLog.info('Loading viewers:', Object.keys(plugins.viewers));
-				Object.values(plugins.viewers).forEach((plugin: ViewerPlugin) => {
-					this.registerPlugin(plugin);
-					if (plugin.settings && Array.isArray(plugin.settings)) {
-						pluginSettings.push(...plugin.settings);
-					}
-				});
-			}
+			const groups = [
+				['viewers', plugins.viewers],
+				['collaborative viewers', plugins.collaborative_viewers],
+				['renderers', plugins.renderers],
+				['loggers', plugins.loggers],
+				['bibliography plugins', plugins.bibliography],
+				['LSP plugins', plugins.lsp],
+				['backup plugins', plugins.backup],
+				['themes', plugins.themes],
+			] as const;
 
-			if (plugins.collaborative_viewers && Object.keys(plugins.collaborative_viewers).length > 0) {
-				moduleLog.info(
-					'Loading collaborative viewers:',
-					Object.keys(plugins.collaborative_viewers),
-				);
-				Object.values(plugins.collaborative_viewers).forEach((plugin: CollaborativeViewerPlugin) => {
+			for (const [label, group] of groups) {
+				const loaded = Object.values(group ?? {}) as Plugin[];
+				if (loaded.length === 0) continue;
+				moduleLog.info(`Loading ${label}:`, Object.keys(group ?? {}));
+				for (const plugin of loaded) {
 					this.registerPlugin(plugin);
-					if (plugin.settings && Array.isArray(plugin.settings)) {
-						pluginSettings.push(...plugin.settings);
-					}
-				});
-			}
-
-			if (plugins.renderers && Object.keys(plugins.renderers).length > 0) {
-				moduleLog.info('Loading renderers:', Object.keys(plugins.renderers));
-				Object.values(plugins.renderers).forEach((plugin: RendererPlugin) => {
-					this.registerPlugin(plugin);
-					if (plugin.settings && Array.isArray(plugin.settings)) {
-						pluginSettings.push(...plugin.settings);
-					}
-				});
-			}
-
-			if (plugins.loggers && Object.keys(plugins.loggers).length > 0) {
-				moduleLog.info('Loading loggers:', Object.keys(plugins.loggers));
-				Object.values(plugins.loggers).forEach((plugin: LoggerPlugin) => {
-					this.registerPlugin(plugin);
-					if (plugin.settings && Array.isArray(plugin.settings)) {
-						pluginSettings.push(...plugin.settings);
-					}
-				});
-			}
-
-			if (plugins.bibliography && Object.keys(plugins.bibliography).length > 0) {
-				moduleLog.info('Loading bibliography plugins:', Object.keys(plugins.bibliography));
-				Object.values(plugins.bibliography).forEach((plugin: BibliographyPlugin) => {
-					this.registerPlugin(plugin);
-					if (plugin.settings && Array.isArray(plugin.settings)) {
-						pluginSettings.push(...plugin.settings);
-					}
-				});
-			}
-
-			if (plugins.lsp && Object.keys(plugins.lsp).length > 0) {
-				moduleLog.info('Loading LSP plugins:', Object.keys(plugins.lsp));
-				Object.values(plugins.lsp).forEach((plugin: LSPPlugin) => {
-					this.registerPlugin(plugin);
-					if (plugin.settings && Array.isArray(plugin.settings)) {
-						pluginSettings.push(...plugin.settings);
-					}
-				});
-			}
-
-			if (plugins.backup && Object.keys(plugins.backup).length > 0) {
-				moduleLog.info('Loading backup plugins:', Object.keys(plugins.backup));
-				Object.values(plugins.backup).forEach((plugin: BackupPlugin) => {
-					this.registerPlugin(plugin);
-					if (plugin.settings && Array.isArray(plugin.settings)) {
-						pluginSettings.push(...plugin.settings);
-					}
-				});
-			}
-
-			if (plugins.themes && Object.keys(plugins.themes).length > 0) {
-				moduleLog.info('Loading themes:', Object.keys(plugins.themes));
-				Object.values(plugins.themes).forEach((plugin: ThemePlugin) => {
-					this.registerPlugin(plugin);
-					if (plugin.settings && Array.isArray(plugin.settings)) {
-						pluginSettings.push(...plugin.settings);
-					}
-				});
+					if (plugin.settings) pluginSettings.push(...plugin.settings);
+				}
 			}
 		} catch (error) {
 			moduleLog.error('Failed to load plugins:', error);
@@ -126,57 +64,9 @@ class PluginRegistryManager {
 	}
 
 	refreshPluginSettings(): Setting[] {
-		const freshSettings: Setting[] = [];
-
-		this.registry.viewers.forEach(plugin => {
-			if (plugin.settings) {
-				freshSettings.push(...plugin.settings);
-			}
-		});
-
-		this.registry.collaborativeViewers.forEach(plugin => {
-			if (plugin.settings) {
-				freshSettings.push(...plugin.settings);
-			}
-		});
-
-		this.registry.renderers.forEach(plugin => {
-			if (plugin.settings) {
-				freshSettings.push(...plugin.settings);
-			}
-		});
-
-		this.registry.loggers.forEach(plugin => {
-			if (plugin.settings) {
-				freshSettings.push(...plugin.settings);
-			}
-		});
-
-		this.registry.bibliography.forEach(plugin => {
-			if (plugin.settings) {
-				freshSettings.push(...plugin.settings);
-			}
-		});
-
-		this.registry.lsp.forEach(plugin => {
-			if (plugin.settings) {
-				freshSettings.push(...plugin.settings);
-			}
-		});
-
-		this.registry.backup.forEach(plugin => {
-			if (plugin.settings) {
-				freshSettings.push(...plugin.settings);
-			}
-		});
-
-		this.registry.themes.forEach(plugin => {
-			if (plugin.settings) {
-				freshSettings.push(...plugin.settings);
-			}
-		});
-
-		return freshSettings;
+		return (Object.values(this.registry) as Plugin[][]).flatMap((group) =>
+			group.flatMap((plugin) => plugin.settings ?? []),
+		);
 	}
 
 	registerPlugin(plugin: Plugin) {
@@ -220,16 +110,14 @@ class PluginRegistryManager {
 
 	getViewerForFile(fileName: string, mimeType?: string): ViewerPlugin | null {
 		for (const viewer of this.registry.viewers) {
-			if (viewer.canHandle(fileName, mimeType)) {
-				return viewer;
-			}
+			if (viewer.canHandle(fileName, mimeType)) return viewer;
 		}
 		return null;
 	}
 
 	getEditableViewersWithExtensions(): ViewerPlugin[] {
 		return this.registry.viewers.filter(
-			v => v.isEditable && v.getSupportedExtensions
+			(v) => v.isEditable && v.getSupportedExtensions,
 		);
 	}
 
@@ -241,14 +129,9 @@ class PluginRegistryManager {
 		fileName: string,
 		mimeType?: string,
 	): CollaborativeViewerPlugin | null {
-
 		for (const viewer of this.registry.collaborativeViewers) {
-
-			if (viewer.canHandle(fileName, mimeType)) {
-				return viewer;
-			}
+			if (viewer.canHandle(fileName, mimeType)) return viewer;
 		}
-		// console.log('[PluginRegistry] No collaborative viewer found for:', fileName, mimeType);
 		return null;
 	}
 
@@ -273,16 +156,19 @@ class PluginRegistryManager {
 		return null;
 	}
 
-	getRendererForOutput(outputType: string, preferredRenderer?: string): RendererPlugin | null {
-		const availableRenderers = this.registry.renderers.filter(renderer =>
-			renderer.canHandle(outputType)
+	getRendererForOutput(
+		outputType: string,
+		preferredRenderer?: string,
+	): RendererPlugin | null {
+		const availableRenderers = this.registry.renderers.filter((renderer) =>
+			renderer.canHandle(outputType),
 		);
 
 		if (availableRenderers.length === 0) return null;
 
 		if (preferredRenderer) {
-			const preferred = availableRenderers.find(renderer =>
-				renderer.id === preferredRenderer
+			const preferred = availableRenderers.find(
+				(renderer) => renderer.id === preferredRenderer,
 			);
 			if (preferred) return preferred;
 		}
@@ -296,9 +182,7 @@ class PluginRegistryManager {
 
 	getLoggerForType(logType: string): LoggerPlugin | null {
 		for (const logger of this.registry.loggers) {
-			if (logger.canHandle(logType)) {
-				return logger;
-			}
+			if (logger.canHandle(logType)) return logger;
 		}
 		return null;
 	}
@@ -308,7 +192,7 @@ class PluginRegistryManager {
 	}
 
 	getBibliographyPlugin(id: string): BibliographyPlugin | null {
-		return this.registry.bibliography.find(plugin => plugin.id === id) || null;
+		return this.registry.bibliography.find((plugin) => plugin.id === id) || null;
 	}
 
 	getAllBibliographyPlugins(): BibliographyPlugin[] {
@@ -320,11 +204,11 @@ class PluginRegistryManager {
 	}
 
 	getLSPPlugin(id: string): LSPPlugin | null {
-		return this.registry.lsp.find(plugin => plugin.id === id) || null;
+		return this.registry.lsp.find((plugin) => plugin.id === id) || null;
 	}
 
 	getEnabledLSPPlugins(): LSPPlugin[] {
-		return this.registry.lsp.filter(plugin => plugin.isEnabled());
+		return this.registry.lsp.filter((plugin) => plugin.isEnabled());
 	}
 
 	getAllLSPPlugins(): LSPPlugin[] {
@@ -332,13 +216,20 @@ class PluginRegistryManager {
 	}
 
 	getLSPPluginsForFileType(fileType: string): LSPPlugin[] {
-		return this.registry.lsp.filter(plugin =>
-			plugin.isEnabled() && plugin.getSupportedFileTypes().includes(fileType)
+		return this.registry.lsp.filter(
+			(plugin) =>
+				plugin.isEnabled() && plugin.getSupportedFileTypes().includes(fileType),
 		);
 	}
 
 	getBackup(): BackupPlugin[] {
 		return this.registry.backup;
+	}
+
+	getGitRemoteProviders(): GitRemoteProvider[] {
+		return this.registry.backup.flatMap((plugin) =>
+			plugin.gitRemote ? [plugin.gitRemote] : [],
+		);
 	}
 
 	getBackupById(id: string): BackupPlugin | null {

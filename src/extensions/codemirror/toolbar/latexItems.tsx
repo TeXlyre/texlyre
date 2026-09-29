@@ -340,7 +340,7 @@ export const createHighlight = (): ToolbarItem => ({
 
 function createColorCommand(fileType: 'latex', type: 'text' | 'highlight') {
 	return (view: EditorView): boolean => {
-		const toolbar = document.querySelector('.plugin-toolbar');
+		const toolbar = document.querySelector('.ui-toolbar[data-role="plugin"]');
 		if (!toolbar) return false;
 
 		const button = toolbar.querySelector(
@@ -353,7 +353,7 @@ function createColorCommand(fileType: 'latex', type: 'text' | 'highlight') {
 		if (picker) {
 			picker.destroy();
 			colorPickers.delete(view);
-			picker = null;
+			picker = undefined;
 		}
 
 		picker = new ColorPicker(view, button, {

@@ -74,8 +74,6 @@ export function isInsideAnnotationTag(
 	const ranges = getAnnotationMaskRanges(state);
 	if (!ranges.length) return false;
 
-	// Mask ranges are sorted and non-overlapping. Find the first range whose
-	// end is after the change start instead of scanning every annotation.
 	let low = 0;
 	let high = ranges.length;
 	while (low < high) {

@@ -1,5 +1,10 @@
 // src/types/auth.ts
-import type { Project, ProjectType, ProjectGroup } from './projects';
+import type {
+	Project,
+	ProjectCreateInput,
+	ProjectGroup,
+	ProjectType,
+} from './projects';
 
 export interface AuthContextType {
 	user: User | null;
@@ -24,16 +29,7 @@ export interface AuthContextType {
 		color?: string,
 		colorLight?: string,
 	) => Promise<User>;
-	createProject: (project: {
-		name: string;
-		description: string;
-		type: string;
-		group?: string;
-		compilerId?: string;
-		tags: string[];
-		docUrl?: string;
-		isFavorite: boolean;
-	}) => Promise<Project>;
+	createProject: (project: ProjectCreateInput) => Promise<Project>;
 	updateProject: (project: Project) => Promise<Project>;
 	deleteProject: (id: string) => Promise<void>;
 	getProjectById: (id: string) => Promise<Project | null>;

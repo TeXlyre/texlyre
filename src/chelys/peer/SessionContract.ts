@@ -71,8 +71,8 @@ export const makeChannelLabel = (label: string, requestId: string): string =>
 	`${label}:${requestId}`;
 
 /**
- * Gives each ephemeral TeXlyre peer one direct service room. All typesetter and
- * LSP channels for that peer are multiplexed over the room's peer connection.
+ * This Gives each TeXlyre peer an independent service room. All typesetter and
+ * LSP channels for that peer are multiplexed across the room's connections.
  */
 export const makeSessionRoomId = (
 	controlRoomId: string,

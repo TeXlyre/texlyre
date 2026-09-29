@@ -38,10 +38,9 @@ interface FileSystemBackupContextType {
 	activities: BackupActivity[];
 	discoveredProjects: ImportableProject[];
 	showDiscoveryModal: boolean;
-	shouldShowAutoBackupModal: boolean;
-	requestAccess: (isAutoStart?: boolean) => Promise<boolean>;
+	requestAccess: () => Promise<boolean>;
 	disconnect: () => Promise<void>;
-	setEnabled: (enabled: boolean, isAutoStart?: boolean) => Promise<void>;
+	setEnabled: (enabled: boolean) => Promise<void>;
 	synchronize: (projectId?: string) => Promise<void>;
 	exportToFileSystem: (projectId?: string) => Promise<void>;
 	importChanges: (projectId?: string) => Promise<void>;
@@ -62,7 +61,6 @@ export const DiskBackupContext = createContext<FileSystemBackupContextType>({
 	activities: [],
 	discoveredProjects: [],
 	showDiscoveryModal: false,
-	shouldShowAutoBackupModal: false,
 	requestAccess: async () => false,
 	disconnect: async () => {},
 	setEnabled: async () => {},
@@ -94,9 +92,6 @@ export const FileSystemBackupProvider: React.FC<
 		ImportableProject[]
 	>([]);
 	const [showDiscoveryModal, setShowDiscoveryModal] = useState(false);
-	const [shouldShowAutoBackupModal, setShouldShowAutoBackupModal] =
-		useState(false);
-
 	const [tempEnabled, setTempEnabled] = useState(false);
 
 	const { getSetting } = useSettings();
@@ -105,6 +100,8 @@ export const FileSystemBackupProvider: React.FC<
 		(getSetting('file-sys-backup-enable')?.value as boolean) ?? false;
 	const autoBackupOnStartup =
 		(getSetting('file-sys-backup-auto-backup')?.value as boolean) ?? false;
+	const autoScanOnStartup =
+		(getSetting('file-sys-backup-auto-scan')?.value as boolean) ?? false;
 	const _autoSyncOnChange =
 		(getSetting('file-sys-backup-auto-sync')?.value as boolean) ?? false;
 
@@ -112,32 +109,26 @@ export const FileSystemBackupProvider: React.FC<
 		return backupEnabledSetting || tempEnabled;
 	}, [backupEnabledSetting, tempEnabled]);
 
-	const requestAccess = useCallback(
-		async (isAutoStart = false): Promise<boolean> => {
-			const connected =
-				(await diskBackupService.restoreAccess()) ||
-				(await diskBackupService.requestAccess(isAutoStart));
-			if (connected) {
-				setTempEnabled(true);
-				diskBackupService.setEnabled(true);
-			}
-			return connected;
-		},
-		[],
-	);
+	const requestAccess = useCallback(async (): Promise<boolean> => {
+		const connected =
+			(await diskBackupService.restoreAccess()) ||
+			(await diskBackupService.requestAccess());
+		if (connected) {
+			setTempEnabled(true);
+			diskBackupService.setEnabled(true);
+		}
+		return connected;
+	}, []);
 
 	const disconnect = useCallback(async (): Promise<void> => {
 		await diskBackupService.disconnect();
 		setTempEnabled(false);
 	}, []);
 
-	const setEnabled = useCallback(
-		async (enabled: boolean, _isAutoStart = false): Promise<void> => {
-			setTempEnabled(enabled);
-			return diskBackupService.setEnabled(enabled);
-		},
-		[],
-	);
+	const setEnabled = useCallback(async (enabled: boolean): Promise<void> => {
+		setTempEnabled(enabled);
+		return diskBackupService.setEnabled(enabled);
+	}, []);
 
 	const synchronize = useCallback(
 		async (projectId?: string): Promise<void> => {
@@ -202,9 +193,6 @@ export const FileSystemBackupProvider: React.FC<
 					...newStatus,
 					isEnabled: prevStatus.isEnabled || tempEnabled,
 				}));
-				setShouldShowAutoBackupModal(
-					autoBackupOnStartup && !newStatus.isConnected,
-				);
 			},
 		);
 
@@ -228,25 +216,24 @@ export const FileSystemBackupProvider: React.FC<
 			unsubscribeActivities();
 			unsubscribeDiscovery();
 		};
-	}, [tempEnabled, getEffectiveEnabled, autoBackupOnStartup]);
+	}, [tempEnabled, getEffectiveEnabled]);
 
 	useEffect(() => {
+		if (!backupEnabledSetting || !autoBackupOnStartup) return;
+
 		let cancelled = false;
 		(async () => {
 			const restored = await diskBackupService.restoreAccess();
-			if (!cancelled && restored) {
-				setTempEnabled(true);
-				diskBackupService.setEnabled(true);
-			}
+			if (cancelled || !restored) return;
+
+			setTempEnabled(true);
+			diskBackupService.setEnabled(true);
+			if (autoScanOnStartup) await diskBackupService.scanMissingProjects();
 		})();
 		return () => {
 			cancelled = true;
 		};
-	}, []);
-
-	useEffect(() => {
-		setShouldShowAutoBackupModal(autoBackupOnStartup && !status.isConnected);
-	}, [autoBackupOnStartup, status.isConnected]);
+	}, [backupEnabledSetting, autoBackupOnStartup, autoScanOnStartup]);
 
 	useEffect(() => {
 		if (backupEnabledSetting) {
@@ -265,7 +252,6 @@ export const FileSystemBackupProvider: React.FC<
 			activities,
 			discoveredProjects,
 			showDiscoveryModal,
-			shouldShowAutoBackupModal,
 			requestAccess,
 			disconnect,
 			setEnabled,
@@ -283,7 +269,6 @@ export const FileSystemBackupProvider: React.FC<
 			activities,
 			discoveredProjects,
 			showDiscoveryModal,
-			shouldShowAutoBackupModal,
 			requestAccess,
 			disconnect,
 			setEnabled,

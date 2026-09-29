@@ -92,8 +92,7 @@ class AutocompleteProcessor {
 		this.currentFilePath = filePath;
 	}
 
-	// Public passthrough so external callers can refresh the bibliography cache
-	// without reaching into the handler instance directly.
+	// This passthrough is so external callers can refresh the bibliography cache without accesing handler
 	refreshBibliographyCache() {
 		return this.bibliographyHandler.updateCache();
 	}

@@ -19,17 +19,19 @@ export interface OutlineSection {
 	label?: string;
 }
 
-export class LaTeXOutlineParser {
-	private static readonly SECTION_COMMANDS = {
-		'\\part': { level: 0, type: 'part' as const },
-		'\\chapter': { level: 1, type: 'chapter' as const },
-		'\\section': { level: 2, type: 'section' as const },
-		'\\subsection': { level: 3, type: 'subsection' as const },
-		'\\subsubsection': { level: 4, type: 'subsubsection' as const },
-		'\\paragraph': { level: 5, type: 'paragraph' as const },
-		'\\subparagraph': { level: 6, type: 'subparagraph' as const },
-	};
+const SECTION_COMMANDS = {
+	'\\part': { level: 0, type: 'part' as const },
+	'\\chapter': { level: 1, type: 'chapter' as const },
+	'\\section': { level: 2, type: 'section' as const },
+	'\\subsection': { level: 3, type: 'subsection' as const },
+	'\\subsubsection': { level: 4, type: 'subsubsection' as const },
+	'\\paragraph': { level: 5, type: 'paragraph' as const },
+	'\\subparagraph': { level: 6, type: 'subparagraph' as const },
+};
 
+type SectionCommand = keyof typeof SECTION_COMMANDS;
+
+export class LaTeXOutlineParser {
 	static parse(content: string): OutlineSection[] {
 		const lines = stripAnnotationTags(content).split('\n');
 		const sections: OutlineSection[] = [];
@@ -44,7 +46,7 @@ export class LaTeXOutlineParser {
 			if (!sectionMatch) continue;
 
 			const { command, starred, title } = sectionMatch;
-			const sectionInfo = LaTeXOutlineParser.SECTION_COMMANDS[command];
+			const sectionInfo = SECTION_COMMANDS[command];
 
 			if (!sectionInfo) continue;
 
@@ -72,7 +74,7 @@ export class LaTeXOutlineParser {
 	}
 
 	private static matchSectionCommand(line: string): {
-		command: string;
+		command: SectionCommand;
 		starred: boolean;
 		title: string;
 	} | null {
@@ -83,7 +85,7 @@ export class LaTeXOutlineParser {
 		if (!match) return null;
 
 		return {
-			command: `\\${match[1]}`,
+			command: `\\${match[1]}` as SectionCommand,
 			starred: match[2] === '*',
 			title: match[3].trim(),
 		};

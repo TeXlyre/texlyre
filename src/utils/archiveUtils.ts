@@ -159,7 +159,10 @@ const readTarEntries = async (
 		.filter((entry) => entry.type === 'file' || entry.type === 'directory')
 		.map((entry) => ({
 			path: normalizeArchivePath(entry.name),
-			data: entry.type === 'file' ? entry.data : new Uint8Array(),
+			data:
+				entry.type === 'file'
+					? (entry.data ?? new Uint8Array())
+					: new Uint8Array(),
 			isDirectory: entry.type === 'directory',
 		}))
 		.filter((entry) => entry.path);
@@ -485,8 +488,10 @@ export async function batchExtractArchive(
 
 export async function createArchiveFromFolder(
 	folderNode: FileNode,
-	getFileContent: (fileId: string) => Promise<string | ArrayBuffer | null>,
-	_getFile: (fileId: string) => Promise<FileNode | null>,
+	getFileContent: (
+		fileId: string,
+	) => Promise<string | ArrayBuffer | null | undefined>,
+	_getFile: (fileId: string) => Promise<FileNode | null | undefined>,
 	format: WritableArchiveFormat = 'zip',
 ): Promise<Blob> {
 	const entries: ArchiveEntry[] = [];
@@ -510,7 +515,7 @@ export async function createArchiveFromFolder(
 
 		const content = await getFileContent(node.id);
 
-		if (content === null) {
+		if (content == null) {
 			return;
 		}
 

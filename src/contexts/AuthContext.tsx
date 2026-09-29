@@ -4,7 +4,12 @@ import { type ReactNode, createContext, useEffect, useState } from 'react';
 
 import { authService } from '../services/AuthService';
 import type { AuthContextType, User } from '../types/auth';
-import type { Project, ProjectType, ProjectGroup } from '../types/projects';
+import type {
+	Project,
+	ProjectCreateInput,
+	ProjectGroup,
+	ProjectType,
+} from '../types/projects';
 
 export const AuthContext = createContext<AuthContextType>({
 	user: null,
@@ -128,8 +133,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 	};
 
 	const logout = async (): Promise<void> => {
-		await authService.logout();
 		setUser(null);
+		await authService.logout();
 	};
 
 	const updateUser = async (updatedUser: User): Promise<User> => {
@@ -153,7 +158,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 	};
 
 	const createProject = async (
-		projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>,
+		projectData: ProjectCreateInput,
 	): Promise<Project> => {
 		return authService.createProject(projectData);
 	};

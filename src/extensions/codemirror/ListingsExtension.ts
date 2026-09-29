@@ -296,6 +296,8 @@ function handleEnterInList(view: EditorView, fileType: FileType): boolean {
 		});
 		return true;
 	}
+
+	return false;
 }
 
 function handleShiftEnterInList(view: EditorView, fileType: FileType): boolean {

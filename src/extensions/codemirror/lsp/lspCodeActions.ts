@@ -14,7 +14,7 @@ import {
 import type { LSPClient } from '@codemirror/lsp-client';
 
 import { genericLSPService } from '../../../services/GenericLSPService';
-import { toLSPSeverity, type LSPDiagnostic } from './lspDiagnostics';
+import type { LSPDiagnostic } from './lspDiagnostics';
 import {
 	createDebouncer,
 	getClientLabel,

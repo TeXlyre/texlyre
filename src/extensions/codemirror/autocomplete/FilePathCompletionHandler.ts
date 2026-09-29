@@ -154,8 +154,8 @@ export class FilePathCompletionHandler {
 				};
 			}
 
-			// Typst command patterns intentionally stop at the opening quote.
-			// Everything after the matched prefix up to the cursor is the partial path.
+			// NOTE (fabawi): Typst command patterns intentionally stop at the opening quote and
+			// everything after the matched prefix up untill the cursor is the partial path.
 			const fromInLine = match.index + match[0].length;
 			const partialPath = textBeforeCursor.substring(fromInLine);
 
@@ -230,7 +230,6 @@ export class FilePathCompletionHandler {
 			case 'data':
 				return cache.allFiles.filter((path) => this.isDataFile(path));
 
-			case 'all':
 			default:
 				return cache.allFiles;
 		}
