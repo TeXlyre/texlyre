@@ -113,7 +113,7 @@ const ExternalTypesetterOutput: React.FC<ExternalTypesetterOutputProps> = ({
 	}, []);
 
 	const sharedContent = useMemo(
-		() => (compiledOutput ? toArrayBuffer(compiledOutput.buffer) : null),
+		() => (compiledOutput ? toArrayBuffer(compiledOutput) : null),
 		[compiledOutput],
 	);
 
@@ -208,6 +208,7 @@ const ExternalTypesetterOutput: React.FC<ExternalTypesetterOutputProps> = ({
 						mimeType,
 						fileName: `output.${outputExtension(mimeType, effectiveFormat ?? '')}`,
 						onLocationClick: handleLocationClick,
+						memoryOptimized: true,
 						controllerRef: (controller: RendererController | null) => {
 							rendererControllerRef.current = controller;
 							controller?.setHighlight?.(currentHighlight);
@@ -234,17 +235,24 @@ const ExternalTypesetterOutput: React.FC<ExternalTypesetterOutputProps> = ({
 
 	return (
 		<div
-			className={`external-output ${className}`}
+			className={`ui-viewer ${className}`}
+			data-role='typeset-output'
 			style={{ position: 'relative' }}
 		>
-			<div className='output-header'>
-				<div className='view-tabs scroll-x' ref={outputTabsRef}>
+			<div className='ui-panel-header' data-role='output' data-shrink='true'>
+				<div
+					className='ui-tab-list scroll-x'
+					data-role='output'
+					data-variant='switcher'
+					ref={outputTabsRef}
+				>
 					<button
-						className={`tab-button ${currentView === 'log' ? 'active' : ''}`}
+						type='button'
+						className={`ui-tab ${currentView === 'log' ? 'active' : ''}`}
 						onClick={() => currentView !== 'log' && toggleOutputView()}
 					>
 						<div
-							className='status-dot'
+							className='ui-status-dot'
 							style={{
 								backgroundColor: indicatorColor[logIndicator ?? 'idle'],
 							}}
@@ -255,8 +263,9 @@ const ExternalTypesetterOutput: React.FC<ExternalTypesetterOutputProps> = ({
 					{currentView === 'output' &&
 						tabs.map((tab) => (
 							<button
+								type='button'
 								key={tab.format}
-								className={`tab-button ${effectiveFormat === tab.format ? 'active' : ''}`}
+								className={`ui-tab ${effectiveFormat === tab.format ? 'active' : ''}`}
 								onClick={() => handleTabSwitch(tab.format)}
 							>
 								{tab.label}
@@ -265,7 +274,8 @@ const ExternalTypesetterOutput: React.FC<ExternalTypesetterOutputProps> = ({
 
 					{currentView === 'log' && (
 						<button
-							className='tab-button'
+							type='button'
+							className='ui-tab'
 							onClick={() => toggleOutputView()}
 							disabled={!hasOutput}
 						>
@@ -282,10 +292,14 @@ const ExternalTypesetterOutput: React.FC<ExternalTypesetterOutputProps> = ({
 				/>
 			</div>
 
-			{compileError && <div className='compile-error'>{compileError}</div>}
+			{compileError && (
+				<div className='ui-message' data-tone='error'>
+					{compileError}
+				</div>
+			)}
 
 			{!compileLog && !hasOutput ? (
-				<div className='empty-state'>
+				<div className='empty-state ui-empty-state'>
 					<p>
 						{t(
 							'No output available. Compile a {typesetter} document to see results.',
@@ -299,7 +313,7 @@ const ExternalTypesetterOutput: React.FC<ExternalTypesetterOutputProps> = ({
 				<>
 					{currentView === 'log' && (
 						<div className='log-view-container'>
-							<div className='log-viewer'>
+							<div className='log-viewer ui-code-block' data-wrap='true'>
 								<pre>{compileLog}</pre>
 							</div>
 						</div>

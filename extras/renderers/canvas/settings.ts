@@ -13,6 +13,24 @@ export const getCanvasRendererSettings = (): Setting[] => [
 		defaultValue: true,
 	},
 	{
+		id: 'canvas-renderer-notifications',
+		category: t('Renderers'),
+		subcategory: t('Canvas Output'),
+		type: 'select',
+		label: t('Compilation notifications'),
+		description: t(
+			'Choose which compilation notifications to show for output using this renderer',
+		),
+		defaultValue: 'off',
+		dependsOn: { id: 'canvas-renderer-enable', value: true, nest: true },
+		disabledReason: t('Requires: Canvas Renderer'),
+		options: [
+			{ label: t('All notifications'), value: 'all' },
+			{ label: t('Errors only'), value: 'errors' },
+			{ label: t('Off'), value: 'off' },
+		],
+	},
+	{
 		id: 'canvas-renderer-initial-zoom',
 		category: t('Renderers'),
 		subcategory: t('Canvas Output'),

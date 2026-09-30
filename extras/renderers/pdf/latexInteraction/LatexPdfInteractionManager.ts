@@ -18,6 +18,7 @@ export type LatexPdfInteractionManagerOptions = {
 	installRetryMs?: number;
 	onInstalled?: (adapterNames: string[]) => void;
 	onWarning?: (message: string, detail?: unknown) => void;
+	memoryOptimized?: boolean;
 };
 
 export class LatexPdfInteractionManager {
@@ -26,6 +27,7 @@ export class LatexPdfInteractionManager {
 	private readonly installRetryMs: number;
 	private readonly onInstalled?: (adapterNames: string[]) => void;
 	private readonly onWarning?: (message: string, detail?: unknown) => void;
+	private readonly memoryOptimized: boolean;
 	private readonly disposers: Array<() => void> = [];
 	private disposed = false;
 	private installed = false;
@@ -46,6 +48,7 @@ export class LatexPdfInteractionManager {
 		this.installRetryMs = options.installRetryMs || DEFAULT_INSTALL_RETRY_MS;
 		this.onInstalled = options.onInstalled;
 		this.onWarning = options.onWarning;
+		this.memoryOptimized = options.memoryOptimized ?? false;
 	}
 
 	async installWhenReady(): Promise<void> {
@@ -132,9 +135,21 @@ export class LatexPdfInteractionManager {
 			pageNumber <= this.pdfDocument.numPages;
 			pageNumber++
 		) {
+			if (this.memoryOptimized && this.disposed) break;
+
 			const page = await this.pdfDocument.getPage(pageNumber);
+			if (this.memoryOptimized && this.disposed) break;
+
 			const annotations = await page.getAnnotations();
-			pageAnnotations.push({ pageNumber, annotations });
+			if (this.memoryOptimized && this.disposed) break;
+
+			if (!this.memoryOptimized || annotations.length > 0) {
+				pageAnnotations.push({ pageNumber, annotations });
+			}
+
+			if (this.memoryOptimized && pageNumber % 8 === 0) {
+				await new Promise<void>((resolve) => setTimeout(resolve, 0));
+			}
 		}
 
 		return {

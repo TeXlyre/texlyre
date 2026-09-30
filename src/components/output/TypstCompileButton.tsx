@@ -203,43 +203,43 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 			return typstFiles;
 		};
 
+		const findFileById = (
+			nodes: FileNode[],
+			fileId: string,
+		): FileNode | undefined => {
+			for (const node of nodes) {
+				if (node.id === fileId) return node;
+				if (node.children) {
+					const match = findFileById(node.children, fileId);
+					if (match) return match;
+				}
+			}
+			return undefined;
+		};
+
 		const allTypstFiles = findTypstFiles(fileTree);
 		setAvailableTypstFiles(allTypstFiles);
 
-		const findMainFile = async () => {
-			if (
-				selectedDocId &&
-				linkedFileInfo?.filePath &&
-				isTypstFile(linkedFileInfo.filePath)
-			) {
-				setAutoMainFile(linkedFileInfo.filePath);
+		if (
+			selectedDocId &&
+			linkedFileInfo?.filePath &&
+			isTypstFile(linkedFileInfo.filePath)
+		) {
+			setAutoMainFile(linkedFileInfo.filePath);
+			return;
+		}
+
+		if (selectedFileId) {
+			const file = findFileById(fileTree, selectedFileId);
+			if (file && isTypstFile(file.path)) {
+				setAutoMainFile(file.path);
 				return;
 			}
+		}
 
-			if (selectedFileId) {
-				const file = await getFile(selectedFileId);
-				if (file && isTypstFile(file.path)) {
-					setAutoMainFile(file.path);
-					return;
-				}
-			}
-
-			if (autoMainFile && allTypstFiles.includes(autoMainFile)) {
-				return;
-			}
-
-			setAutoMainFile(allTypstFiles[0]);
-		};
-
-		findMainFile();
-	}, [
-		selectedFileId,
-		getFile,
-		fileTree,
-		selectedDocId,
-		linkedFileInfo,
-		autoMainFile,
-	]);
+		if (autoMainFile && allTypstFiles.includes(autoMainFile)) return;
+		setAutoMainFile(allTypstFiles[0]);
+	}, [selectedFileId, fileTree, selectedDocId, linkedFileInfo, autoMainFile]);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -506,10 +506,16 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 	const isDisabled = isInitializing || (!isCompiling && !effectiveMainFile);
 
 	return (
-		<div className={`typst-compile-buttons ${className}`} ref={dropdownRef}>
-			<div className='compile-button-group'>
+		<div className={`ui-control-cluster ${className}`} ref={dropdownRef}>
+			<div
+				className='ui-button-group ui-split-button'
+				data-variant='joined'
+				data-size='control'
+				data-trigger-group='true'
+			>
 				<button
-					className={`typst-button compile-button ${isCompiling ? 'compiling' : ''} ${isInitializing ? 'initializing' : ''}`}
+					type='button'
+					className={`ui-split-main compile-button ${isCompiling ? 'compiling' : ''} ${isInitializing ? 'initializing' : ''}`}
 					onClick={handleCompileOrStop}
 					disabled={isDisabled}
 					title={
@@ -536,7 +542,8 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 				/>
 
 				<button
-					className='typst-button dropdown-toggle'
+					type='button'
+					className='ui-split-toggle dropdown-toggle'
 					onClick={toggleDropdown}
 					title={t('Compilation Options')}
 				>
@@ -548,16 +555,20 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 				isOpen={isDropdownOpen}
 				triggerElement={
 					dropdownRef.current?.querySelector(
-						'.compile-button-group',
+						'[data-trigger-group]',
 					) as HTMLElement
 				}
 				className='typst-dropdown'
 			>
-				<div className='dropdown-section'>
-					<div className='format-selector-header'>
-						<div className='dropdown-title'>{t('Main File:')}</div>
+				<div className='ui-menu-section' data-variant='control'>
+					<div className='ui-toolbar' data-justify='between' data-gap='sm'>
+						<div className='ui-menu-title' data-variant='control'>
+							{t('Main File:')}
+						</div>
 						<button
-							className='pdf-options-toggle'
+							type='button'
+							className='ui-icon-button'
+							data-variant='control'
 							onClick={handleResetProperties}
 							title={t('Reset to global settings')}
 							disabled={isCompiling}
@@ -565,20 +576,22 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 							<ResetIcon />
 						</button>
 					</div>
-					<div className='dropdown-value' title={effectiveMainFile}>
+					<div className='ui-menu-value' title={effectiveMainFile}>
 						{getDisplayName(effectiveMainFile)}
 						{projectMainFile && (
-							<span className='shared-indicator'>{t('(shared)')}</span>
+							<span className='ui-status' data-tone='accent'>
+								{t('(shared)')}
+							</span>
 						)}
 					</div>
 				</div>
 				{useSharedSettings && (
-					<div className='dropdown-section'>
-						<div className='dropdown-label'>{t('Select main file:')}</div>
+					<div className='ui-menu-section' data-variant='control'>
+						<div className='ui-menu-label'>{t('Select main file:')}</div>
 						<select
 							value={projectMainFile || propMainFile || 'auto'}
 							onChange={(e) => handleMainFileChange(e.target.value)}
-							className='dropdown-select'
+							className='ui-field-control'
 							disabled={isCompiling}
 						>
 							<option value='auto'>{t('Auto-detect')}</option>
@@ -588,7 +601,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 								</option>
 							))}
 						</select>
-						<label className='dropdown-checkbox'>
+						<label className='ui-menu-item checkbox-control'>
 							<input
 								type='checkbox'
 								checked={!!projectMainFile}
@@ -600,11 +613,13 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 					</div>
 				)}
 
-				<div className='dropdown-section'>
-					<div className='format-selector-header'>
-						<div className='dropdown-title'>{t('Output Format:')}</div>
+				<div className='ui-menu-section' data-variant='control'>
+					<div className='ui-toolbar' data-justify='between' data-gap='sm'>
+						<div className='ui-menu-title' data-variant='control'>
+							{t('Output Format:')}
+						</div>
 					</div>
-					<div className='format-selector-group'>
+					<div className='ui-toolbar' data-gap='sm'>
 						<select
 							value={effectiveFormat}
 							onChange={(e) => {
@@ -627,7 +642,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 									setIsPdfOptionsOpen(false);
 								}
 							}}
-							className='dropdown-select'
+							className='ui-field-control'
 							disabled={isCompiling}
 						>
 							<option value='pdf'>{t('PDF')}</option>
@@ -637,7 +652,9 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 						{(effectiveFormat === 'pdf' ||
 							effectiveFormat === 'canvas-pdf') && (
 							<button
-								className={`pdf-options-toggle ${isPdfOptionsOpen ? 'active' : ''}`}
+								type='button'
+								className={`ui-icon-button ${isPdfOptionsOpen ? 'active' : ''}`}
+								data-variant='control'
 								onClick={() => setIsPdfOptionsOpen(!isPdfOptionsOpen)}
 								title={t('PDF Options')}
 								disabled={isCompiling}
@@ -648,9 +665,14 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 					</div>
 					{(effectiveFormat === 'pdf' || effectiveFormat === 'canvas-pdf') &&
 						isPdfOptionsOpen && (
-							<div className='pdf-options-section'>
-								<div className='pdf-option'>
-									<label className='dropdown-title'>
+							<div
+								className='ui-card ui-stack'
+								data-surface='secondary'
+								data-padding='sm'
+								data-gap='sm'
+							>
+								<div className='ui-field'>
+									<label className='ui-menu-title' data-variant='control'>
 										{t('PDF Standards:')}
 									</label>
 									{getStandardGroups().map((group) => {
@@ -661,7 +683,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 										const selected = parseStandards(current);
 										return (
 											<div key={group.group} className='pdf-standard-group'>
-												<div className='dropdown-label'>{t(group.label)}</div>
+												<div className='ui-menu-label'>{t(group.label)}</div>
 												{group.options.map((option) => {
 													const checked = selected.includes(option.value);
 													const enabled = isStandardEnabled(
@@ -671,7 +693,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 													return (
 														<label
 															key={option.value}
-															className='dropdown-checkbox'
+															className='ui-menu-item checkbox-control'
 														>
 															<input
 																type='checkbox'
@@ -715,13 +737,12 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 										href='https://typst.app/docs/reference/pdf/'
 										target='_blank'
 										rel='noopener noreferrer'
-										className='dropdown-link'
 									>
 										{t('Learn more about PDF standards')}
 									</a>
 								</div>
 
-								<label className='dropdown-checkbox'>
+								<label className='ui-menu-item checkbox-control'>
 									<input
 										type='checkbox'
 										checked={
@@ -759,7 +780,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 						)}
 					{/* TODO (fabawi): disabled for now as it conflicts with the output setting from tabs*/}
 					{/* {useSharedSettings &&
-							<label className="dropdown-checkbox">
+							<label className='ui-menu-item checkbox-control'>
 							<input
 								type="checkbox"
 								checked={!!projectFormat}
@@ -770,9 +791,9 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 						} */}
 				</div>
 
-				<div className='dropdown-section'>
+				<div className='ui-menu-section' data-variant='control'>
 					{useSharedSettings && (
-						<label className='dropdown-checkbox'>
+						<label className='ui-menu-item checkbox-control'>
 							<input
 								type='checkbox'
 								checked={effectiveAutoCompileOnSave}
@@ -787,7 +808,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 					)}
 
 					<div
-						className='cache-item'
+						className='ui-menu-item'
 						onClick={handleClearCache}
 						title={t('Clear compilation cache')}
 					>
@@ -795,7 +816,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 						{t('Clear Cache')}
 					</div>
 					<div
-						className='cache-item'
+						className='ui-menu-item'
 						onClick={handleClearCacheAndCompile}
 						title={`${t('Clear cache and compile')} ${useSharedSettings ? t('(Shift+F9)') : ''}`}
 					>

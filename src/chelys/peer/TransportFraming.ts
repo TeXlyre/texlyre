@@ -19,8 +19,10 @@ interface FrameHeader {
 }
 
 interface PendingMessage {
-	chunks: Array<Uint8Array | undefined>;
+	data: Uint8Array;
+	receivedFrames: Uint8Array;
 	received: number;
+	total: number;
 	kind: FrameHeader['kind'];
 	length: number;
 	timer: ReturnType<typeof setTimeout>;
@@ -59,12 +61,17 @@ function readHeader(data: ArrayBuffer): FrameHeader | null {
 
 function validFrame(header: FrameHeader, bodyLength: number): boolean {
 	if (header.total < 1 || header.sequence >= header.total) return false;
-	if (bodyLength > MAX_FRAME_BODY) return false;
 	if (header.length > header.total * MAX_FRAME_BODY) return false;
-	if (header.total === 1) {
-		return header.sequence === 0 && bodyLength === header.length;
+	if (
+		header.total > 1 &&
+		header.length <= (header.total - 1) * MAX_FRAME_BODY
+	) {
+		return false;
 	}
-	return header.length > (header.total - 1) * MAX_FRAME_BODY;
+
+	const offset = header.sequence * MAX_FRAME_BODY;
+	const expectedLength = Math.min(MAX_FRAME_BODY, header.length - offset);
+	return expectedLength >= 0 && bodyLength === expectedLength;
 }
 
 function decodePayload(
@@ -133,16 +140,18 @@ export class FrameReassembler {
 		const entry = this.getOrCreate(header);
 		if (!entry) return null;
 
-		if (entry.chunks[header.sequence] === undefined) {
-			entry.chunks[header.sequence] = body;
+		if (entry.receivedFrames[header.sequence] === 0) {
+			const offset = header.sequence * MAX_FRAME_BODY;
+			entry.data.set(body, offset);
+			entry.receivedFrames[header.sequence] = 1;
 			entry.received += 1;
 			this.refreshTimer(header.messageId, entry);
 		}
-		if (entry.received < entry.chunks.length) return null;
+		if (entry.received < entry.total) return null;
 
 		clearTimeout(entry.timer);
 		this.pending.delete(header.messageId);
-		return this.assemble(header.messageId, entry);
+		return decodePayload(entry.kind, entry.data);
 	}
 
 	reset(): void {
@@ -154,7 +163,7 @@ export class FrameReassembler {
 		const existing = this.pending.get(header.messageId);
 		if (existing) {
 			if (
-				existing.chunks.length === header.total &&
+				existing.total === header.total &&
 				existing.kind === header.kind &&
 				existing.length === header.length
 			) {
@@ -168,41 +177,16 @@ export class FrameReassembler {
 		}
 
 		const entry: PendingMessage = {
-			chunks: new Array(header.total),
+			data: new Uint8Array(header.length),
+			receivedFrames: new Uint8Array(header.total),
 			received: 0,
+			total: header.total,
 			kind: header.kind,
 			length: header.length,
 			timer: this.createTimer(header.messageId),
 		};
 		this.pending.set(header.messageId, entry);
 		return entry;
-	}
-
-	private assemble(
-		messageId: number,
-		entry: PendingMessage,
-	): TransportPayload | null {
-		const chunks = entry.chunks as Uint8Array[];
-		const receivedLength = chunks.reduce(
-			(total, chunk) => total + chunk.byteLength,
-			0,
-		);
-		if (receivedLength !== entry.length) {
-			this.report(
-				new Error(
-					`Transport message ${messageId} is incomplete (${receivedLength}/${entry.length} bytes)`,
-				),
-			);
-			return null;
-		}
-
-		const merged = new Uint8Array(receivedLength);
-		let offset = 0;
-		for (const chunk of chunks) {
-			merged.set(chunk, offset);
-			offset += chunk.byteLength;
-		}
-		return decodePayload(entry.kind, merged);
 	}
 
 	private createTimer(messageId: number): ReturnType<typeof setTimeout> {

@@ -10,6 +10,7 @@ import React, {
 import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
 import { fileStoreService } from '../../services/FileStoreService';
+import { filePathCacheService } from '../../services/FilePathCacheService';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useLaTeX } from '../../hooks/useLaTeX';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
@@ -232,16 +233,6 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 		}
 	}, [currentHighlight]);
 
-	useEffect(() => {
-		if (
-			compiledCanvas &&
-			effectiveFormat === 'canvas-pdf' &&
-			canvasControllerRef.current?.updateContent
-		) {
-			canvasControllerRef.current.updateContent(compiledCanvas);
-		}
-	}, [compiledCanvas, effectiveFormat]);
-
 	const handleVisualizerResize = (height: number) => {
 		setVisualizerHeight(height);
 		setProperty('log-visualizer-height', height);
@@ -252,9 +243,39 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 		setProperty('log-visualizer-collapsed', collapsed);
 	};
 
-	const handleLineClick = async (line: number) => {
-		if (!selectedFileId) return;
+	const handleLineClick = async (line: number, filePath?: string) => {
 		try {
+			if (filePath) {
+				const targetFile = await filePathCacheService.findFileByPath(
+					effectiveMainFile ?? '',
+					filePath,
+				);
+				if (!targetFile) {
+					moduleLog.warn(`Diagnostic file not found: ${filePath}`);
+					return;
+				}
+
+				const target = targetFile.documentId
+					? { kind: 'document' as const, documentId: targetFile.documentId }
+					: { kind: 'file' as const, fileId: targetFile.id };
+				const isCurrent = targetFile.documentId
+					? selectedDocId === targetFile.documentId
+					: selectedFileId === targetFile.id;
+
+				if (isCurrent) {
+					gotoEditor(target, { line });
+				} else {
+					gotoEditor(target, { line }, { waitForReady: true });
+					document.dispatchEvent(
+						new CustomEvent('navigate-to-compiled-file', {
+							detail: { filePath: targetFile.path },
+						}),
+					);
+				}
+				return;
+			}
+
+			if (!selectedFileId) return;
 			const file = await getFile(selectedFileId);
 			if (!file || !isLatexFile(file.path)) return;
 			gotoEditor({ kind: 'file', fileId: selectedFileId }, { line });
@@ -388,7 +409,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 							fileName: 'output.pdf',
 							onSave: handleSavePdf,
 							onLocationClick: handleLocationClick,
-							controllerRef: (controller: RendererController) => {
+							controllerRef: (controller: RendererController | null) => {
 								pdfControllerRef.current = controller;
 							},
 						})
@@ -420,7 +441,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 							content: compiledCanvas || new ArrayBuffer(0),
 							mimeType: 'application/pdf',
 							fileName: 'output.pdf',
-							controllerRef: (controller: RendererController) => {
+							controllerRef: (controller: RendererController | null) => {
 								canvasControllerRef.current = controller;
 							},
 							onLocationClick: handleLocationClick,
@@ -449,17 +470,24 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 
 	return (
 		<div
-			className={`latex-output ${className}`}
+			className={`ui-viewer ${className}`}
+			data-role='typeset-output'
 			style={{ position: 'relative' }}
 		>
-			<div className='output-header'>
-				<div className='view-tabs scroll-x' ref={outputTabsRef}>
+			<div className='ui-panel-header' data-role='output' data-shrink='true'>
+				<div
+					className='ui-tab-list scroll-x'
+					data-role='output'
+					data-variant='switcher'
+					ref={outputTabsRef}
+				>
 					<button
-						className={`tab-button ${currentView === 'log' ? 'active' : ''}`}
+						type='button'
+						className={`ui-tab ${currentView === 'log' ? 'active' : ''}`}
 						onClick={() => currentView !== 'log' && toggleOutputView()}
 					>
 						<div
-							className='status-dot'
+							className='ui-status-dot'
 							style={{ backgroundColor: indicatorColor }}
 						/>
 						{t('Log')}
@@ -468,7 +496,8 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 					{currentView === 'output' && (
 						<>
 							<button
-								className={`tab-button ${
+								type='button'
+								className={`ui-tab ${
 									currentView === 'output' && effectiveFormat === 'pdf'
 										? 'active'
 										: ''
@@ -479,7 +508,8 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 							</button>
 
 							<button
-								className={`tab-button ${
+								type='button'
+								className={`ui-tab ${
 									currentView === 'output' && effectiveFormat === 'canvas-pdf'
 										? 'active'
 										: ''
@@ -493,7 +523,8 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 
 					{currentView === 'log' && (
 						<button
-							className='tab-button'
+							type='button'
+							className='ui-tab'
 							onClick={() => toggleOutputView()}
 							disabled={!hasAnyOutput}
 						>
@@ -515,7 +546,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 			</div>
 
 			{!compileLog && !hasAnyOutput ? (
-				<div className='empty-state'>
+				<div className='empty-state ui-empty-state'>
 					<p>
 						{t(
 							'No output available. Compile a {typesetter} document to see results.',
@@ -549,11 +580,13 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 									</ResizablePanel>
 
 									<div className='raw-log-panel'>
-										<pre className='log-viewer'>{compileLog}</pre>
+										<pre className='log-viewer ui-code-block' data-wrap='true'>
+											{compileLog}
+										</pre>
 									</div>
 								</div>
 							) : (
-								<div className='log-viewer'>
+								<div className='log-viewer ui-code-block' data-wrap='true'>
 									<pre>{compileLog}</pre>
 								</div>
 							)}

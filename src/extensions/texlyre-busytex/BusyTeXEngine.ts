@@ -189,8 +189,10 @@ export class BusyTeXEngine {
 					: undefined,
 			};
 		} catch (error) {
-			this.setStatus('error');
-			this.status = 'ready';
+			if (this.status !== 'unloaded') {
+				this.setStatus('error');
+				this.setStatus('ready');
+			}
 			throw error;
 		}
 	}
@@ -241,7 +243,7 @@ export class BusyTeXEngine {
 		try {
 			await this.runner.writeTexliveRemoteMisses(misses);
 		} catch {
-			// non-fatal
+			// non-fatal empty writes.
 		}
 	}
 

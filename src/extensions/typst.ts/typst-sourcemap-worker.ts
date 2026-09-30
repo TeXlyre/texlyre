@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-export {};
+import { getTypstRenderer } from './TypstRendererRuntime';
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -21,8 +21,7 @@ interface BuildMessage {
 	id: string;
 	type: 'build';
 	payload: {
-		svg: string;
-		pageInfos: PageInfo[];
+		artifact: Uint8Array;
 		sources: Record<string, string>;
 		mainFile?: string;
 	};
@@ -74,51 +73,20 @@ interface Window {
 
 const FENCE = /^\s*```/;
 const RAW = /#raw\s*\(/;
-const TAG = /<(\/?)([a-zA-Z][\w:-]*)\b([^>]*?)(\/?)>/g;
-const ATTR = /(\w[\w:-]*)\s*=\s*"([^"]*)"/g;
-const TEXT = />([^<]+)</g;
-const TR = /translate\(\s*(-?[\d.]+)(?:\s*[, ]\s*(-?[\d.]+))?\s*\)/;
-const SC = /scale\(\s*(-?[\d.]+)(?:\s*[, ]\s*(-?[\d.]+))?\s*\)/;
+const SEMANTIC_TEXT =
+	/<span\s+class="typst-content-text"([^>]*)>([\s\S]*?)<\/span>/g;
+const STYLE_NUMBER = (name: string, style: string) => {
+	const match = new RegExp(
+		`${name}:\\s*calc\\(var\\(--data-text-(?:width|height)\\)\\s*\\*\\s*(-?[\\d.]+)\\)`,
+	).exec(style);
+	return match ? Number.parseFloat(match[1]) : 0;
+};
 
 const CONTEXT = 10;
 const SOURCE_CONTEXT = 6;
 const SHORT = 12;
 const MARGIN = 4;
 const SHINGLE = 6;
-
-const WEAK = new Set([
-	'the',
-	'a',
-	'an',
-	'and',
-	'or',
-	'is',
-	'are',
-	'to',
-	'in',
-	'of',
-	'with',
-	'for',
-	'from',
-	'true',
-	'false',
-	'none',
-	'auto',
-	'default',
-	'width',
-	'height',
-	'title',
-	'description',
-	'audio',
-	'video',
-	'media',
-	'source',
-	'sources',
-	'fallback',
-	'background',
-	'local',
-	'remote',
-]);
 
 function norm(s: string): string {
 	return s
@@ -146,7 +114,7 @@ function overlayKind(s: string): OverlayKind {
 }
 
 function usefulContext(s: string): boolean {
-	const words = s.split(/\s+/).filter((w) => w.length > 2 && !WEAK.has(w));
+	const words = s.split(/\s+/).filter((w) => w.length > 2);
 	return s.length >= 18 || words.length >= 2 || /[`#:/.-]/.test(s);
 }
 
@@ -252,119 +220,44 @@ function buildSourceIndex(
 	return out;
 }
 
-function parseAttrs(s: string): Map<string, string> {
-	const out = new Map<string, string>();
-	let m: RegExpExecArray | null;
-
-	ATTR.lastIndex = 0;
-	while ((m = ATTR.exec(s))) out.set(m[1], m[2]);
-
-	return out;
+function decodeHtmlText(value: string): string {
+	return norm(
+		value
+			.replace(/&amp;/g, '&')
+			.replace(/&lt;/g, '<')
+			.replace(/&gt;/g, '>')
+			.replace(/&quot;/g, '"')
+			.replace(/&#39;|&apos;/g, "'")
+			.replace(/<[^>]+>/g, ''),
+	);
 }
 
-function textFromHtml(s: string): string {
-	const parts: string[] = [];
-	let m: RegExpExecArray | null;
-
-	TEXT.lastIndex = 0;
-	while ((m = TEXT.exec(s))) {
-		const part = norm(m[1]);
-		if (part) parts.push(part);
-	}
-
-	return norm(parts.join(' '));
-}
-
-function pageAt(
-	pages: PageInfo[],
-	y: number,
-): { page: number; offset: number } {
-	let offset = 0;
-
-	for (let i = 0; i < pages.length; i++) {
-		if (y < offset + pages[i].height) return { page: i + 1, offset };
-		offset += pages[i].height;
-	}
-
-	const last = Math.max(0, pages.length - 1);
-	return { page: last + 1, offset: offset - (pages[last]?.height ?? 0) };
-}
-
-function transformOf(
-	parent: { tx: number; ty: number; sx: number; sy: number },
-	attrs: string,
-): { tx: number; ty: number; sx: number; sy: number } {
-	const transform = /transform\s*=\s*"([^"]*)"/.exec(attrs);
-	let { tx, ty, sx, sy } = parent;
-
-	if (!transform) return { tx, ty, sx, sy };
-
-	const t = TR.exec(transform[1]);
-	const s = SC.exec(transform[1]);
-
-	if (t) {
-		tx += Number.parseFloat(t[1]) * parent.sx;
-		ty += Number.parseFloat(t[2] ?? '0') * parent.sy;
-	}
-
-	if (s) {
-		sx *= Number.parseFloat(s[1]);
-		sy *= Number.parseFloat(s[2] ?? s[1]);
-	}
-
-	return { tx, ty, sx, sy };
-}
-
-function collectOverlays(svg: string, pages: PageInfo[]): Overlay[] {
+function collectSemanticOverlays(html: string, page: number): Overlay[] {
 	const overlays: Overlay[] = [];
-	const stack = [{ tx: 0, ty: 0, sx: 1, sy: 1 }];
-	let m: RegExpExecArray | null;
+	SEMANTIC_TEXT.lastIndex = 0;
+	let match: RegExpExecArray | null;
 
-	TAG.lastIndex = 0;
+	while ((match = SEMANTIC_TEXT.exec(html))) {
+		const attrs = match[1];
+		const text = decodeHtmlText(match[2]);
+		if (!text) continue;
 
-	while ((m = TAG.exec(svg))) {
-		const closing = m[1] === '/';
-		const tag = m[2].toLowerCase();
-		const attrs = m[3];
-		const selfClosing = m[4] === '/';
+		const style = /style="([^"]*)"/.exec(attrs)?.[1] ?? '';
+		const fontSize = Number.parseFloat(
+			/font-size:\s*(?:calc\([^*]*\*\s*)?(-?[\d.]+)/.exec(style)?.[1] ?? '10',
+		);
+		const scaleX = Number.parseFloat(
+			/scaleX\((-?[\d.]+)\)/.exec(style)?.[1] ?? '1',
+		);
+		const x = STYLE_NUMBER('left', style);
+		const y = STYLE_NUMBER('top', style);
+		const width = Math.max(
+			fontSize * 0.5,
+			text.length * fontSize * 0.55 * Math.abs(scaleX),
+		);
+		const height = Math.max(fontSize, 1);
 
-		if (closing) {
-			if (stack.length > 1) stack.pop();
-			continue;
-		}
-
-		const current = transformOf(stack[stack.length - 1], attrs);
-
-		if (tag === 'foreignobject') {
-			const close = svg.indexOf('</foreignObject>', TAG.lastIndex);
-			if (close === -1) continue;
-
-			const attr = parseAttrs(attrs);
-			const text = textFromHtml(svg.slice(TAG.lastIndex, close));
-			TAG.lastIndex = close + '</foreignObject>'.length;
-
-			if (!text) continue;
-
-			const x = Number.parseFloat(attr.get('x') ?? '0');
-			const y = Number.parseFloat(attr.get('y') ?? '0');
-			const w = Number.parseFloat(attr.get('width') ?? '0');
-			const h = Number.parseFloat(attr.get('height') ?? '0');
-			const docY = current.ty + y * current.sy;
-			const page = pageAt(pages, docY);
-
-			overlays.push({
-				text,
-				page: page.page,
-				x: current.tx + x * current.sx,
-				y: docY - page.offset,
-				width: Math.abs(w * current.sx),
-				height: Math.abs(h * current.sy),
-			});
-
-			continue;
-		}
-
-		if (!selfClosing) stack.push(current);
+		overlays.push({ text, page, x, y, width, height });
 	}
 
 	return overlays;
@@ -662,13 +555,11 @@ function addRect(
 }
 
 function build(
-	svg: string,
-	pageInfos: PageInfo[],
+	overlays: Overlay[],
 	sources: Record<string, string>,
 	mainFile?: string,
 ): BuildResult {
 	const index = buildSourceIndex(sources);
-	const overlays = collectOverlays(svg, pageInfos);
 	const forward = new Map<string, AnnotatedRect[]>();
 	const reverse = new Map<number, AnnotatedRect[]>();
 
@@ -698,26 +589,46 @@ function build(
 	};
 }
 
-self.addEventListener('message', (e: MessageEvent<BuildMessage>) => {
-	const { id, type, payload } = e.data;
-	if (type !== 'build') return;
+self.addEventListener('message', (event: MessageEvent<BuildMessage>) => {
+	void (async () => {
+		const { id, type, payload } = event.data;
+		if (type !== 'build') return;
 
-	try {
-		self.postMessage({
-			id,
-			type: 'done',
-			result: build(
-				payload.svg,
-				payload.pageInfos,
-				payload.sources,
-				payload.mainFile,
-			),
-		});
-	} catch (error) {
-		self.postMessage({
-			id,
-			type: 'error',
-			error: error instanceof Error ? error.message : String(error),
-		});
-	}
+		try {
+			const renderer = await getTypstRenderer();
+			const overlays: Overlay[] = [];
+
+			await renderer.runWithSession(
+				{ format: 'vector', artifactContent: payload.artifact },
+				async (session: any) => {
+					const pages: PageInfo[] = session.retrievePagesInfo?.() ?? [];
+					for (let index = 0; index < pages.length; index++) {
+						const result = await renderer.renderCanvas({
+							renderSession: session,
+							pageOffset: index,
+							dataSelection: { body: false, semantics: true },
+						});
+						overlays.push(
+							...collectSemanticOverlays(
+								result.htmlSemantics?.[0] ?? '',
+								index + 1,
+							),
+						);
+					}
+				},
+			);
+
+			self.postMessage({
+				id,
+				type: 'done',
+				result: build(overlays, payload.sources, payload.mainFile),
+			});
+		} catch (error) {
+			self.postMessage({
+				id,
+				type: 'error',
+				error: error instanceof Error ? error.message : String(error),
+			});
+		}
+	})();
 });
