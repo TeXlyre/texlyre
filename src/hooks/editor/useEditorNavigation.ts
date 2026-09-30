@@ -12,6 +12,7 @@ import type {
 	LinkedFileInfoState,
 } from '../../types/editor';
 import type { FileNode } from '../../types/files';
+import type { YjsDocUrl } from '../../types/yjs';
 import { gotoEditor } from '../../utils/editorNavigator';
 import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
 import { useAuth } from '../useAuth';
@@ -42,6 +43,7 @@ interface UseEditorNavigationOptions {
 	onSelectDocument: (id: string) => void;
 	onUpdateContent: (content: string) => void;
 	content: string;
+	docUrl: YjsDocUrl;
 	targetDocId?: string | null;
 	targetFilePath?: string | null;
 	setOutputForFileName: (name?: string) => void;
@@ -53,6 +55,7 @@ export const useEditorNavigation = ({
 	onSelectDocument,
 	onUpdateContent,
 	content,
+	docUrl,
 	targetDocId,
 	targetFilePath,
 	setOutputForFileName,
@@ -413,6 +416,10 @@ export const useEditorNavigation = ({
 
 	useEffect(() => {
 		const buildDocToFileMap = async () => {
+			if (!docUrl) return;
+
+			await fileStoreService.initialize(docUrl);
+
 			const allFiles = await fileStoreService.getAllFiles(false, false, false);
 			const map = new Map<string, LinkedFileInfo>();
 
@@ -433,11 +440,13 @@ export const useEditorNavigation = ({
 
 		void buildDocToFileMap();
 		document.addEventListener('refresh-file-tree', buildDocToFileMap);
+		document.addEventListener('file-saved', buildDocToFileMap);
 
 		return () => {
 			document.removeEventListener('refresh-file-tree', buildDocToFileMap);
+			document.removeEventListener('file-saved', buildDocToFileMap);
 		};
-	}, []);
+	}, [docUrl]);
 
 	useEffect(() => {
 		const handleOpenSearchPanel = () => setActiveView('search');
