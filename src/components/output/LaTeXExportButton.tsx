@@ -355,10 +355,16 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 		isExporting || isCompiling || isInitializing || !effectiveMainFile;
 
 	return (
-		<div className={`latex-export-buttons ${className}`} ref={dropdownRef}>
-			<div className='compile-button-group'>
+		<div className={`ui-control-cluster ${className}`} ref={dropdownRef}>
+			<div
+				className='ui-button-group ui-split-button'
+				data-variant='joined'
+				data-size='control'
+				data-trigger-group='true'
+			>
 				<button
-					className={`latex-button export-button ${isExporting ? 'exporting' : ''}`}
+					type='button'
+					className={`ui-split-main export-button ${isExporting ? 'exporting' : ''}`}
 					onClick={handleExport}
 					disabled={isDisabled}
 					title={t('Export')}
@@ -366,7 +372,8 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 					<ExportIcon />
 				</button>
 				<button
-					className='latex-button dropdown-toggle'
+					type='button'
+					className='ui-split-toggle dropdown-toggle'
 					onClick={toggleDropdown}
 					disabled={isExporting}
 					title={t('Export Options')}
@@ -379,28 +386,32 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 				isOpen={isDropdownOpen}
 				triggerElement={
 					dropdownRef.current?.querySelector(
-						'.compile-button-group',
+						'[data-trigger-group]',
 					) as HTMLElement
 				}
 				className='latex-dropdown'
 			>
-				<div className='dropdown-section'>
-					<div className='dropdown-title'>{t('Main File:')}</div>
-					<div className='dropdown-value' title={effectiveMainFile}>
+				<div className='ui-menu-section' data-variant='control'>
+					<div className='ui-menu-title' data-variant='control'>
+						{t('Main File:')}
+					</div>
+					<div className='ui-menu-value' title={effectiveMainFile}>
 						{getDisplayName(effectiveMainFile)}
 						{projectMainFile && (
-							<span className='shared-indicator'>{t('(shared)')}</span>
+							<span className='ui-status' data-tone='accent'>
+								{t('(shared)')}
+							</span>
 						)}
 					</div>
 				</div>
 
 				{useSharedSettings && (
-					<div className='dropdown-section'>
-						<div className='dropdown-label'>{t('Select main file:')}</div>
+					<div className='ui-menu-section' data-variant='control'>
+						<div className='ui-menu-label'>{t('Select main file:')}</div>
 						<select
 							value={projectMainFile || propMainFile || 'auto'}
 							onChange={(e) => handleMainFileChange(e.target.value)}
-							className='dropdown-select'
+							className='ui-field-control'
 							disabled={isExporting}
 						>
 							<option value='auto'>{t('Auto-detect')}</option>
@@ -413,11 +424,11 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 					</div>
 				)}
 
-				<div className='dropdown-section'>
-					<div className='dropdown-title'>
+				<div className='ui-menu-section' data-variant='control'>
+					<div className='ui-menu-title' data-variant='control'>
 						{t('{typesetter} Engine:', { typesetter: t('LaTeX') })}
 					</div>
-					<div className='format-selector-group'>
+					<div className='ui-toolbar' data-gap='sm'>
 						<select
 							value={selectedEngine}
 							onChange={(e) => {
@@ -427,7 +438,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 									projectId,
 								});
 							}}
-							className='dropdown-select'
+							className='ui-field-control'
 							disabled={isExporting}
 						>
 							<optgroup label={t('SwiftLaTeX (TeX Live 2020)')}>
@@ -447,7 +458,9 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 						</select>
 						{isBusyTeX && (
 							<button
-								className={`pdf-options-toggle ${isCacheOptionsOpen ? 'active' : ''}`}
+								type='button'
+								className={`ui-icon-button ${isCacheOptionsOpen ? 'active' : ''}`}
+								data-variant='control'
 								onClick={() => setIsCacheOptionsOpen(!isCacheOptionsOpen)}
 								title={t('Bundle Cache Options')}
 								disabled={isExporting}
@@ -457,12 +470,17 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 						)}
 					</div>
 					{isBusyTeX && isCacheOptionsOpen && (
-						<div className='pdf-options-section'>
-							<div className='dropdown-label'>{t('Bundle for export:')}</div>
+						<div
+							className='ui-card ui-stack'
+							data-surface='secondary'
+							data-padding='sm'
+							data-gap='sm'
+						>
+							<div className='ui-menu-label'>{t('Bundle for export:')}</div>
 							<select
 								value={selectedBundle}
 								onChange={(e) => handleBundleChange(e.target.value)}
-								className='dropdown-select'
+								className='ui-field-control'
 								disabled={isExporting}
 							>
 								{Object.entries(BUSYTEX_BUNDLE_LABELS).map(([id, label]) => (
@@ -472,17 +490,24 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 								))}
 							</select>
 							<div
-								className='dropdown-label'
+								className='ui-menu-label'
 								style={{ marginTop: 'var(--space-sm)' }}
 							>
 								{t('Cached bundles:')}
 							</div>
 							{Object.entries(BUSYTEX_BUNDLE_LABELS).map(
 								([bundleId, label]) => (
-									<div key={bundleId} className='bundle-cache-row'>
-										<span className='bundle-label'>{t(label)}</span>
+									<div
+										key={bundleId}
+										className='ui-toolbar ui-meta'
+										data-gap='sm'
+									>
+										<span className='ui-control-label'>{t(label)}</span>
 										<span
-											className={`bundle-status ${bundleCacheStatus[bundleId] ? 'cached' : 'not-cached'}`}
+											className='ui-status'
+											data-tone={
+												bundleCacheStatus[bundleId] ? 'success' : 'muted'
+											}
 										>
 											{bundleCacheStatus[bundleId]
 												? t('cached')
@@ -490,7 +515,10 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 										</span>
 										{bundleCacheStatus[bundleId] && (
 											<button
-												className='bundle-delete-btn'
+												type='button'
+												className='ui-icon-button'
+												data-variant='ghost'
+												data-tone='danger'
 												onClick={() => handleDeleteBundle(bundleId)}
 												disabled={isDeletingBundle === bundleId || isExporting}
 												title={t('Delete cached bundle')}
@@ -505,8 +533,10 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 					)}
 				</div>
 
-				<div className='dropdown-section'>
-					<div className='dropdown-title'>{t('Export Format:')}</div>
+				<div className='ui-menu-section' data-variant='control'>
+					<div className='ui-menu-title' data-variant='control'>
+						{t('Export Format:')}
+					</div>
 					<select
 						value={selectedFormat}
 						onChange={(e) => {
@@ -516,7 +546,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 								projectId,
 							});
 						}}
-						className='dropdown-select'
+						className='ui-field-control'
 						disabled={isExporting}
 					>
 						<option value='pdf'>PDF</option>
@@ -524,8 +554,8 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 					</select>
 				</div>
 
-				<div className='dropdown-section'>
-					<label className='dropdown-checkbox'>
+				<div className='ui-menu-section' data-variant='control'>
+					<label className='ui-menu-item checkbox-control'>
 						<input
 							type='checkbox'
 							checked={includeLog}
@@ -543,7 +573,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 					{!isBusyTeX &&
 						selectedFormat === 'pdf' &&
 						selectedEngine === 'xetex' && (
-							<label className='dropdown-checkbox'>
+							<label className='ui-menu-item checkbox-control'>
 								<input
 									type='checkbox'
 									checked={includeDvi}
@@ -559,7 +589,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 							</label>
 						)}
 
-					<label className='dropdown-checkbox'>
+					<label className='ui-menu-item checkbox-control'>
 						<input
 							type='checkbox'
 							checked={includeBbl}
@@ -574,7 +604,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 						{t('Include BBL file')}
 					</label>
 
-					<label className='dropdown-checkbox'>
+					<label className='ui-menu-item checkbox-control'>
 						<input
 							type='checkbox'
 							checked={includeWorkDir}
@@ -590,9 +620,10 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 					</label>
 				</div>
 
-				<div className='dropdown-section'>
+				<div className='ui-menu-section' data-variant='control'>
 					<button
-						className='dropdown-button'
+						type='button'
+						className='button primary'
 						onClick={handleExport}
 						disabled={isDisabled}
 					>

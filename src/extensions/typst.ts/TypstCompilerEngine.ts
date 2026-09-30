@@ -5,6 +5,7 @@ import type { TypstOutputFormat, TypstPdfOptions } from '../../types/typst';
 
 type TypstCompileWorkerOptions = {
 	allowRemoteUrls?: boolean;
+	buildSourceMap?: boolean;
 };
 
 type TypstCompilePayload = {
@@ -27,56 +28,19 @@ export type TypstWorkerResponse =
 			result: {
 				format: string;
 				output: Uint8Array | string;
+				sourceMapArtifact?: Uint8Array;
 				diagnostics?: any[];
-				pageInfos?: any[];
 			};
 	  }
 	| { id: string; type: 'error'; error: string };
 
 export class TypstCompilerEngine {
 	private worker: Worker | null = null;
-	private pendingResolves: Map<string, (v: any) => void> = new Map();
-	private pendingRejects: Map<string, (e: any) => void> = new Map();
-
-	getWorker(): Worker {
-		if (this.worker) return this.worker;
-
-		this.worker = new Worker(new URL('./typst-worker.ts', import.meta.url), {
-			type: 'module',
-		});
-
-		this.worker.onmessage = (e: MessageEvent<TypstWorkerResponse>) => {
-			const { id, type } = e.data;
-
-			if (!id) return;
-
-			if (type === 'done' || type === 'pong') {
-				const resolve = this.pendingResolves.get(id);
-				if (resolve) resolve('result' in e.data ? e.data.result : undefined);
-			} else if (type === 'error') {
-				const reject = this.pendingRejects.get(id);
-				if (reject) reject(new Error(e.data.error || 'Worker error'));
-			}
-
-			this.pendingResolves.delete(id);
-			this.pendingRejects.delete(id);
-		};
-
-		this.worker.onerror = (ev) => {
-			const err = new Error(`Typst worker error: ${String(ev.message || ev)}`);
-			this.pendingRejects.forEach((reject) => {
-				reject(err);
-			});
-			this.pendingResolves.clear();
-			this.pendingRejects.clear();
-			this.worker = null;
-		};
-
-		return this.worker;
-	}
+	private pendingResolves = new Map<string, (value: any) => void>();
+	private pendingRejects = new Map<string, (error: any) => void>();
 
 	async ping(): Promise<void> {
-		return this.callWorker('ping', undefined);
+		await this.callWorker('ping', undefined);
 	}
 
 	async compile(
@@ -89,30 +53,62 @@ export class TypstCompilerEngine {
 	): Promise<{
 		format: string;
 		output: Uint8Array | string;
+		sourceMapArtifact?: Uint8Array;
 		diagnostics?: any[];
-		pageInfos?: any[];
 	}> {
 		return this.callWorker(
 			'compile',
-			{
-				mainFilePath,
-				sources,
-				format,
-				pdfOptions,
-				options,
-			},
+			{ mainFilePath, sources, format, pdfOptions, options },
 			signal,
 		);
 	}
 
 	terminate(): void {
-		if (this.worker) {
-			this.worker.terminate();
-			this.worker = null;
-		}
-
+		this.worker?.terminate();
+		this.worker = null;
+		const error = new Error('Compilation was cancelled');
+		for (const reject of this.pendingRejects.values()) reject(error);
 		this.pendingResolves.clear();
 		this.pendingRejects.clear();
+	}
+
+	private getWorker(): Worker {
+		if (this.worker) return this.worker;
+
+		const worker = new Worker(new URL('./typst-worker.ts', import.meta.url), {
+			type: 'module',
+		});
+
+		worker.onmessage = (event: MessageEvent<TypstWorkerResponse>) => {
+			const { id, type } = event.data;
+			if (!id) return;
+
+			if (type === 'done' || type === 'pong') {
+				this.pendingResolves.get(id)?.(
+					'result' in event.data ? event.data.result : undefined,
+				);
+			} else {
+				this.pendingRejects.get(id)?.(
+					new Error(event.data.error || 'Typst worker error'),
+				);
+			}
+
+			this.pendingResolves.delete(id);
+			this.pendingRejects.delete(id);
+		};
+
+		worker.onerror = (event) => {
+			const error = new Error(
+				`Typst worker error: ${String(event.message || event)}`,
+			);
+			for (const reject of this.pendingRejects.values()) reject(error);
+			this.pendingResolves.clear();
+			this.pendingRejects.clear();
+			if (this.worker === worker) this.worker = null;
+		};
+
+		this.worker = worker;
+		return worker;
 	}
 
 	private callWorker<TType extends 'compile' | 'ping'>(
@@ -123,35 +119,40 @@ export class TypstCompilerEngine {
 		const id = nanoid();
 		const worker = this.getWorker();
 
-		const promise = new Promise((resolve, reject) => {
-			this.pendingResolves.set(id, resolve);
-			this.pendingRejects.set(id, reject);
-		});
+		return new Promise((resolve, reject) => {
+			let settled = false;
 
-		const abort = () => {
-			if (this.worker) {
-				this.worker.terminate();
-				this.worker = null;
-			}
+			const finishResolve = (value: any) => {
+				if (settled) return;
+				settled = true;
+				signal?.removeEventListener('abort', abort);
+				resolve(value);
+			};
+			const finishReject = (error: any) => {
+				if (settled) return;
+				settled = true;
+				signal?.removeEventListener('abort', abort);
+				reject(error);
+			};
+			const abort = () => {
+				this.pendingResolves.delete(id);
+				this.pendingRejects.delete(id);
+				if (this.worker === worker) {
+					worker.terminate();
+					this.worker = null;
+				}
+				finishReject(new Error('Compilation was cancelled'));
+			};
 
-			const reject = this.pendingRejects.get(id);
-			if (reject) reject(new Error('Compilation was cancelled'));
+			this.pendingResolves.set(id, finishResolve);
+			this.pendingRejects.set(id, finishReject);
 
-			this.pendingResolves.delete(id);
-			this.pendingRejects.delete(id);
-		};
-
-		if (signal) {
-			if (signal.aborted) {
+			if (signal?.aborted) {
 				abort();
-				return Promise.reject(new Error('Compilation was cancelled'));
+				return;
 			}
-
-			signal.addEventListener('abort', abort, { once: true });
-		}
-
-		worker.postMessage({ id, type, payload });
-
-		return promise;
+			signal?.addEventListener('abort', abort, { once: true });
+			worker.postMessage({ id, type, payload });
+		});
 	}
 }

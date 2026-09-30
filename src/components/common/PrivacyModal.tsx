@@ -25,7 +25,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
 			icon={InfoIcon}
 			size='medium'
 		>
-			<div className='privacy-content'>
+			<div className='ui-stack' data-gap='md' data-role='privacy'>
 				<h3>{t('TeXlyre Data Practices')}</h3>
 				<ul>
 					<li>
@@ -290,7 +290,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
 					/>
 				</p>
 
-				<div className='contact-info'>
+				<div className='ui-meta' data-divided='true'>
 					<p>
 						<Trans
 							i18nKey='<strong>Questions?</strong> <issues>Open an issue on our GitHub repository</issues>.'

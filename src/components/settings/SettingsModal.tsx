@@ -221,7 +221,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 				title={t('Settings')}
 				size='large'
 			>
-				<div className='settings-empty-state'>
+				<div className='settings-empty-state ui-empty-state'>
 					<p>{t('No settings are currently available.')}</p>
 				</div>
 			</Modal>
@@ -238,40 +238,61 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 		>
 			<div className='settings-wrapper'>
 				{hasPendingChanges && (
-					<div className='pending-changes-bar warning-message'>
+					<div
+						className='ui-message ui-toolbar'
+						data-tone='warning'
+						data-justify='between'
+					>
 						<span>
 							{t('You have unsaved changes that require page refresh')}
 						</span>
-						<button className='button primary' onClick={handleSaveChanges}>
+						<button
+							type='button'
+							className='button primary'
+							onClick={handleSaveChanges}
+						>
 							{t('Save Changes')}
 						</button>
 					</div>
 				)}
 				<div className='settings-container'>
-					<div className='settings-sidebar'>
+					<div className='settings-sidebar ui-list'>
 						<div className='settings-search'>
-							<input
-								type='text'
-								placeholder={t('Search settings...')}
-								value={searchQuery}
-								onChange={(e) => setSearchQuery(e.target.value)}
-								className='search-input'
-							/>
-							{searchQuery && (
-								<button
-									aria-label={t('Clear search')}
-									className='clear-search-button'
-									onClick={() => setSearchQuery('')}
-									title={t('Clear search')}
-								>
-									<span aria-hidden='true'>×</span>
-								</button>
-							)}
+							<div className='ui-search-field'>
+								<input
+									type='text'
+									placeholder={t('Search settings...')}
+									value={searchQuery}
+									onChange={(e) => setSearchQuery(e.target.value)}
+									className='search-input ui-field-control ui-search-control'
+								/>
+								{searchQuery && (
+									<button
+										type='button'
+										aria-label={t('Clear search')}
+										className='ui-search-clear'
+										onClick={() => setSearchQuery('')}
+										title={t('Clear search')}
+									>
+										<span aria-hidden='true'>×</span>
+									</button>
+								)}
+							</div>
 						</div>
 						{filteredData.categories.map(({ category, subcategories }) => (
-							<div key={category} className='settings-category'>
+							<div key={category} className='ui-stack'>
 								<div
-									className={`category-item ${activeCategory === category ? 'active' : ''}`}
+									className='ui-list-item'
+									data-interactive='true'
+									data-appearance='flat'
+									data-border='none'
+									data-padding='sd'
+									data-selected={
+										activeCategory === category ? 'true' : undefined
+									}
+									data-accent={
+										activeCategory === category ? 'start' : undefined
+									}
 									onClick={() => {
 										setActiveCategory(category);
 										setActiveSubcategory(subcategories[0]);
@@ -280,11 +301,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 									{highlightText(category, searchQuery)}
 								</div>
 								{activeCategory === category && subcategories.length > 0 && (
-									<div className='subcategories'>
+									<div className='subcategories ui-list'>
 										{subcategories.map((subcategory) => (
 											<div
 												key={subcategory}
-												className={`subcategory-item ${activeSubcategory === subcategory ? 'active' : ''}`}
+												className='ui-list-item'
+												data-interactive='true'
+												data-appearance='flat'
+												data-border='none'
+												data-padding='sm'
+												data-selected={
+													activeSubcategory === subcategory ? 'true' : undefined
+												}
 												onClick={() => setActiveSubcategory(subcategory)}
 											>
 												{highlightText(subcategory, searchQuery)}
@@ -296,7 +324,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 						))}
 
 						{filteredData.categories.length === 0 && searchQuery && (
-							<div className='no-results'>
+							<div className='ui-empty-state' data-style='empty'>
 								{t('No settings found matching "')}
 								{searchQuery}"
 							</div>
@@ -305,7 +333,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
 					<div className='settings-content'>
 						<h3>{renderTitle()}</h3>
-						<div className='settings-group'>
+						<div className='ui-stack' data-gap='md'>
 							{settings.map((setting) => {
 								const disabled = !isDependencyMet(setting);
 								const nested = shouldNestSetting(setting);
@@ -313,7 +341,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 								return (
 									<div
 										key={setting.id}
-										className={`setting-with-highlight${nested ? ' nested-setting' : ''}`}
+										className='setting-with-highlight'
+										data-nested={nested ? 'true' : undefined}
 									>
 										<SettingControl
 											setting={{
@@ -342,7 +371,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 								);
 							})}
 							{settings.length === 0 && (
-								<div className='no-settings'>
+								<div className='ui-empty-state' data-style='empty'>
 									{t('No settings available in this category.')}
 								</div>
 							)}
@@ -350,10 +379,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 					</div>
 
 					{hasUnsavedChanges && (
-						<div className='save-indicator'>{t('Settings Saved')}</div>
+						<div
+							className='ui-message'
+							data-role='save-indicator'
+							data-tone='success'
+							data-density='compact'
+						>
+							{t('Settings Saved')}
+						</div>
 					)}
 					{needsRefresh && !hasPendingChanges && (
-						<div className='refresh-indicator'>
+						<div
+							className='settings-refresh-indicator ui-message'
+							data-tone='error'
+							data-density='compact'
+						>
 							{t('Page refresh required')}
 						</div>
 					)}

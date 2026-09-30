@@ -44,10 +44,13 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 	const displayUsername = isGuest ? t('Guest User') : username;
 
 	return (
-		<div className='user-dropdown-container'>
+		<div>
 			<button
+				type='button'
 				ref={buttonRef}
-				className={`user-dropdown-button ${isGuest ? 'guest' : ''}`}
+				className='button user-dropdown-button'
+				data-variant='ghost'
+				data-tone={isGuest ? 'accent' : undefined}
 				onClick={() => setIsOpen(!isOpen)}
 				aria-expanded={isOpen}
 				aria-haspopup='true'
@@ -65,13 +68,17 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 				{showStorageSummary && (
 					<button
 						type='button'
-						className='dropdown-item storage-summary'
+						className='ui-menu-item ui-stack'
 						onClick={() => {
 							setIsOpen(false);
 							onOpenProfile('data');
 						}}
 					>
-						<div className='storage-summary-labels'>
+						<div
+							className='ui-toolbar ui-meta'
+							data-justify='between'
+							data-width='full'
+						>
 							<span>{t('Storage')}</span>
 							<span>
 								{t('{used} of {total}', {
@@ -91,7 +98,8 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 				{!isGuest && (
 					<>
 						<button
-							className='dropdown-item'
+							type='button'
+							className='ui-menu-item'
 							onClick={() => {
 								setIsOpen(false);
 								onOpenProfile();
@@ -101,7 +109,8 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 							{t('Profile Settings')}
 						</button>
 						<button
-							className='dropdown-item'
+							type='button'
+							className='ui-menu-item'
 							onClick={() => {
 								setIsOpen(false);
 								onOpenExport();
@@ -112,7 +121,9 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 						</button>
 						<div className='dropdown-separator' />
 						<button
-							className='dropdown-item danger'
+							type='button'
+							className='ui-menu-item'
+							data-tone='danger'
 							onClick={() => {
 								setIsOpen(false);
 								onOpenDeleteAccount();
@@ -126,7 +137,8 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 				{isGuest && onOpenUpgrade && (
 					<>
 						<button
-							className='dropdown-item'
+							type='button'
+							className='ui-menu-item'
 							onClick={() => {
 								setIsOpen(false);
 								onOpenUpgrade();
@@ -139,7 +151,8 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 					</>
 				)}
 				<button
-					className='dropdown-item'
+					type='button'
+					className='ui-menu-item'
 					onClick={() => {
 						setIsOpen(false);
 						onLogout();

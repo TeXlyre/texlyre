@@ -2,15 +2,15 @@
 
 [
   {
-    "id": "mock-lsp",
-    "name": "Mock LSP",
-    "enabled": true,
-    "fileExtensions": ["tex", "latex", "typ"],
-    "transportConfig": {
-      "type": "websocket",
-      "url": "ws://localhost:7000"
-    },
-    "clientConfig": "{\"rootUri\":\"file:///\",\"workspaceFolders\":[]}"
+	"id": "mock-lsp",
+	"name": "Mock LSP",
+	"enabled": true,
+	"fileExtensions": ["tex", "latex", "typ"],
+	"transportConfig": {
+	  "type": "websocket",
+	  "url": "ws://localhost:7000"
+	},
+	"clientConfig": "{\"rootUri\":\"file:///\",\"workspaceFolders\":[]}"
   }
 ]
 
@@ -25,7 +25,6 @@ wss.on('connection', (ws) => {
 		const msgStr = message.toString();
 		const msg = JSON.parse(msgStr);
 
-		// Initialize
 		if (msg.method === 'initialize') {
 			ws.send(
 				JSON.stringify({
@@ -43,10 +42,7 @@ wss.on('connection', (ws) => {
 					},
 				}),
 			);
-		}
-
-		// Initialized notification
-		else if (msg.method === 'initialized') {
+		} else if (msg.method === 'initialized') {
 			console.log('Client initialized');
 
 			// Send a sample diagnostic after 1 second

@@ -473,6 +473,7 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			<PluginControlGroup>
 				{fileId && (
 					<button
+						type='button'
 						onClick={handleManualSave}
 						title={t('Save File (Ctrl+S)')}
 						disabled={isSaving || !iframeLoaded}
@@ -482,6 +483,7 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					</button>
 				)}
 				<button
+					type='button'
 					onClick={handleDownloadSource}
 					title={t('Download TikZ source')}
 					disabled={!iframeLoaded}
@@ -489,6 +491,7 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					<DownloadIcon />
 				</button>
 				<button
+					type='button'
 					onClick={handleSaveSvg}
 					title={t('Save as SVG')}
 					disabled={!iframeLoaded}
@@ -500,7 +503,7 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	);
 
 	return (
-		<div className='tikz-viewer-container'>
+		<div className='ui-viewer' data-surface='base'>
 			<PluginHeader
 				fileName={fileInfo.fileName}
 				filePath={fileInfo.filePath}
@@ -510,12 +513,24 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				controls={headerControls}
 			/>
 
-			<div className='tikz-viewer-content'>
+			<div
+				className='ui-viewer-content'
+				data-layout='fill'
+				data-surface='secondary'
+			>
 				{error && (
-					<div className='tikz-error-message error-message'>{error}</div>
+					<div className='tikz-error-message ui-message' data-tone='error'>
+						{error}
+					</div>
 				)}
 				{isLoading && (
-					<div className='loading-indicator'>{t('Loading TikZ editor...')}</div>
+					<div
+						className='ui-message'
+						data-variant='loading'
+						data-placement='overlay-center'
+					>
+						{t('Loading TikZ editor...')}
+					</div>
 				)}
 				{!isLoading && !error && (
 					<>
@@ -538,7 +553,12 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					</>
 				)}
 				{showSaveIndicator && (
-					<div className='save-indicator'>
+					<div
+						className='ui-message'
+						data-role='save-indicator'
+						data-tone='success'
+						data-density='compact'
+					>
 						<span>{t('Saved')}</span>
 					</div>
 				)}

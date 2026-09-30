@@ -62,7 +62,7 @@ export const createColorEdit = (fileType: FileType): ToolbarItem => ({
 	label: t('Edit Color'),
 	icon: renderToString(<EditIcon />),
 	command: (view: EditorView): boolean => {
-		const toolbar = document.querySelector('.plugin-toolbar');
+		const toolbar = document.querySelector('.ui-toolbar[data-role="plugin"]');
 		if (!toolbar) return false;
 
 		const button = toolbar.querySelector(
@@ -75,7 +75,7 @@ export const createColorEdit = (fileType: FileType): ToolbarItem => ({
 		if (picker) {
 			picker.destroy();
 			colorPickers.delete(view);
-			picker = null;
+			picker = undefined;
 		}
 
 		picker = new ColorPicker(view, button, {

@@ -57,7 +57,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 		(getSetting('file-tree-internal-drag-drop')?.value as boolean) ?? true;
 
 	useEffect(() => {
-		// Start duplicate detection when file tree is loaded
+		// This starts duplicate detection when file tree is loaded to avoid idb conflicts storing with same key
 		if (!isLoading && fileTree.length > 0) {
 			duplicateKeyDetectionService.start();
 		}
@@ -198,7 +198,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				fileOperationNotificationService.showError(
 					operationId,
 					t('Failed to extract ZIP: {error}', {
-						error: error.message,
+						error: error instanceof Error ? error.message : String(error),
 					}),
 				);
 				throw error;
@@ -305,7 +305,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 						}
 					});
 
-					file.documentId = documentId || createdDocId;
+					file.documentId = documentId ?? createdDocId ?? undefined;
 					await fileStoreService.storeFile(file, {
 						showConflictDialog: false,
 					});
@@ -530,7 +530,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					fileOperationNotificationService.showError(
 						operationId,
 						t('Failed to delete files: {error}', {
-							error: error.message,
+							error: error instanceof Error ? error.message : String(error),
 						}),
 					);
 				}
@@ -575,7 +575,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				fileOperationNotificationService.showError(
 					operationId,
 					t('Failed to move files: {error}', {
-						error: error.message,
+						error: error instanceof Error ? error.message : String(error),
 					}),
 				);
 
@@ -640,7 +640,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				fileOperationNotificationService.showError(
 					operationId,
 					t('Failed to unlink files: {error}', {
-						error: error.message,
+						error: error instanceof Error ? error.message : String(error),
 					}),
 				);
 
@@ -695,8 +695,6 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					`Moving ${sourceFile.name} from ${sourceFile.path} to directory ${targetPath}`,
 				);
 
-				// For move operations, we pass the target directory path
-				// The service will construct the full new path
 				await autoSaveService.flushPendingSaves();
 
 				const movedIds = await fileStoreService.batchMoveFiles([
@@ -741,7 +739,6 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				await autoSaveService.flushPendingSaves();
 
-				// For rename operations, we pass the full new path
 				const movedIds = await fileStoreService.batchMoveFiles(
 					[
 						{
@@ -755,7 +752,6 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				moduleLog.info('Rename completed, new IDs:', movedIds);
 
-				// If no files were moved (cancelled), return original ID
 				if (movedIds.length === 0) {
 					return fileId;
 				}
@@ -788,12 +784,11 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			try {
 				const contentBuffer = stringToArrayBuffer(content);
 				await fileStoreService.updateFileContent(fileId, contentBuffer);
-				await refreshFileTree();
 			} catch (error) {
 				moduleLog.error('Error updating file content:', error);
 			}
 		},
-		[refreshFileTree],
+		[],
 	);
 
 	const clearSelectedFile = useCallback(() => {

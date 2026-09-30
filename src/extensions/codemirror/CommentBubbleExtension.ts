@@ -6,7 +6,7 @@ import { t } from '@/i18n';
 
 const commentBubblePlugin = ViewPlugin.fromClass(
 	class {
-		private floatingButton: HTMLElement | null = null;
+		private floatingButton: HTMLButtonElement | null = null;
 		private hideTimeout: number | null = null;
 		private modalOpen: boolean = false;
 
@@ -84,7 +84,10 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 					}
 				}
 			} else {
-				this.hideFloatingButton();
+				const selection = this.view.state.selection.main;
+				if (selection.from === selection.to) {
+					this.hideFloatingButton();
+				}
 			}
 		}
 
@@ -135,9 +138,10 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 
 		createFloatingButton() {
 			this.floatingButton = document.createElement('button');
-			this.floatingButton.className = 'floating-comment-button';
+			this.floatingButton.className = 'floating-comment-button button primary';
+			this.floatingButton.type = 'button';
 			this.floatingButton.title = t('Add comment (Alt+C)');
-			this.floatingButton.innerText = t('Add comment');
+			this.floatingButton.innerText = t('Comment');
 			this.floatingButton.addEventListener('click', (e) => {
 				e.preventDefault();
 				e.stopPropagation();
@@ -174,7 +178,7 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 			this.floatingButton.style.position = 'absolute';
 			this.floatingButton.style.left = `${coords.left + scrollLeft + 10}px`;
 			this.floatingButton.style.top = `${coords.top + scrollTop - 35}px`;
-			this.floatingButton.style.display = 'block';
+			this.floatingButton.style.display = 'inline-flex';
 			this.floatingButton.style.zIndex = '1000';
 		}
 

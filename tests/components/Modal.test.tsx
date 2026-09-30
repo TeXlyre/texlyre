@@ -51,7 +51,9 @@ describe('Modal Component', () => {
             </Modal>
         );
 
-        expect(baseElement.querySelector('.modal-small')).toBeInTheDocument();
+        expect(
+            baseElement.querySelector('[data-role="modal"][data-size="small"]')
+        ).toBeInTheDocument();
 
         rerender(
             <Modal isOpen={true} onClose={jest.fn()} title="Test Modal" size="large">
@@ -59,6 +61,8 @@ describe('Modal Component', () => {
             </Modal>
         );
 
-        expect(baseElement.querySelector('.modal-large')).toBeInTheDocument();
+        expect(
+            baseElement.querySelector('[data-role="modal"][data-size="large"]')
+        ).toBeInTheDocument();
     });
 });

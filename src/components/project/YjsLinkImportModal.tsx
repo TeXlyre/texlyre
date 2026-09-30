@@ -88,14 +88,18 @@ const YjsLinkImportModal: React.FC<YjsLinkImportModalProps> = ({
 		>
 			<div className='yjs-link-import-modal'>
 				{error && (
-					<div className='error-message' style={{ marginBottom: '1rem' }}>
+					<div
+						className='ui-message'
+						data-tone='error'
+						style={{ marginBottom: '1rem' }}
+					>
 						{error}
 					</div>
 				)}
 
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<label htmlFor='yjs-link-input'>{t('TeXlyre Link')}</label>
-					<p className='field-description'>
+					<p className='ui-field-hint'>
 						{t('Enter the full TeXlyre link, partial link, or just the YJS ID')}
 					</p>
 					<input
@@ -105,7 +109,7 @@ const YjsLinkImportModal: React.FC<YjsLinkImportModalProps> = ({
 						onChange={(e) => setYjsInput(e.target.value)}
 						placeholder='yjs:abc123... or abc123...'
 						onKeyDown={(e) => e.key === 'Enter' && handleOpen()}
-						/* biome-ignore lint/a11y/noAutofocus: Import modal expects immediate paste focus */
+						/* biome-ignore lint/a11y/noAutofocus: Import modal expects immediate paste focus. */
 						autoFocus
 					/>
 					<small>
@@ -113,7 +117,7 @@ const YjsLinkImportModal: React.FC<YjsLinkImportModalProps> = ({
 					</small>
 				</div>
 
-				<div className='info-message'>
+				<div className='ui-message' data-tone='info'>
 					<p>
 						{t(
 							'This will open the shared project associated with this TeXlyre link. The project owner must be online to sync data via peer-to-peer connection.',
@@ -122,7 +126,12 @@ const YjsLinkImportModal: React.FC<YjsLinkImportModalProps> = ({
 				</div>
 			</div>
 
-			<div className='modal-actions'>
+			<div
+				className='ui-actions'
+				data-variant='modal'
+				data-align='end'
+				data-cross='stretch'
+			>
 				<button
 					type='button'
 					className='button secondary'

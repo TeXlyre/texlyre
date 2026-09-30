@@ -7,12 +7,12 @@ import type {
 	TypstCompileResult,
 	TypstOutputFormat,
 	TypstPdfOptions,
-	TypstPageInfo,
 } from '../types/typst';
 import type { FileNode } from '../types/files';
 import { fileStoreService } from './FileStoreService';
 import {
 	notificationService,
+	shouldShowNotification,
 	type NotificationOptions,
 } from './NotificationService';
 import { typstSourceMapService } from './TypstSourceMapService';
@@ -124,7 +124,7 @@ class TypstService {
 				format,
 			);
 
-			const { output, diagnostics, pageInfos } = await this.runCompile(
+			const { output, diagnostics, sourceMapArtifact } = await this.runCompile(
 				normalizedMain,
 				sources,
 				format,
@@ -145,9 +145,8 @@ class TypstService {
 				);
 			}
 
-			const result = this.createSuccessResult(output, format, log, pageInfos);
-			await this.saveCompilationOutput(normalizedMain, result);
-			this.updateSourceMap(format, output, pageInfos, sources, normalizedMain);
+			const result = this.createSuccessResult(output, format, log);
+			this.updateSourceMap(format, sourceMapArtifact, sources, normalizedMain);
 
 			this.showSuccessNotification(
 				t('{typesetter} {format} compilation completed', {
@@ -160,13 +159,12 @@ class TypstService {
 			return result;
 		} catch (error) {
 			if (this.isCancellation(error)) {
-				typstSourceMapService.clear();
 				return { status: 1, log: 'Compilation was cancelled', format };
 			}
 			const log = this.logFromError(error);
 			return this.failCompile(operationId, format, normalizedMain, log);
 		} finally {
-			this.endOperation();
+			this.endOperation(signal);
 		}
 	}
 
@@ -207,10 +205,11 @@ class TypstService {
 				format,
 			);
 
+			const exportFormat = format === 'canvas' ? 'svg' : format;
 			const { output, diagnostics } = await this.runCompile(
 				normalizedMain,
 				sources,
-				format,
+				exportFormat,
 				pdfOptions,
 				signal,
 				compileOptions,
@@ -228,7 +227,7 @@ class TypstService {
 			const baseName = this.getBaseName(normalizedMain);
 			const files = this.buildExportFiles(
 				output,
-				format,
+				exportFormat,
 				baseName,
 				includeLog ? this.formatDiagnostics(diagnostics) : null,
 			);
@@ -253,7 +252,7 @@ class TypstService {
 				format,
 			});
 		} finally {
-			this.endOperation();
+			this.endOperation(signal);
 		}
 	}
 
@@ -284,6 +283,7 @@ class TypstService {
 
 	stopCompilation(): void {
 		this.compilationAbortController?.abort();
+		typstSourceMapService.cancelPendingBuild();
 		if (this.isCompiling()) this.setStatus('ready');
 	}
 
@@ -302,7 +302,7 @@ class TypstService {
 		operationId?: string,
 		format?: TypstOutputFormat,
 	): void {
-		if (this.canNotify(format))
+		if (this.canNotify('loading', format))
 			notificationService.showLoading(message, operationId);
 	}
 
@@ -310,7 +310,7 @@ class TypstService {
 		message: string,
 		options: TypstNotificationOptions = {},
 	): void {
-		if (this.canNotify(options.format))
+		if (this.canNotify('success', options.format))
 			notificationService.showSuccess(message, options);
 	}
 
@@ -318,7 +318,7 @@ class TypstService {
 		message: string,
 		options: TypstNotificationOptions = {},
 	): void {
-		if (this.canNotify(options.format))
+		if (this.canNotify('error', options.format))
 			notificationService.showError(message, options);
 	}
 
@@ -326,19 +326,23 @@ class TypstService {
 		message: string,
 		options: TypstNotificationOptions = {},
 	): void {
-		if (this.canNotify(options.format))
+		if (this.canNotify('info', options.format))
 			notificationService.showInfo(message, options);
 	}
 
 	private beginOperation(): AbortSignal {
+		this.compilationAbortController?.abort();
+		typstSourceMapService.cancelPendingBuild();
+		const controller = new AbortController();
+		this.compilationAbortController = controller;
 		this.setStatus('compiling');
-		this.compilationAbortController = new AbortController();
-		return this.compilationAbortController.signal;
+		return controller.signal;
 	}
 
-	private endOperation(): void {
-		this.setStatus('ready');
+	private endOperation(signal?: AbortSignal): void {
+		if (signal && this.compilationAbortController?.signal !== signal) return;
 		this.compilationAbortController = null;
+		this.setStatus('ready');
 	}
 
 	private isCancellation(error: unknown): boolean {
@@ -374,8 +378,8 @@ class TypstService {
 		options: { allowRemoteUrls?: boolean } = {},
 	): Promise<{
 		output: Uint8Array | string;
+		sourceMapArtifact?: Uint8Array;
 		diagnostics?: any[];
-		pageInfos?: TypstPageInfo[];
 	}> {
 		const result = await this.compilerEngine.compile(
 			mainFilePath,
@@ -383,13 +387,17 @@ class TypstService {
 			format,
 			pdfOptions,
 			signal,
-			options,
+			{
+				...options,
+				buildSourceMap:
+					format === 'canvas' && typstSourceMapService.isEnabled(),
+			},
 		);
 
 		return {
 			output: result.output,
+			sourceMapArtifact: result.sourceMapArtifact,
 			diagnostics: result.diagnostics,
-			pageInfos: result.pageInfos as TypstPageInfo[] | undefined,
 		};
 	}
 
@@ -425,33 +433,24 @@ class TypstService {
 
 	private updateSourceMap(
 		format: TypstOutputFormat,
-		output: Uint8Array | string,
-		pageInfos: TypstPageInfo[] | undefined,
+		artifact: Uint8Array | undefined,
 		sources: Record<string, string | Uint8Array>,
 		mainFile: string,
 	): void {
-		if (format === 'canvas' && typeof output === 'string' && pageInfos) {
-			const stringSources: Record<string, string> = {};
-			const decoder = new TextDecoder();
-			for (const [path, content] of Object.entries(sources)) {
-				if (!path.endsWith('.typ')) continue;
-				if (typeof content === 'string') {
-					stringSources[path] = content;
-				} else {
-					try {
-						stringSources[path] = decoder.decode(content);
-					} catch {}
-				}
-			}
-			typstSourceMapService.loadFromSvg(
-				output,
-				pageInfos,
-				stringSources,
-				mainFile,
-			);
-		} else {
+		if (format !== 'canvas' || !artifact) {
 			typstSourceMapService.clear();
+			return;
 		}
+
+		const stringSources: Record<string, string> = {};
+		const decoder = new TextDecoder();
+		for (const [path, content] of Object.entries(sources)) {
+			if (!path.endsWith('.typ')) continue;
+			stringSources[path] =
+				typeof content === 'string' ? content : decoder.decode(content);
+		}
+
+		typstSourceMapService.loadFromArtifact(artifact, stringSources, mainFile);
 	}
 
 	private buildExportFiles(
@@ -501,7 +500,6 @@ class TypstService {
 		output: Uint8Array | string,
 		format: TypstOutputFormat,
 		log: string,
-		pageInfos?: TypstPageInfo[],
 	): TypstCompileResult {
 		const result: TypstCompileResult = {
 			status: 0,
@@ -517,14 +515,13 @@ class TypstService {
 				result.svg = output as string;
 				break;
 			case 'canvas':
-				result.canvas = new TextEncoder().encode(output as string);
+				result.canvas = output as Uint8Array;
 				break;
 			case 'canvas-pdf':
 				result.canvas = output as Uint8Array;
 				break;
 		}
 
-		if (pageInfos) result.pageInfos = pageInfos;
 		return result;
 	}
 
@@ -643,57 +640,6 @@ class TypstService {
 	private getDirectoryPath(path: string): string {
 		const lastSlash = path.lastIndexOf('/');
 		return lastSlash >= 0 ? path.substring(0, lastSlash) : '';
-	}
-
-	private async saveCompilationOutput(
-		mainFile: string,
-		result: TypstCompileResult,
-	): Promise<void> {
-		try {
-			const outputFiles = this.createOutputFiles(mainFile, result);
-			if (outputFiles.length === 0) return;
-			await this.ensureOutputDirectoriesExist();
-			await fileStoreService.batchStoreFiles(outputFiles, {
-				showConflictDialog: false,
-			});
-		} catch (error) {
-			moduleLog.error('Failed to save compilation output:', error);
-		}
-	}
-
-	private createOutputFiles(
-		mainFile: string,
-		result: TypstCompileResult,
-	): FileNode[] {
-		const baseName = this.getBaseName(mainFile);
-		const files: FileNode[] = [];
-
-		if (result.pdf && result.format === 'pdf') {
-			const buffer =
-				result.pdf instanceof Uint8Array ? result.pdf.buffer : result.pdf;
-			files.push(
-				this.createFileNode(`${baseName}.pdf`, buffer, 'application/pdf', true),
-			);
-		} else if (
-			(result.svg || result.canvas) &&
-			(result.format === 'svg' || result.format === 'canvas')
-		) {
-			const content =
-				result.format === 'svg'
-					? result.svg!
-					: new TextDecoder().decode(result.canvas!);
-			files.push(
-				this.createFileNode(
-					`${baseName}.svg`,
-					new TextEncoder().encode(content).buffer,
-					'image/svg+xml',
-					true,
-				),
-			);
-		}
-
-		files.push(this.createLogFile(baseName, result.log));
-		return files;
 	}
 
 	private createFileNode(
@@ -847,22 +793,16 @@ class TypstService {
 			: `${prefix}: ${message}`;
 	}
 
-	private canNotify(format?: TypstOutputFormat): boolean {
-		if (!this.areNotificationsEnabled()) return false;
-		return !format?.toLowerCase().includes('canvas');
-	}
-
-	private areNotificationsEnabled(): boolean {
-		try {
-			const userId = localStorage.getItem('texlyre-current-user');
-			const storageKey = userId
-				? `texlyre-user-${userId}-settings`
-				: 'texlyre-settings';
-			const settings = JSON.parse(localStorage.getItem(storageKey) || '{}');
-			return settings['typst-notifications'] !== false;
-		} catch {
-			return true;
-		}
+	private canNotify(
+		type: 'loading' | 'success' | 'error' | 'info',
+		format?: TypstOutputFormat,
+	): boolean {
+		const canvas = format?.toLowerCase().includes('canvas') ?? false;
+		return shouldShowNotification(
+			canvas ? 'canvas-renderer-notifications' : 'pdf-renderer-notifications',
+			type,
+			canvas ? 'off' : 'all',
+		);
 	}
 
 	private setStatus(status: CompilationStatus): void {

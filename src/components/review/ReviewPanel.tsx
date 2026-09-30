@@ -203,13 +203,15 @@ const ReviewPanel: React.FC<ReviewPanelProps> = ({ className = '' }) => {
 	}
 
 	return (
-		<div className={`review-panel ${className}`}>
-			<div className='review-panel-header'>
-				<div className='review-panel-title'>
-					<h3>{t('Changes')}</h3>
+		<div className={`review-panel ui-panel ${className}`} data-role='thread'>
+			<div className='ui-panel-header' data-role='thread' data-shrink='true'>
+				<div className='ui-panel-heading ui-toolbar' data-gap='sm'>
+					<h3 className='ui-panel-title'>{t('Changes')}</h3>
 					<button
 						type='button'
-						className='review-sync-button'
+						className='review-sync-button ui-icon-button'
+						data-variant='ghost'
+						data-size='sm'
 						onClick={resetScrollSync}
 						title={t('Reset review panel position')}
 						aria-label={t('Reset review panel position')}
@@ -218,15 +220,17 @@ const ReviewPanel: React.FC<ReviewPanelProps> = ({ className = '' }) => {
 					</button>
 				</div>
 
-				<div className='view-tabs'>
+				<div className='ui-tab-list' data-role='panel' data-variant='switcher'>
 					<button
-						className={`tab-button ${activeTab === 'list' ? 'active' : ''}`}
+						type='button'
+						className={`ui-tab ${activeTab === 'list' ? 'active' : ''}`}
 						onClick={() => setActiveTab('list')}
 					>
 						{t('Active')}
 					</button>
 					<button
-						className={`tab-button ${activeTab === 'resolved' ? 'active' : ''}`}
+						type='button'
+						className={`ui-tab ${activeTab === 'resolved' ? 'active' : ''}`}
 						onClick={() => setActiveTab('resolved')}
 					>
 						{t('Resolved')}
@@ -235,21 +239,35 @@ const ReviewPanel: React.FC<ReviewPanelProps> = ({ className = '' }) => {
 			</div>
 
 			{activeTab === 'list' && (
-				<div className='review-panel-actions'>
-					<button onClick={resolveAllReviews} disabled={!visibleReviews.length}>
+				<div className='ui-panel-controls ui-actions' data-fill='true'>
+					<button
+						type='button'
+						onClick={resolveAllReviews}
+						disabled={!visibleReviews.length}
+					>
 						{t('Resolve all')}
 					</button>
-					<button onClick={acceptAllReviews} disabled={!visibleReviews.length}>
+					<button
+						type='button'
+						onClick={acceptAllReviews}
+						disabled={!visibleReviews.length}
+					>
 						{t('Accept all')}
 					</button>
-					<button onClick={rejectAllReviews} disabled={!visibleReviews.length}>
+					<button
+						type='button'
+						onClick={rejectAllReviews}
+						disabled={!visibleReviews.length}
+					>
 						{t('Reject all')}
 					</button>
 				</div>
 			)}
 
 			<div
-				className='review-panel-content'
+				className='ui-panel-content'
+				data-overflow='y'
+				data-position='relative'
 				ref={contentRef}
 				onScroll={() => {
 					const content = contentRef.current;
@@ -263,7 +281,7 @@ const ReviewPanel: React.FC<ReviewPanelProps> = ({ className = '' }) => {
 				}}
 			>
 				{visibleReviews.length === 0 ? (
-					<div className='no-reviews'>
+					<div className='no-reviews ui-empty-state'>
 						{activeTab === 'resolved'
 							? t('No resolved changes yet.')
 							: t('No tracked changes.')}

@@ -62,6 +62,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
 	const itemsPerPage = maxItemsPerPage - (maxItemsPerPage % columns);
 	const totalPages = Math.ceil(projects.length / itemsPerPage);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies(displayedProjects.length): The rendered item count intentionally retriggers CSS grid column measurement. */
 	useEffect(() => {
 		const grid = gridRef.current;
 		if (!grid) return;
@@ -225,12 +226,13 @@ const ProjectList: React.FC<ProjectListProps> = ({
 	};
 
 	return (
-		<div className='project-list-container'>
-			<div className='project-list-header'>
-				<div className='project-sort-controls'>
+		<div className='ui-panel' data-height='full' data-role='project-list'>
+			<div className='ui-panel-header' data-role='project-list'>
+				<div className='ui-toolbar' data-gap='sm'>
 					<span>{t('Sort by:')}</span>
 					<button
-						className={`sort-button ${sortBy === 'name' ? 'active' : ''}`}
+						type='button'
+						className={`button ${sortBy === 'name' ? 'active' : ''}`}
 						onClick={() => handleSortChange('name')}
 					>
 						{t('Name')}
@@ -238,21 +240,24 @@ const ProjectList: React.FC<ProjectListProps> = ({
 						{sortBy === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
 					</button>
 					<button
-						className={`sort-button ${sortBy === 'createdAt' ? 'active' : ''}`}
+						type='button'
+						className={`button ${sortBy === 'createdAt' ? 'active' : ''}`}
 						onClick={() => handleSortChange('createdAt')}
 					>
 						{t('Created')}{' '}
 						{sortBy === 'createdAt' && (sortDirection === 'asc' ? '↑' : '↓')}
 					</button>
 					<button
-						className={`sort-button ${sortBy === 'updatedAt' ? 'active' : ''}`}
+						type='button'
+						className={`button ${sortBy === 'updatedAt' ? 'active' : ''}`}
 						onClick={() => handleSortChange('updatedAt')}
 					>
 						{t('Updated')}{' '}
 						{sortBy === 'updatedAt' && (sortDirection === 'asc' ? '↑' : '↓')}
 					</button>
 					<button
-						className='sort-button'
+						type='button'
+						className='button '
 						onClick={handleToggleViewMode}
 						title={t('Switch to {viewMode}', {
 							viewMode: viewMode === 'grid' ? t('List View') : t('Grid View'),
@@ -262,24 +267,21 @@ const ProjectList: React.FC<ProjectListProps> = ({
 					</button>
 				</div>
 
-				<div
-					className='project-selection-controls'
-					style={{ marginTop: '0.5rem' }}
-				>
+				<div className='ui-actions'>
 					{!isSelectionMode ? (
 						<button
-							className='button secondary smaller'
+							type='button'
+							className='button secondary '
 							onClick={handleEnterSelectionMode}
 							disabled={projects.length === 0}
 						>
 							{t('Select Projects')}
 						</button>
 					) : (
-						<div
-							style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
-						>
+						<div className='ui-actions'>
 							<button
-								className='button secondary smaller'
+								type='button'
+								className='button secondary '
 								onClick={handleSelectAll}
 							>
 								{selectedProjects.size === projects.length
@@ -287,7 +289,8 @@ const ProjectList: React.FC<ProjectListProps> = ({
 									: t('Select All')}
 							</button>
 							<button
-								className='button primary smaller'
+								type='button'
+								className='button primary '
 								onClick={handleExportSelected}
 								disabled={selectedProjects.size === 0}
 							>
@@ -296,7 +299,8 @@ const ProjectList: React.FC<ProjectListProps> = ({
 								{selectedProjects.size})
 							</button>
 							<button
-								className='button danger smaller'
+								type='button'
+								className='button danger '
 								onClick={handleShowDeleteModal}
 								disabled={selectedProjects.size === 0 || !onDeleteSelected}
 								title={`Delete ${selectedProjects.size} selected project${selectedProjects.size === 1 ? '' : 's'}`}
@@ -306,7 +310,8 @@ const ProjectList: React.FC<ProjectListProps> = ({
 								{selectedProjects.size})
 							</button>
 							<button
-								className='button secondary smaller'
+								type='button'
+								className='button secondary '
 								onClick={handleExitSelectionMode}
 							>
 								{t('Cancel')}
@@ -316,9 +321,9 @@ const ProjectList: React.FC<ProjectListProps> = ({
 				</div>
 			</div>
 
-			<div style={{ flex: 1, overflow: 'auto', padding: '1rem' }}>
+			<div className='ui-panel-content' data-overflow='y' data-padding='sm'>
 				{displayedProjects.length === 0 ? (
-					<div className='no-projects'>
+					<div className='ui-empty-state'>
 						<p>{t('No projects found matching the current criteria')}</p>
 						{!isSelectionMode && (
 							<p>
@@ -338,7 +343,13 @@ const ProjectList: React.FC<ProjectListProps> = ({
 						)}
 					</div>
 				) : (
-					<div ref={gridRef} className={`projects-${viewMode}`}>
+					<div
+						ref={gridRef}
+						className={
+							viewMode === 'list' ? 'projects-list ui-list' : 'projects-grid'
+						}
+						data-gap={viewMode === 'list' ? 'xs' : undefined}
+					>
 						{displayedProjects.map((project) => (
 							<ProjectCard
 								key={project.id}
@@ -358,28 +369,24 @@ const ProjectList: React.FC<ProjectListProps> = ({
 			</div>
 
 			{totalPages > 1 && (
-				<div
-					className='pagination-controls'
-					style={{
-						padding: '0.5rem',
-						borderTop: '1px solid var(--accent-border, #333)',
-					}}
-				>
+				<div className='ui-pagination' data-justify='center'>
 					<button
-						className='pagination-button'
+						type='button'
+						className='button '
 						onClick={handlePrevPage}
 						disabled={currentPage === 1}
 					>
 						{t('← Prev')}
 					</button>
-					<span className='pagination-info'>
+					<span className='ui-meta'>
 						{t('Page {currentPage} of {totalPages}', {
 							currentPage,
 							totalPages,
 						})}
 					</span>
 					<button
-						className='pagination-button'
+						type='button'
+						className='button '
 						onClick={handleNextPage}
 						disabled={currentPage === totalPages}
 					>

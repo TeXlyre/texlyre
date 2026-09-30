@@ -1,4 +1,7 @@
 /* extras/renderers/canvas/styles.css */
+@import "../shared/toolbar.css";
+@import "../shared/layout.css";
+
 .canvas-renderer-viewer *,
 .canvas-renderer-viewer *::before,
 .canvas-renderer-viewer *::after {
@@ -7,47 +10,14 @@
 
 .canvas-page .textLayer,
 .canvas-page .textLayer *,
+.canvas-page .interactiveLayer,
+.canvas-page .interactiveLayer *,
 .canvas-page .annotationLayer,
 .canvas-page .annotationLayer * {
 	box-sizing: border-box;
 }
 
-.canvas-renderer-container {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	width: 100%;
-	background-color: var(--pico-background);
-	overflow: hidden;
-	position: relative;
-}
-
-.canvas-renderer-container:focus {
-	outline: none;
-}
-
-.canvas-toolbar {
-	display: flex;
-	min-height: 40px;
-	background-color: var(--pico-secondary-background);
-	border-bottom: 1px solid var(--accent-border, #333);
-	z-index: 10;
-	flex-shrink: 0;
-	overflow-x: auto;
-	overflow-y: hidden;
-	scrollbar-width: thin;
-	scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
-}
-
-.toolbar {
-	display: flex;
-	width: 100%;
-	align-items: center;
-	gap: 10px;
-	min-width: min-content;
-}
-
-.canvas-toolbar #toolbarLeft {
+.canvas-toolbar #toolbar-left {
 	display: flex;
 	align-items: center;
 	flex: 1 1 auto;
@@ -55,136 +25,41 @@
 	overflow: hidden;
 }
 
-.canvas-toolbar #toolbarRight {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	flex-shrink: 0;
-	margin-left: 0;
-	margin-right: 0;
-}
-
-.canvas-toolbar .toolbar.toolbar-no-left #toolbarRight {
-	margin-left: auto;
-	margin-right: auto;
-}
-
-.canvas-toolbar #toolbarLeft .plugin-header,
-.canvas-toolbar #toolbarLeft .plugin-header .file-info,
-.canvas-toolbar #toolbarLeft .plugin-header .filepath-info {
+.canvas-toolbar #toolbar-left .ui-panel-header[data-role="plugin"],
+.canvas-toolbar #toolbar-left .ui-panel-header[data-role="plugin"] .file-info,
+.canvas-toolbar
+	#toolbar-left
+	.ui-panel-header[data-role="plugin"]
+	.filepath-info {
 	border: none;
 	background-color: transparent;
 	min-width: 0;
 }
 
-.canvas-toolbar #toolbarLeft .plugin-header .filepath-info > span {
+.canvas-toolbar
+	#toolbar-left
+	.ui-panel-header[data-role="plugin"]
+	.filepath-info
+	> span {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	min-width: 0;
 }
 
-.toolbarButtonGroup {
-	display: flex;
-	align-items: center;
-	gap: 5px;
-}
-
-.toolbarField {
-	min-width: min-content;
-	height: 28px !important;
-	margin: 0 !important;
-	padding: 0 !important;
-}
-
-.toolbarButton {
-	height: 28px;
-	padding: 0 0.5rem;
-	font-size: 0.9rem;
-	background-color: var(--pico-background);
-	border: 1px solid var(--accent-border, #444);
-	border-radius: 4px;
-	color: var(--text-color);
-	cursor: pointer;
-	transition: background-color 0.2s;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	vertical-align: middle;
-	box-sizing: border-box;
-}
-
-.toolbarButton:hover:not(:disabled) {
-	background-color: var(--pico-primary-focus);
-}
-
-.toolbarButton:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.toolbarZoomSelect {
-	height: 28px;
-	min-width: min-content;
-	text-align: center;
-	padding: 0 0.4rem;
-	font-size: 0.9rem;
-	background-color: var(--pico-background);
-	border: 1px solid var(--accent-border, #444);
-	border-radius: 4px;
-	color: var(--text-color);
-	cursor: pointer;
-	transition: background-color 0.2s;
-	margin: 0;
-	line-height: 0.7;
-	vertical-align: middle;
-	box-sizing: border-box;
-}
-
-.toolbarZoomSelect:hover:not(:disabled) {
-	background-color: var(--pico-primary-focus);
-}
-
-.toolbarZoomSelect:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.toolbarZoomSelect option {
-	background-color: var(--pico-background);
-	color: var(--text-color);
-}
-
-.pageNumber {
-	display: flex;
-	align-items: center;
-	gap: 5px;
-	margin: 0 5px;
-}
-
-.pageNumber input {
-	width: 3em;
-	height: 28px;
-	text-align: center;
-	padding: 0;
-	margin: 0;
-	border: 1px solid var(--accent-border, #444);
-	border-radius: 4px;
-	background-color: var(--pico-background);
-	color: var(--text-color);
-	vertical-align: middle;
-	box-sizing: border-box;
-	line-height: 1;
-}
-
 .canvas-renderer-content {
-	flex: 1 1 auto;
+	contain: layout paint;
 	overflow: auto;
-	position: relative;
 }
 
 .canvas-virtual-wrapper {
 	min-width: min-content;
+	flex: 0 0 auto;
+}
+
+.canvas-virtual-wrapper > .canvas-page {
+	position: absolute;
+	margin: 0;
 }
 
 .canvas-renderer-viewer {
@@ -213,63 +88,6 @@
 	display: block;
 }
 
-.canvas-renderer-loading {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	padding: 1rem 2rem;
-	background-color: var(--pico-background);
-	border-radius: 4px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-	color: var(--text-color);
-	z-index: 100;
-}
-
-.canvas-renderer-error {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	padding: 1rem 2rem;
-	background-color: rgba(220, 53, 69, 0.1);
-	border: 1px solid rgba(220, 53, 69, 0.3);
-	border-radius: 4px;
-	color: var(--color-error);
-	max-width: 80%;
-	text-align: center;
-	z-index: 100;
-}
-
-.canvas-renderer-content.fullscreen {
-	overflow-y: auto;
-	scrollbar-width: none;
-}
-
-.canvas-renderer-content.fullscreen::-webkit-scrollbar {
-	width: 0;
-	height: 0;
-}
-
-.canvas-renderer-content.fullscreen:hover {
-	scrollbar-width: thin;
-	scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
-}
-
-.canvas-renderer-content.fullscreen:hover::-webkit-scrollbar {
-	width: 8px;
-	height: 8px;
-}
-
-.canvas-renderer-content.fullscreen:hover::-webkit-scrollbar-thumb {
-	background: rgba(100, 100, 100, 0.5);
-	border-radius: 4px;
-}
-
-.canvas-renderer-content.fullscreen:hover::-webkit-scrollbar-track {
-	background: transparent;
-}
-
 .canvas-page .textLayer {
 	position: absolute;
 	left: 0;
@@ -296,7 +114,7 @@
 	margin: -1px;
 	padding: 1px;
 	background-color: rgba(180, 0, 255, 0.25);
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	pointer-events: none;
 }
 
@@ -312,6 +130,15 @@
 .canvas-page .textLayer svg [data-text] {
 	pointer-events: auto;
 	cursor: text;
+}
+
+.canvas-page .interactiveLayer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	overflow: hidden;
+	pointer-events: none;
+	z-index: 3;
 }
 
 .canvas-page .annotationLayer {
@@ -339,7 +166,7 @@
 	background: rgba(0, 54, 255, 0.13);
 	border: 1px solid transparent;
 	box-sizing: border-box;
-	font-size: 9px;
+	font-size: var(--font-size-nano);
 	height: 100%;
 	margin: 0;
 	padding: 0 3px;
@@ -356,21 +183,4 @@
 	margin: 0;
 	vertical-align: top;
 	width: 100%;
-}
-
-@keyframes source-map-highlight-pulse {
-	0% {
-		opacity: 0;
-		transform: scale(1.2);
-	}
-
-	30% {
-		opacity: 1;
-		transform: scale(1);
-	}
-
-	100% {
-		opacity: 0.4;
-		transform: scale(1);
-	}
 }

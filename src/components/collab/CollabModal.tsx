@@ -36,7 +36,10 @@ const CollabModal: React.FC<CollabModalProps> = ({
 				size='medium'
 				headerActions={
 					<button
-						className='modal-close-button'
+						type='button'
+						className='ui-icon-button'
+						data-role='modal-close'
+						data-variant='subtle'
 						onClick={() => setShowSettings(true)}
 						title={t('Real-time Document Synchronization Settings')}
 					>
@@ -44,23 +47,38 @@ const CollabModal: React.FC<CollabModalProps> = ({
 					</button>
 				}
 			>
-				<div className='collab-modal'>
-					<div className='collab-status'>
-						<div className='status-info'>
-							<div className='status-item'>
+				<div className='ui-stack' data-gap='lg'>
+					<section
+						className='ui-card ui-stack'
+						data-gap='md'
+						data-padding='md'
+						data-surface='secondary'
+					>
+						<div className='ui-list' data-gap='sm'>
+							<div className='ui-meta' data-layout='row'>
 								<strong>{t('Sync Status:')}</strong>{' '}
 								{isConnected ? t('Connected') : t('Disconnected')}
 							</div>
-							<div className='status-item'>
+							<div className='ui-meta' data-layout='row'>
 								<strong>{t('Project ID:')}</strong>{' '}
 								{docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl}
 							</div>
 						</div>
 
-						<div className='collab-controls'>
-							<div className='sync-toolbar'>
-								<div className='primary-actions'>
+						<div className='ui-stack' data-gap='sm'>
+							<div
+								className='ui-toolbar'
+								data-width='full'
+								data-justify='between'
+								data-gap='md'
+							>
+								<div
+									className='ui-toolbar-actions'
+									data-role='primary'
+									data-gap='sm'
+								>
 									<button
+										type='button'
 										className='button primary'
 										onClick={onSyncAll}
 										disabled={!isConnected || isSyncing}
@@ -71,11 +89,11 @@ const CollabModal: React.FC<CollabModalProps> = ({
 								</div>
 							</div>
 						</div>
-					</div>
+					</section>
 
-					<div className='collab-info'>
+					<div className='ui-message' data-tone='info'>
 						<h3>{t('How Document Collaboration Works')}</h3>
-						<div className='info-content'>
+						<div>
 							<p>
 								{t(
 									'Real-time document collaboration allows multiple users to edit documents simultaneously:',

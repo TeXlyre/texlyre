@@ -83,7 +83,6 @@ function insideBody(from: number, to: number, range: AnnotationRange): boolean {
 	return from >= range.openEnd && to <= range.closeStart;
 }
 
-/** Expand until every intersected annotation is contained or containing. */
 function expandSelection(
 	ranges: readonly AnnotationRange[],
 	from: number,
@@ -190,10 +189,6 @@ function buildInsert(
 	return { insert, cursorPos: from + cursorOffset };
 }
 
-/**
- * Whole comments may be removed with their selected text. Review wrappers are
- * never removed by ordinary editing. Partial annotation syntax stays atomic.
- */
 export function normalizeAnnotationChange(
 	state: EditorState,
 	input: SingleChange,
@@ -324,8 +319,6 @@ export function createTagProtection(): Extension {
 		const event = tr.annotation(Transaction.userEvent);
 		const original = getChanges(tr);
 
-		// Ordinary typing/deleting in visible text cannot damage hidden tag
-		// syntax. Skip the expensive annotation normalization path entirely.
 		if (
 			!original.some((change) =>
 				isInsideAnnotationTag(tr.startState, change.from, change.to),

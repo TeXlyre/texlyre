@@ -22,18 +22,34 @@ class PopoutViewerService {
 	private channel: BroadcastChannel | null = null;
 	private popoutWindow: Window | null = null;
 	private projectId: string | null = null;
-	private listeners: Set<(message: PopoutMessage) => void> = new Set();
+	private listeners = new Set<(message: PopoutMessage) => void>();
+	private lastContent: PopoutPayload | null = null;
+	private lastCompileResult: { status: number; compileLog: string } | null =
+		null;
 
 	initialize(projectId: string): void {
 		if (this.projectId === projectId && this.channel) return;
 		this.cleanup();
 		this.projectId = projectId;
-		this.channel = new BroadcastChannel(`texlyre-popout-${this.projectId}`);
+		this.channel = new BroadcastChannel(`texlyre-popout-${projectId}`);
 		this.channel.addEventListener('message', (event) => {
 			const message = event.data as PopoutMessage;
-			this.listeners.forEach((listener) => {
-				listener(message);
-			});
+			if (message.type === 'window-ready') {
+				if (this.lastContent) {
+					this.sendMessage({
+						type: 'content-update',
+						data: this.lastContent,
+						timestamp: Date.now(),
+					});
+				} else if (this.lastCompileResult) {
+					this.sendMessage({
+						type: 'content-update',
+						data: this.lastCompileResult,
+						timestamp: Date.now(),
+					});
+				}
+			}
+			for (const listener of this.listeners) listener(message);
 		});
 	}
 
@@ -42,9 +58,8 @@ class PopoutViewerService {
 
 		const baseUrl = window.location.origin + window.location.pathname;
 		const popoutUrl = `${baseUrl}#popout-viewer:${this.projectId}`;
-
-		if (this.popoutWindow && !this.popoutWindow.closed) {
-			this.popoutWindow.focus();
+		if (this.isWindowOpen()) {
+			this.popoutWindow?.focus();
 			return true;
 		}
 
@@ -54,23 +69,24 @@ class PopoutViewerService {
 			'width=1000,height=800,scrollbars=yes,resizable=yes,menubar=no,toolbar=no,location=no,status=no',
 		);
 
-		if (this.popoutWindow) {
-			const checkClosed = () => {
-				if (this.popoutWindow?.closed) {
-					this.popoutWindow = null;
-					this.sendMessage({ type: 'window-closed', timestamp: Date.now() });
-				} else {
-					setTimeout(checkClosed, 1000);
-				}
-			};
-			setTimeout(checkClosed, 1000);
-			return true;
-		}
+		if (!this.popoutWindow) return false;
 
-		return false;
+		const checkClosed = () => {
+			if (this.popoutWindow?.closed) {
+				this.popoutWindow = null;
+				this.sendMessage({ type: 'window-closed', timestamp: Date.now() });
+				return;
+			}
+			setTimeout(checkClosed, 1000);
+		};
+		setTimeout(checkClosed, 1000);
+		return true;
 	}
 
 	sendContent(payload: PopoutPayload): void {
+		this.lastContent = payload;
+		this.lastCompileResult = null;
+		if (!this.isWindowOpen()) return;
 		this.sendMessage({
 			type: 'content-update',
 			data: payload,
@@ -79,14 +95,20 @@ class PopoutViewerService {
 	}
 
 	sendCompileResult(status: number, compileLog: string): void {
+		this.lastContent = null;
+		this.lastCompileResult = { status, compileLog };
+		if (!this.isWindowOpen()) return;
 		this.sendMessage({
 			type: 'content-update',
-			data: { status, compileLog },
+			data: this.lastCompileResult,
 			timestamp: Date.now(),
 		});
 	}
 
 	clear(): void {
+		this.lastContent = null;
+		this.lastCompileResult = null;
+		if (!this.isWindowOpen()) return;
 		this.sendMessage({ type: 'content-clear', timestamp: Date.now() });
 	}
 
@@ -95,26 +117,23 @@ class PopoutViewerService {
 	}
 
 	closeWindow(): void {
-		if (this.popoutWindow && !this.popoutWindow.closed) {
+		if (this.popoutWindow && !this.popoutWindow.closed)
 			this.popoutWindow.close();
-		}
 		this.popoutWindow = null;
 	}
 
 	addListener(listener: (message: PopoutMessage) => void): () => void {
 		this.listeners.add(listener);
-		return () => {
-			this.listeners.delete(listener);
-		};
+		return () => this.listeners.delete(listener);
 	}
 
 	cleanup(): void {
 		this.closeWindow();
-		if (this.channel) {
-			this.channel.close();
-			this.channel = null;
-		}
+		this.channel?.close();
+		this.channel = null;
 		this.listeners.clear();
+		this.lastContent = null;
+		this.lastCompileResult = null;
 		this.projectId = null;
 	}
 

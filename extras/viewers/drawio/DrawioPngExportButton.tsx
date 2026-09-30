@@ -261,13 +261,16 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
 	};
 
 	return (
-		<div
-			className={`drawio-export-button-container ${className}`}
-			ref={dropdownRef}
-		>
-			<div className='drawio-export-button-group'>
+		<div className={`ui-control-cluster ${className}`} ref={dropdownRef}>
+			<div
+				className='ui-button-group ui-split-button'
+				data-layout='weighted'
+				data-main-padding='md'
+				data-trigger-group='true'
+			>
 				<button
-					className={`control-button export-button ${isExporting ? 'exporting' : ''}`}
+					type='button'
+					className={`button ui-split-main export-button ${isExporting ? 'exporting' : ''}`}
 					onClick={handleSaveAsPng}
 					disabled={disabled || isExporting}
 					title={t('Save as PNG')}
@@ -276,7 +279,8 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
 				</button>
 
 				<button
-					className='control-button dropdown-toggle'
+					type='button'
+					className='button ui-split-toggle dropdown-toggle'
 					onClick={toggleDropdown}
 					disabled={disabled || isExporting}
 					title={t('PNG Export Options')}
@@ -289,12 +293,12 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
 				isOpen={isDropdownOpen}
 				triggerElement={
 					dropdownRef.current?.querySelector(
-						'.drawio-export-button-group',
+						'[data-trigger-group]',
 					) as HTMLElement
 				}
 				className='drawio-png-dropdown'
 			>
-				<div className='dropdown-option'>
+				<div className='ui-menu-section' data-variant='control'>
 					<label>
 						{t('Margin (px):')}
 						<NumberInput
@@ -310,7 +314,7 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
 					</label>
 				</div>
 
-				<div className='dropdown-option'>
+				<div className='ui-menu-section' data-variant='control'>
 					<label>
 						{t('Image scale:')}
 						<NumberInput
@@ -326,7 +330,7 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
 					</label>
 				</div>
 
-				<div className='dropdown-option'>
+				<div className='ui-menu-section' data-variant='control'>
 					<label>
 						<input
 							type='checkbox'
@@ -341,7 +345,7 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
 				</div>
 
 				{!transparentBackground && (
-					<div className='dropdown-option'>
+					<div className='ui-menu-section' data-variant='control'>
 						<label>
 							{t('Background color:')}
 							<input
@@ -356,9 +360,10 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
 					</div>
 				)}
 
-				<div className='dropdown-option'>
+				<div className='ui-menu-section' data-variant='control'>
 					<button
-						className='dropdown-button'
+						type='button'
+						className='button primary'
 						onClick={handleDownloadAsPng}
 						disabled={disabled || isExporting}
 					>

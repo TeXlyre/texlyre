@@ -1,11 +1,11 @@
 // src/components/output/PopoutViewerWindow.tsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { createTypstPagedPreviewSource } from '../../extensions/typst.ts/TypstPagedPreviewSource';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { useSettings } from '../../hooks/useSettings';
 import { toArrayBuffer } from '../../utils/fileUtils';
-import type { RendererController } from '../../plugins/PluginInterface';
 import type {
 	PopoutContentKind,
 	PopoutMessage,
@@ -29,15 +29,15 @@ const PopoutViewerWindow: React.FC<PopoutViewerWindowProps> = ({
 	const [compileStatus, setCompileStatus] = useState<number>(0);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const channelRef = useRef<BroadcastChannel | null>(null);
-	const controllerRef = useRef<RendererController | null>(null);
-	const kindRef = useRef<PopoutContentKind>('pdf');
 	const { getSetting } = useSettings();
 
 	const useEnhancedRenderer = getSetting('pdf-renderer-enable')?.value ?? true;
-
-	useEffect(() => {
-		kindRef.current = kind;
-	}, [kind]);
+	const typstAllowRemoteContent =
+		(getSetting('typst-allow-remote-content')?.value as boolean) ?? true;
+	const airgapExternalRequests =
+		(getSetting('offline-airgap-external-requests')?.value as boolean) ?? false;
+	const previewAllowRemoteUrls =
+		typstAllowRemoteContent && !airgapExternalRequests;
 
 	useEffect(() => {
 		const channel = new BroadcastChannel(`texlyre-popout-${projectId}`);
@@ -49,16 +49,6 @@ const PopoutViewerWindow: React.FC<PopoutViewerWindowProps> = ({
 				case 'content-update':
 					if (message.data?.content !== undefined) {
 						const incoming = message.data.content;
-						const incomingKind = message.data.kind ?? kindRef.current;
-
-						if (
-							(incomingKind === 'canvas-pdf' ||
-								incomingKind === 'canvas-svg') &&
-							controllerRef.current?.updateContent
-						) {
-							controllerRef.current.updateContent(incoming);
-						}
-
 						setContent(incoming);
 						if (message.data.kind) setKind(message.data.kind);
 						if (message.data.mimeType) setMimeType(message.data.mimeType);
@@ -95,6 +85,19 @@ const PopoutViewerWindow: React.FC<PopoutViewerWindowProps> = ({
 			channel.close();
 		};
 	}, [projectId]);
+
+	const pagedSource = useMemo(() => {
+		if (mimeType !== 'application/x-texlyre-typst-vector' || !content)
+			return null;
+		if (typeof content === 'string') return null;
+		const bytes =
+			content instanceof Uint8Array ? content : new Uint8Array(content);
+		return createTypstPagedPreviewSource(bytes, {
+			allowRemoteUrls: previewAllowRemoteUrls,
+		});
+	}, [content, mimeType, previewAllowRemoteUrls]);
+
+	useEffect(() => () => pagedSource?.dispose?.(), [pagedSource]);
 
 	const handleSave = (saveName: string) => {
 		if (!content) return;
@@ -149,12 +152,10 @@ const PopoutViewerWindow: React.FC<PopoutViewerWindowProps> = ({
 
 		return React.createElement(renderer.renderOutput, {
 			content: rendererContent,
+			pagedSource: pagedSource ?? undefined,
 			mimeType,
 			fileName,
 			onSave: kind === 'pdf' ? handleSave : undefined,
-			controllerRef: (controller: RendererController) => {
-				controllerRef.current = controller;
-			},
 		});
 	};
 
@@ -197,6 +198,7 @@ const PopoutViewerWindow: React.FC<PopoutViewerWindowProps> = ({
 				</div>
 				{content && kind === 'pdf' && (
 					<button
+						type='button'
 						onClick={() => handleSave(fileName)}
 						style={{
 							padding: '0.5rem 1rem',

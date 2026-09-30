@@ -18,6 +18,7 @@ import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';
 import { collabService } from '../services/CollabService';
 import { fileStorageEventEmitter } from '../services/FileStoreService';
+import { normalizeNotificationMode } from '../services/NotificationService';
 import { peerFileSyncService } from '../services/PeerFileSyncService';
 import type {
 	FileSyncContextType,
@@ -90,8 +91,9 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 	const fileSyncServerUrl =
 		(getSetting('file-sync-server-url')?.value as string) ??
 		'http://filepizza.localhost:8082';
-	const syncNotificationsEnabled =
-		(getSetting('file-sync-notifications')?.value as boolean) ?? true;
+	const syncNotificationMode = normalizeNotificationMode(
+		getSetting('file-sync-notifications')?.value,
+	);
 
 	const projectId = docUrl
 		? docUrl.startsWith('yjs:')
@@ -101,7 +103,12 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
 	const addNotification = useCallback(
 		(notification: Omit<FileSyncNotification, 'id' | 'timestamp'>) => {
-			if (!syncNotificationsEnabled) return;
+			if (
+				syncNotificationMode === 'off' ||
+				(syncNotificationMode === 'errors' &&
+					notification.type !== 'sync_error')
+			)
+				return;
 
 			const fullNotification: FileSyncNotification = {
 				id: nanoid(),
@@ -112,7 +119,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 			moduleLog.info('Adding notification:', fullNotification);
 			setNotifications((prev) => [...prev, fullNotification]);
 		},
-		[syncNotificationsEnabled],
+		[syncNotificationMode],
 	);
 
 	const getRequestsArray = useCallback(
@@ -225,15 +232,19 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 	}, [user, isFileSyncEnabled, addNotification, docUrl, projectId]);
 
 	const createHoldSignal = useCallback(
-		(targetPeerId: string): FileSyncHoldSignal => ({
-			id: nanoid(),
-			holderId: user?.id,
-			holderUsername: user?.username,
-			targetPeerId,
-			timestamp: Date.now(),
-			expiresAt: Date.now() + holdTimeoutSeconds * 1000,
-			status: 'active',
-		}),
+		(targetPeerId: string): FileSyncHoldSignal | null => {
+			if (!user) return null;
+
+			return {
+				id: nanoid(),
+				holderId: user.id,
+				holderUsername: user.username,
+				targetPeerId,
+				timestamp: Date.now(),
+				expiresAt: Date.now() + holdTimeoutSeconds * 1000,
+				status: 'active',
+			};
+		},
 		[user, holdTimeoutSeconds],
 	);
 
@@ -243,6 +254,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				return null;
 
 			const holdSignal = createHoldSignal(targetPeerId);
+			if (!holdSignal) return null;
+
 			ydocRef.current
 				.getArray<FileSyncHoldSignal>('holdSignals')
 				.push([holdSignal]);
@@ -414,7 +427,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 							filePaths: filesToRequest.map((f) => f.filePath),
 							remoteTimestamps: filesToRequest.map((f) => f.lastModified),
 							documentIds: filesToRequest.map((f) => f.documentId),
-							deletionStates: filesToRequest.map((f) => f.isDeleted),
+							deletionStates: filesToRequest.map((f) => f.isDeleted ?? false),
 							timestamp: Date.now(),
 							status: 'pending',
 							holdSignalId: holdSignal.id,
@@ -977,8 +990,9 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 			});
 		} catch (error) {
 			peerFileSyncService.showErrorNotification(
-				t('Manual sync failed: ') +
-					`${error instanceof Error ? error.message : t('Unknown error')}`,
+				`${t('Manual sync failed: ')}${
+					error instanceof Error ? error.message : t('Unknown error')
+				}`,
 				{ operationId },
 			);
 		} finally {

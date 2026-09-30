@@ -104,8 +104,8 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 			widthCacheRef.current = {
 				byKey,
 				split:
-					el.querySelector<HTMLElement>('.plugin-toolbar__split')
-						?.offsetWidth ?? DEFAULT_SPLIT_WIDTH,
+					el.querySelector<HTMLElement>('.ui-toolbar-separator')?.offsetWidth ??
+					DEFAULT_SPLIT_WIDTH,
 				overflow: byKey.get(OVERFLOW_KEY) ?? DEFAULT_ITEM_WIDTH,
 			};
 		}
@@ -167,7 +167,7 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 		);
 	}, [items, protectedTailGroups]);
 
-	/* biome-ignore lint/correctness/useExhaustiveDependencies: items is a reset trigger, not read in body */
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: items is a reset trigger, not read in body. */
 	useLayoutEffect(() => {
 		widthCacheRef.current = null;
 		isBaselineRef.current = true;
@@ -203,7 +203,8 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 			key={item.key}
 			ref={buttonRef}
 			type='button'
-			className='plugin-toolbar__item'
+			className='ui-icon-button'
+			data-variant='subtle'
 			data-item={item.key}
 			title={item.label}
 			disabled={disabled}
@@ -211,8 +212,8 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 			onClick={onClick}
 		>
 			<i
-				className='plugin-toolbar__icon'
-				/* biome-ignore lint/security/noDangerouslySetInnerHtml: Icons are trusted pre-rendered SVG strings */
+				className='ui-icon'
+				/* biome-ignore lint/security/noDangerouslySetInnerHtml: Icons are trusted pre-rendered SVG strings. */
 				dangerouslySetInnerHTML={{ __html: icon || '' }}
 			/>
 		</button>
@@ -234,10 +235,15 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 	};
 
 	return (
-		<div ref={setToolbarRef} className='plugin-toolbar scroll-x'>
+		<div
+			ref={setToolbarRef}
+			className='ui-toolbar scroll-x'
+			data-role='plugin'
+			data-gap='tight'
+		>
 			{visibleGroups.map((group, idx) => (
 				<span key={`group-${groupKey(group)}`} style={{ display: 'contents' }}>
-					{idx > 0 && <span className='plugin-toolbar__split' />}
+					{idx > 0 && <span className='ui-toolbar-separator' />}
 					{group.map((item) => renderButton(item))}
 				</span>
 			))}
@@ -245,7 +251,7 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 			{collapsedGroups.length > 0 && (
 				<>
 					{visibleGroups.length > 0 && (
-						<span className='plugin-toolbar__split' />
+						<span className='ui-toolbar-separator' />
 					)}
 					{renderButton(
 						{ key: OVERFLOW_KEY, label: t('More'), icon: overflowIcon },
@@ -263,7 +269,11 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 				'type' in entry ? (
 					<span
 						key={`tail-${entry.type}`}
-						className={`plugin-toolbar__${entry.type}`}
+						className={
+							entry.type === 'split'
+								? 'ui-toolbar-separator'
+								: 'ui-toolbar-spacer'
+						}
 					/>
 				) : (
 					renderButton(entry)
@@ -273,24 +283,23 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 			<PositionedDropdown
 				isOpen={overflowOpen && collapsedGroups.length > 0}
 				triggerElement={overflowButtonRef.current}
-				className='plugin-toolbar-overflow-menu dropdown-menu'
 				align='left'
 				onClose={() => setOverflowOpen(false)}
 			>
 				{collapsedGroups.map((group, groupIdx) => (
 					<div key={`section-${groupKey(group)}`}>
-						<div className='plugin-toolbar-overflow-section'>
+						<div className='ui-menu-section' data-gap='none'>
 							{group.map((item) => (
 								<button
 									key={item.key}
 									type='button'
-									className='dropdown-item plugin-toolbar-overflow-item'
+									className='ui-menu-item'
 									onMouseDown={(event) => event.preventDefault()}
 									onClick={() => runOverflowItem(item.key)}
 								>
 									<span
-										className='plugin-toolbar-overflow-icon'
-										/* biome-ignore lint/security/noDangerouslySetInnerHtml: Trusted pre-rendered icon */
+										className='ui-icon'
+										/* biome-ignore lint/security/noDangerouslySetInnerHtml: Trusted pre-rendered icon. */
 										dangerouslySetInnerHTML={{ __html: item.icon || '' }}
 									/>
 									<span>{item.label}</span>
@@ -298,7 +307,7 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 							))}
 						</div>
 						{groupIdx < collapsedGroups.length - 1 && (
-							<div className='plugin-toolbar-overflow-separator' />
+							<div className='ui-menu-divider' />
 						)}
 					</div>
 				))}

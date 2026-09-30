@@ -80,10 +80,14 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 			icon={ZipFileIcon}
 			size='medium'
 		>
-			<div className='project-export-modal'>
-				{error && <div className='export-error-message'>{error}</div>}
+			<div className='ui-stack' data-gap='md'>
+				{error && (
+					<div className='ui-message' data-tone='error'>
+						{error}
+					</div>
+				)}
 
-				<div className='export-info'>
+				<div className='ui-message' data-tone='info'>
 					<p>
 						{t('Export {count} project in your preferred format.', {
 							count: selectedProjects.length,
@@ -91,14 +95,19 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 					</p>
 				</div>
 
-				<div className='selected-projects-list'>
+				<div className='ui-list' data-scroll='short'>
 					{selectedProjects.map((project) => (
-						<div key={project.id} className='export-project-item'>
+						<div
+							key={project.id}
+							className='ui-list-item'
+							data-appearance='flat'
+							data-padding='sm'
+						>
 							<strong>{project.name}</strong>
-							<div className='export-project-details'>
+							<div className='ui-note'>
 								{project.description || t('No description')}
 							</div>
-							<div className='export-project-details'>
+							<div className='ui-meta'>
 								{t('Last Modified: {lastModified}', {
 									lastModified: formatDate(project.updatedAt),
 								})}
@@ -107,68 +116,62 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 					))}
 				</div>
 
-				<div className='export-format-selection'>
-					<h3>{t('Export Format')}</h3>
+				<section className='ui-stack' data-gap='sm'>
+					<h3 className='ui-section-title'>{t('Export Format')}</h3>
 
-					<div className='dropdown-options'>
-						<div
-							className={`dropdown-option ${exportFormat === 'texlyre' ? 'selected' : ''}`}
-							onClick={() => setExportFormat('texlyre')}
+					<div className='ui-stack' data-gap='sm'>
+						<label
+							className='ui-choice-card'
+							data-direction='row'
+							data-selected={exportFormat === 'texlyre' ? 'true' : undefined}
 						>
-							<label className='dropdown-option-label'>
-								<input
-									type='radio'
-									name='exportFormat'
-									value='texlyre'
-									checked={exportFormat === 'texlyre'}
-									onChange={() => setExportFormat('texlyre')}
-								/>
-								<div className='option-content'>
-									<div className='option-header'>
-										<FileTextIcon />
-										<strong>{t('TeXlyre Format')}</strong>
-									</div>
-									<p>
-										{t(
-											'Complete project export including documents, collaboration data, and files. Can be imported back into TeXlyre.',
-										)}
-									</p>
-								</div>
-							</label>
-						</div>
+							<input
+								type='radio'
+								name='exportFormat'
+								value='texlyre'
+								checked={exportFormat === 'texlyre'}
+								onChange={() => setExportFormat('texlyre')}
+							/>
+							<FileTextIcon />
+							<div className='ui-stack' data-gap='xs'>
+								<strong>{t('TeXlyre Format')}</strong>
+								<p className='ui-note'>
+									{t(
+										'Complete project export including documents, collaboration data, and files. Can be imported back into TeXlyre.',
+									)}
+								</p>
+							</div>
+						</label>
 
-						<div
-							className={`dropdown-option ${exportFormat === 'files-only' ? 'selected' : ''}`}
-							onClick={() => setExportFormat('files-only')}
+						<label
+							className='ui-choice-card'
+							data-direction='row'
+							data-selected={exportFormat === 'files-only' ? 'true' : undefined}
 						>
-							<label className='dropdown-option-label'>
-								<input
-									type='radio'
-									name='exportFormat'
-									value='files-only'
-									checked={exportFormat === 'files-only'}
-									onChange={() => setExportFormat('files-only')}
-								/>
-								<div className='option-content'>
-									<div className='option-header'>
-										<FileIcon />
-										<strong>{t('Files Only')}</strong>
-									</div>
-									<p>
-										{t(
-											'Export only the files from your projects in a simple folder structure. Compatible with any application.',
-										)}
-									</p>
-								</div>
-							</label>
-						</div>
+							<input
+								type='radio'
+								name='exportFormat'
+								value='files-only'
+								checked={exportFormat === 'files-only'}
+								onChange={() => setExportFormat('files-only')}
+							/>
+							<FileIcon />
+							<div className='ui-stack' data-gap='xs'>
+								<strong>{t('Files Only')}</strong>
+								<p className='ui-note'>
+									{t(
+										'Export only the files from your projects in a simple folder structure. Compatible with any application.',
+									)}
+								</p>
+							</div>
+						</label>
 					</div>
-				</div>
+				</section>
 
-				<div className='export-option-group'>
+				<div className='ui-stack' data-gap='sm'>
 					{exportFormat === 'texlyre' && (
 						<>
-							<label className='export-option-label'>
+							<label className='checkbox-control'>
 								<input
 									type='checkbox'
 									checked={includeDocuments}
@@ -177,7 +180,7 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 								/>
 								<span>{t('Include documents and collaboration data')}</span>
 							</label>
-							<label className='export-option-label'>
+							<label className='checkbox-control'>
 								<input
 									type='checkbox'
 									checked={includeFiles}
@@ -189,7 +192,7 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 						</>
 					)}
 
-					<label className='export-option-label'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={includeTemporaryFiles}
@@ -201,7 +204,7 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 				</div>
 
 				{exportFormat === 'files-only' && selectedProjects.length > 1 && (
-					<div className='warning-message'>
+					<div className='ui-message' data-tone='warning'>
 						{t(
 							'Files will be organized by project name in separate folders. Documents are not included in files-only export.',
 						)}
@@ -209,7 +212,12 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 				)}
 			</div>
 
-			<div className='modal-actions'>
+			<div
+				className='ui-actions'
+				data-variant='modal'
+				data-align='end'
+				data-cross='stretch'
+			>
 				<button
 					type='button'
 					className='button secondary'

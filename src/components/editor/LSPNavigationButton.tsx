@@ -121,10 +121,15 @@ const LSPNavigationButton: React.FC<LSPNavigationButtonProps> = ({
 	const noTargetLabel = t('No target at cursor');
 
 	return (
-		<div className='control-group lsp-navigation-container' ref={containerRef}>
-			<div className='split-button-group'>
+		<div className='lsp-navigation-container' ref={containerRef}>
+			<div
+				className='ui-button-group ui-split-button'
+				data-role='plugin-control'
+				data-trigger-group='true'
+			>
 				<button
-					className='control-button'
+					type='button'
+					className='button ui-split-main'
 					onClick={() => navigate(primaryKind)}
 					disabled={!hasTarget}
 					title={hasTarget ? NAVIGATION_LABELS[primaryKind] : noTargetLabel}
@@ -134,7 +139,8 @@ const LSPNavigationButton: React.FC<LSPNavigationButtonProps> = ({
 
 				{supportedKinds.length > 1 && (
 					<button
-						className='control-button dropdown-toggle'
+						type='button'
+						className='button ui-split-toggle dropdown-toggle'
 						onClick={() => setIsOpen((open) => !open)}
 						disabled={!hasTarget}
 						title={hasTarget ? t('Go to...') : noTargetLabel}
@@ -149,21 +155,22 @@ const LSPNavigationButton: React.FC<LSPNavigationButtonProps> = ({
 				isOpen={isOpen}
 				triggerElement={
 					containerRef.current?.querySelector(
-						'.split-button-group',
+						'[data-trigger-group]',
 					) as HTMLElement
 				}
-				className='dropdown-menu lsp-navigation-dropdown'
+				className='lsp-navigation-dropdown'
 				onClose={() => setIsOpen(false)}
 			>
-				<div className='dropdown-section'>
+				<div className='ui-menu-section' data-variant='control'>
 					{supportedKinds.map((kind) => (
 						<button
+							type='button'
 							key={kind}
-							className='dropdown-item'
+							className='ui-menu-item'
 							onClick={() => navigate(kind)}
 						>
 							<GoToDefinitionIcon />
-							<span className='dropdown-label'>{NAVIGATION_LABELS[kind]}</span>
+							<span className='ui-menu-label'>{NAVIGATION_LABELS[kind]}</span>
 						</button>
 					))}
 				</div>

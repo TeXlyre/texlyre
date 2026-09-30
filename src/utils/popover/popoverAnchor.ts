@@ -28,22 +28,14 @@ export class PopoverAnchor {
 		if (this.isOpen) return;
 
 		const buttonRect = this.button.getBoundingClientRect();
-		const toolbar = this.button.closest('.plugin-toolbar');
 
-		if (toolbar) {
-			toolbar.appendChild(this.container);
-		} else {
-			document.body.appendChild(this.container);
-		}
-
-		const toolbarRect = toolbar?.getBoundingClientRect();
-		if (toolbarRect) {
-			this.container.style.top = `${buttonRect.bottom - toolbarRect.top + 4}px`;
-			this.container.style.left = `${buttonRect.left - toolbarRect.left}px`;
-		} else {
-			this.container.style.top = `${buttonRect.bottom + 4}px`;
-			this.container.style.left = `${buttonRect.left}px`;
-		}
+		// NOTE (fabawi): Popovers are overlays, so are kept outside scrollable toolbars while
+		// keeping them inside the active fullscreen tree when necessary.
+		const host = document.fullscreenElement ?? document.body;
+		host.appendChild(this.container);
+		this.container.style.position = 'fixed';
+		this.container.style.top = `${buttonRect.bottom + 4}px`;
+		this.container.style.left = `${buttonRect.left}px`;
 
 		this.isOpen = true;
 		onOpen?.();

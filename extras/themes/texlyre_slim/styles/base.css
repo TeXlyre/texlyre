@@ -1,34 +1,59 @@
 /* extras/themes/texlyre_slim/styles/base.css */
 [data-theme-plugin="texlyre-slim"] {
-	--font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-	--code-font-family: "Fira Code", "Courier New", monospace;
-
-	--spacing-xs: 0.25rem;
-	--spacing-sm: 0.5rem;
-	--spacing-md: 1rem;
-	--spacing-lg: 1.5rem;
-
-	--radius-sm: 4px;
-	--radius-md: 8px;
-	--radius-lg: 12px;
-
-	--transition-fast: 0.15s ease;
-	--transition-normal: 0.25s ease;
-
-	--focus-ring: 2px solid var(--pico-primary);
-	--focus-offset: 2px;
-
-	font-family: var(--font-family);
+	--slim-font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+	font-family: var(--slim-font-family);
+	--ui-field-control-height: var(--button-height-md);
+	--ui-field-control-min-height: var(--button-height-md);
+	--ui-field-control-font-size: var(--font-size-meta);
+	--ui-field-control-line-height: 1.2;
+	--ui-field-control-radius: var(--radius-md);
+	--ui-action-control-height: var(--control-height-compact);
+	--ui-action-control-font-size: var(--font-size-small);
+	--ui-action-control-line-height: 1.2;
+	--ui-action-control-radius: var(--radius-md);
+	--ui-button-height: var(--ui-field-control-height);
+	--ui-button-min-height: var(--ui-field-control-height);
+	--ui-button-font-size: var(--ui-field-control-font-size);
+	--ui-button-line-height: var(--ui-field-control-line-height);
+	--ui-button-radius: var(--ui-field-control-radius);
+	--ui-icon-button-size: var(--ui-action-control-height);
+	--ui-icon-button-radius: var(--ui-action-control-radius);
+	--ui-joined-control-height: var(--ui-action-control-height);
+	--ui-field-label-font-size: var(--font-size-small);
+	--ui-field-hint-font-size: var(--font-size-meta);
+	--ui-search-result-font-size: var(--font-size-small);
+	--ui-search-result-meta-font-size: var(--font-size-meta);
+	--ui-editor-tab-font-size: var(
+		--ui-file-name-font-size,
+		var(--font-size-small)
+	);
+	--ui-outline-item-font-size: var(
+		--ui-file-name-font-size,
+		var(--font-size-small)
+	);
+	--ui-outline-line-font-size: var(--font-size-meta);
+	--ui-project-font-size: var(--font-size-small);
+	--ui-project-title-font-size: var(--font-size-small);
+	--ui-project-control-font-size: var(--font-size-small);
+	--ui-project-list-item-font-size: var(--font-size-small);
+	--ui-project-meta-font-size: var(--font-size-meta);
+	--ui-project-tag-font-size: var(--font-size-meta);
+	--ui-modal-font-size: var(--font-size-small);
+	--ui-message-font-size: var(--font-size-small);
+	--ui-message-compact-font-size: var(--font-size-small);
+	--ui-tab-font-size: var(--font-size-small);
+	--ui-explorer-tab-font-size: var(--font-size-small);
+	--ui-file-name-font-size: var(--font-size-small);
+	--ui-empty-state-font-size: var(--font-size-small);
+	--ui-menu-compact-item-font-size: var(--font-size-meta);
+	--ui-menu-compact-item-padding: var(--space-xs) var(--space-sm);
 }
 
-[data-theme-plugin="texlyre-slim"] button {
-	border-radius: var(--radius-md);
-	transition: all var(--transition-fast);
-	font-weight: 500;
-	color: var(--text-color);
+[data-theme-plugin="texlyre-slim"] .app-container {
+	font-size: var(--font-size-secondary);
 }
 
 [data-theme-plugin="texlyre-slim"] *:focus-visible {
-	outline: var(--focus-ring);
-	outline-offset: var(--focus-offset);
+	outline: 2px solid var(--pico-primary);
+	outline-offset: 2px;
 }

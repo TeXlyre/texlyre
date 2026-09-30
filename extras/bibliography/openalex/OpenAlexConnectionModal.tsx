@@ -5,8 +5,6 @@ import { useState, useEffect } from 'react';
 
 import Modal from '@/components/common/Modal';
 import { OpenAlexIcon } from './Icon';
-import { openAlexAPIService } from './OpenAlexAPIService';
-import './styles.css';
 
 interface OpenAlexConnectionModalProps {
 	isOpen: boolean;
@@ -27,7 +25,6 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 	const [email, setEmail] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [isTesting, setIsTesting] = useState(false);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -38,27 +35,8 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 	}, [isOpen, existingEmail]);
 
 	const handleSubmit = async () => {
-		setIsTesting(true);
-		setError(null);
-		try {
-			const isValid = await openAlexAPIService.testConnection(
-				apiKey.trim() || undefined,
-				email.trim() || undefined,
-			);
-			if (!isValid) {
-				setError(
-					t('Could not reach OpenAlex API. Please check your connection.'),
-				);
-				return;
-			}
-		} catch {
-			setError(t('Connection test failed'));
-			return;
-		} finally {
-			setIsTesting(false);
-		}
-
 		setIsLoading(true);
+		setError(null);
 		try {
 			await onConnect(apiKey.trim() || undefined, email.trim() || undefined);
 			onClose();
@@ -70,25 +48,8 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 	};
 
 	const handleConnectAnonymously = async () => {
-		setIsTesting(true);
-		setError(null);
-		try {
-			const isValid = await openAlexAPIService.testConnection(
-				undefined,
-				undefined,
-			);
-			if (!isValid) {
-				setError(t('Could not reach OpenAlex API.'));
-				return;
-			}
-		} catch {
-			setError(t('Connection test failed'));
-			return;
-		} finally {
-			setIsTesting(false);
-		}
-
 		setIsLoading(true);
+		setError(null);
 		try {
 			await onConnect(undefined, undefined);
 			onClose();
@@ -99,7 +60,7 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 		}
 	};
 
-	const busy = isLoading || isTesting;
+	const busy = isLoading;
 
 	return (
 		<Modal
@@ -109,14 +70,14 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 			icon={OpenAlexIcon}
 			size='medium'
 		>
-			<div className='openalex-connection-modal'>
-				<p className='openalex-step-description'>
+			<div className='ui-stack' data-gap='lg'>
+				<p className='ui-note'>
 					{t(
 						'OpenAlex is free and works without an API key. Providing an email enables the polite pool (higher rate limits). An API key is required for premium access.',
 					)}
 				</p>
 
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<label>{t('Email (recommended):')}</label>
 					<input
 						type='email'
@@ -125,17 +86,25 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 						placeholder={t('your@email.com')}
 						disabled={busy}
 					/>
-					<span className='openalex-field-hint'>
+					<span className='ui-note ui-field-hint'>
 						{t('Used as mailto parameter for polite pool access')}
 					</span>
 				</div>
 
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<label>
 						{t('API Key')}
-						<span className='openalex-optional-badge'>{t('optional')}</span>
+						<span className='ui-badge' data-variant='label'>
+							{t('optional')}
+						</span>
 						{hasExistingApiKey && (
-							<span className='openalex-stored-badge'>{t('stored')}</span>
+							<span
+								className='ui-status'
+								data-variant='label'
+								data-tone='success'
+							>
+								{t('stored')}
+							</span>
 						)}
 					</label>
 					<input
@@ -151,10 +120,21 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 					/>
 				</div>
 
-				{error && <div className='error-message'>{error}</div>}
+				{error && (
+					<div className='ui-message' data-tone='error'>
+						{error}
+					</div>
+				)}
 
-				<div className='button-group openalex-button-group'>
+				<div
+					className='ui-actions'
+					data-variant='modal'
+					data-gap='sd'
+					data-wrap='true'
+					data-cross='stretch'
+				>
 					<button
+						type='button'
 						className='button primary'
 						onClick={handleSubmit}
 						disabled={busy}
@@ -163,6 +143,7 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 					</button>
 					{!hasExistingApiKey && (
 						<button
+							type='button'
 							className='button secondary'
 							onClick={handleConnectAnonymously}
 							disabled={busy}
@@ -171,6 +152,7 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 						</button>
 					)}
 					<button
+						type='button'
 						className='button secondary'
 						onClick={onClose}
 						disabled={busy}
@@ -183,7 +165,6 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 					href='https://docs.openalex.org/how-to-use-the-api/rate-limits-and-authentication'
 					target='_blank'
 					rel='noopener noreferrer'
-					className='dropdown-link'
 				>
 					{t('Learn more about OpenAlex API access')}
 				</a>

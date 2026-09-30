@@ -208,6 +208,7 @@ const CombinedMediaViewer: React.FC<ViewerProps> = ({
 		<>
 			<PluginControlGroup>
 				<button
+					type='button'
 					onClick={handlePlayPause}
 					disabled={isLoading || !!error}
 					title={isPlaying ? t('Pause') : t('Play')}
@@ -224,6 +225,7 @@ const CombinedMediaViewer: React.FC<ViewerProps> = ({
 
 			<PluginControlGroup>
 				<button
+					type='button'
 					onClick={handleToggleMute}
 					disabled={isLoading || !!error}
 					title={isMuted ? t('Unmute') : t('Mute')}
@@ -252,7 +254,7 @@ const CombinedMediaViewer: React.FC<ViewerProps> = ({
 					value={playbackRate}
 					onChange={handleRateChange}
 					disabled={isLoading || !!error}
-					className='media-rate-select'
+					className='media-rate-select ui-field-control'
 					title={t('Playback Speed')}
 				>
 					{PLAYBACK_RATES.map((rate) => (
@@ -265,6 +267,7 @@ const CombinedMediaViewer: React.FC<ViewerProps> = ({
 
 			<PluginControlGroup>
 				<button
+					type='button'
 					onClick={handleExport}
 					disabled={isLoading}
 					title={t('Download')}
@@ -292,7 +295,7 @@ const CombinedMediaViewer: React.FC<ViewerProps> = ({
 	};
 
 	return (
-		<div className='media-viewer-container'>
+		<div className='ui-viewer' data-surface='secondary'>
 			<PluginHeader
 				fileName={fileInfo.fileName}
 				filePath={fileInfo.filePath}
@@ -302,12 +305,26 @@ const CombinedMediaViewer: React.FC<ViewerProps> = ({
 				controls={headerControls}
 			/>
 
-			<div className='media-viewer-content'>
+			<div className='ui-viewer-content' data-position='relative'>
 				{isLoading && (
-					<div className='loading-indicator'>{t('Loading media...')}</div>
+					<div
+						className='ui-message'
+						data-variant='loading'
+						data-placement='overlay-center'
+					>
+						{t('Loading media...')}
+					</div>
 				)}
 
-				{error && <div className='media-error-message'>{error}</div>}
+				{error && (
+					<div
+						className='ui-message'
+						data-placement='overlay-center'
+						data-variant='error'
+					>
+						{error}
+					</div>
+				)}
 
 				{!isLoading && !error && mediaSrc && (
 					<div className={`media-stage ${isVideo ? 'is-video' : 'is-audio'}`}>
@@ -316,6 +333,7 @@ const CombinedMediaViewer: React.FC<ViewerProps> = ({
 								<video {...sharedProps} className='media-element' playsInline />
 								<div className='media-video-overlay'>
 									<button
+										type='button'
 										onClick={handlePlayPause}
 										className='media-video-overlay-button'
 										title={isPlaying ? t('Pause') : t('Play')}
@@ -327,6 +345,7 @@ const CombinedMediaViewer: React.FC<ViewerProps> = ({
 						) : (
 							<div className='media-audio-card'>
 								<button
+									type='button'
 									onClick={handlePlayPause}
 									className='media-audio-card-icon'
 									title={isPlaying ? t('Pause') : t('Play')}

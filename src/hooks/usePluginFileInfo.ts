@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 
 import { createNamedLogger } from '@/logging';
-import { fileStoreService } from '../services/FileStoreService';
+import {
+	fileStoreService,
+	type FileStorageChange,
+} from '../services/FileStoreService';
 
 const moduleLog = createNamedLogger('usePluginFileInfo');
 
@@ -44,7 +47,26 @@ export const usePluginFileInfo = (fileId?: string, fileName?: string) => {
 			}
 		};
 
-		loadFileInfo();
+		const handleContentChanged = (event: Event) => {
+			const { detail } = event as CustomEvent<FileStorageChange>;
+			if (!fileId || detail.fileId !== fileId) return;
+
+			setFileInfo((current) => ({
+				...current,
+				filePath: detail.filePath ?? current.filePath,
+				fileSize: detail.size ?? current.fileSize,
+				lastModified: detail.lastModified ?? current.lastModified,
+			}));
+		};
+
+		void loadFileInfo();
+		document.addEventListener('file-content-changed', handleContentChanged);
+		return () => {
+			document.removeEventListener(
+				'file-content-changed',
+				handleContentChanged,
+			);
+		};
 	}, [fileId, fileName]);
 
 	return fileInfo;

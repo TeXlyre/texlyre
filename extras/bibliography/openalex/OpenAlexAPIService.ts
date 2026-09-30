@@ -104,6 +104,18 @@ export class OpenAlexAPIService {
 		return email ? `&mailto=${encodeURIComponent(email)}` : '';
 	}
 
+	private async fetchWithRetry(
+		url: string,
+		init?: RequestInit,
+	): Promise<Response> {
+		let response = await fetch(url, init);
+		if (response.status === 503) {
+			await new Promise((resolve) => setTimeout(resolve, 300));
+			response = await fetch(url, init);
+		}
+		return response;
+	}
+
 	private buildFilterString(
 		filters: OpenAlexFilters,
 		authorId?: string,
@@ -135,7 +147,7 @@ export class OpenAlexAPIService {
 	async testConnection(apiKey?: string, email?: string): Promise<boolean> {
 		try {
 			const mailto = this.buildMailtoParam(email);
-			const response = await fetch(
+			const response = await this.fetchWithRetry(
 				`${this.baseUrl}/works?per_page=1${mailto}`,
 				{ headers: this.buildHeaders(apiKey, email) },
 			);
@@ -147,13 +159,14 @@ export class OpenAlexAPIService {
 
 	async searchAuthors(
 		query: string,
+		apiKey?: string,
 		email?: string,
 	): Promise<Array<{ id: string; display_name: string }>> {
 		const mailto = this.buildMailtoParam(email);
 		const url = `${this.baseUrl}/authors?search=${encodeURIComponent(query)}&per_page=5${mailto}&select=id,display_name`;
 		try {
-			const response = await fetch(url, {
-				headers: this.buildHeaders(undefined, email),
+			const response = await this.fetchWithRetry(url, {
+				headers: this.buildHeaders(apiKey, email),
 			});
 			if (!response.ok) return [];
 			const data = await response.json();
@@ -179,7 +192,7 @@ export class OpenAlexAPIService {
 
 		const url = `${this.baseUrl}/works?search=${encodedQuery}&per_page=${perPage}&page=${page}${filterStr}${mailto}&select=id,title,display_name,type,publication_year,publication_date,doi,authorships,primary_location,open_access,biblio,cited_by_count,abstract_inverted_index,concepts,keywords`;
 
-		const response = await fetch(url, {
+		const response = await this.fetchWithRetry(url, {
 			headers: this.buildHeaders(apiKey, email),
 		});
 		if (!response.ok) {
@@ -216,7 +229,7 @@ export class OpenAlexAPIService {
 			const url = `${this.baseUrl}/works?filter=${encodeURIComponent(filter)}&per_page=50${mailto}&select=id,title,display_name,type,publication_year,publication_date,doi,authorships,primary_location,open_access,biblio,cited_by_count,abstract_inverted_index,concepts,keywords`;
 
 			try {
-				const response = await fetch(url, {
+				const response = await this.fetchWithRetry(url, {
 					headers: this.buildHeaders(apiKey, email),
 				});
 				if (response.ok) {

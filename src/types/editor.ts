@@ -92,3 +92,14 @@ export interface EditorSettings {
 	language: string;
 	textDirection: 'auto' | 'ltr' | 'rtl';
 }
+
+export type EditorSidebarView = 'documents' | 'files' | 'search' | 'history';
+
+export interface LinkedFileInfo {
+	fileName: string;
+	filePath: string;
+	fileId: string;
+	mimeType?: string;
+}
+
+export type LinkedFileInfoState = Partial<LinkedFileInfo>;

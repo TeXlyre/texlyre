@@ -8,6 +8,7 @@ import {
 	workspaceService,
 } from '../../services/WorkspaceService';
 import { FolderOpenIcon } from '../common/Icons';
+import GitRemoteStatusIndicator from '../history/GitRemoteStatusIndicator';
 import WorkspaceModal from './WorkspaceModal';
 
 const WorkspaceStatusIndicator: React.FC = () => {
@@ -29,8 +30,6 @@ const WorkspaceStatusIndicator: React.FC = () => {
 			document.removeEventListener('show-workspace-modal', handleShowModal);
 	}, []);
 
-	if (!status.projectId) return null;
-
 	const tooltip = status.needsPermission
 		? t('Folder access is not granted. Click to reconnect.')
 		: t('Mirroring {count} files with {name}', {
@@ -40,21 +39,29 @@ const WorkspaceStatusIndicator: React.FC = () => {
 
 	return (
 		<>
-			<button
-				type='button'
-				className={`workspace-badge ${status.needsPermission ? 'disconnected' : ''}`}
-				title={tooltip}
-				onClick={() => setShowModal(true)}
-			>
-				<FolderOpenIcon />
-				<span>{status.directoryName ?? t('Folder')}</span>
-			</button>
+			{status.projectId ? (
+				<>
+					<button
+						type='button'
+						className='ui-badge'
+						data-variant='label'
+						data-tone={status.needsPermission ? 'danger' : undefined}
+						data-truncate='true'
+						title={tooltip}
+						onClick={() => setShowModal(true)}
+					>
+						<FolderOpenIcon />
+						<span>{status.directoryName ?? t('Folder')}</span>
+					</button>
 
-			<WorkspaceModal
-				isOpen={showModal}
-				onClose={() => setShowModal(false)}
-				status={status}
-			/>
+					<WorkspaceModal
+						isOpen={showModal}
+						onClose={() => setShowModal(false)}
+						status={status}
+					/>
+				</>
+			) : null}
+			<GitRemoteStatusIndicator />
 		</>
 	);
 };

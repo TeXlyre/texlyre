@@ -140,7 +140,7 @@ const ProfileAccountIdentitySection: React.FC<
 
 	return (
 		<form onSubmit={handleSubmit} className='profile-form'>
-			<div className='form-group'>
+			<div className='ui-field' data-spacing='section'>
 				<label htmlFor='username'>{t('Username')}</label>
 				<input
 					type='text'
@@ -151,7 +151,7 @@ const ProfileAccountIdentitySection: React.FC<
 				/>
 			</div>
 
-			<div className='form-group'>
+			<div className='ui-field' data-spacing='section'>
 				<label htmlFor='email'>{t('Email')}</label>
 				<input
 					type='email'
@@ -165,7 +165,7 @@ const ProfileAccountIdentitySection: React.FC<
 			<div className='color-picker-group'>
 				<label>{t('Cursor Colors')}</label>
 				<div className='color-picker-row'>
-					<div className='form-group color-picker-item'>
+					<div className='color-picker-item ui-field' data-spacing='section'>
 						<label htmlFor='color'>{t('Dark Theme')}</label>
 						<div className='color-picker-wrapper'>
 							<input
@@ -178,7 +178,7 @@ const ProfileAccountIdentitySection: React.FC<
 							<span className='color-picker-overlay dark'>{username}</span>
 						</div>
 					</div>
-					<div className='form-group color-picker-item'>
+					<div className='color-picker-item ui-field' data-spacing='section'>
 						<label htmlFor='colorLight'>{t('Light Theme')}</label>
 						<div className='color-picker-wrapper'>
 							<input
@@ -196,7 +196,7 @@ const ProfileAccountIdentitySection: React.FC<
 
 			<h3>{t('Change Password')}</h3>
 
-			<div className='form-group'>
+			<div className='ui-field' data-spacing='section'>
 				<label htmlFor='currentPassword'>{t('Current Password')}</label>
 				<input
 					type='password'
@@ -207,7 +207,7 @@ const ProfileAccountIdentitySection: React.FC<
 				/>
 			</div>
 
-			<div className='form-group'>
+			<div className='ui-field' data-spacing='section'>
 				<label htmlFor='newPassword'>{t('New Password')}</label>
 				<input
 					type='password'
@@ -218,7 +218,7 @@ const ProfileAccountIdentitySection: React.FC<
 				/>
 			</div>
 
-			<div className='form-group'>
+			<div className='ui-field' data-spacing='section'>
 				<label htmlFor='confirmPassword'>{t('Confirm New Password')}</label>
 				<input
 					type='password'
@@ -230,7 +230,7 @@ const ProfileAccountIdentitySection: React.FC<
 			</div>
 
 			{requiresPasswordForChelys && (
-				<div className='warning-message'>
+				<div className='ui-message' data-tone='warning'>
 					<p>
 						{t(
 							'Changing your username or password will move your Chelys room. After saving, update the matching username and password in your Chelys app so it re-derives the new room. Enter your current password to confirm.',
@@ -239,7 +239,12 @@ const ProfileAccountIdentitySection: React.FC<
 				</div>
 			)}
 
-			<div className='modal-actions'>
+			<div
+				className='ui-actions'
+				data-variant='modal'
+				data-align='end'
+				data-cross='stretch'
+			>
 				<button
 					type='button'
 					className='button secondary'

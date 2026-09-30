@@ -1,144 +1,176 @@
-/* Generic, reusable button styles */
-.button,
-.action-button {
+:is(button, [type="button"], [type="submit"], [type="reset"], .button) {
 	display: flex;
 	align-items: center;
-	gap: var(--space-sm);
-	padding: var(--space-ss) 0.8rem;
+	box-sizing: border-box;
+	gap: var(--ui-button-gap, var(--space-sm));
+	padding: var(--ui-button-padding, var(--space-ss) 0.8rem);
 	background-color: transparent;
 	border: 1px solid var(--accent-border, #ddd);
-	border-radius: var(--radius-sm);
+	border-radius: var(--ui-button-radius, var(--radius-sm));
 	color: var(--text-color);
-	font-size: 0.9rem;
-	font-weight: 500;
+	font-size: var(--ui-button-font-size, var(--font-size-ui));
+	line-height: var(--ui-button-line-height, 1.2);
+	font-weight: var(--ui-button-font-weight, 500);
 	cursor: pointer;
 	transition: background-color var(--transition-normal);
 	text-decoration: none;
 	justify-content: center;
+	flex-shrink: 0;
+	margin: 0;
 }
 
-.button:hover,
-.action-button:hover {
+button:is([type="button"], [type="submit"], [type="reset"]) {
+	margin: 0;
+}
+
+button[data-nowrap="true"],
+.button[data-nowrap="true"] {
+	white-space: nowrap;
+}
+
+button[data-width="full"],
+.button[data-width="full"] {
+	width: 100%;
+}
+
+button[data-state="loading"],
+.button[data-state="loading"] {
+	opacity: 0.8;
+	cursor: wait;
+}
+
+:is(
+	button,
+	[type="button"],
+	[type="submit"],
+	[type="reset"],
+	.button
+):hover:not(:disabled) {
 	background-color: var(--pico-primary-focus);
 }
 
-.button:disabled {
+:is(
+	button,
+	[type="button"],
+	[type="submit"],
+	[type="reset"],
+	.button
+):disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
 
-.button.primary,
-.action-button.primary {
+:is(
+	button,
+	[type="button"],
+	[type="submit"],
+	[type="reset"],
+	.button
+):focus-visible {
+	outline: 2px solid var(--pico-primary-focus);
+	outline-offset: 1px;
+}
+
+button[data-tone="success"],
+.button[data-tone="success"],
+.ui-button-group[data-tone="success"] > :where(button, .button) {
+	background-color: color-mix(in srgb, var(--color-success) 10%, transparent);
+}
+
+button[data-tone="muted"],
+.button[data-tone="muted"],
+.ui-button-group[data-tone="muted"] > :where(button, .button) {
+	background-color: color-mix(in srgb, var(--pico-secondary) 10%, transparent);
+}
+
+button[data-tone="accent"],
+.button[data-tone="accent"],
+.ui-button-group[data-tone="accent"] > :where(button, .button) {
+	border-color: var(--pico-primary);
+	background-color: var(--pico-secondary-background);
+}
+
+.button.primary {
 	background-color: var(--pico-primary);
 	color: var(--pico-primary-inverse, #fff);
 	border: none;
 }
 
-.button.primary:hover,
-.action-button.primary:hover {
+.button.primary:hover {
 	background-color: var(--pico-primary-hover);
 }
 
-.button.danger,
-.action-button.danger {
+.button.danger {
 	background-color: var(--color-error);
 	color: white;
 	border: none;
 }
 
-.button.danger:hover,
-.action-button.danger:hover {
+.button.danger:hover {
 	background-color: #c82333;
 }
 
-.button.warn,
-.action-button.warn {
+.button.warn {
 	background-color: color-mix(in srgb, var(--color-warning) 20%, white);
 	border-color: var(--color-warning);
 	color: color-mix(in srgb, var(--pico-secondary) 80%, black);
 }
 
-.button.warn:hover,
-.action-button.warn:hover {
+.button.warn:hover {
 	background-color: var(--color-warning);
 }
 
 .button.icon-only {
-	padding: var(--space-sm);
-	min-width: auto;
-	width: auto;
+	width: var(--ui-icon-button-size, var(--control-height-compact));
+	height: var(--ui-icon-button-size, var(--control-height-compact));
+	min-width: var(--ui-icon-button-size, var(--control-height-compact));
+	min-height: var(--ui-icon-button-size, var(--control-height-compact));
+	padding: var(--ui-icon-button-padding, var(--space-xs));
+	border-radius: var(--ui-icon-button-radius, var(--radius-sm));
 	aspect-ratio: 1;
 }
 
-.button.icon-only svg,
-.action-button svg {
+.button.icon-only svg {
+	width: var(--ui-icon-size, 1rem);
+	height: var(--ui-icon-size, 1rem);
 	margin: 0;
 	flex-shrink: 0;
 }
 
-.back-button,
-.logout-button {
-	display: flex;
-	height: var(--button-height-lg);
-	align-items: center;
-	gap: var(--space-sm);
-	padding: var(--space-ss) 0.8rem;
-	background-color: transparent;
-	border: 1px solid var(--accent-border, #ddd);
-	border-radius: var(--radius-sm);
-	color: var(--text-color);
-	font-size: 0.9rem;
-	font-weight: 500;
-	cursor: pointer;
-	transition: background-color var(--transition-normal);
-	text-decoration: none;
-	justify-content: center;
+button.active,
+.button.active,
+button[aria-pressed="true"],
+.button[aria-pressed="true"],
+button[aria-selected="true"],
+.button[aria-selected="true"] {
+	background-color: var(--ui-button-active-background, var(--pico-primary));
+	color: var(--ui-button-active-color, var(--pico-primary-inverse));
+	border-color: var(--ui-button-active-border-color, var(--pico-primary));
 }
 
-.back-button:hover,
-.logout-button:hover {
-	background-color: var(--pico-primary-focus);
-}
-
-.button.small {
-	padding: 0.375rem var(--space-sd);
-	font-size: 0.875rem;
-}
-
-.button.smaller {
-	padding: 0.225rem 0.45rem;
-	font-size: 0.575rem;
-}
-
-.view-tabs {
-	display: flex;
-	gap: var(--space-xs);
-	padding: var(--space-xs);
-}
-
-.tab-button {
-	padding: var(--space-xs) var(--space-sd);
-	border-radius: var(--radius-sm);
+.button[data-variant="text"] {
+	display: inline-flex;
+	height: auto;
+	min-height: 0;
+	padding: var(--ui-text-button-padding, var(--space-xs) var(--space-sm));
+	border: 0;
 	background: none;
-	border: none;
-	cursor: pointer;
-	font-size: 0.8rem;
-	color: var(--text-color);
-	transition: background-color var(--transition-normal);
-}
-
-.tab-button.active {
-	background-color: var(--pico-primary-focus);
 	color: var(--pico-primary);
+	font-family: inherit;
+	font-size: var(
+		--ui-text-button-font-size,
+		var(--ui-button-font-size, inherit)
+	);
+	line-height: var(--ui-text-button-line-height, inherit);
 	font-weight: 500;
 }
 
-.tab-button:hover:not(:disabled) {
-	background-color: var(--pico-primary-focus);
-	color: var(--pico-secondary);
+.button[data-variant="text"]:hover:not(:disabled) {
+	background: none;
+	text-decoration: underline;
 }
 
-.tab-button:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
+.button[data-variant="ghost"] {
+	background: transparent;
+	border-color: transparent;
 }

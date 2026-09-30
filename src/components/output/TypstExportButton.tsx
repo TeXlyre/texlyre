@@ -47,7 +47,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 	useSharedSettings = false,
 }) => {
 	const { exportDocument } = useTypst();
-	const { selectedFileId, getFile, fileTree } = useFileTree();
+	const { selectedFileId, fileTree } = useFileTree();
 	const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -151,33 +151,42 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 			return typstFiles;
 		};
 
+		const findFileById = (
+			nodes: FileNode[],
+			fileId: string,
+		): FileNode | undefined => {
+			for (const node of nodes) {
+				if (node.id === fileId) return node;
+				if (node.children) {
+					const match = findFileById(node.children, fileId);
+					if (match) return match;
+				}
+			}
+			return undefined;
+		};
+
 		const allTypstFiles = findTypstFiles(fileTree);
 		setAvailableTypstFiles(allTypstFiles);
 
-		const findMainFile = async () => {
-			if (
-				selectedDocId &&
-				linkedFileInfo?.filePath &&
-				isTypstFile(linkedFileInfo.filePath)
-			) {
-				setAutoMainFile(linkedFileInfo.filePath);
+		if (
+			selectedDocId &&
+			linkedFileInfo?.filePath &&
+			isTypstFile(linkedFileInfo.filePath)
+		) {
+			setAutoMainFile(linkedFileInfo.filePath);
+			return;
+		}
+
+		if (selectedFileId) {
+			const file = findFileById(fileTree, selectedFileId);
+			if (file && isTypstFile(file.path)) {
+				setAutoMainFile(file.path);
 				return;
 			}
+		}
 
-			if (selectedFileId) {
-				const file = await getFile(selectedFileId);
-				if (file && isTypstFile(file.path)) {
-					setAutoMainFile(file.path);
-					return;
-				}
-			}
-
-			const typstFile = allTypstFiles[0];
-			setAutoMainFile(typstFile);
-		};
-
-		findMainFile();
-	}, [selectedFileId, getFile, fileTree, selectedDocId, linkedFileInfo]);
+		setAutoMainFile(allTypstFiles[0]);
+	}, [selectedFileId, fileTree, selectedDocId, linkedFileInfo]);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -253,10 +262,16 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 	const isDisabled = isExporting || !effectiveMainFile;
 
 	return (
-		<div className={`typst-export-buttons ${className}`} ref={dropdownRef}>
-			<div className='compile-button-group'>
+		<div className={`ui-control-cluster ${className}`} ref={dropdownRef}>
+			<div
+				className='ui-button-group ui-split-button'
+				data-variant='joined'
+				data-size='control'
+				data-trigger-group='true'
+			>
 				<button
-					className={`typst-button export-button ${isExporting ? 'exporting' : ''}`}
+					type='button'
+					className={`ui-split-main export-button ${isExporting ? 'exporting' : ''}`}
 					onClick={handleExport}
 					disabled={isDisabled}
 					title={t('Export')}
@@ -265,7 +280,8 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 				</button>
 
 				<button
-					className='typst-button dropdown-toggle'
+					type='button'
+					className='ui-split-toggle dropdown-toggle'
 					onClick={toggleDropdown}
 					disabled={isExporting}
 					title={t('Export Options')}
@@ -278,28 +294,32 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 				isOpen={isDropdownOpen}
 				triggerElement={
 					dropdownRef.current?.querySelector(
-						'.compile-button-group',
+						'[data-trigger-group]',
 					) as HTMLElement
 				}
 				className='typst-dropdown'
 			>
-				<div className='dropdown-section'>
-					<div className='dropdown-title'>{t('Main File:')}</div>
-					<div className='dropdown-value' title={effectiveMainFile}>
+				<div className='ui-menu-section' data-variant='control'>
+					<div className='ui-menu-title' data-variant='control'>
+						{t('Main File:')}
+					</div>
+					<div className='ui-menu-value' title={effectiveMainFile}>
 						{getDisplayName(effectiveMainFile)}
 						{projectMainFile && (
-							<span className='shared-indicator'>{t('(shared)')}</span>
+							<span className='ui-status' data-tone='accent'>
+								{t('(shared)')}
+							</span>
 						)}
 					</div>
 				</div>
 
 				{useSharedSettings && (
-					<div className='dropdown-section'>
-						<div className='dropdown-label'>{t('Select main file:')}</div>
+					<div className='ui-menu-section' data-variant='control'>
+						<div className='ui-menu-label'>{t('Select main file:')}</div>
 						<select
 							value={projectMainFile || propMainFile || 'auto'}
 							onChange={(e) => handleMainFileChange(e.target.value)}
-							className='dropdown-select'
+							className='ui-field-control'
 							disabled={isExporting}
 						>
 							<option value='auto'>{t('Auto-detect')}</option>
@@ -312,12 +332,14 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 					</div>
 				)}
 
-				<div className='dropdown-section'>
-					<div className='format-selector-header'>
-						<div className='dropdown-title'>{t('Export Format:')}</div>
+				<div className='ui-menu-section' data-variant='control'>
+					<div className='ui-toolbar' data-justify='between' data-gap='sm'>
+						<div className='ui-menu-title' data-variant='control'>
+							{t('Export Format:')}
+						</div>
 					</div>
 
-					<div className='format-selector-group'>
+					<div className='ui-toolbar' data-gap='sm'>
 						<select
 							value={selectedFormat}
 							onChange={(e) => {
@@ -330,7 +352,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 									setIsPdfOptionsOpen(false);
 								}
 							}}
-							className='dropdown-select'
+							className='ui-field-control'
 							disabled={isExporting}
 						>
 							<option value='pdf'>{t('PDF')}</option>
@@ -338,7 +360,9 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 						</select>
 						{selectedFormat === 'pdf' && (
 							<button
-								className={`pdf-options-toggle ${isPdfOptionsOpen ? 'active' : ''}`}
+								type='button'
+								className={`ui-icon-button ${isPdfOptionsOpen ? 'active' : ''}`}
+								data-variant='control'
 								onClick={() => setIsPdfOptionsOpen(!isPdfOptionsOpen)}
 								title={t('PDF Options')}
 								disabled={isExporting}
@@ -348,14 +372,21 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 						)}
 					</div>
 					{selectedFormat === 'pdf' && isPdfOptionsOpen && (
-						<div className='pdf-options-section'>
-							<div className='pdf-option'>
-								<label className='dropdown-title'>{t('PDF Standards:')}</label>
+						<div
+							className='ui-card ui-stack'
+							data-surface='secondary'
+							data-padding='sm'
+							data-gap='sm'
+						>
+							<div className='ui-field'>
+								<label className='ui-menu-title' data-variant='control'>
+									{t('PDF Standards:')}
+								</label>
 								{getStandardGroups().map((group) => {
 									const selected = parseStandards(localPdfOptions.pdfStandard);
 									return (
 										<div key={group.group} className='pdf-standard-group'>
-											<div className='dropdown-label'>{t(group.label)}</div>
+											<div className='ui-menu-label'>{t(group.label)}</div>
 											{group.options.map((option) => {
 												const checked = selected.includes(option.value);
 												const enabled = isStandardEnabled(
@@ -365,7 +396,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 												return (
 													<label
 														key={option.value}
-														className='dropdown-checkbox'
+														className='ui-menu-item checkbox-control'
 													>
 														<input
 															type='checkbox'
@@ -394,12 +425,11 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 									href='https://typst.app/docs/reference/pdf/'
 									target='_blank'
 									rel='noopener noreferrer'
-									className='dropdown-link'
 								>
 									{t('Learn more about PDF standards')}
 								</a>
 							</div>
-							<label className='dropdown-checkbox'>
+							<label className='ui-menu-item checkbox-control'>
 								<input
 									type='checkbox'
 									checked={localPdfOptions.pdfTags !== false}
@@ -418,8 +448,8 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 					)}
 				</div>
 
-				<div className='dropdown-section'>
-					<label className='dropdown-checkbox'>
+				<div className='ui-menu-section' data-variant='control'>
+					<label className='ui-menu-item checkbox-control'>
 						<input
 							type='checkbox'
 							checked={includeLog}
@@ -436,9 +466,10 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 					</label>
 				</div>
 
-				<div className='dropdown-section'>
+				<div className='ui-menu-section' data-variant='control'>
 					<button
-						className='dropdown-button'
+						type='button'
+						className='button primary'
 						onClick={handleExport}
 						disabled={isDisabled}
 					>

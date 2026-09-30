@@ -8,7 +8,7 @@ import type { LoggerProps } from '@/plugins/PluginInterface';
 import { formatFileSize } from '@/utils/fileUtils';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './LaTeXVisualizerPlugin';
 import { type ParsedError, parseLatexLog } from './parser';
-import './styles.css';
+import '../shared/styles.css';
 
 const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	const [parsedErrors, setParsedErrors] = useState<ParsedError[]>([]);
@@ -35,7 +35,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 
 	const handleErrorClick = (error: ParsedError) => {
 		if (error.line && onLineClick) {
-			onLineClick(error.line);
+			onLineClick(error.line, error.file);
 		}
 	};
 
@@ -64,9 +64,10 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	];
 
 	const headerControls = (
-		<div className='error-stats'>
+		<div className='log-filter-stats'>
 			<span
-				className={`error-count ${filter === 'error' ? 'active' : ''}`}
+				className={`log-filter-count ${filter === 'error' ? 'active' : ''}`}
+				data-kind='error'
 				onClick={() => handleFilterClick('error')}
 				title={t('Click to filter errors')}
 			>
@@ -74,7 +75,8 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 				{parsedErrors.filter((e) => e.type === 'error').length}
 			</span>
 			<span
-				className={`warning-count ${filter === 'warning' ? 'active' : ''}`}
+				className={`log-filter-count ${filter === 'warning' ? 'active' : ''}`}
+				data-kind='warning'
 				onClick={() => handleFilterClick('warning')}
 				title={t('Click to filter warnings')}
 			>
@@ -85,7 +87,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	);
 
 	return (
-		<div className='latex-visualizer'>
+		<div className='log-visualizer'>
 			<PluginHeader
 				fileName={t('{typesetter} Log', { typesetter: t('LaTeX') })}
 				filePath={t('{typesetter} Compilation Output', {
@@ -97,27 +99,27 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 				controls={headerControls}
 			/>
 
-			<div className='latex-visualizer-content'>
+			<div className='log-visualizer-content'>
 				{filteredErrors.length === 0 ? (
-					<div className='no-errors'>
-						<div className='success-icon'>✓</div>
-						<div>
+					<div className='log-empty-state'>
+						<div className='log-empty-icon'>✓</div>
+						<div className='log-empty-title'>
 							{parsedErrors.length === 0
 								? t('No errors or warnings found.')
 								: t('No {filter} found.', { filter })}
 						</div>
-						<div className='success-subtitle'>
+						<div className='log-empty-subtitle'>
 							{parsedErrors.length === 0
 								? t('Compilation appears successful!')
 								: t('Showing {filter} items only.', { filter })}
 						</div>
 					</div>
 				) : (
-					<ul className='error-list'>
+					<ul className='log-diagnostic-list ui-list' data-gap='md'>
 						{filteredErrors.map((error, index) => (
 							<li
 								key={index}
-								className={`error-item ${error.type} ${error.line ? 'clickable' : ''}`}
+								className={`log-diagnostic-item ${error.type} ${error.line ? 'clickable' : ''}`}
 								onClick={() => handleErrorClick(error)}
 								title={
 									error.line
@@ -127,17 +129,17 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 										: undefined
 								}
 							>
-								<div className='error-header'>
-									<span className='error-type-badge'>
-										<span className='error-icon'>
+								<div className='log-diagnostic-header'>
+									<span className='log-diagnostic-type-badge'>
+										<span className='log-diagnostic-icon'>
 											{getErrorTypeIcon(error.type)}
 										</span>
-										<span className='error-type-text'>{t(error.type)}</span>
+										<span>{t(error.type)}</span>
 									</span>
-									<div className='error-location'>
+									<div className='log-diagnostic-location'>
 										{error.file && (
 											<span
-												className='error-file'
+												className='log-diagnostic-file'
 												title={t('File: {errorFile}', {
 													errorFile: error.file,
 												})}
@@ -148,18 +150,27 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 											</span>
 										)}
 										{error.line && (
-											<span className='error-line'>
-												{t('Line')}
-												{error.line}
-											</span>
+											<button
+												type='button'
+												className='button secondary'
+												onClick={(event) => {
+													event.stopPropagation();
+													handleErrorClick(error);
+												}}
+												title={t('Go to line {line}', { line: error.line })}
+											>
+												{t('Line {line}', { line: error.line })}
+											</button>
 										)}
 									</div>
 								</div>
-								<div className='latex-error-message'>
+								<div className='log-diagnostic-message'>
 									{error.fullMessage || error.message}
 								</div>
 								{error.lineContent && (
-									<pre className='error-context'>{error.lineContent}</pre>
+									<pre className='ui-code-block' data-wrap='true'>
+										{error.lineContent}
+									</pre>
 								)}
 							</li>
 						))}

@@ -219,7 +219,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 		} catch (error) {
 			fileOperationNotificationService.showError(
 				operationId,
-				t('Failed to replace: {message}', { message: error.message }),
+				t('Failed to replace: {message}', {
+					message: error instanceof Error ? error.message : String(error),
+				}),
 			);
 		} finally {
 			setPendingReplace(null);
@@ -245,22 +247,30 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 	};
 
 	return (
-		<div className={`search-panel ${className}`}>
-			<div className='file-explorer-header'>
-				<h3>{t('Search')}</h3>
+		<div className={`ui-panel ${className}`} data-height='full'>
+			<div className='ui-panel-header' data-role='explorer' data-position='top'>
+				<h3 className='ui-panel-title' data-size='body' data-shrink='true'>
+					{t('Search')}
+				</h3>
 				<div
-					className='search-mode-toggle file-explorer-actions scroll-x'
+					className='ui-toolbar-actions scroll-x'
+					data-gap='sm'
+					data-active-style='filled'
 					ref={headerActionsRef}
 				>
 					<button
-						className={`mode-toggle-btn ${!showReplace ? 'active' : ''}`}
+						type='button'
+						className={`ui-icon-button ${!showReplace ? 'active' : ''}`}
+						data-variant='subtle'
 						onClick={() => showReplace && toggleReplace()}
 						title={t('Search only (Ctrl+Shift+F)')}
 					>
 						<SearchIcon />
 					</button>
 					<button
-						className={`mode-toggle-btn ${showReplace ? 'active' : ''}`}
+						type='button'
+						className={`ui-icon-button ${showReplace ? 'active' : ''}`}
+						data-variant='subtle'
 						onClick={toggleReplace}
 						title={t('Search and Replace (Ctrl+Shift+H)')}
 					>
@@ -269,23 +279,39 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 				</div>
 			</div>
 
-			<div className='search-options'>
+			<div
+				className='search-options ui-panel-controls ui-toolbar-actions'
+				data-gap='xs'
+				data-active-style='filled'
+			>
 				<button
-					className={`search-option-btn ${caseSensitive ? 'active' : ''}`}
+					type='button'
+					className={`ui-icon-button ${caseSensitive ? 'active' : ''}`}
+					data-variant='subtle'
+					data-size='sm'
+					aria-pressed={caseSensitive}
 					onClick={toggleCaseSensitive}
 					title={t('Match case')}
 				>
 					{t('Aa')}
 				</button>
 				<button
-					className={`search-option-btn ${wholeWord ? 'active' : ''}`}
+					type='button'
+					className={`ui-icon-button ${wholeWord ? 'active' : ''}`}
+					data-variant='subtle'
+					data-size='sm'
+					aria-pressed={wholeWord}
 					onClick={toggleWholeWord}
 					title={t('Match whole word')}
 				>
 					{t('|w|')}
 				</button>
 				<button
-					className={`search-option-btn ${useRegex ? 'active' : ''}`}
+					type='button'
+					className={`ui-icon-button ${useRegex ? 'active' : ''}`}
+					data-variant='subtle'
+					data-size='sm'
+					aria-pressed={useRegex}
 					onClick={toggleRegex}
 					title={t('Use regular expression')}
 				>
@@ -293,39 +319,43 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 				</button>
 			</div>
 
-			<div className='search-input-container'>
-				<input
-					type='text'
-					placeholder={t('Search in files...')}
-					value={query}
-					onChange={(e) => setQuery(e.target.value)}
-					className='search-input'
-				/>
+			<div className='search-input-container ui-panel-controls'>
+				<div className='ui-search-field'>
+					<input
+						type='text'
+						placeholder={t('Search in files...')}
+						value={query}
+						onChange={(e) => setQuery(e.target.value)}
+						className='search-input ui-field-control ui-search-control'
+					/>
 
-				{query && (
-					<button
-						aria-label={t('Clear search')}
-						className='clear-search-button'
-						onClick={clearSearch}
-						title={t('Clear search')}
-					>
-						<span aria-hidden='true'>×</span>
-					</button>
-				)}
+					{query && (
+						<button
+							type='button'
+							aria-label={t('Clear search')}
+							className='clear-search-button ui-search-clear'
+							onClick={clearSearch}
+							title={t('Clear search')}
+						>
+							<span aria-hidden='true'>×</span>
+						</button>
+					)}
+				</div>
 			</div>
 
 			{showReplace && (
-				<div className='search-input-container'>
+				<div className='search-input-container ui-panel-controls'>
 					<input
 						type='text'
 						placeholder={t('Replace with...')}
 						value={replaceText}
 						onChange={(e) => setReplaceText(e.target.value)}
-						className='search-input'
+						className='search-input ui-field-control'
 					/>
 
 					<button
-						className='replace-all-btn'
+						type='button'
+						className='button icon-button primary '
 						onClick={handleReplaceAll}
 						disabled={
 							!query.trim() ||
@@ -335,14 +365,19 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 						}
 						title={t('Replace all')}
 					>
-						{t('Replace All')}
+						<ReplaceIcon />
 					</button>
 				</div>
 			)}
 
-			<div className='search-results'>
+			<div
+				className='ui-panel-content'
+				data-role='search-results'
+				data-overflow='y'
+				data-padding='sm'
+			>
 				{(isSearching || isReplacing) && (
-					<div className='search-loading'>
+					<div className='ui-empty-state'>
 						{isSearching ? t('Searching...') : t('Replacing...')}
 					</div>
 				)}
@@ -351,24 +386,24 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 					!isReplacing &&
 					results.length === 0 &&
 					query.trim() && (
-						<div className='search-empty'>{t('No results found')}</div>
+						<div className='ui-empty-state'>{t('No results found')}</div>
 					)}
 
 				{!isSearching && !isReplacing && query.trim() === '' && (
-					<div className='search-empty'>
+					<div className='ui-empty-state'>
 						{t('Enter a search query to find files')}
 					</div>
 				)}
 
 				{!isSearching && !isReplacing && results.length > 0 && (
 					<>
-						<div className='search-results-header'>
+						<div className='ui-meta'>
 							{t('{totalMatches} match in {count} file', {
 								totalMatches,
 								count: results.length,
 							})}
 						</div>
-						<div className='search-results-note'>
+						<div className='ui-note'>
 							{t(
 								'Click once to open file or document, twice to navigate to match',
 							)}
@@ -376,19 +411,27 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 						{results.map((result, resultIdx) => (
 							<div
 								key={`${result.fileId}-${result.matchType}-${resultIdx}`}
-								className='search-result-file'
+								className='ui-stack'
+								data-gap='xs'
 							>
-								<div className='search-result-file-header'>
+								<div
+									className='ui-list-item'
+									data-surface='secondary'
+									data-align='center'
+									data-gap='sm'
+									data-padding='xs'
+								>
 									<FileTextIcon />
-									<span className='search-result-filename'>
+									<span className='ui-control-label'>
 										{result.fileName || t('Untitled')}
 									</span>
-									<span className='search-result-filepath'>
+									<span className='ui-meta' style={{ marginLeft: 'auto' }}>
 										{result.filePath || ''}
 									</span>
 									{showReplace && result.matchType === 'content' && (
 										<button
-											className='replace-file-btn'
+											type='button'
+											className='button primary '
 											onClick={(e) =>
 												handleReplaceInFile(
 													result.fileId,
@@ -413,7 +456,12 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 								{result.matchType === 'filename' &&
 								result.matches.length > 0 ? (
 									<div
-										className='search-result-match'
+										className='ui-list-item'
+										data-border='none'
+										data-interactive='true'
+										data-align='center'
+										data-gap='sm'
+										data-padding='xs'
 										onClick={() =>
 											handleResultClick(
 												result.fileId,
@@ -424,7 +472,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 											)
 										}
 									>
-										<span className='search-result-match-text'>
+										<span className='ui-control-label'>
 											{highlightMatch(
 												result.matches[0].text || result.fileName,
 												result.matches[0].matchStart,
@@ -434,11 +482,16 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 									</div>
 								) : result.matchType === 'content' &&
 									result.matches.length > 0 ? (
-									<div className='search-result-matches'>
+									<div className='ui-list' data-gap='xs'>
 										{result.matches.slice(0, 50).map((match, idx) => (
 											<div
 												key={`${result.fileId}-${match.line}-${idx}`}
-												className='search-result-match'
+												className='ui-list-item'
+												data-border='none'
+												data-interactive='true'
+												data-align='center'
+												data-gap='sm'
+												data-padding='xs'
 												onClick={() =>
 													handleResultClick(
 														result.fileId,
@@ -449,8 +502,13 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 													)
 												}
 											>
-												<span className='search-result-line'>{match.line}</span>
-												<span className='search-result-match-text'>
+												<span
+													className='ui-meta'
+													style={{ minWidth: '3em', textAlign: 'right' }}
+												>
+													{match.line}
+												</span>
+												<span className='ui-control-label'>
 													{highlightMatch(
 														match.text || '',
 														match.matchStart,
@@ -460,7 +518,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 											</div>
 										))}
 										{result.matches.length > 50 && (
-											<div className='search-result-more'>
+											<div className='ui-note'>
 												{t('+{count} more matches', {
 													count: result.matches.length - 50,
 												})}

@@ -2,9 +2,14 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
-import Toast, { type ToastNotification } from './Toast';
+import type {
+	NotificationType,
+	ToastEventDetail,
+	ToastNotification,
+} from '../../types/notifications';
+import Toast from './Toast';
 
-function getDefaultDuration(type: string): number {
+function getDefaultDuration(type: NotificationType): number {
 	switch (type) {
 		case 'loading':
 			return 0; // Persistent until explicitly dismissed
@@ -23,14 +28,16 @@ const ToastContainer: React.FC = () => {
 	const [notifications, setNotifications] = useState<ToastNotification[]>([]);
 
 	useEffect(() => {
-		const handleToastEvent = (event: CustomEvent) => {
+		const handleToastEvent = (event: CustomEvent<ToastEventDetail>) => {
 			const { type, message, operationId, duration, data, actions } =
 				event.detail;
 
-			if (type === 'dismiss' && operationId) {
-				setNotifications((prev) =>
-					prev.filter((n) => n.operationId !== operationId),
-				);
+			if (type === 'dismiss') {
+				if (operationId) {
+					setNotifications((prev) =>
+						prev.filter((n) => n.operationId !== operationId),
+					);
+				}
 				return;
 			}
 

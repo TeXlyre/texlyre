@@ -7,7 +7,7 @@ const moduleLog = createNamedLogger('DrawioYjsAdapter');
 interface DrawioYjsAdapterOptions {
 	doc: Y.Doc;
 	awareness?: Awareness;
-	iframeRef: React.RefObject<HTMLIFrameElement>;
+	iframeRef: React.RefObject<HTMLIFrameElement | null>;
 	drawioOrigin: string;
 	onContentChange?: (xml: string) => void;
 }
@@ -23,7 +23,7 @@ export class DrawioYjsAdapter {
 	private ymap: Y.Map<any>;
 	private ytext: Y.Text;
 	private awareness?: Awareness;
-	private iframeRef: React.RefObject<HTMLIFrameElement>;
+	private iframeRef: React.RefObject<HTMLIFrameElement | null>;
 	private drawioOrigin: string;
 	private onContentChange?: (xml: string) => void;
 	private isInitialized = false;

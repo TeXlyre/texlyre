@@ -36,8 +36,7 @@ export class ReferenceCompletionHandler {
 		this.markdownLabels = labelsByFormat.markdown ?? new Map();
 	}
 
-	// Optional compatibility method. You can remove this once all callers use
-	// updateLabelsByFormat().
+	// TODO (fabawi): Switch all usages of this to updateLabelsByFormat() instead
 	updateLabels(labels: Map<string, string[]>) {
 		const isTexLabels = Array.from(labels.keys()).some((path) =>
 			isLatexFile(path),
@@ -58,8 +57,7 @@ export class ReferenceCompletionHandler {
 		}
 	}
 
-	// Returns the partial text and insertion offset when the cursor sits inside
-	// a Typst @-style reference, which can resolve to either a label or a citation.
+	// This matches Typst @-style reference, which can either be a label or a citation
 	getTypstReferenceMatch(
 		context: CompletionContext,
 	): { partial: string; from: number } | null {
@@ -74,13 +72,10 @@ export class ReferenceCompletionHandler {
 		return { partial: refInfo.partial, from };
 	}
 
-	// Returns ranked Typst label completion options filtered by the given partial.
 	getTypstLabelOptions(partial: string): Completion[] {
 		return this.getLabelOptionsFromMap(this.typstLabels, partial);
 	}
 
-	// Returns the partial text and insertion offset when the cursor sits inside
-	// a Markdown heading/anchor link, for example: [See section](#partial).
 	getMarkdownReferenceMatch(
 		context: CompletionContext,
 	): { partial: string; from: number } | null {

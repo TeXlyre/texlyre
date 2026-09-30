@@ -27,12 +27,12 @@ const PositionedDropdown: React.FC<PositionedDropdownProps> = ({
 	<Popover
 		anchor={triggerElement}
 		open={isOpen}
-		className={className}
+		className={className ? `ui-menu ${className}` : 'ui-menu'}
 		align={align === 'right' ? 'end' : 'start'}
 		spacing={spacing}
 		padding={padding}
 		clampHeight
-		style={{ zIndex: 1001, width: 'max-content' }}
+		style={{ zIndex: 'var(--z-dropdown)', width: 'max-content' }}
 		onClose={onClose}
 	>
 		{children}

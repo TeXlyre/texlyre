@@ -610,6 +610,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		<PluginControlGroup>
 			{fileId && (
 				<button
+					type='button'
 					onClick={handleManualSave}
 					title={t('Save File (Ctrl+S)')}
 					disabled={isSaving || !iframeLoaded}
@@ -619,6 +620,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				</button>
 			)}
 			<button
+				type='button'
 				onClick={handleDownloadSource}
 				title={t('Download TikZ source')}
 				disabled={!iframeLoaded}
@@ -626,6 +628,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				<DownloadIcon />
 			</button>
 			<button
+				type='button'
 				onClick={handleSaveSvg}
 				title={t('Save as SVG')}
 				disabled={!iframeLoaded}
@@ -637,14 +640,20 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
 	if (isLoading) {
 		return (
-			<div className='tikz-viewer-container'>
-				<div className='loading-indicator'>{t('Loading TikZ editor...')}</div>
+			<div className='tikz-viewer-container ui-viewer' data-surface='base'>
+				<div
+					className='ui-message'
+					data-variant='loading'
+					data-placement='overlay-center'
+				>
+					{t('Loading TikZ editor...')}
+				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className='tikz-viewer-container'>
+		<div className='tikz-viewer-container ui-viewer' data-surface='base'>
 			<PluginHeader
 				fileName={fileInfo.fileName}
 				filePath={fileInfo.filePath}
@@ -655,9 +664,15 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				awareness={yjsProvider?.awareness}
 			/>
 
-			<div className='tikz-viewer-content'>
+			<div
+				className='tikz-viewer-content ui-viewer-content'
+				data-layout='fill'
+				data-surface='secondary'
+			>
 				{error && (
-					<div className='tikz-error-message error-message'>{error}</div>
+					<div className='tikz-error-message ui-message' data-tone='error'>
+						{error}
+					</div>
 				)}
 				{!error && (
 					<>
@@ -680,7 +695,12 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					</>
 				)}
 				{showSaveIndicator && (
-					<div className='save-indicator'>
+					<div
+						className='ui-message'
+						data-role='save-indicator'
+						data-tone='success'
+						data-density='compact'
+					>
 						<span>{t('Saved')}</span>
 					</div>
 				)}

@@ -3,6 +3,9 @@ import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { t } from '@/i18n';
+import { fileHandlerService } from '../../services/FileHandlerService';
+import { fileStoreService } from '../../services/FileStoreService';
+import { gitFileSystemService } from '../../services/GitFileSystemService';
 import {
 	type WorkspaceActivity,
 	workspaceActivityService,
@@ -27,6 +30,13 @@ const getActivityIcon = (type: string): string => {
 	return '✓';
 };
 
+const getActivityTone = (type: string) => {
+	if (type === 'permission-lost' || type === 'conflict')
+		return 'error' as const;
+	if (type === 'annotations-dropped') return 'warning' as const;
+	return 'success' as const;
+};
+
 const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
 	isOpen,
 	onClose,
@@ -35,11 +45,20 @@ const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
 	const [activity, setActivity] = useState<WorkspaceActivity[]>([]);
 	const [error, setError] = useState<string | null>(null);
 	const [isBusy, setIsBusy] = useState(false);
+	const [cleanAnnotations, setCleanAnnotations] = useState(true);
 
 	const loadActivity = useCallback(async () => {
 		if (!status.projectId) return;
 		setActivity(await workspaceActivityService.list(status.projectId));
 	}, [status.projectId]);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies(isOpen): Opening the modal intentionally refreshes workspace settings that may have changed externally. */
+	useEffect(() => {
+		if (!status.projectId) return;
+		setCleanAnnotations(
+			fileHandlerService.getWorkspaceCleanAnnotations(status.projectId),
+		);
+	}, [isOpen, status.projectId]);
 
 	useEffect(() => {
 		if (!isOpen) return;
@@ -66,6 +85,32 @@ const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
 		}
 	};
 
+	const changeCleanAnnotations = (clean: boolean) =>
+		run(async () => {
+			if (!status.projectId) return;
+			fileHandlerService.setWorkspaceCleanAnnotations(status.projectId, clean);
+			setCleanAnnotations(clean);
+
+			const fileSystem = gitFileSystemService.get(status.projectId);
+			const gitSettings = fileSystem.getSettings();
+			if (gitSettings.storeGitOnDisk) {
+				fileSystem.setGitCleanAnnotations(clean);
+			}
+
+			if (
+				workspaceService.getStatus().projectId === status.projectId &&
+				fileHandlerService.hasWorkspace() &&
+				fileStoreService.getCurrentProjectId() === status.projectId
+			) {
+				const files = await fileStoreService.getAllFiles(false, false, true);
+				await fileHandlerService.mirrorFiles(files);
+			}
+
+			if (gitSettings.storeGitOnDisk) {
+				await fileSystem.syncGitToDisk();
+			}
+		});
+
 	return (
 		<Modal
 			isOpen={isOpen}
@@ -74,11 +119,25 @@ const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
 			icon={FolderOpenIcon}
 			size='medium'
 		>
-			<div className='workspace-modal file-sync-modal'>
-				<div className='sync-status'>
-					<div className='sync-controls'>
-						<div className='sync-toolbar'>
-							<div className='primary-actions'>
+			<div className='ui-stack' data-gap='lg'>
+				<section
+					className='ui-card ui-stack'
+					data-gap='md'
+					data-padding='md'
+					data-surface='secondary'
+				>
+					<div className='ui-stack' data-gap='sm'>
+						<div
+							className='ui-toolbar'
+							data-width='full'
+							data-justify='between'
+							data-gap='md'
+						>
+							<div
+								className='ui-toolbar-actions'
+								data-role='primary'
+								data-gap='sm'
+							>
 								{status.needsPermission ? (
 									<button
 										type='button'
@@ -91,7 +150,11 @@ const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
 									</button>
 								) : null}
 							</div>
-							<div className='secondary-actions'>
+							<div
+								className='ui-toolbar-actions'
+								data-role='secondary'
+								data-gap='xs'
+							>
 								<button
 									type='button'
 									className='button secondary icon-only'
@@ -114,11 +177,28 @@ const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
 						</div>
 					</div>
 
-					<div className='status-info'>
-						<div className='status-item workspace-folder-name'>
+					<label className='checkbox-control'>
+						<input
+							type='checkbox'
+							checked={cleanAnnotations}
+							disabled={isBusy || !status.projectId}
+							onChange={(event) =>
+								void changeCleanAnnotations(event.target.checked)
+							}
+						/>
+						<span>{t('Clean annotations')}</span>
+					</label>
+					<p className='ui-note'>
+						{t(
+							'Remove TeXlyre annotation markers from mirrored folder files. Turn this off to mirror the exact annotated text.',
+						)}
+					</p>
+
+					<div className='ui-list' data-gap='sm'>
+						<div className='ui-panel-title'>
 							<strong>{status.directoryName ?? t('No folder linked')}</strong>
 						</div>
-						<div className='status-item'>
+						<div className='ui-meta' data-layout='row'>
 							<span>
 								{status.needsPermission
 									? t(
@@ -131,44 +211,48 @@ const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
 							</span>
 						</div>
 						{status.lastSyncedAt ? (
-							<div className='status-item workspace-modal-meta'>
+							<div className='ui-meta'>
 								{t('Last synced {date}', {
 									date: formatDate(status.lastSyncedAt),
 								})}
 							</div>
 						) : null}
-						{error ? <div className='error-message'>{error}</div> : null}
+						{error ? (
+							<div className='ui-message' data-tone='error'>
+								{error}
+							</div>
+						) : null}
 					</div>
-				</div>
+				</section>
 
-				<div className='workspace-activities'>
-					<div className='activities-header'>
-						<h3>{t('Recent Activity')}</h3>
+				<div className='ui-list' data-gap='md'>
+					<div className='ui-toolbar' data-justify='between' data-gap='sm'>
+						<h3 className='ui-panel-title'>{t('Recent Activity')}</h3>
 					</div>
 					{activity.length === 0 ? (
-						<p className='workspace-modal-meta'>
-							{t('No activity recorded yet')}
-						</p>
+						<p className='ui-note'>{t('No activity recorded yet')}</p>
 					) : (
-						<div className='activities-list'>
+						<div className='ui-list' data-gap='sm' data-scroll='medium'>
 							{activity
 								.slice(-10)
 								.reverse()
 								.map((entry) => (
-									<div key={entry.id} className='activity-item'>
-										<div className='activity-content'>
-											<div className='activity-header'>
-												<span className='activity-icon'>
-													{getActivityIcon(entry.type)}
-												</span>
-												<span className='activity-message'>
-													{entry.message}
-												</span>
-											</div>
-											<div className='activity-time'>
-												{formatDate(entry.timestamp)}
-											</div>
+									<div
+										key={entry.id}
+										className='ui-message ui-stack'
+										data-tone={getActivityTone(entry.type)}
+										data-density='compact'
+										data-gap='xs'
+									>
+										<div className='ui-actions'>
+											<span className='ui-icon'>
+												{getActivityIcon(entry.type)}
+											</span>
+											<span className='ui-list-content' data-grow='true'>
+												{entry.message}
+											</span>
 										</div>
+										<div className='ui-meta'>{formatDate(entry.timestamp)}</div>
 									</div>
 								))}
 						</div>

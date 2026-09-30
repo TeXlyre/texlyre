@@ -258,21 +258,52 @@ export interface StrippedAnnotationSpan {
 	to: number;
 }
 
+export interface StrippedReviewDeletion {
+	at: number;
+	text: string;
+	id: string;
+	openTag: string;
+	closeTag: string;
+}
+
 export function stripAnnotationTagsWithSpans(
 	text: string,
 	kinds: readonly AnnotationKind[] = ANNOTATION_KINDS,
-): { content: string; spans: StrippedAnnotationSpan[] } {
+): {
+	content: string;
+	spans: StrippedAnnotationSpan[];
+	reviewDeletions: StrippedReviewDeletion[];
+} {
 	const spans: StrippedAnnotationSpan[] = [];
+	const reviewDeletions: StrippedReviewDeletion[] = [];
 
 	for (const kind of kinds) {
 		for (const match of scanAnnotationTags(text, kind)) {
 			spans.push({ from: match.openTagEnd, to: match.closeTagStart });
+
+			if (kind === 'review' && match.openTagEnd === match.closeTagStart) {
+				const original = /original:\s*'([^']*)'/.exec(match.openTagContent);
+				const resolved = /resolved:\s*(true|false)/.exec(match.openTagContent);
+				if (original?.[1] && resolved?.[1] !== 'true') {
+					reviewDeletions.push({
+						at: match.openTagEnd,
+						text: decodeAnnotationText(original[1]),
+						id: match.id,
+						openTag: text.slice(match.openTagStart, match.openTagEnd),
+						closeTag: text.slice(match.closeTagStart, match.closeTagEnd),
+					});
+				}
+			}
 		}
 	}
 
 	const ranges = collectAnnotationTagRanges(text, kinds);
 	if (!ranges.length) {
-		return { content: text, spans: spans.sort((a, b) => a.from - b.from) };
+		return {
+			content: text,
+			spans: spans.sort((a, b) => a.from - b.from),
+			reviewDeletions,
+		};
 	}
 
 	const shiftFor = (offset: number): number => {
@@ -291,6 +322,9 @@ export function stripAnnotationTagsWithSpans(
 			.map((span) => ({ from: shiftFor(span.from), to: shiftFor(span.to) }))
 			.filter((span) => span.from < span.to)
 			.sort((a, b) => a.from - b.from),
+		reviewDeletions: reviewDeletions
+			.map((deletion) => ({ ...deletion, at: shiftFor(deletion.at) }))
+			.sort((a, b) => a.at - b.at || a.id.localeCompare(b.id)),
 	};
 }
 
@@ -416,7 +450,7 @@ export function decodeAnnotationText(encoded: string): string {
 	return decoded;
 }
 
-/** Reads Base64 metadata written as `<name>64` and legacy plain `<name>` fields. */
+// This reads Base64 metadata written as `<name>64` and legacy plain `<name>` fields
 export function parseAnnotationTextField(source: string, name: string): string {
 	const encoded = source.match(new RegExp(`${name}64:\\s*'([^']*)'`, 's'));
 	if (encoded) return decodeAnnotationText(encoded[1]);
@@ -443,7 +477,7 @@ export function parseAnnotationResponses(
 		responses.push({
 			id,
 			user: user.trim(),
-			timestamp: Number.parseInt(timestamp),
+			timestamp: Number.parseInt(timestamp, 10),
 			content: encoded
 				? decodeAnnotationText(content)
 				: content.replace(/\s+/g, ' ').trim(),

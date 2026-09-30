@@ -444,6 +444,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			<PluginControlGroup>
 				{fileId && (
 					<button
+						type='button'
 						onClick={handleManualSave}
 						title={t('Save File (Ctrl+S)')}
 						disabled={isSaving || !iframeLoaded}
@@ -453,6 +454,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					</button>
 				)}
 				<button
+					type='button'
 					onClick={handleDownload}
 					title={t('Download as Draw.io XML')}
 					disabled={!iframeLoaded}
@@ -478,14 +480,20 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
 	if (isLoading) {
 		return (
-			<div className='drawio-viewer-container'>
-				<div className='loading-indicator'>{t('Loading diagram...')}</div>
+			<div className='drawio-viewer-container ui-viewer'>
+				<div
+					className='ui-message'
+					data-variant='loading'
+					data-placement='overlay-center'
+				>
+					{t('Loading diagram...')}
+				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className='drawio-viewer-container'>
+		<div className='drawio-viewer-container ui-viewer'>
 			<PluginHeader
 				fileName={fileInfo.fileName}
 				filePath={fileInfo.filePath}
@@ -496,20 +504,29 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				awareness={yjsProvider?.awareness}
 			/>
 
-			<div className='drawio-viewer-content'>
+			<div
+				className='drawio-viewer-content ui-viewer-content'
+				data-layout='fill'
+			>
 				{error && (
-					<div className='drawio-error-message error-message'>{error}</div>
+					<div className='ui-message' data-tone='error' data-spacing='inset'>
+						{error}
+					</div>
 				)}
 
 				{!isOnline && showOfflineBanner && (
-					<div className='drawio-warning-message warning-message'>
+					<div
+						className='drawio-warning-message ui-message'
+						data-tone='warning'
+					>
 						<span>
 							{t(
 								'You are currently offline. Draw.io is cached and will work, but some features may be limited.',
 							)}
 						</span>
 						<button
-							className='button icon-only small'
+							type='button'
+							className='button icon-only '
 							onClick={() => setShowOfflineBanner(false)}
 							title={t('Dismiss offline banner')}
 						>
@@ -537,7 +554,12 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				)}
 
 				{showSaveIndicator && (
-					<div className='save-indicator'>
+					<div
+						className='ui-message'
+						data-role='save-indicator'
+						data-tone='success'
+						data-density='compact'
+					>
 						<span>{t('Saved')}</span>
 					</div>
 				)}

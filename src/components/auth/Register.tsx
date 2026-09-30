@@ -120,12 +120,12 @@ const Register: React.FC<RegisterProps> = ({
 						'Copy this key into your Chelys app and log in there with the same username and password.',
 					)}
 				</p>
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<CopyField label={t('Chelys key')} value={chelysPrfHex} mono />
 				</div>
 				<button
 					type='button'
-					className='auth-button'
+					className='button primary'
 					onClick={() => {
 						onRegisterSuccess();
 						window.location.reload();
@@ -143,10 +143,14 @@ const Register: React.FC<RegisterProps> = ({
 				{isUpgrade ? t('Upgrade to Full Account') : t('Create an Account')}
 			</h2>
 
-			{error && <div className='auth-error'>{error}</div>}
+			{error && (
+				<div className='ui-message' data-tone='error'>
+					{error}
+				</div>
+			)}
 
-			<form onSubmit={handleSubmit} className='auth-form'>
-				<div className='form-group'>
+			<form onSubmit={handleSubmit} className='ui-stack'>
+				<div className='ui-field' data-spacing='section'>
 					<label htmlFor='username'>
 						{t('Username')}
 						<span className='required'>*</span>
@@ -162,7 +166,7 @@ const Register: React.FC<RegisterProps> = ({
 					/>
 				</div>
 
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<label htmlFor='email'>{t('Email')}</label>
 					<input
 						type='email'
@@ -174,7 +178,7 @@ const Register: React.FC<RegisterProps> = ({
 					/>
 				</div>
 
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<PasswordInfo />
 					<label htmlFor='password'>
 						{t('Password')}
@@ -191,7 +195,7 @@ const Register: React.FC<RegisterProps> = ({
 					/>
 				</div>
 
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<label htmlFor='confirmPassword'>
 						{t('Confirm Password')}
 						<span className='required'>*</span>
@@ -209,7 +213,8 @@ const Register: React.FC<RegisterProps> = ({
 
 				<button
 					type='submit'
-					className={`auth-button ${isLoading ? 'loading' : ''}`}
+					className='button primary'
+					data-state={isLoading ? 'loading' : undefined}
 					disabled={!ageConfirmed || !privacyAccepted || isLoading}
 				>
 					{isLoading
@@ -224,14 +229,16 @@ const Register: React.FC<RegisterProps> = ({
 				{!isUpgrade && (
 					<button
 						type='button'
-						className={`auth-button chelys-button ${isLoading ? 'loading' : ''}`}
+						className='button'
+						data-tone='accent'
+						data-state={isLoading ? 'loading' : undefined}
 						onClick={handleChelysSubmit}
 						disabled={!ageConfirmed || !privacyAccepted || isLoading}
 					>
 						<span>
 							{isLoading ? t('Creating Account...') : t('Sign up with Chelys')}
 						</span>
-						<span className='passkey-badge'>
+						<span className='ui-badge' data-variant='label' data-tone='accent'>
 							<PasskeyIcon size={24} />
 							{t('Passkey')}
 						</span>
@@ -239,46 +246,51 @@ const Register: React.FC<RegisterProps> = ({
 				)}
 			</form>
 
-			<div className='form-group'>
-				<label className='checkbox-control'>
-					<input
-						type='checkbox'
-						checked={ageConfirmed}
-						onChange={(e) => setAgeConfirmed(e.target.checked)}
-						required
-					/>
+			<div className='ui-stack auth-consent-fields' data-gap='xs'>
+				<div className='ui-field'>
+					<label className='checkbox-control'>
+						<input
+							type='checkbox'
+							checked={ageConfirmed}
+							onChange={(e) => setAgeConfirmed(e.target.checked)}
+							required
+						/>
 
-					<span>{t('I confirm I am at least 16 years old')}</span>
-				</label>
-			</div>
+						<span>{t('I confirm I am at least 16 years old')}</span>
+					</label>
+				</div>
 
-			<div className='form-group'>
-				<label className='checkbox-control'>
-					<input
-						type='checkbox'
-						checked={privacyAccepted}
-						onChange={(e) => setPrivacyAccepted(e.target.checked)}
-						required
-					/>
+				<div className='ui-field'>
+					<label className='checkbox-control'>
+						<input
+							type='checkbox'
+							checked={privacyAccepted}
+							onChange={(e) => setPrivacyAccepted(e.target.checked)}
+							required
+						/>
 
-					<span>
-						{t('I understand how my data is handled as described in the')}{' '}
-						<button
-							type='button'
-							className='inline-link-button'
-							onClick={onShowPrivacy}
-						>
-							{t('privacy information')}
-						</button>
-					</span>
-				</label>
+						<span>
+							{t('I understand how my data is handled as described in the')}{' '}
+							<button
+								type='button'
+								className='button'
+								data-variant='text'
+								onClick={onShowPrivacy}
+							>
+								{t('privacy information')}
+							</button>
+						</span>
+					</label>
+				</div>
 			</div>
 
 			{!isUpgrade && (
-				<div className='auth-alt-action'>
+				<div className='ui-actions' data-align='center' data-wrap='true'>
 					<span>{t('Already have an account?')}</span>
 					<button
-						className='text-button'
+						type='button'
+						className='button'
+						data-variant='text'
 						onClick={onSwitchToLogin}
 						disabled={isLoading}
 					>

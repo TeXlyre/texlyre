@@ -53,8 +53,8 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
 			icon={UserIcon}
 			size='medium'
 		>
-			<div className='guest-consent-modal'>
-				<div className='guest-info-section'>
+			<div className='guest-consent-modal ui-stack' data-gap='md'>
+				<div className='ui-stack' data-gap='md'>
 					<h3>{t('Guest Session Information')}</h3>
 					<p>
 						{t(
@@ -62,7 +62,7 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
 						)}
 					</p>
 
-					<div className='guest-features'>
+					<div className='ui-stack' data-gap='sm'>
 						<h4>{t('What you can do:')}</h4>
 						<ul>
 							<li>{t('Create and edit LaTeX/Typst projects')}</li>
@@ -94,7 +94,7 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
 						</ul>
 					</div>
 
-					<div className='guest-upgrade-info'>
+					<div className='ui-message' data-tone='info'>
 						<h4>{t('Upgrade anytime:')}</h4>
 						<p>
 							{t(
@@ -104,8 +104,13 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
 					</div>
 				</div>
 
-				<div className='consent-checkboxes'>
-					<div className='form-group'>
+				<div
+					className='ui-card ui-stack guest-consent-fields'
+					data-surface='secondary'
+					data-padding='md'
+					data-gap='xs'
+				>
+					<div className='ui-field'>
 						<label className='checkbox-control'>
 							<input
 								type='checkbox'
@@ -118,7 +123,7 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
 						</label>
 					</div>
 
-					<div className='form-group'>
+					<div className='ui-field'>
 						<label className='checkbox-control'>
 							<input
 								type='checkbox'
@@ -135,7 +140,8 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
 								)}{' '}
 								<button
 									type='button'
-									className='inline-link-button'
+									className='button'
+									data-variant='text'
 									onClick={onShowPrivacy}
 								>
 									{t('privacy information')}
@@ -145,7 +151,7 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
 					</div>
 				</div>
 
-				<div className='privacy-notice'>
+				<div className='ui-message' data-tone='success'>
 					<p>
 						<strong>{t('Privacy: ')}</strong>&nbsp;
 						{t(
@@ -154,7 +160,12 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
 					</p>
 				</div>
 
-				<div className='modal-actions'>
+				<div
+					className='ui-actions'
+					data-variant='modal'
+					data-align='end'
+					data-cross='stretch'
+				>
 					<button
 						type='button'
 						className='button secondary'

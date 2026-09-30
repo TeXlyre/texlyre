@@ -50,8 +50,8 @@ const GuestUpgradeModal: React.FC<GuestUpgradeModalProps> = ({
 				icon={UserIcon}
 				size='medium'
 			>
-				<div className='upgrade-modal-content'>
-					<div className='upgrade-info'>
+				<div className='ui-stack' data-gap='lg'>
+					<div className='ui-stack' data-gap='md'>
 						<h3>{t('Keep Your Projects in This Browser')}</h3>
 						<p>
 							{t(
@@ -76,7 +76,7 @@ const GuestUpgradeModal: React.FC<GuestUpgradeModalProps> = ({
 								)}
 							</strong>
 						</p>
-						<div className='storage-notice'>
+						<div className='ui-message' data-tone='warning'>
 							<p>
 								<strong>{t('Important: ')}</strong>
 								{t(

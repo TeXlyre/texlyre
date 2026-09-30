@@ -1,4 +1,4 @@
-import { mergeAnnotatedContent } from '@src/utils/annotationMerge';
+import { mergeAnnotatedContent } from '@src/utils/annotationMergeUtils';
 import { stripAnnotations } from '@src/utils/fileCommentUtils';
 
 const comment = (id: string, inner: string) =>

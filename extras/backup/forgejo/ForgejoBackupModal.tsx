@@ -4,23 +4,25 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import {
 	DisconnectIcon,
-	GitBranchIcon,
+	RepositoryIcon,
 	GitPushIcon,
 	ImportIcon,
 	SettingsIcon,
 	TrashIcon,
 } from '@/components/common/Icons';
 import Modal from '@/components/common/Modal';
+import GitCredentialSelect from '@/components/history/GitCredentialSelect';
 import SettingsModal from '@/components/settings/SettingsModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useSecrets } from '@/hooks/useSecrets';
-import { useRecords } from '@/hooks/useRecords';
 import { useSettings } from '@/hooks/useSettings';
+import { useRecords } from '@/hooks/useRecords';
 import { formatDate } from '@/utils/dateUtils';
+import { ensureGitRemoteBranch } from '@/utils/gitUtils';
 import { forgejoAPIService } from './ForgejoAPIService';
+import { forgejoGitRemoteProvider } from './ForgejoGitRemoteProvider';
 import { forgejoBackupService } from './ForgejoBackupService';
 import { ForgejoIcon } from './Icon';
-import './styles.css';
 import { createNamedLogger } from '@/logging';
 const moduleLog = createNamedLogger('ForgejoBackupModal');
 
@@ -63,6 +65,10 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 	const secrets = useSecrets();
 	const records = useRecords();
 	const { getSetting } = useSettings();
+	const scopedProjectId =
+		isInEditor && syncScope === 'current'
+			? (currentProjectId ?? undefined)
+			: undefined;
 
 	useEffect(() => {
 		const apiEndpoint =
@@ -127,12 +133,8 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 	}, [records]);
 
 	useEffect(() => {
-		const scopedProjectId =
-			isInEditor && syncScope === 'current'
-				? (currentProjectId ?? undefined)
-				: undefined;
 		forgejoBackupService.setCurrentProjectId(scopedProjectId);
-	}, [isInEditor, syncScope, currentProjectId]);
+	}, [scopedProjectId]);
 
 	useEffect(() => {
 		const unsubscribeStatus = forgejoBackupService.addStatusListener(setStatus);
@@ -161,8 +163,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 	useEffect(() => {
 		if (isOpen) {
 			const checkExistingCredentials = async () => {
-				const projectId =
-					isInEditor && syncScope === 'current' ? currentProjectId : undefined;
+				const projectId = scopedProjectId;
 				if (await forgejoBackupService.hasStoredCredentials(projectId)) {
 					try {
 						const storedRepo =
@@ -187,10 +188,11 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 			};
 			checkExistingCredentials();
 		}
-	}, [isOpen, isInEditor, syncScope, currentProjectId]);
+	}, [isOpen, scopedProjectId]);
 
 	const normalizeForgejoRepoInput = (input: string): string => {
 		const trimmed = input.trim();
+
 		if (!trimmed) return '';
 
 		const urlMatch = trimmed.match(
@@ -244,8 +246,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 			if (result.success) {
 				setShowConnectionFlow(true);
 				setConnectionStep('token');
-				const projectId =
-					isInEditor && syncScope === 'current' ? currentProjectId : undefined;
+				const projectId = scopedProjectId;
 				const storedRepo =
 					await forgejoBackupService.getStoredRepository(projectId);
 				const storedBranch =
@@ -304,7 +305,8 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 
 	const handleBranchSubmit = () =>
 		handleAsyncOperation(async () => {
-			if (!selectedBranch) return;
+			const branchName = selectedBranch.trim();
+			if (!branchName) return;
 
 			const repoName = effectiveSelectedRepo || selectedRepo;
 
@@ -315,18 +317,26 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 				return;
 			}
 
-			const projectId =
-				isInEditor && syncScope === 'current' ? currentProjectId : undefined;
+			await ensureGitRemoteBranch(
+				forgejoGitRemoteProvider,
+				forgejoToken,
+				repoName,
+				branchName,
+				availableBranches,
+				displayBranch,
+			);
+
+			const projectId = scopedProjectId;
 
 			const success = await forgejoBackupService.connectToRepository(
 				forgejoToken,
 				repoName,
 				projectId,
-				selectedBranch,
+				branchName,
 			);
 
 			if (success) {
-				setDisplayBranch(selectedBranch);
+				setDisplayBranch(branchName);
 				setShowConnectionFlow(false);
 				setForgejoToken('');
 				setSelectedRepo('');
@@ -337,8 +347,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 
 	const handleChangeConnection = () =>
 		handleAsyncOperation(async () => {
-			const projectId =
-				isInEditor && syncScope === 'current' ? currentProjectId : undefined;
+			const projectId = scopedProjectId;
 
 			const credentials =
 				await forgejoBackupService.getStoredCredentials(projectId);
@@ -391,8 +400,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 		}
 	};
 
-	const getScopedProjectId = () =>
-		isInEditor && syncScope === 'current' ? currentProjectId : undefined;
+	const getScopedProjectId = () => scopedProjectId;
 
 	const replaceCommitMessageVariables = (template: string): string => {
 		const now = new Date();
@@ -432,15 +440,14 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 			backup_start: '📤',
 			import_start: '📥',
 		})[type] || 'ℹ️';
-	const getActivityColor = (type: string) =>
-		({
-			backup_error: '#dc3545',
-			import_error: '#dc3545',
-			backup_complete: '#28a745',
-			import_complete: '#28a745',
-			backup_start: '#007bff',
-			import_start: '#6f42c1',
-		})[type] || '#6c757d';
+
+	const getActivityTone = (type: string) => {
+		if (type === 'backup_error' || type === 'import_error')
+			return 'error' as const;
+		if (type === 'backup_complete' || type === 'import_complete')
+			return 'success' as const;
+		return 'info' as const;
+	};
 
 	const getDefaultCommitMessagePlaceholder = (): string => {
 		const template =
@@ -459,7 +466,10 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 				size='medium'
 				headerActions={
 					<button
-						className='modal-close-button'
+						type='button'
+						className='ui-icon-button'
+						data-role='modal-close'
+						data-variant='subtle'
 						onClick={() => setShowSettings(true)}
 						title={t('Forgejo Backup Settings')}
 					>
@@ -467,25 +477,40 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 					</button>
 				}
 			>
-				<div className='backup-modal'>
-					{error && <div className='error-message'>{error}</div>}
+				<div className='ui-stack' data-gap='lg'>
+					{error && (
+						<div className='ui-message' data-tone='error'>
+							{error}
+						</div>
+					)}
+
 					{showConnectionFlow && (
-						<div className='connection-flow'>
-							<h3>{t('Connect to Forgejo')}</h3>
+						<div
+							className='ui-card ui-stack'
+							data-gap='md'
+							data-padding='md'
+							data-radius='lg'
+							data-surface='accent'
+						>
+							<h3 className='ui-panel-title' data-size='body'>
+								{t('Connect to Forgejo')}
+							</h3>
 							{connectionStep === 'token' && (
-								<div>
-									<label>{t('Forgejo Access Token:')}</label>
-									<input
-										type='password'
+								<div className='ui-stack' data-gap='md'>
+									<label className='ui-field-label'>
+										{t('Forgejo Personal Access Token:')}
+									</label>
+									<GitCredentialSelect
+										providerId='forgejo'
+										projectId={isInEditor ? (currentProjectId ?? '') : ''}
 										value={forgejoToken}
-										onChange={(e) => {
-											setError(null);
-											setForgejoToken(e.target.value);
-										}}
+										onChange={setForgejoToken}
+										mode='backup'
 										placeholder={t('token...')}
 									/>
-									<div className='button-group'>
+									<div className='ui-actions' data-gap='md'>
 										<button
+											type='button'
 											className='button primary'
 											onClick={handleTokenSubmit}
 											disabled={!forgejoToken.trim() || isOperating}
@@ -493,27 +518,27 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 											{isOperating ? t('Connecting...') : t('Connect')}
 										</button>
 										<button
+											type='button'
 											className='button secondary'
 											onClick={() => setShowConnectionFlow(false)}
 										>
 											{t('Cancel')}
 										</button>
 									</div>
-									<br />
 									<a
 										href='https://texlyre.org/docs/integrations/codeberg'
 										target='_blank'
 										rel='noopener noreferrer'
-										className='dropdown-link'
 									>
 										{t('Learn more about Codeberg (Forgejo) Integration')}
 									</a>
 								</div>
 							)}
 							{connectionStep === 'repo' && (
-								<div>
-									<label>{t('Repository: ')}</label>
+								<div className='ui-stack' data-gap='md'>
+									<label className='ui-field-label'>{t('Repository: ')}</label>
 									<input
+										className='ui-field-control'
 										type='text'
 										value={repoInput}
 										onChange={(e) => {
@@ -527,6 +552,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 									/>
 
 									<select
+										className='ui-field-control'
 										value={selectedRepo}
 										onChange={(e) => {
 											setError(null);
@@ -546,8 +572,9 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 										))}
 									</select>
 
-									<div className='button-group'>
+									<div className='ui-actions' data-gap='md'>
 										<button
+											type='button'
 											className='button primary'
 											onClick={handleRepoSubmit}
 											disabled={!effectiveSelectedRepo || isOperating}
@@ -555,6 +582,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 											{isOperating ? t('Loading...') : t('Next')}
 										</button>
 										<button
+											type='button'
 											className='button secondary'
 											onClick={() => setConnectionStep('token')}
 										>
@@ -564,30 +592,48 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 								</div>
 							)}
 							{connectionStep === 'branch' && (
-								<div>
-									<label>{t('Select Branch:')}</label>
-									<select
+								<div className='ui-stack' data-gap='md'>
+									<label className='ui-field-label'>{t('Branch: ')}</label>
+									<input
+										className='ui-field-control'
+										type='text'
+										list='forgejoGitRemoteProvider-branches'
 										value={selectedBranch}
 										onChange={(e) => {
 											setError(null);
 											setSelectedBranch(e.target.value);
 										}}
-									>
+									/>
+									<datalist id='forgejoGitRemoteProvider-branches'>
 										{availableBranches.map((branch) => (
-											<option key={branch.name} value={branch.name}>
-												{branch.name} {branch.protected ? t('(Protected)') : ''}
-											</option>
+											<option
+												key={branch.name}
+												value={branch.name}
+												label={branch.protected ? t('(Protected)') : undefined}
+											/>
 										))}
-									</select>
-									<div className='button-group'>
+									</datalist>
+									{availableBranches.length > 0 &&
+									!availableBranches.some(
+										(item) => item.name === selectedBranch.trim(),
+									) ? (
+										<p className='ui-note'>
+											{t(
+												'A new remote branch will be created when you connect.',
+											)}
+										</p>
+									) : null}
+									<div className='ui-actions' data-gap='md'>
 										<button
+											type='button'
 											className='button primary'
 											onClick={handleBranchSubmit}
-											disabled={!selectedBranch || isOperating}
+											disabled={!selectedBranch.trim() || isOperating}
 										>
 											{isOperating ? t('Connecting...') : t('Connect')}
 										</button>
 										<button
+											type='button'
 											className='button secondary'
 											onClick={() => setConnectionStep('repo')}
 										>
@@ -601,11 +647,17 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 
 					{!showConnectionFlow && (
 						<>
-							<div className='backup-status'>
-								<div className='status-header'>
-									<div className='backup-controls'>
+							<div
+								className='ui-card ui-stack'
+								data-gap='md'
+								data-padding='md'
+								data-surface='secondary'
+							>
+								<div className='ui-stack' data-gap='md'>
+									<div className='ui-stack' data-gap='sm'>
 										{!status.isConnected ? (
 											<button
+												type='button'
 												className='button primary'
 												onClick={handleConnect}
 												disabled={isOperating}
@@ -615,10 +667,16 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 										) : (
 											<>
 												{isInEditor && (
-													<div className='sync-scope-selector'>
-														<label>{t('Backup Scope:')}</label>
-														<div>
-															<label>
+													<div
+														className='ui-card ui-stack'
+														data-gap='sm'
+														data-padding='sm'
+													>
+														<label className='ui-field-label'>
+															{t('Backup Scope:')}
+														</label>
+														<div className='ui-actions' data-wrap='true'>
+															<label className='checkbox-control'>
 																<input
 																	type='radio'
 																	name='syncScope'
@@ -637,7 +695,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 																	{currentProjectName})
 																</span>
 															</label>
-															<label>
+															<label className='checkbox-control'>
 																<input
 																	type='radio'
 																	name='syncScope'
@@ -657,8 +715,11 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 													</div>
 												)}
 												<div>
-													<label>{t('Commit Message:')}</label>
+													<label className='ui-field-label'>
+														{t('Commit Message:')}
+													</label>
 													<input
+														className='ui-field-control'
 														type='text'
 														value={commitMessage}
 														onChange={(e) => {
@@ -669,9 +730,19 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 														disabled={isOperating}
 													/>
 												</div>
-												<div className='backup-toolbar'>
-													<div className='primary-actions'>
+												<div
+													className='ui-toolbar'
+													data-width='full'
+													data-justify='between'
+													data-gap='md'
+												>
+													<div
+														className='ui-toolbar-actions'
+														data-role='primary'
+														data-gap='sm'
+													>
 														<button
+															type='button'
 															className='button primary'
 															onClick={handleExport}
 															disabled={
@@ -686,6 +757,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 																: t('Push To Forgejo')}
 														</button>
 														<button
+															type='button'
 															className='button warn secondary'
 															onClick={handleImport}
 															disabled={
@@ -698,16 +770,22 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 																: t('Import From Forgejo')}
 														</button>
 													</div>
-													<div className='secondary-actions'>
+													<div
+														className='ui-toolbar-actions'
+														data-role='secondary'
+														data-gap='xs'
+													>
 														<button
+															type='button'
 															className='button secondary icon-only'
 															onClick={handleChangeConnection}
 															disabled={isOperating}
 															title={t('Change repository/branch')}
 														>
-															<GitBranchIcon />
+															<RepositoryIcon />
 														</button>
 														<button
+															type='button'
 															className='button secondary icon-only'
 															onClick={handleDisconnect}
 															disabled={isOperating}
@@ -721,13 +799,13 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 										)}
 									</div>
 								</div>
-								<div className='status-info'>
-									<div className='status-item'>
+								<div className='ui-list' data-gap='sm'>
+									<div className='ui-meta' data-layout='row'>
 										<strong>{t('Forgejo Backup:')}</strong>{' '}
 										{status.isConnected ? t('Connected') : t('Disconnected')}
 									</div>
 									{status.isConnected && status.repository && (
-										<div className='status-item'>
+										<div className='ui-meta' data-layout='row'>
 											<strong>{t('Repository: ')}</strong>
 											<span>
 												{status.repository} ({displayBranch})
@@ -735,13 +813,15 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 										</div>
 									)}
 									{status.lastSync && (
-										<div className='status-item'>
+										<div className='ui-meta' data-layout='row'>
 											<strong>{t('Last Sync:')}</strong>{' '}
 											{formatDate(status.lastSync)}
 										</div>
 									)}
 									{status.error && (
-										<div className='error-message'>{status.error}</div>
+										<div className='ui-message' data-tone='error'>
+											{status.error}
+										</div>
 									)}
 								</div>
 								<br />
@@ -749,17 +829,21 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 									href='https://texlyre.org/docs/git-synchronization'
 									target='_blank'
 									rel='noopener noreferrer'
-									className='dropdown-link'
 								>
 									{t('Learn more about Git synchronization')}
 								</a>
 							</div>
 							{activities.length > 0 && (
-								<div className='backup-activities'>
-									<div className='activities-header'>
-										<h3>{t('Recent Activity')}</h3>
+								<div className='ui-list' data-gap='md'>
+									<div
+										className='ui-toolbar'
+										data-justify='between'
+										data-gap='sm'
+									>
+										<h3 className='ui-panel-title'>{t('Recent Activity')}</h3>
 										<button
-											className='button danger small secondary'
+											type='button'
+											className='button danger  secondary'
 											onClick={() => forgejoBackupService.clearAllActivities()}
 											title={t('Clear all activities')}
 											disabled={isOperating}
@@ -768,29 +852,35 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 											{t('Clear All')}
 										</button>
 									</div>
-									<div className='activities-list'>
+									<div className='ui-list' data-gap='sm' data-scroll='medium'>
 										{activities
 											.slice(-10)
 											.reverse()
 											.map((activity) => (
 												<div
 													key={activity.id}
-													className='activity-item'
-													style={{
-														borderLeftColor: getActivityColor(activity.type),
-													}}
+													className='ui-message ui-stack'
+													data-tone={getActivityTone(activity.type)}
+													data-density='compact'
+													data-gap='xs'
 												>
-													<div className='activity-content'>
-														<div className='activity-header'>
-															<span className='activity-icon'>
+													<div className='ui-list-content'>
+														<div className='ui-actions'>
+															<span className='ui-icon'>
 																{getActivityIcon(activity.type)}
 															</span>
-															<span className='activity-message'>
+															<span
+																className='ui-list-content'
+																data-grow='true'
+															>
 																{activity.message}
 															</span>
 															<button
+																type='button'
 																aria-label={t('Dismiss activity')}
-																className='activity-close'
+																className='ui-icon-button'
+																data-variant='subtle'
+																data-size='xs'
 																onClick={() =>
 																	forgejoBackupService.clearActivity(
 																		activity.id,
@@ -802,7 +892,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 																<span aria-hidden='true'>×</span>
 															</button>
 														</div>
-														<div className='activity-time'>
+														<div className='ui-meta'>
 															{formatDate(activity.timestamp)}
 														</div>
 													</div>
@@ -812,9 +902,9 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 								</div>
 							)}
 
-							<div className='backup-info'>
+							<div className='ui-message' data-tone='info'>
 								<h3>{t('How Forgejo Backup Works')}</h3>
-								<div className='info-content'>
+								<div>
 									<p>
 										{t(
 											'Forgejo backup stores your TeXlyre data in a Forgejo repository:',

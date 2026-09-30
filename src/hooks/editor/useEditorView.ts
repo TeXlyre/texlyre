@@ -26,7 +26,7 @@ import {
 	searchKeymap,
 } from '@codemirror/search';
 import { Compartment, EditorState, type Extension } from '@codemirror/state';
-import { type ViewUpdate, keymap } from '@codemirror/view';
+import { type ViewUpdate, ViewPlugin, keymap } from '@codemirror/view';
 import { lineNumbers } from '@codemirror/view';
 import { EditorView } from 'codemirror';
 import { vim } from '@replit/codemirror-vim';
@@ -151,7 +151,7 @@ const classifyFileType = (
 const fileUndoHistoryCache = new Map<string, unknown>();
 
 export const useEditorView = (
-	editorRef: React.RefObject<HTMLDivElement>,
+	editorRef: React.RefObject<HTMLDivElement | null>,
 	docUrl: string,
 	documentId: string,
 	isDocumentSelected: boolean,
@@ -193,6 +193,7 @@ export const useEditorView = (
 	const [provider, setProvider] = useState<CollabProvider | null>(null);
 	const hasEmittedReadyRef = useRef<boolean>(false);
 	const undoManagerRef = useRef<UndoManager | null>(null);
+	const highlightExtensionRef = useRef<Extension>([]);
 	const toolbarControllerRef = useRef<ToolbarController | null>(null);
 	const [toolbarController, setToolbarController] =
 		useState<ToolbarController | null>(null);
@@ -208,11 +209,12 @@ export const useEditorView = (
 	const projectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
 
 	useEffect(() => {
+		if (!projectId) return;
 		filePathCacheService.initialize();
 		return () => {
 			filePathCacheService.cleanup();
 		};
-	}, []);
+	}, [projectId]);
 
 	const saveFileToStorage = useCallback(
 		async (content: string) => {
@@ -220,13 +222,14 @@ export const useEditorView = (
 			try {
 				const encoder = new TextEncoder();
 				const contentBuffer = encoder.encode(content).buffer;
-				await fileStoreService.updateFileContent(currentFileId, contentBuffer);
+				const file = await fileStoreService.updateFileContent(
+					currentFileId,
+					contentBuffer,
+				);
 
 				if (fileName && isBibFile(fileName) && viewRef.current) {
 					refreshBibliographyCache(viewRef.current);
 				}
-
-				const file = await fileStoreService.getFile(currentFileId);
 
 				setShowSaveIndicator(true);
 				setTimeout(() => setShowSaveIndicator(false), 1500);
@@ -295,14 +298,35 @@ export const useEditorView = (
 		});
 	};
 
+	const buildCommentTrackingExtension = (): Extension => {
+		if (!enableComments) return [];
+
+		return ViewPlugin.fromClass(
+			class {
+				private updateTimeout: ReturnType<typeof setTimeout> | null = null;
+
+				update(update: ViewUpdate) {
+					if (!update.docChanged) return;
+					if (this.updateTimeout) clearTimeout(this.updateTimeout);
+					const content = update.state.doc.toString();
+					this.updateTimeout = setTimeout(() => {
+						this.updateTimeout = null;
+						updateComments(content);
+					}, 150);
+				}
+
+				destroy() {
+					if (this.updateTimeout) clearTimeout(this.updateTimeout);
+				}
+			},
+		);
+	};
+
 	const buildCursorTrackingExtension = (): Extension => {
 		let cursorUpdateTimeout: NodeJS.Timeout | null = null;
 
 		return EditorView.updateListener.of((update: ViewUpdate) => {
-			if (update.docChanged) {
-				if (enableComments) updateComments(update.state.doc.toString());
-				if (autoSaveRef.current) autoSaveRef.current();
-			}
+			if (update.docChanged && autoSaveRef.current) autoSaveRef.current();
 
 			if (update.selectionSet) {
 				if (cursorUpdateTimeout) clearTimeout(cursorUpdateTimeout);
@@ -342,7 +366,16 @@ export const useEditorView = (
 			bracketMatching(),
 			closeBrackets(),
 			highlightSelectionMatches(),
-			search(),
+			search({
+				scrollToMatch: (range, view) =>
+					EditorView.scrollIntoView(range, {
+						y: 'start',
+						yMargin: Math.min(
+							view.defaultLineHeight * 5,
+							Math.max(0, view.scrollDOM.clientHeight - 1),
+						),
+					}),
+			}),
 			buildSpellCheckExtension(),
 			keymap.of([
 				indentWithTab,
@@ -353,6 +386,7 @@ export const useEditorView = (
 				...completionKeymap,
 			]),
 			buildCursorTrackingExtension(),
+			buildCommentTrackingExtension(),
 			searchHighlightExtension,
 		];
 
@@ -399,14 +433,23 @@ export const useEditorView = (
 		});
 	};
 
-	const buildHighlightExtension = (): Extension =>
-		getSyntaxHighlightingEnabled() ||
-		editorSettings.languageFeatures.lspHighlighting
-			? resolveHighlightTheme(
-					editorSettings.highlightTheme || 'auto',
-					resolvedVariant ?? currentVariant,
-				)
-			: [];
+	const buildHighlightExtension = useCallback(
+		(): Extension =>
+			getSyntaxHighlightingEnabled() ||
+			editorSettings.languageFeatures.lspHighlighting
+				? resolveHighlightTheme(
+						editorSettings.highlightTheme || 'auto',
+						resolvedVariant ?? currentVariant,
+					)
+				: [],
+		[
+			getSyntaxHighlightingEnabled,
+			editorSettings.languageFeatures.lspHighlighting,
+			editorSettings.highlightTheme,
+			resolvedVariant,
+			currentVariant,
+		],
+	);
 
 	const buildLanguageSpecificExtensions = (
 		info: FileTypeInfo,
@@ -473,14 +516,14 @@ export const useEditorView = (
 					setCurrentFilePath(viewRef.current, file.path);
 					filePathCacheService.updateCurrentFilePath(file.path);
 					updateLinkNavigationFilePath(viewRef.current, file.path);
-					updateLinkNavigationFileName(viewRef.current, fileName || '');
+					updateLinkNavigationFileName(viewRef.current, fileName);
 				}
 			}, 100);
 		} else if (!isEditingFile && documentId) {
 			setTimeout(async () => {
 				if (!viewRef.current) return;
 				filePathCacheService.updateCurrentFilePath('', documentId);
-				updateLinkNavigationFileName(viewRef.current, fileName || '');
+				updateLinkNavigationFileName(viewRef.current, fileName);
 
 				const allFiles = await fileStoreService.getAllFiles(
 					false,
@@ -609,34 +652,19 @@ export const useEditorView = (
 		};
 	}, [projectId, documentId, isDocumentSelected, isEditingFile]);
 
-	const userId = user?.id;
-	const username = user?.username;
-	const userName = user?.name;
-	const userColor = user?.color;
-	const userColorLight = user?.colorLight;
-
 	useEffect(() => {
-		if (!userId || !projectId || !documentId || isEditingFile) return;
+		if (!user || !projectId || !documentId || isEditingFile) return;
 
 		collabService.setUserInfo(projectId, `yjs_${documentId}`, {
-			id: userId,
-			username,
-			name: userName,
-			color: userColor,
-			colorLight: userColorLight,
+			id: user.id,
+			username: user.username,
+			name: user.name,
+			color: user.color,
+			colorLight: user.colorLight,
 			passwordHash: '',
 			createdAt: 0,
 		});
-	}, [
-		projectId,
-		documentId,
-		isEditingFile,
-		userId,
-		username,
-		userName,
-		userColor,
-		userColorLight,
-	]);
+	}, [projectId, documentId, isEditingFile, user]);
 
 	// --- Create / recreate EditorView ---
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: Build helpers (buildBaseExtensions, buildKeymapExtensions, buildLanguageSpecificExtensions, buildCommentExtensions, buildLanguageExtension, scheduleFilePathSync) close over editorSettings/getXxxEnabled and are intentionally re-evaluated only on the listed triggers; settings-only changes go through the separate reconfigure effect below. yDoc and enableComments are triggers, not body reads. */
@@ -679,13 +707,15 @@ export const useEditorView = (
 
 		extensions.push(base.of(buildBaseExtensions()));
 		extensions.push(language.of(buildLanguageExtension(info)));
-		extensions.push(highlight.of(buildHighlightExtension()));
+		const highlightExtension = buildHighlightExtension();
+		highlightExtensionRef.current = highlightExtension;
+		extensions.push(highlight.of(highlightExtension));
 		extensions.push(
 			createBurstDeferredLanguage(
 				() => [language.reconfigure([]), highlight.reconfigure([])],
 				() => [
 					language.reconfigure(buildLanguageExtension(info)),
-					highlight.reconfigure(buildHighlightExtension()),
+					highlight.reconfigure(highlightExtensionRef.current),
 				],
 			),
 		);
@@ -836,7 +866,6 @@ export const useEditorView = (
 				toolbarControllerRef.current = null;
 				setToolbarController(null);
 
-				filePathCacheService.cleanup();
 				viewRef.current.destroy();
 				viewRef.current = null;
 			}
@@ -882,11 +911,14 @@ export const useEditorView = (
 					]
 				: [];
 
+		const highlightExtension = buildHighlightExtension();
+		highlightExtensionRef.current = highlightExtension;
+
 		view.dispatch({
 			effects: [
 				base.reconfigure(buildBaseExtensions()),
 				language.reconfigure(buildLanguageExtension(info)),
-				highlight.reconfigure(buildHighlightExtension()),
+				highlight.reconfigure(highlightExtension),
 				languageSpecific.reconfigure(
 					buildLanguageSpecificExtensions(
 						info,
@@ -908,18 +940,13 @@ export const useEditorView = (
 		const view = viewRef.current;
 		if (!view) return;
 
+		const highlightExtension = buildHighlightExtension();
+		highlightExtensionRef.current = highlightExtension;
 		view.dispatch({
-			effects: compartmentsRef.current.highlight.reconfigure(
-				buildHighlightExtension(),
-			),
+			effects:
+				compartmentsRef.current.highlight.reconfigure(highlightExtension),
 		});
-	}, [
-		currentVariant,
-		resolvedVariant,
-		editorSettings.highlightTheme,
-		editorSettings.languageFeatures.lspHighlighting,
-		getSyntaxHighlightingEnabled,
-	]);
+	}, [buildHighlightExtension]);
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: editorSettingsVersion is the trigger to recreate the auto-saver when auto-save delay/enabled changes. */
 	useEffect(() => {
@@ -1055,7 +1082,11 @@ export const useEditorView = (
 			if (autoSaveKey) {
 				const content = viewRef.current?.state?.doc?.toString();
 				if (content) {
-					autoSaveService.flushPendingSaves().catch(console.error);
+					autoSaveService
+						.flushPendingSaves()
+						.catch((error) =>
+							moduleLog.error('Failed to flush pending saves:', error),
+						);
 				}
 				autoSaveService.clearAutoSaver(autoSaveKey);
 			}

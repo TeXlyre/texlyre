@@ -56,23 +56,33 @@ export interface FileMetadata {
 	content?: ArrayBuffer | string;
 }
 
+export interface SerializedProjectDocuments {
+	documents: DocumentMetadata[];
+	documentContents: Map<
+		string,
+		{ yjsState?: Uint8Array; readableContent?: string }
+	>;
+}
+
+export interface SerializedProjectFiles {
+	files: FileMetadata[];
+	fileContents: Map<string, ArrayBuffer | string>;
+	deletedFiles: FileMetadata[];
+}
+
+export interface SerializedProjectData {
+	metadata: ProjectMetadata;
+	documents: DocumentMetadata[];
+	files: FileMetadata[];
+	documentContents: SerializedProjectDocuments['documentContents'];
+	fileContents: SerializedProjectFiles['fileContents'];
+}
+
 export interface BackupLayoutService {
 	manifest: UnifiedManifest;
 	account: User | null;
 	projects: ProjectMetadata[];
-	projectData: Map<
-		string,
-		{
-			metadata: ProjectMetadata;
-			documents: DocumentMetadata[];
-			files: FileMetadata[];
-			documentContents: Map<
-				string,
-				{ yjsState?: Uint8Array; readableContent?: string }
-			>;
-			fileContents: Map<string, ArrayBuffer | string>;
-		}
-	>;
+	projectData: Map<string, SerializedProjectData>;
 }
 
 export class UnifiedDataStructureService {

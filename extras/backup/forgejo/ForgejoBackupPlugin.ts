@@ -3,6 +3,7 @@ import type { BackupPlugin } from '@/plugins/PluginInterface';
 import ForgejoBackupModal from './ForgejoBackupModal';
 import { forgejoBackupService } from './ForgejoBackupService';
 import ForgejoBackupStatusIndicator from './ForgejoBackupStatusIndicator';
+import { forgejoGitRemoteProvider } from './ForgejoGitRemoteProvider';
 import { ForgejoIcon } from './Icon';
 import { getForgejoBackupSettings } from './settings';
 
@@ -23,6 +24,7 @@ const forgejoBackupPlugin: BackupPlugin = {
 	renderStatusIndicator: ForgejoBackupStatusIndicator,
 	renderModal: ForgejoBackupModal,
 	getService: () => forgejoBackupService,
+	gitRemote: forgejoGitRemoteProvider,
 };
 
 export default forgejoBackupPlugin;

@@ -45,12 +45,17 @@ const SourceMapButton: React.FC<SourceMapButtonProps> = ({
 
 	return (
 		<div
-			className={`sourcemap-button-container ${className}`}
+			className={`ui-control-cluster sourcemap-control ${className}`}
 			ref={dropdownRef}
 		>
-			<div className='sourcemap-button-group'>
+			<div
+				className='ui-button-group ui-split-button'
+				data-role='plugin-control'
+				data-trigger-group='true'
+			>
 				<button
-					className='control-button sourcemap-locate-button'
+					type='button'
+					className='button ui-split-main'
 					onClick={onForwardSync}
 					disabled={isDisabled}
 					title={t('Jump to location in output (SyncTeX)')}
@@ -58,7 +63,8 @@ const SourceMapButton: React.FC<SourceMapButtonProps> = ({
 					<LocateIcon />
 				</button>
 				<button
-					className='control-button dropdown-toggle'
+					type='button'
+					className='button ui-split-toggle dropdown-toggle'
 					onClick={(e) => {
 						e.stopPropagation();
 						setIsDropdownOpen(!isDropdownOpen);
@@ -74,17 +80,17 @@ const SourceMapButton: React.FC<SourceMapButtonProps> = ({
 				isOpen={isDropdownOpen && !isDisabled}
 				triggerElement={
 					dropdownRef.current?.querySelector(
-						'.sourcemap-button-group',
+						'[data-trigger-group]',
 					) as HTMLElement
 				}
 				className='sourcemap-dropdown'
 				onClose={() => setIsDropdownOpen(false)}
 			>
-				<div className='sourcemap-dropdown-section'>
-					<div className='sourcemap-dropdown-label'>
+				<div className='ui-menu-section' data-gap='xs'>
+					<div className='ui-menu-title sourcemap-dropdown-label'>
 						{t('Output click (reverse sync)')}
 					</div>
-					<div className='dropdown-option'>
+					<div className='ui-menu-section' data-variant='control'>
 						<label>
 							<input
 								type='checkbox'
@@ -98,8 +104,9 @@ const SourceMapButton: React.FC<SourceMapButtonProps> = ({
 						<div className='sourcemap-click-mode-group'>
 							{CLICK_MODE_OPTIONS.map((opt) => (
 								<button
+									type='button'
 									key={opt.value}
-									className={`sourcemap-click-mode-btn${reverseClickMode === opt.value ? ' active' : ''}`}
+									className={`button sourcemap-click-mode-btn${reverseClickMode === opt.value ? ' active' : ''}`}
 									onClick={() => updateReverseClickMode(opt.value)}
 								>
 									{opt.label}
@@ -109,13 +116,13 @@ const SourceMapButton: React.FC<SourceMapButtonProps> = ({
 					)}
 				</div>
 
-				<div className='sourcemap-dropdown-divider' />
+				<div className='ui-menu-divider sourcemap-dropdown-divider' />
 
-				<div className='sourcemap-dropdown-section'>
-					<div className='sourcemap-dropdown-label'>
+				<div className='ui-menu-section' data-gap='xs'>
+					<div className='ui-menu-title sourcemap-dropdown-label'>
 						{t('Editor click (forward sync)')}
 					</div>
-					<div className='dropdown-option'>
+					<div className='ui-menu-section' data-variant='control'>
 						<label>
 							<input
 								type='checkbox'
@@ -129,8 +136,9 @@ const SourceMapButton: React.FC<SourceMapButtonProps> = ({
 						<div className='sourcemap-click-mode-group'>
 							{CLICK_MODE_OPTIONS.map((opt) => (
 								<button
+									type='button'
 									key={opt.value}
-									className={`sourcemap-click-mode-btn${forwardClickMode === opt.value ? ' active' : ''}`}
+									className={`button sourcemap-click-mode-btn${forwardClickMode === opt.value ? ' active' : ''}`}
 									onClick={() => updateForwardClickMode(opt.value)}
 								>
 									{opt.label}
@@ -140,10 +148,10 @@ const SourceMapButton: React.FC<SourceMapButtonProps> = ({
 					)}
 				</div>
 
-				<div className='sourcemap-dropdown-divider' />
+				<div className='ui-menu-divider sourcemap-dropdown-divider' />
 
-				<div className='sourcemap-dropdown-section'>
-					<div className='dropdown-option'>
+				<div className='ui-menu-section' data-gap='xs'>
+					<div className='ui-menu-section' data-variant='control'>
 						<label>
 							<input
 								type='checkbox'

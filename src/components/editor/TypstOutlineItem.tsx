@@ -45,12 +45,24 @@ const TypstOutlineItem: React.FC<TypstOutlineItemProps> = ({
 	return (
 		<div className='outline-item'>
 			<div
-				className={`outline-section ${isCurrentSection ? 'current' : ''}`}
+				className='outline-section ui-list-item'
+				data-border='none'
+				data-interactive='true'
+				data-align='center'
+				data-gap='xs'
+				data-padding='xs'
+				data-selected={isCurrentSection ? 'true' : undefined}
 				onClick={handleClick}
 				style={{ paddingLeft: `${level * 12}px` }}
 			>
 				{hasChildren && (
-					<button className='outline-expand-btn' onClick={handleToggleExpand}>
+					<button
+						type='button'
+						className='ui-icon-button'
+						data-variant='ghost'
+						data-size='xs'
+						onClick={handleToggleExpand}
+					>
 						{isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
 					</button>
 				)}
@@ -58,11 +70,11 @@ const TypstOutlineItem: React.FC<TypstOutlineItemProps> = ({
 
 				<span className='outline-icon'>{getSectionIcon(section.type)}</span>
 
-				<span className='outline-title' title={section.title}>
+				<span className='outline-title ui-control-label' title={section.title}>
 					{section.title}
 				</span>
 
-				<span className='outline-line'>{section.line}</span>
+				<span className='outline-line ui-meta'>{section.line}</span>
 			</div>
 
 			{hasChildren && isExpanded && (

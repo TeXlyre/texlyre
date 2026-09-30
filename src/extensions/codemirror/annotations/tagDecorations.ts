@@ -34,7 +34,7 @@ class HiddenTagWidget extends WidgetType {
 
 	toDOM(): HTMLElement {
 		const span = document.createElement('span');
-		span.className = this.className;
+		span.className = `ui-hidden-tag ${this.className}`;
 		span.dataset.tagId = this.id;
 		span.setAttribute('aria-hidden', 'true');
 		span.textContent = '\u200b';

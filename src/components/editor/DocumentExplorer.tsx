@@ -35,7 +35,6 @@ interface FileViewerProps {
 	onUpdateContent: (content: string) => void;
 	content: string;
 	docUrl: YjsDocUrl;
-	getDocumentContent: (projectUrl: string, docId: string) => Promise<string>;
 	collabProjectId?: string;
 	docsWithPeers?: Set<string>;
 }
@@ -58,7 +57,6 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 	onUpdateContent,
 	content,
 	docUrl,
-	getDocumentContent,
 	collabProjectId,
 	docsWithPeers,
 }) => {
@@ -115,7 +113,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 		const doc = documents.find((d) => d.id === docId);
 		if (!doc) return;
 
-		const exportContent = await getDocumentContent(docUrl, docId);
+		const exportContent = await collabService.getDocumentContent(docUrl, docId);
 
 		const blob = new Blob([exportContent], { type: 'text/plain' });
 		const url = URL.createObjectURL(blob);
@@ -133,7 +131,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 		const doc = documents.find((d) => d.id === docId);
 		if (!doc) return;
 
-		const docContent = await getDocumentContent(docUrl, docId);
+		const docContent = await collabService.getDocumentContent(docUrl, docId);
 		const linkedFile = await filePathCacheService.getLinkedFile(docId);
 
 		const info: DocumentPropertiesInfo = {
@@ -194,15 +192,25 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 	return (
 		<>
 			<div className='file-explorer'>
-				<div className='file-explorer-header'>
-					<h3>{t('Documents')}</h3>
+				<div
+					className='ui-panel-header'
+					data-role='explorer'
+					data-position='top'
+				>
+					<h3 className='ui-panel-title' data-size='body' data-shrink='true'>
+						{t('Documents')}
+					</h3>
 					<div
-						className='file-explorer-actions scroll-x'
+						className='ui-toolbar-actions scroll-x'
+						data-gap='sm'
+						data-active-style='filled'
 						ref={headerActionsRef}
 					>
 						{syncSession ? (
 							<button
-								className='action-btn'
+								type='button'
+								className='ui-icon-button'
+								data-variant='subtle'
 								title={t('Stop Sync')}
 								onClick={handleStopSync}
 								style={{ backgroundColor: 'var(--accent-color)' }}
@@ -211,7 +219,9 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 							</button>
 						) : (
 							<button
-								className='action-btn'
+								type='button'
+								className='ui-icon-button'
+								data-variant='subtle'
 								title={t('Sync All Documents')}
 								onClick={handleSyncAll}
 								disabled={documents.length === 0}
@@ -220,7 +230,9 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 							</button>
 						)}
 						<button
-							className='action-btn'
+							type='button'
+							className='ui-icon-button'
+							data-variant='subtle'
 							title={t('New Document')}
 							onClick={onCreateDocument}
 						>
@@ -230,7 +242,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 				</div>
 
 				{syncSession && syncProgress.total > 0 && (
-					<div className='sync-progress'>
+					<div className='ui-message' data-tone='info' data-density='compact'>
 						{t('🔄')}
 						{getSyncButtonText()} {t('- Real-time sync active')}
 					</div>
@@ -245,15 +257,32 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 						>
 							<span className='file-icon'>{renderDocumentIcon(doc.name)}</span>
 							{editingDocId === doc.id ? (
-								<input
-									type='text'
-									value={editName}
-									onChange={(e) => setEditName(e.target.value)}
-									onBlur={handleSaveRename}
-									onKeyDown={handleKeyDown}
+								<div
+									className='file-name-input-row ui-field-with-action'
 									onClick={(e) => e.stopPropagation()}
-									className='file-name-input'
-								/>
+								>
+									<input
+										type='text'
+										value={editName}
+										onChange={(e) => setEditName(e.target.value)}
+										onBlur={handleSaveRename}
+										onKeyDown={handleKeyDown}
+										className='file-name-input ui-field-control'
+									/>
+									<button
+										type='button'
+										aria-label={t('Cancel renaming')}
+										className='ui-field-clear'
+										onMouseDown={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+											setEditingDocId(null);
+										}}
+										title={t('Cancel renaming')}
+									>
+										<span aria-hidden='true'>×</span>
+									</button>
+								</div>
 							) : (
 								<>
 									<span className='file-name'>{doc.name}</span>
@@ -284,7 +313,9 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 									}}
 								>
 									<button
-										className='action-btn menu-trigger'
+										type='button'
+										className='ui-icon-button'
+										data-variant='subtle'
 										title={t('Options')}
 										onClick={(e) => {
 											e.stopPropagation();
@@ -303,7 +334,8 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 										onClose={() => setActiveMenu(null)}
 									>
 										<button
-											className='dropdown-item'
+											type='button'
+											className='ui-menu-item'
 											onClick={() => {
 												handleStartRename(doc.id);
 												setActiveMenu(null);
@@ -314,7 +346,8 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 										</button>
 
 										<button
-											className='dropdown-item'
+											type='button'
+											className='ui-menu-item'
 											onClick={() => {
 												handleExportDocument(doc.id);
 												setActiveMenu(null);
@@ -325,7 +358,8 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 										</button>
 
 										<button
-											className='dropdown-item'
+											type='button'
+											className='ui-menu-item'
 											onClick={() => {
 												handleShowProperties(doc.id);
 												setActiveMenu(null);

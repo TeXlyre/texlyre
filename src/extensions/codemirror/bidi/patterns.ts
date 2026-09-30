@@ -23,7 +23,7 @@ export const latexBidiPatterns: BidiPattern[] = [
 	},
 	// Standalone commands consuming trailing structural punctuation
 	{ pattern: /\\[A-Za-z@]+\*?(?!\s*[[{])[{}[\]);,]*/g, fileType: 'latex' },
-	// Bare structural punctuation only when preceded by a command match (opening braces/brackets)
+	// Structural punctuation only when preceded by a command match (opening braces/brackets)
 	{ pattern: /(?<=\\[A-Za-z@]+[^{}[\]]*)[{}[\]]+/g, fileType: 'latex' },
 ];
 
@@ -35,7 +35,7 @@ export const typstBidiPatterns: BidiPattern[] = [
 			/#[A-Za-z_][A-Za-z0-9_-]*(?:\s*(?:\([^)]*\)|\[[^\]]*\]|\{[^}]*\}|\([^)]*$|\[[^\]]*$|\{[^}]*$))+[{}[\]);,]*/gm,
 		fileType: 'typst',
 	},
-	// Bare #identifier consuming trailing structural punctuation
+	// #identifier consuming trailing structural punctuation
 	{
 		pattern: /#[A-Za-z_][A-Za-z0-9_-]*(?!\s*[([{])[{}[\]);,]*/g,
 		fileType: 'typst',

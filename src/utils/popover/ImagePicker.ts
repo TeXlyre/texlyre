@@ -58,7 +58,7 @@ export class ImagePicker {
 	private createInput(): HTMLInputElement {
 		const input = document.createElement('input');
 		input.type = 'text';
-		input.className = 'popover-image-input';
+		input.className = 'ui-field-control popover-image-input';
 		input.placeholder = t('Image path or URL');
 		return input;
 	}

@@ -4,6 +4,7 @@ import type React from 'react';
 import type { Setting } from '../contexts/SettingsContext';
 import type { BackupStatus } from '../types/backup';
 import type { BibEntry } from '../types/bibliography';
+import type { GitRemoteProvider } from '../types/gitRemote';
 import type { SourceMapHighlight } from '../types/sourceMap';
 
 export interface Plugin {
@@ -64,11 +65,52 @@ export interface RendererPlugin extends Plugin {
 
 export interface RendererController {
 	updateContent?: (content: ArrayBuffer | Uint8Array | string) => void;
+	cancelPending?: () => void;
 	setHighlight?: (highlight: SourceMapHighlight | null) => void;
+}
+
+export interface PagedRendererPage {
+	width: number;
+	height: number;
+}
+
+export interface PagedRendererNavigationTarget {
+	page: number;
+	x?: number;
+	y?: number;
+}
+
+export interface PagedRendererSource {
+	readonly id: string;
+	readonly byteLength?: number;
+	readonly typeLabel?: string;
+	readonly mimeType?: string;
+	getPages(signal?: AbortSignal): Promise<readonly PagedRendererPage[]>;
+	renderPage(options: {
+		page: number;
+		canvas: HTMLCanvasElement;
+		scale: number;
+		signal: AbortSignal;
+	}): Promise<void>;
+	renderTextLayer?(options: {
+		page: number;
+		container: HTMLDivElement;
+		scale: number;
+		signal: AbortSignal;
+		onNavigate?: (target: PagedRendererNavigationTarget) => void;
+	}): Promise<void>;
+	renderInteractiveLayer?(options: {
+		page: number;
+		container: HTMLDivElement;
+		scale: number;
+		signal: AbortSignal;
+	}): Promise<void>;
+	dispose?(): void;
 }
 
 export interface RendererProps {
 	content: ArrayBuffer | Uint8Array | string;
+	pagedSource?: PagedRendererSource;
 	mimeType?: string;
 	fileName?: string;
 	headerLabel?: string;
@@ -77,6 +119,7 @@ export interface RendererProps {
 	onDownload?: (fileName: string) => void;
 	controllerRef?: (controller: RendererController | null) => void;
 	onLocationClick?: (page: number, x: number, y: number) => void;
+	memoryOptimized?: boolean;
 }
 
 // Loggers
@@ -88,7 +131,7 @@ export interface LoggerPlugin extends Plugin {
 
 export interface LoggerProps {
 	log: string;
-	onLineClick?: (line: number) => void;
+	onLineClick?: (line: number, file?: string) => void;
 }
 
 // Bibliography Support
@@ -151,6 +194,7 @@ export interface BackupPlugin extends Plugin {
 	renderStatusIndicator: React.ComponentType<BackupStatusIndicatorProps>;
 	renderModal: React.ComponentType<BackupModalProps>;
 	getService: () => BackupServiceInterface;
+	gitRemote?: GitRemoteProvider;
 }
 
 export interface BackupStatusIndicatorProps {
@@ -177,6 +221,14 @@ export interface BackupServiceInterface {
 }
 
 // Theme Layout Configuration
+export type ThemeView = 'explorer' | 'editor' | 'output' | 'chat';
+
+export interface ThemeOutlineControls {
+	preview?: boolean;
+	maximize?: boolean;
+	returnToEditorOnNavigate?: boolean;
+}
+
 export interface ThemeLayout {
 	id: string;
 	name: string;
@@ -185,6 +237,7 @@ export interface ThemeLayout {
 	minFileExplorerWidth: number;
 	maxFileExplorerWidth: number;
 	stylesheetPath: string;
+	outlineControls?: ThemeOutlineControls;
 }
 
 // Themes
@@ -196,6 +249,7 @@ export interface ThemePlugin extends Plugin {
 	getCurrentTheme: () => ThemeVariant;
 	getLayout: () => ThemeLayout;
 	applyLayout: () => void;
+	requestView?: (view: ThemeView) => void;
 	cleanup?: () => void;
 }
 

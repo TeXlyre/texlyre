@@ -64,9 +64,13 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 			size='medium'
 		>
 			<div className='export-account-modal'>
-				{error && <div className='export-error-message'>{error}</div>}
+				{error && (
+					<div className='ui-message' data-tone='error'>
+						{error}
+					</div>
+				)}
 
-				<div className='export-info'>
+				<div className='ui-message' data-tone='info'>
 					<p>
 						{t(
 							'Export your TeXlyre account data including projects, settings, and collaboration history.',
@@ -106,8 +110,8 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 					</div>
 				)}
 
-				<div className='export-option-group'>
-					<label className='export-option-label'>
+				<div className='ui-stack' data-gap='sm'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={includeDocuments}
@@ -117,7 +121,7 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 
 						<span>{t('Include documents and collaboration data')}</span>
 					</label>
-					<label className='export-option-label'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={includeFiles}
@@ -127,7 +131,7 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 
 						<span>{t('Include project files')}</span>
 					</label>
-					<label className='export-option-label'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={includeTemporaryFiles}
@@ -137,7 +141,7 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 
 						<span>{t('Include cache and temporary files')}</span>
 					</label>
-					<label className='export-option-label'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={includeUserData}
@@ -151,14 +155,19 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 					</label>
 				</div>
 
-				<div className='export-note info-message'>
+				<div className='export-note ui-message' data-tone='info'>
 					{t(
 						'Exported data can be imported into any TeXlyre installation to restore your complete workspace.',
 					)}
 				</div>
 			</div>
 
-			<div className='modal-actions'>
+			<div
+				className='ui-actions'
+				data-variant='modal'
+				data-align='end'
+				data-cross='stretch'
+			>
 				<button
 					type='button'
 					className='button secondary'

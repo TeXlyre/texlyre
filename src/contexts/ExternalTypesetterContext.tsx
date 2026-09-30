@@ -2,7 +2,6 @@
 import type React from 'react';
 import { type ReactNode, createContext, useCallback, useState } from 'react';
 
-import { useFileTree } from '../hooks/useFileTree';
 import { typesetterRegistryService } from '../services/TypesetterRegistryService';
 import { fileStoreService } from '../services/FileStoreService';
 import { filePathCacheService } from '../services/FilePathCacheService';
@@ -15,7 +14,6 @@ import {
 	genericTypesetterService,
 	type TypesetterFile,
 } from '../services/GenericTypesetterService';
-import type { FileNode } from '../types/files';
 import { type DownloadableFile, downloadFiles } from '../utils/archiveUtils';
 import { findCompileArtifact, outputExtension } from '../utils/compilerUtils';
 import { getProjectName } from '../utils/urlUtils';
@@ -60,15 +58,6 @@ interface ExternalTypesetterProviderProps {
 	children: ReactNode;
 }
 
-const collectFiles = (nodes: FileNode[]): FileNode[] => {
-	const result: FileNode[] = [];
-	for (const node of nodes) {
-		if (node.type === 'file') result.push(node);
-		if (node.children?.length) result.push(...collectFiles(node.children));
-	}
-	return result;
-};
-
 const getBaseName = (filePath: string): string => {
 	const name = filePath.split('/').pop() || filePath;
 	return name.replace(/\.[^.]+$/, '');
@@ -77,7 +66,6 @@ const getBaseName = (filePath: string): string => {
 export const ExternalTypesetterProvider: React.FC<
 	ExternalTypesetterProviderProps
 > = ({ children }) => {
-	const { fileTree } = useFileTree();
 	const [isCompiling, setIsCompiling] = useState(false);
 	const [isExporting, setIsExporting] = useState(false);
 	const [compileError, setCompileError] = useState<string | null>(null);
@@ -95,27 +83,23 @@ export const ExternalTypesetterProvider: React.FC<
 	}, []);
 
 	const loadFiles = useCallback(async (): Promise<TypesetterFile[]> => {
-		const nodes = collectFiles(fileTree);
+		const nodes = await fileStoreService.getAllFiles(false, false, true);
 		const files: TypesetterFile[] = [];
+
 		for (const node of nodes) {
-			let content = node.content;
-			if (content === undefined) {
-				try {
-					const raw = await fileStoreService.getFile(node.id);
-					content = raw?.content;
-				} catch {
-					content = undefined;
-				}
-			}
-			if (content === undefined) continue;
+			if (node.type !== 'file' || node.content === undefined) continue;
+
 			files.push({
 				path: node.path,
-				content: node.isBinary ? toBytes(content) : cleanBytes(content),
+				content: node.isBinary
+					? toBytes(node.content)
+					: cleanBytes(node.content),
 				lastModified: node.lastModified,
 			});
 		}
+
 		return files;
-	}, [fileTree]);
+	}, []);
 
 	const compileDocument = useCallback(
 		async (

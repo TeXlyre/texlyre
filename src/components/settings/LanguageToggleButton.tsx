@@ -107,7 +107,8 @@ const LanguageToggleButton: React.FC<LanguageToggleButtonProps> = ({
 		>
 			<button
 				type='button'
-				className={className}
+				className={`${className} ui-icon-button`}
+				data-variant='subtle'
 				onClick={() => setIsOpen(!isOpen)}
 				title={`${currentLanguage.nativeName} (${currentLanguage.name})`}
 			>
@@ -115,39 +116,44 @@ const LanguageToggleButton: React.FC<LanguageToggleButtonProps> = ({
 			</button>
 
 			{isOpen && (
-				<div className='language-dropdown-menu'>
-					<div className='dropdown-search'>
+				<div className='language-dropdown-menu ui-menu' data-layout='column'>
+					<div className='ui-menu-search'>
 						<input
 							ref={searchInputRef}
 							type='text'
 							placeholder={t('Search languages...')}
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
-							className='dropdown-search-input'
+							className='dropdown-search-input ui-field-control'
 						/>
 					</div>
-					<div className='dropdown-options'>
+					<div className='ui-menu-scroll'>
 						{filteredLanguages.map((lang, index) => (
 							<div
 								key={lang.code}
 								ref={(el) => {
 									optionRefs.current[index] = el;
 								}}
-								className={`dropdown-option ${currentLanguage.code === lang.code ? 'selected' : ''} ${focusedIndex === index ? 'focused' : ''}`}
+								className='ui-menu-item'
+								data-active={
+									currentLanguage.code === lang.code ? 'true' : undefined
+								}
+								data-emphasis={
+									currentLanguage.code === lang.code ? 'strong' : undefined
+								}
+								data-focused={focusedIndex === index ? 'true' : undefined}
 								onClick={() => handleSelect(lang.code)}
 								tabIndex={0}
 								role='option'
 								aria-selected={currentLanguage.code === lang.code}
 							>
-								<div className='option-header'>
-									<span className='option-name'>
-										{lang.nativeName} ({lang.name})
-									</span>
-								</div>
+								<span>
+									{lang.nativeName} ({lang.name})
+								</span>
 							</div>
 						))}
 						{filteredLanguages.length === 0 && (
-							<div className='no-options'>{t('No languages found')}</div>
+							<div className='ui-empty-state'>{t('No languages found')}</div>
 						)}
 					</div>
 				</div>

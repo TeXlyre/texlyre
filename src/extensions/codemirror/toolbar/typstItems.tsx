@@ -397,7 +397,7 @@ export const createHighlight = (): ToolbarItem => ({
 
 function createColorCommand(fileType: 'typst', type: 'text' | 'highlight') {
 	return (view: EditorView): boolean => {
-		const toolbar = document.querySelector('.plugin-toolbar');
+		const toolbar = document.querySelector('.ui-toolbar[data-role="plugin"]');
 		const button = toolbar?.querySelector(
 			`[data-item="${fileType}-${type === 'text' ? 'textcolor' : 'highlight'}"]`,
 		) as HTMLElement | null;
@@ -408,7 +408,7 @@ function createColorCommand(fileType: 'typst', type: 'text' | 'highlight') {
 		if (picker) {
 			picker.destroy();
 			colorPickers.delete(view);
-			picker = null;
+			picker = undefined;
 		}
 
 		picker = new ColorPicker(view, button, {

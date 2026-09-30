@@ -85,7 +85,7 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 		typesetters.configs,
 		lsps.configs,
 		lsps.getConfigsForFile,
-		preferences.preferences.shareWithAll,
+		preferences.isSharedWithAll,
 	]);
 
 	const globallySharedTools = projectTools.filter(
@@ -126,20 +126,20 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 			icon={ShareIcon}
 			size='medium'
 		>
-			<div className='share-project-content'>
-				<div className='share-info'>
-					<h4>
+			<div className='ui-stack' data-gap='lg'>
+				<div className='ui-stack' data-gap='xs'>
+					<h4 className='ui-panel-title' data-size='body'>
 						{t('Share "')}
 						{projectName}"
 					</h4>
-					<p>
+					<p className='ui-meta'>
 						{t(
 							'Anyone with this link can view and collaborate on this project.',
 						)}
 					</p>
 				</div>
 
-				<div className='share-url-section'>
+				<div>
 					<CopyField
 						id='share-url'
 						label={t('Project Link')}
@@ -147,8 +147,13 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 					/>
 				</div>
 
-				<div className='share-tools-section'>
-					<label className='checkbox-control shared-project-tools-toggle'>
+				<div
+					className='ui-card ui-stack'
+					data-gap='sm'
+					data-padding='md'
+					data-surface='secondary'
+				>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={projectShareEnabled}
@@ -164,7 +169,7 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 					</label>
 
 					{projectShareEnabled && shareableProjectTools.length > 0 ? (
-						<div className='share-tools-group'>
+						<div className='ui-stack' data-gap='xs'>
 							<strong>{t('Shared with this project')}</strong>
 							<ul>
 								{shareableProjectTools.map((tool) => (
@@ -178,13 +183,13 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 							</ul>
 						</div>
 					) : (
-						<p className='shared-tools-empty'>
+						<p className='ui-note'>
 							{t('No additional project tools will be shared.')}
 						</p>
 					)}
 
 					{globallySharedTools.length > 0 && (
-						<div className='share-tools-group'>
+						<div className='ui-stack' data-gap='xs'>
 							<strong>{t('Already shared with all collaborators')}</strong>
 							<ul>
 								{globallySharedTools.map((tool) => (
@@ -200,7 +205,7 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 					)}
 
 					{projectShareEnabled && unavailableProjectTools.length > 0 && (
-						<div className='share-tools-group unavailable'>
+						<div className='ui-note ui-stack' data-gap='xs'>
 							<strong>{t('Not shareable')}</strong>
 							<ul>
 								{unavailableProjectTools.map((tool) => (
@@ -215,16 +220,28 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 				</div>
 
 				{qrCodeUrl && (
-					<div className='qr-code-section'>
-						<label>{t('QR Code')}</label>
-						<div className='qr-code-container'>
-							<img src={qrCodeUrl} alt={t('QR Code for project link')} />
-							<p>{t('Scan to open project on mobile')}</p>
+					<div className='ui-stack' data-gap='sm'>
+						<label className='ui-field-label'>{t('QR Code')}</label>
+						<div
+							className='ui-card ui-stack'
+							data-gap='sm'
+							data-padding='md'
+							data-surface='secondary'
+							data-align='center'
+						>
+							<img
+								className='project-share-qr'
+								src={qrCodeUrl}
+								alt={t('QR Code for project link')}
+							/>
+							<p className='ui-meta' data-align='center'>
+								{t('Scan to open project on mobile')}
+							</p>
 						</div>
 					</div>
 				)}
 
-				<div className='info-message'>
+				<div className='ui-message' data-tone='info'>
 					<h5>{t('Sharing Tips')}</h5>
 					<ul>
 						<li>

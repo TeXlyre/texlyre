@@ -3,6 +3,7 @@ import type { BackupPlugin } from '@/plugins/PluginInterface';
 import GitHubBackupModal from './GitHubBackupModal';
 import { gitHubBackupService } from './GitHubBackupService';
 import GitHubBackupStatusIndicator from './GitHubBackupStatusIndicator';
+import { gitHubGitRemoteProvider } from './GitHubGitRemoteProvider';
 import { GitHubIcon } from './Icon';
 import { getGitHubBackupSettings } from './settings';
 
@@ -23,6 +24,7 @@ const gitHubBackupPlugin: BackupPlugin = {
 	renderStatusIndicator: GitHubBackupStatusIndicator,
 	renderModal: GitHubBackupModal,
 	getService: () => gitHubBackupService,
+	gitRemote: gitHubGitRemoteProvider,
 };
 
 export default gitHubBackupPlugin;

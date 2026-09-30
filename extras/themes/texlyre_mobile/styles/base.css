@@ -3,61 +3,248 @@
 	--mobile-font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 	--mobile-code-font-family: "Fira Code", "Courier New", monospace;
 
-	--mobile-spacing-xs: 0.5rem;
+	--mobile-spacing-xs: var(--space-sm);
 	--mobile-spacing-sm: var(--space-sd);
-	--mobile-spacing-md: 1rem;
-	--mobile-spacing-lg: 1.5rem;
-	--mobile-spacing-xl: 2rem;
+	--mobile-spacing-md: var(--space-md);
+	--mobile-spacing-lg: var(--space-lg);
 
 	--mobile-radius-sm: 6px;
 	--mobile-radius-md: 12px;
 	--mobile-radius-lg: 16px;
-	--mobile-radius-xl: 20px;
 
 	--mobile-transition-fast: 0.2s ease;
-	--mobile-transition-normal: 0.3s ease;
-	--mobile-transition-slow: 0.5s ease;
 
 	--mobile-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-	--mobile-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
 	--mobile-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
 
 	--mobile-z-navigation: 100;
-	--mobile-z-dropdown: 200;
-	--mobile-z-modal: 300;
 	--mobile-z-toast: 400;
 
-	--project-title-width: 150px;
+	--project-title-width: 200px;
 	--mobile-nav-height: 60px;
-	--mobile-header-height: 20px;
 	--mobile-min-touch-target: 44px;
-	--mobile-sidebar-width: 10rem;
+	--mobile-sidebar-width: 160px;
+	--ui-settings-modal-width: min(
+		760px,
+		calc(100vw - 2 * var(--mobile-spacing-md))
+	);
+	--ui-settings-modal-height: min(
+		700px,
+		calc(100vh - 2 * var(--mobile-nav-height))
+	);
+	--ui-settings-sidebar-width: var(--mobile-sidebar-width);
 
 	--mobile-icon-size-sm: 20px;
 	--mobile-icon-size-md: 24px;
 	--mobile-icon-size-lg: 28px;
 
-	--mobile-font-xs: 0.75rem;
-	--mobile-font-sm: 0.875rem;
-	--mobile-font-md: 1rem;
-	--mobile-font-lg: 1.125rem;
-	--mobile-font-xl: 1.25rem;
-	--mobile-font-xxl: 1.5rem;
+	--mobile-font-xs: var(--font-size-meta);
+	--mobile-font-sm: var(--font-size-control);
+	--mobile-font-md: var(--font-size-body);
+	--mobile-font-lg: var(--font-size-title);
+	--mobile-font-xl: var(--font-size-heading-lg);
+	--mobile-font-xxl: var(--font-size-heading-xl);
+
+	--ui-field-control-height: var(--mobile-min-touch-target);
+	--ui-field-control-min-height: var(--mobile-min-touch-target);
+	--ui-field-control-font-size: var(--mobile-font-sm);
+	--ui-field-control-line-height: 1.25;
+	--ui-field-control-radius: var(--mobile-radius-md);
+	--ui-action-control-height: var(--mobile-min-touch-target);
+	--ui-action-control-font-size: var(--mobile-font-sm);
+	--ui-action-control-line-height: 1.25;
+	--ui-action-control-radius: var(--mobile-radius-md);
+	--ui-action-control-padding: 0 var(--mobile-spacing-md);
+	--ui-button-height: var(--ui-field-control-height);
+	--ui-button-min-height: var(--ui-field-control-height);
+	--ui-button-font-size: var(--ui-field-control-font-size);
+	--ui-button-line-height: var(--ui-field-control-line-height);
+	--ui-button-radius: var(--ui-field-control-radius);
+	--ui-icon-button-size: var(--ui-action-control-height);
+	--ui-icon-button-radius: var(--ui-action-control-radius);
+	--ui-joined-control-height: var(--ui-action-control-height);
+	--ui-scrollbar-size: 0px;
+	--ui-scrollbar-renderer-size: 0px;
+	--ui-scrollbar-gutter: auto;
+	--ui-field-label-font-size: var(--mobile-font-sm);
+	--ui-field-label-line-height: 1.35;
+	--ui-field-hint-font-size: var(--mobile-font-xs);
+	--ui-field-hint-line-height: 1.4;
+	--ui-field-control-padding: 0 var(--mobile-spacing-md);
+	--ui-search-control-radius: var(--mobile-radius-sm);
+	--ui-field-select-padding-inline-end: calc(
+		var(--mobile-spacing-lg) +
+		var(--mobile-spacing-md)
+	);
+	--ui-multiselect-min-height: calc(
+		var(--mobile-min-touch-target) +
+		var(--mobile-min-touch-target)
+	);
+	--ui-multiselect-padding: var(--mobile-spacing-sm);
+	--ui-multiselect-option-padding: var(--mobile-spacing-xs)
+		var(--mobile-spacing-sm);
+	--ui-multiselect-option-line-height: 1.25;
+	--ui-field-label-margin-bottom: var(--mobile-spacing-sm);
+	--ui-button-padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	--ui-list-item-min-height: var(--mobile-min-touch-target);
+	--ui-list-item-radius: var(--mobile-radius-md);
+	--ui-list-item-padding-xs: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	--ui-message-padding: var(--mobile-spacing-md);
+	--ui-message-radius: var(--mobile-radius-lg);
+	--ui-message-font-size: var(--mobile-font-sm);
+	--ui-message-line-height: 1.4;
+	--ui-panel-title-font-size: var(--mobile-font-lg);
+	--ui-panel-header-min-height: var(--mobile-min-touch-target);
+	--ui-panel-header-padding: var(--mobile-spacing-md);
+	--ui-panel-header-gap: var(--mobile-spacing-sm);
+	--ui-section-header-min-height: var(--mobile-min-touch-target);
+	--ui-section-header-font-size: var(--mobile-font-lg);
+	--ui-section-header-padding: var(--mobile-spacing-md);
+	--ui-icon-button-sm-size: var(--mobile-min-touch-target);
+	--ui-icon-button-xs-size: var(--mobile-min-touch-target);
+	--ui-icon-button-padding: var(--mobile-spacing-md);
+	--ui-icon-size: var(--mobile-icon-size-md);
+	--ui-icon-sm-size: var(--mobile-icon-size-sm);
+	--ui-icon-xs-size: var(--mobile-icon-size-sm);
+	--ui-menu-radius: var(--mobile-radius-lg);
+	--ui-menu-shadow: var(--mobile-shadow-lg);
+	--ui-menu-item-min-height: var(--mobile-min-touch-target);
+	--ui-menu-item-padding: var(--mobile-spacing-md);
+	--ui-menu-item-font-size: var(--mobile-font-sm);
+	--ui-menu-compact-item-font-size: var(--mobile-font-sm);
+	--ui-menu-title-sm-font-size: var(--mobile-font-xs);
+	--ui-menu-meta-font-size: var(--mobile-font-xs);
+	--ui-menu-indicator-font-size: var(--mobile-font-xs);
+	--ui-menu-control-title-font-size: var(--mobile-font-xs);
+	--ui-menu-label-font-size: var(--mobile-font-sm);
+	--ui-menu-value-font-size: var(--mobile-font-xs);
+	--ui-dropdown-font-size: var(--mobile-font-sm);
+	--ui-note-font-size: var(--mobile-font-xs);
+	--ui-search-result-font-size: var(--mobile-font-sm);
+	--ui-search-result-meta-font-size: var(--mobile-font-xs);
+	--ui-history-item-font-size: var(--mobile-font-sm);
+	--ui-history-item-meta-font-size: var(--mobile-font-xs);
+	--ui-project-font-size: var(--mobile-font-sm);
+	--ui-project-title-font-size: var(--mobile-font-sm);
+	--ui-project-control-font-size: var(--mobile-font-sm);
+	--ui-project-list-item-font-size: var(--mobile-font-sm);
+	--ui-project-meta-font-size: var(--mobile-font-xs);
+	--ui-project-tag-font-size: var(--mobile-font-xs);
+	--ui-note-line-height: 1.4;
+	--ui-meta-font-size: var(--mobile-font-xs);
+	--ui-outline-item-font-size: var(
+		--ui-file-name-font-size,
+		var(--mobile-font-sm)
+	);
+	--ui-outline-icon-font-size: var(--mobile-font-sm);
+	--ui-outline-line-font-size: var(--mobile-font-xs);
+	--ui-outline-empty-font-size: var(--mobile-font-sm);
+	--ui-outline-empty-secondary-font-size: var(--mobile-font-xs);
+	--ui-tooltip-font-size: var(--mobile-font-xs);
+	--ui-tooltip-line-height: 1.4;
+	--ui-tooltip-title-font-size: var(--mobile-font-sm);
+	--ui-toast-top: var(--mobile-spacing-md);
+	--ui-toast-right: var(--mobile-spacing-md);
+	--ui-toast-left: var(--mobile-spacing-md);
+	--ui-toast-max-width: none;
+	--ui-toast-z-index: var(--mobile-z-toast);
+	--ui-tab-min-height: calc(var(--mobile-min-touch-target) - 8px);
+	--ui-tab-padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	--ui-tab-font-size: var(--mobile-font-sm);
+	--ui-switcher-tab-font-size: var(--mobile-font-sm);
+	--ui-panel-tab-font-size: var(--mobile-font-sm);
+	--ui-explorer-tabs-background: var(--pico-secondary-background);
+	--ui-explorer-tabs-border: 2px solid var(--accent-border);
+	--ui-explorer-tab-min-height: var(--mobile-min-touch-target);
+	--ui-explorer-tab-padding: var(--mobile-spacing-md);
+	--ui-explorer-tab-font-size: var(--mobile-font-sm);
+	--ui-explorer-tab-font-weight: 600;
+	--ui-explorer-header-min-height: calc(var(--mobile-min-touch-target) + 8px);
+	--ui-explorer-header-padding: var(--mobile-spacing-md);
+	--ui-explorer-title-font-size: var(--mobile-font-lg);
+	--ui-editor-tabs-container-min-height: var(--mobile-min-touch-target);
+	--ui-editor-tabs-container-max-height: var(--mobile-min-touch-target);
+	--ui-editor-tab-height: calc(var(--mobile-min-touch-target) - 8px);
+	--ui-editor-tab-min-width: 120px;
+	--ui-editor-tab-max-width: 180px;
+	--ui-editor-tab-padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	--ui-editor-tab-font-size: var(
+		--ui-file-name-font-size,
+		var(--mobile-font-sm)
+	);
+	--ui-modal-radius: var(--mobile-radius-lg);
+	--ui-modal-header-padding: var(--mobile-spacing-lg);
+	--ui-modal-title-font-size: var(--mobile-font-lg);
+	--ui-modal-content-padding: var(--mobile-spacing-lg);
+	--ui-control-cluster-gap: var(--mobile-spacing-sm);
+	--ui-joined-control-padding: var(--mobile-spacing-sm);
+	--ui-joined-toggle-width: var(--mobile-min-touch-target);
+	--ui-joined-toggle-padding-inline: var(--mobile-spacing-md);
+	--ui-split-icon-size: var(--mobile-icon-size-sm);
+	--ui-plugin-toolbar-height: var(--mobile-min-touch-target);
+	--ui-plugin-toolbar-item-height: var(--mobile-min-touch-target);
+	--ui-plugin-toolbar-padding: 0 var(--mobile-spacing-xs);
+	--ui-plugin-toolbar-gap: var(--mobile-spacing-xs);
+	--ui-plugin-toolbar-icon-size: var(--mobile-icon-size-md);
+	--ui-plugin-toolbar-separator-height: calc(
+		var(--mobile-min-touch-target) *
+		0.55
+	);
+	--ui-plugin-toolbar-separator-margin: var(--mobile-spacing-xs);
+	--ui-plugin-header-wrap: nowrap;
+	--ui-plugin-controls-wrap: nowrap;
+	--ui-plugin-controls-overflow-x: visible;
+
+	--ui-explorer-background: var(--pico-secondary-background);
+	--ui-explorer-radius: var(--mobile-radius-lg);
+	--ui-explorer-font-size: var(--mobile-font-sm);
+	--ui-file-node-min-height: var(--mobile-min-touch-target);
+	--ui-file-node-padding: var(--mobile-spacing-md);
+	--ui-file-root-node-padding: var(--mobile-spacing-md);
+	--ui-file-node-margin: var(--mobile-spacing-xs) var(--mobile-spacing-sm);
+	--ui-file-root-node-margin-left: var(--mobile-spacing-sm);
+	--ui-file-node-radius: var(--mobile-radius-md);
+	--ui-file-name-font-size: var(--mobile-font-sm);
+	--ui-chat-background: var(--pico-background);
+	--ui-chat-header-padding: var(--mobile-spacing-md);
+	--ui-chat-header-background: var(--pico-secondary-background);
+	--ui-chat-user-font-size: var(--mobile-font-xs);
+	--ui-chat-time-font-size: var(--mobile-font-xs);
+	--ui-chat-message-font-size: var(--mobile-font-sm);
+	--ui-chat-message-line-height: 1.6;
+	--ui-chat-input-min-height: calc(var(--mobile-min-touch-target) * 2);
+	--ui-chat-input-font-size: var(--ui-field-control-font-size);
+	--ui-chat-input-padding: var(--mobile-spacing-md);
+	--ui-chat-count-background: var(--pico-primary);
+	--ui-chat-count-color: var(--pico-primary-inverse);
+	--ui-chat-empty-color: var(--pico-secondary);
+	--ui-chat-message-margin-bottom: var(--mobile-spacing-md);
+	--ui-chat-own-background: var(--pico-primary);
+	--ui-chat-own-color: var(--pico-primary-inverse);
+	--ui-chat-other-background: var(--pico-secondary-background);
+	--ui-chat-other-color: var(--text-color);
+	--ui-chat-input-container-background: var(--pico-background);
+	--ui-chat-input-border-color: var(--pico-secondary);
 
 	font-family: var(--mobile-font-family);
-	font-size: var(--mobile-font-md);
 	line-height: 1.6;
 	touch-action: manipulation;
 	-webkit-text-size-adjust: 100%;
 	text-size-adjust: 100%;
 }
 
-[data-theme-plugin="texlyre-mobile"] button,
-[data-theme-plugin="texlyre-mobile"] a,
-[data-theme-plugin="texlyre-mobile"] input,
-[data-theme-plugin="texlyre-mobile"] select,
-[data-theme-plugin="texlyre-mobile"] textarea,
-[data-theme-plugin="texlyre-mobile"] label {
+[data-theme-plugin="texlyre-mobile"] body {
+	font-size: var(--mobile-font-sm);
+}
+
+[data-theme-plugin="texlyre-mobile"]:where(
+	button,
+	a,
+	input,
+	select,
+	textarea,
+	label
+) {
 	touch-action: manipulation;
 }
 
@@ -65,19 +252,7 @@
 	display: none;
 }
 
-[data-theme-plugin="texlyre-mobile"] button {
-	border-radius: var(--mobile-radius-md);
-	transition: all var(--mobile-transition-fast);
-	font-weight: 500;
-	color: var(--text-color);
-	min-height: var(--mobile-min-touch-target);
-	min-width: var(--mobile-min-touch-target);
-	font-size: var(--mobile-font-sm);
-	padding: var(--mobile-spacing-sm) 0.3rem;
-}
-
-[data-theme-plugin="texlyre-mobile"] button svg,
-[data-theme-plugin="texlyre-mobile"] .action-btn svg {
+[data-theme-plugin="texlyre-mobile"] :where(button svg) {
 	width: var(--mobile-icon-size-md);
 	height: var(--mobile-icon-size-md);
 }
@@ -102,106 +277,63 @@
 	line-height: 1.4;
 }
 
-[data-theme-plugin="texlyre-mobile"] h4,
-[data-theme-plugin="texlyre-mobile"] h5,
-[data-theme-plugin="texlyre-mobile"] h6 {
+[data-theme-plugin="texlyre-mobile"] :where(h4, h5, h6) {
 	font-size: var(--mobile-font-md);
 	line-height: 1.4;
-}
-
-[data-theme-plugin="texlyre-mobile"] p,
-[data-theme-plugin="texlyre-mobile"] div,
-[data-theme-plugin="texlyre-mobile"] span {
-	font-size: var(--mobile-font-sm);
-	line-height: 1.6;
-}
-
-[data-theme-plugin="texlyre-mobile"] .cm-editor div,
-[data-theme-plugin="texlyre-mobile"] .cm-editor span {
-	font-size: inherit;
-	line-height: inherit;
 }
 
 [data-theme-plugin="texlyre-mobile"] small {
 	font-size: var(--mobile-font-xs);
 }
 
-[data-theme-plugin="texlyre-mobile"] input,
-[data-theme-plugin="texlyre-mobile"] textarea,
-[data-theme-plugin="texlyre-mobile"] select {
-	font-size: var(--mobile-font-md);
-	padding: var(--mobile-spacing-md);
-	border-radius: var(--mobile-radius-md);
-	min-height: var(--mobile-min-touch-target);
-}
-
-[data-theme-plugin="texlyre-mobile"] code,
-[data-theme-plugin="texlyre-mobile"] pre {
+[data-theme-plugin="texlyre-mobile"] :where(code, pre) {
 	font-family: var(--mobile-code-font-family);
 	font-size: var(--mobile-font-sm);
 }
 
 @media (max-width: 480px) {
 	[data-theme-plugin="texlyre-mobile"] {
-		--mobile-spacing-xs: 0.15rem;
-		--mobile-spacing-sm: 0.25rem;
-		--mobile-spacing-md: 0.35rem;
-		--mobile-spacing-lg: 0.5rem;
-		--mobile-spacing-xl: 0.65rem;
-
+		--mobile-spacing-xs: var(--space-us);
+		--mobile-spacing-sm: var(--space-xs);
+		--mobile-spacing-md: var(--space-ss);
+		--mobile-spacing-lg: var(--space-sm);
 		--mobile-radius-sm: 2px;
 		--mobile-radius-md: 3px;
 		--mobile-radius-lg: 4px;
-		--mobile-radius-xl: 6px;
-
 		--mobile-nav-height: 50px;
 		--mobile-min-touch-target: 32px;
-
 		--mobile-icon-size-sm: 14px;
 		--mobile-icon-size-md: 16px;
 		--mobile-icon-size-lg: 18px;
-
-		--mobile-font-xs: 0.6rem;
-		--mobile-font-sm: 0.7rem;
-		--mobile-font-md: 0.8rem;
-		--mobile-font-lg: 0.9rem;
-		--mobile-font-xl: 1rem;
-		--mobile-font-xxl: 1.1rem;
-
-		font-size: var(--mobile-font-md);
-		line-height: 1.6;
+		--mobile-font-xs: var(--font-size-micro);
+		--mobile-font-sm: var(--font-size-caption);
+		--mobile-font-md: var(--font-size-small);
+		--mobile-font-lg: var(--font-size-ui);
+		--mobile-font-xl: var(--font-size-body);
+		--mobile-font-xxl: var(--font-size-title);
 	}
 }
 
 @media (min-width: 481px) and (max-width: 768px) {
 	[data-theme-plugin="texlyre-mobile"] {
-		--mobile-spacing-xs: 0.25rem;
-		--mobile-spacing-sm: 0.35rem;
-		--mobile-spacing-md: 0.5rem;
-		--mobile-spacing-lg: 0.7rem;
-		--mobile-spacing-xl: 1rem;
-
+		--mobile-spacing-xs: var(--space-xs);
+		--mobile-spacing-sm: var(--space-ss);
+		--mobile-spacing-md: var(--space-sm);
+		--mobile-spacing-lg: var(--space-sd);
 		--mobile-radius-sm: 3px;
 		--mobile-radius-md: 6px;
 		--mobile-radius-lg: 10px;
-		--mobile-radius-xl: 14px;
-
 		--mobile-nav-height: 55px;
 		--mobile-min-touch-target: 38px;
-
 		--mobile-icon-size-sm: 18px;
 		--mobile-icon-size-md: 22px;
 		--mobile-icon-size-lg: 26px;
-
-		--mobile-font-xs: 0.7rem;
-		--mobile-font-sm: 0.8rem;
-		--mobile-font-md: 0.9rem;
-		--mobile-font-lg: 1rem;
-		--mobile-font-xl: 1.15rem;
-		--mobile-font-xxl: 1.35rem;
-
-		font-size: var(--mobile-font-md);
-		line-height: 1.6;
+		--mobile-font-xs: var(--font-size-caption);
+		--mobile-font-sm: var(--font-size-small);
+		--mobile-font-md: var(--font-size-ui);
+		--mobile-font-lg: var(--font-size-body);
+		--mobile-font-xl: var(--font-size-title);
+		--mobile-font-xxl: var(--font-size-heading-lg);
 	}
 }
 

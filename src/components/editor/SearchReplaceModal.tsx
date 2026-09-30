@@ -63,11 +63,16 @@ const SearchReplaceModal: React.FC<SearchReplaceModalProps> = ({
 			<div className='search-replace-modal-content'>
 				<p>{getMessage()}</p>
 
-				<div className='warning-message'>
+				<div className='ui-message' data-tone='warning'>
 					{t('This action cannot be undone.')}
 				</div>
 
-				<div className='modal-actions'>
+				<div
+					className='ui-actions'
+					data-variant='modal'
+					data-align='end'
+					data-cross='stretch'
+				>
 					<button type='button' className='button secondary' onClick={onClose}>
 						{t('Cancel')}
 					</button>

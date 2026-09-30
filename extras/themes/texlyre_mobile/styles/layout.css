@@ -1,5 +1,4 @@
 /* extras/themes/texlyre_mobile/styles/layout.css */
-
 [data-layout="texlyre-mobile"] {
 	--mobile-nav-height: 60px;
 }
@@ -19,13 +18,13 @@
 	padding: 0;
 	width: 100%;
 	min-width: 300px;
-	max-width: 100% !important;
+	max-width: 100%;
 }
 
 [data-layout="texlyre-mobile"] #root {
 	height: 100vh;
 	width: 100vw;
-	max-width: 100% !important;
+	max-width: 100%;
 	margin: 0;
 	padding: 0;
 	overflow: hidden;
@@ -41,7 +40,6 @@
 	overflow: hidden;
 }
 
-/* Header */
 [data-layout="texlyre-mobile"] header {
 	flex: 0 0 auto;
 	background-color: var(--pico-secondary-background);
@@ -57,24 +55,6 @@
 	padding-top: var(--mobile-spacing-sm);
 }
 
-[data-layout="texlyre-mobile"] .header-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	min-height: var(--mobile-min-touch-target);
-	width: 100%;
-	padding: var(--mobile-spacing-sm) 0;
-}
-
-[data-layout="texlyre-mobile"] .header-row:first-child {
-	flex: 0 0 auto;
-}
-
-[data-layout="texlyre-mobile"] .header-row:last-child {
-	flex: 1;
-	min-height: calc(var(--mobile-min-touch-target) - 8px);
-}
-
 [data-layout="texlyre-mobile"] .header-left,
 [data-layout="texlyre-mobile"] .header-right {
 	flex-shrink: 0;
@@ -84,9 +64,9 @@
 	align-self: flex-start;
 	position: absolute;
 	left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
-	top: 0 !important;
-	margin: 0 !important;
-	padding: 0 !important;
+	top: 0;
+	margin: 0;
+	padding: 0;
 }
 
 [data-layout="texlyre-mobile"] .header-left h1 {
@@ -100,31 +80,31 @@
 }
 
 [data-layout="texlyre-mobile"] .header-right .user-dropdown-button {
-	position: fixed !important;
-	inset-block-start: 0 !important;
-	inset-inline-start: auto !important;
-	inset-inline-end: var(--mobile-spacing-md) !important;
-	inset-block-end: auto !important;
-	margin: 0 !important;
-	padding: 0 !important;
+	position: fixed;
+	inset-block-start: 0;
+	inset-inline-start: auto;
+	inset-inline-end: var(--mobile-spacing-md);
+	inset-block-end: auto;
+	margin: 0;
+	padding: 0;
 	padding-left: var(--mobile-spacing-sm);
 	padding-right: var(--mobile-spacing-sm);
 	max-width: 150px;
 }
 
-/* Main content */
 [data-layout="texlyre-mobile"] .main-content {
 	flex: 1;
 	width: 100vw;
+	height: auto;
+	min-height: 0;
 	overflow: hidden;
 	position: relative;
 	display: block;
-	padding: 0 !important;
-	gap: 0 !important;
+	padding: 0;
+	gap: 0;
 	margin-bottom: var(--mobile-nav-height);
 }
 
-/* Bottom navigation */
 [data-layout="texlyre-mobile"] .mobile-bottom-nav,
 .texlyre-mobile-nav {
 	display: none;
@@ -149,7 +129,6 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	padding-right: max(0px, env(safe-area-inset-right));
 }
 
-/* Footer & info */
 [data-layout="texlyre-mobile"] footer .texlyre-info {
 	display: block;
 }
@@ -161,97 +140,80 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	display: none;
 }
 
-[data-layout="texlyre-mobile"] footer .project-type-badge {
-	position: absolute;
-	top: var(--mobile-spacing-sm);
-	right: var(--mobile-spacing-sm);
-	bottom: auto;
-	left: auto;
-	z-index: var(--mobile-z-navigation);
-	font-size: var(--mobile-font-xs);
-	filter: brightness(0.8);
+[data-layout="texlyre-mobile"] footer .footer-status {
 	display: none;
 }
 
-[data-layout="texlyre-mobile"] footer .project-type-badge .type-info-help {
-	font-size: var(--mobile-font-xs);
-	display: none;
-}
-
-[data-layout="texlyre-mobile"] footer .workspace-badge {
-	display: none;
-}
-
-/* Sidebar / explorer / panels */
-[data-layout="texlyre-mobile"] .file-explorer,
+[data-layout="texlyre-mobile"] .ui-panel[data-role="explorer"],
 [data-layout="texlyre-mobile"] .sidebar-container,
 [data-layout="texlyre-mobile"] .explorer-container,
 [data-layout="texlyre-mobile"] .resizable-panel,
 [data-layout="texlyre-mobile"] .panel-content {
-	border-radius: 0 !important;
-	border: none !important;
-	width: 100% !important;
-	max-width: 100% !important;
-	min-width: 100% !important;
-	height: 100% !important;
+	border-radius: 0;
+	border: none;
+	width: 100%;
+	max-width: 100%;
+	min-width: 100%;
+	height: 100%;
 }
 
 [data-layout="texlyre-mobile"] .panel-content,
 [data-layout="texlyre-mobile"] .external-output-container .panel-content,
 [data-layout="texlyre-mobile"] .latex-output-container .panel-content,
 [data-layout="texlyre-mobile"] .typst-output-container .panel-content {
-	display: flex !important;
-	flex-direction: column !important;
+	display: flex;
+	flex-direction: column;
 }
 
 [data-layout="texlyre-mobile"] .explorer-container,
-[data-layout="texlyre-mobile"] .file-explorer {
-	flex: 1 !important;
-	display: flex !important;
-	flex-direction: column !important;
-	height: auto !important;
+[data-layout="texlyre-mobile"] .ui-panel[data-role="explorer"] {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	height: auto;
 }
 
 [data-layout="texlyre-mobile"] .file-tree {
-	width: 100% !important;
-	max-width: 100% !important;
-	flex: 1 !important;
-	display: block !important;
-	overflow-y: auto !important;
-	min-height: 0 !important;
+	width: 100%;
+	max-width: 100%;
+	flex: 1;
+	display: block;
+	overflow-y: auto;
+	min-height: 0;
 	transform: translateZ(0);
 	will-change: transform;
 }
 
-[data-layout="texlyre-mobile"] .external-outline,
-[data-layout="texlyre-mobile"] .latex-outline,
-[data-layout="texlyre-mobile"] .textmate-outline,
-[data-layout="texlyre-mobile"] .typst-outline {
-	width: 100% !important;
-	max-width: 100% !important;
-	flex: 1 !important;
-	display: block !important;
-	overflow-y: auto !important;
-	min-height: 0 !important;
-	max-height: 50% !important;
+[data-layout="texlyre-mobile"] .outline-panel {
+	width: 100%;
+	max-width: 100%;
+	flex: 1;
+	display: block;
+	overflow-y: auto;
+	min-height: 0;
+	max-height: 50%;
 }
 
-[data-layout="texlyre-mobile"] .view-toggle {
-	width: 100% !important;
-	max-width: 100% !important;
-	margin: 0 !important;
-	padding: 0 !important;
+[data-layout="texlyre-mobile"] .outline-panel[data-collapsed="true"] {
+	flex: 0 0 auto;
+	max-height: none;
+	margin-top: auto;
+	overflow: hidden;
+}
+
+[data-layout="texlyre-mobile"] .ui-tab-list[data-role="explorer-view"] {
+	width: 100%;
+	max-width: 100%;
+	margin: 0;
+	padding: 0;
 	z-index: 10;
-	order: -1 !important;
-	flex-shrink: 0 !important;
+	order: -1;
+	flex-shrink: 0;
 }
 
-/* Output */
-[data-layout="texlyre-mobile"] .external-output,
+[data-layout="texlyre-mobile"] .ui-viewer[data-role="typeset-output"],
 [data-layout="texlyre-mobile"] .external-output-container,
-[data-layout="texlyre-mobile"] .latex-output,
 [data-layout="texlyre-mobile"] .latex-output-container,
-[data-layout="texlyre-mobile"] .typst-output,
 [data-layout="texlyre-mobile"] .typst-output-container,
 [data-layout="texlyre-mobile"] .pdf-viewer,
 [data-layout="texlyre-mobile"] .log-viewer,
@@ -259,121 +221,235 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 [data-layout="texlyre-mobile"] .split-log-view {
 	border-radius: 0;
 	border: none;
-	width: 100% !important;
-	height: 100% !important;
-	overflow-y: auto !important;
-}
-
-[data-layout="texlyre-mobile"] .output-content {
-	flex: 1 !important;
-	height: 100% !important;
-	overflow-y: auto !important;
+	width: 100%;
+	height: 100%;
+	overflow-y: auto;
 }
 
 [data-layout="texlyre-mobile"] .pdf-viewer embed {
-	width: 100% !important;
-	height: 100% !important;
-	display: block !important;
+	width: 100%;
+	height: 100%;
+	display: block;
 }
 
 [data-layout="texlyre-mobile"] .empty-state {
-	width: 100% !important;
-	height: 100% !important;
-	display: flex !important;
-	align-items: center !important;
-	justify-content: center !important;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
-/* Modals & toasts */
-[data-layout="texlyre-mobile"] .modal-container {
+[data-layout="texlyre-mobile"] .ui-panel[data-role="modal"] {
 	margin: var(--mobile-spacing-md);
-	width: calc(100vw - 2 * var(--mobile-spacing-md));
+	width: min(
+		var(--ui-modal-width, calc(100vw - 2 * var(--mobile-spacing-md))),
+		calc(100vw - 2 * var(--mobile-spacing-md))
+	);
 	max-height: calc(100vh - 2 * var(--mobile-nav-height));
-}
-
-[data-layout="texlyre-mobile"] .toast-container {
-	top: var(--mobile-spacing-md);
-	right: var(--mobile-spacing-md);
-	left: var(--mobile-spacing-md);
-	max-width: none;
-	position: fixed;
-	z-index: var(--mobile-z-toast);
 }
 
 [data-layout="texlyre-mobile"] .settings-sidebar {
 	width: var(--mobile-sidebar-width);
 }
 
-/* Hidden / mobile-only utilities */
 [data-layout="texlyre-mobile"] .resize-handle,
-[data-layout="texlyre-mobile"] .collapse-button,
-[data-layout="texlyre-mobile"] .comment-toggle-button,
-[data-layout="texlyre-mobile"] .mobile-hidden {
+[data-layout="texlyre-mobile"] .collapse-button {
 	display: none !important;
 }
 
-[data-layout="texlyre-mobile"] .mobile-only {
-	display: block !important;
-}
-
-/* Chat panel base */
-[data-layout="texlyre-mobile"] .chat-panel {
+[data-layout="texlyre-mobile"] .ui-panel[data-role="chat"] {
 	border-radius: 0;
 }
 
-[data-layout="texlyre-mobile"] .chat-panel-content {
-	flex: 1 !important;
-	overflow-y: scroll !important;
+[data-layout="texlyre-mobile"] .ui-panel-content[data-role="chat"] {
+	flex: 1;
+	overflow-y: scroll;
 }
 
-[data-layout="texlyre-mobile"] .chat-panel-input-container {
+[data-layout="texlyre-mobile"] .ui-toolbar[data-role="chat-input"] {
 	margin-bottom: var(--mobile-nav-height);
 }
 
-[data-layout="texlyre-mobile"] body:not(.mobile-view-chat) .chat-panel {
-	display: none !important;
+[data-layout="texlyre-mobile"]
+	body:not(.mobile-view-chat)
+	.ui-panel[data-role="chat"] {
+	display: none;
+	z-index: 0;
 }
 
-/* View: explorer */
 [data-layout="texlyre-mobile"] body.mobile-view-explorer .main-content {
-	width: 100vw !important;
-	max-width: 100vw !important;
-	gap: 0 !important;
-	padding: 0 !important;
-	margin: 0 !important;
+	width: 100vw;
+	max-width: 100vw;
+	gap: 0;
+	padding: 0;
+	margin: 0 0 var(--mobile-nav-height);
 }
 
 [data-layout="texlyre-mobile"]
 	body.mobile-view-explorer
 	.main-content
 	> *:not(.sidebar-container) {
-	display: none !important;
+	display: none;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container,
 [data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container > *,
 [data-layout="texlyre-mobile"] body.mobile-view-explorer .explorer-container {
-	width: 100vw !important;
-	max-width: 100vw !important;
-	min-width: 100vw !important;
-	height: 100% !important;
-	flex: 1 !important;
-	flex-shrink: 0 !important;
-	flex-grow: 1 !important;
-	border: none !important;
-	border-radius: 0 !important;
-	margin-top: 0 !important;
-	overflow: hidden !important;
+	width: 100vw;
+	max-width: 100vw;
+	min-width: 100vw;
+	height: 100%;
+	flex: 1;
+	flex-shrink: 0;
+	flex-grow: 1;
+	border: none;
+	border-radius: 0;
+	margin-top: 0;
+	overflow: hidden;
 }
 
 [data-layout="texlyre-mobile"]
 	body.mobile-view-explorer
 	.sidebar-container
-	.file-explorer {
-	margin-top: 0 !important;
+	.ui-panel[data-role="explorer"] {
+	margin-top: 0;
 }
 
-/* View: editor */
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.main-content[data-mobile-outline-preview="true"]:has(
+		.outline-panel:not([data-collapsed="true"])
+	) {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.main-content[data-mobile-outline-preview="true"]:has(
+		.outline-panel:not([data-collapsed="true"])
+	)
+	> .sidebar-container {
+	height: auto;
+	min-height: 0;
+	flex: 1 1 auto;
+}
+
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.main-content[data-mobile-outline-preview="true"]:has(
+		.outline-panel:not([data-collapsed="true"])
+	)
+	> .editor-container-outer {
+	display: flex;
+	width: 100vw;
+	height: min(42vh, 360px);
+	min-height: min(32vh, 220px);
+	max-height: 45%;
+	flex: 0 1 min(42vh, 360px);
+	border-top: 1px solid var(--accent-border);
+	overflow: hidden;
+}
+
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.main-content[data-mobile-outline-preview="true"]:has(
+		.outline-panel:not([data-collapsed="true"])
+	)
+	.editor-tabs-container {
+	display: none;
+}
+
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.main-content[data-mobile-outline-preview="true"]:has(
+		.outline-panel:not([data-collapsed="true"])
+	)
+	.editor-container,
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.main-content[data-mobile-outline-preview="true"]:has(
+		.outline-panel:not([data-collapsed="true"])
+	)
+	.git-editor-surface,
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.main-content[data-mobile-outline-preview="true"]:has(
+		.outline-panel:not([data-collapsed="true"])
+	)
+	.editor-wrapper {
+	min-height: 0;
+	height: 100%;
+}
+
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.main-content[data-mobile-outline-preview="true"]:has(
+		.outline-panel:not([data-collapsed="true"])
+	)
+	> .editor-container-outer
+	> .editor-container {
+	width: 100%;
+	max-width: 100%;
+	flex: 1 1 100%;
+}
+
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.main-content[data-mobile-outline-preview="true"]:has(
+		.outline-panel:not([data-collapsed="true"])
+	)
+	> .editor-container-outer
+	> .resizable-panel {
+	display: none !important;
+}
+
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.main-content[data-mobile-outline-maximized="true"]:has(
+		.outline-panel:not([data-collapsed="true"])
+	)
+	.explorer-container {
+	height: auto;
+	min-height: 0;
+	flex: 0 0 auto;
+}
+
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.main-content[data-mobile-outline-maximized="true"]:has(
+		.outline-panel:not([data-collapsed="true"])
+	)
+	.explorer-container
+	> .panel-content {
+	height: auto;
+	min-height: 0;
+	flex: 0 0 auto;
+}
+
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.main-content[data-mobile-outline-maximized="true"]:has(
+		.outline-panel:not([data-collapsed="true"])
+	)
+	.explorer-container
+	> .panel-content
+	> :not(.ui-tab-list[data-role="explorer-view"]) {
+	display: none;
+}
+
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.main-content[data-mobile-outline-maximized="true"]:has(
+		.outline-panel:not([data-collapsed="true"])
+	)
+	.outline-panel {
+	max-height: none;
+	flex: 1 1 auto;
+}
+
 [data-layout="texlyre-mobile"]
 	body.mobile-view-editor
 	.main-content
@@ -381,43 +457,47 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 [data-layout="texlyre-mobile"]
 	body.mobile-view-editor
 	.external-output-container,
-[data-layout="texlyre-mobile"] body.mobile-view-editor .external-output,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .latex-output-container,
-[data-layout="texlyre-mobile"] body.mobile-view-editor .latex-output,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .typst-output-container,
-[data-layout="texlyre-mobile"] body.mobile-view-editor .typst-output,
+[data-layout="texlyre-mobile"]
+	body.mobile-view-editor
+	.ui-viewer[data-role="typeset-output"],
 [data-layout="texlyre-mobile"] body.mobile-view-editor .pdf-viewer,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .log-viewer,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .log-view-container {
-	display: none !important;
+	display: none;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-editor .editor-container-outer,
-[data-layout="texlyre-mobile"] body.mobile-view-editor .editor-output-container,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .editor-wrapper {
-	width: 100vw !important;
-	height: 100% !important;
-	flex: 1 !important;
-	display: flex !important;
-	overflow: hidden !important;
+	width: 100vw;
+	height: 100%;
+	flex: 1;
+	display: flex;
+	overflow: hidden;
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-editor .editor-wrapper {
+	flex-direction: column;
 }
 
 [data-layout="texlyre-mobile"]
 	body.mobile-view-editor
 	.codemirror-editor-container {
-	height: 100% !important;
-	overflow-y: auto !important;
+	height: 100%;
+	overflow-y: auto;
 }
 
-[data-layout="texlyre-mobile"] body.mobile-view-editor .comment-panel,
-[data-layout="texlyre-mobile"] body.mobile-view-editor .review-panel {
-	position: relative !important;
-	right: 0 !important;
-	width: 65vw !important;
-	z-index: calc(var(--mobile-z-navigation) - 1) !important;
-	background-color: var(--pico-background) !important;
-	border-left: 1px solid var(--accent-border) !important;
-	box-shadow: var(--mobile-shadow-lg) !important;
+[data-layout="texlyre-mobile"]
+	body.mobile-view-editor
+	.ui-panel[data-role="thread"] {
+	position: relative;
+	right: 0;
+	width: 65vw;
+	z-index: calc(var(--mobile-z-navigation) - 1);
+	background-color: var(--pico-background);
+	border-left: 1px solid var(--accent-border);
+	box-shadow: var(--mobile-shadow-lg);
 }
 
 [data-layout="texlyre-mobile"]
@@ -426,14 +506,9 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 [data-layout="texlyre-mobile"]
 	body.mobile-view-editor
 	.review-panel.editor-review-panel {
-	display: flex !important;
+	display: flex;
 }
 
-[data-layout="texlyre-mobile"] body.mobile-view-editor .viewer-plugin-info {
-	display: none !important;
-}
-
-/* View: output */
 [data-layout="texlyre-mobile"]
 	body.mobile-view-output
 	.main-content
@@ -444,131 +519,128 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	body.mobile-view-output
 	.codemirror-editor-container,
 [data-layout="texlyre-mobile"] body.mobile-view-output .editor-tabs-container {
-	display: none !important;
+	display: none;
 }
 
 [data-layout="texlyre-mobile"]
 	body.mobile-view-output
 	.external-output-container,
-[data-layout="texlyre-mobile"] body.mobile-view-output .external-output,
 [data-layout="texlyre-mobile"] body.mobile-view-output .latex-output-container,
-[data-layout="texlyre-mobile"] body.mobile-view-output .latex-output,
 [data-layout="texlyre-mobile"] body.mobile-view-output .typst-output-container,
-[data-layout="texlyre-mobile"] body.mobile-view-output .typst-output,
-[data-layout="texlyre-mobile"] body.mobile-view-output .output-content,
+[data-layout="texlyre-mobile"]
+	body.mobile-view-output
+	.ui-viewer[data-role="typeset-output"],
 [data-layout="texlyre-mobile"] body.mobile-view-output .pdf-viewer,
 [data-layout="texlyre-mobile"] body.mobile-view-output .log-view-container,
 [data-layout="texlyre-mobile"] body.mobile-view-output .log-viewer,
 [data-layout="texlyre-mobile"] body.mobile-view-output .pdf-viewer embed,
 [data-layout="texlyre-mobile"] body.mobile-view-output .empty-state,
-[data-layout="texlyre-mobile"] body.mobile-view-output .output-header,
-[data-layout="texlyre-mobile"] body.mobile-view-output .view-tabs,
-[data-layout="texlyre-mobile"] body.mobile-view-output .tab-button {
-	display: flex !important;
+[data-layout="texlyre-mobile"]
+	body.mobile-view-output
+	.ui-panel-header[data-role="output"],
+[data-layout="texlyre-mobile"]
+	body.mobile-view-output
+	.ui-tab-list[data-role="output"],
+[data-layout="texlyre-mobile"]
+	body.mobile-view-output
+	.ui-tab-list[data-role="output"]
+	> .ui-tab {
+	display: flex;
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-output .editor-output-container,
+[data-layout="texlyre-mobile"]
+	body.mobile-view-output
+	.external-output-container,
+[data-layout="texlyre-mobile"] body.mobile-view-output .latex-output-container,
+[data-layout="texlyre-mobile"] body.mobile-view-output .typst-output-container,
+[data-layout="texlyre-mobile"]
+	body.mobile-view-output
+	.ui-viewer[data-role="typeset-output"],
+[data-layout="texlyre-mobile"] body.mobile-view-output .pdf-viewer,
+[data-layout="texlyre-mobile"] body.mobile-view-output .log-view-container {
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	height: 100%;
+	flex: 1;
+	margin: 0;
+	overflow-y: auto;
 }
 
 [data-layout="texlyre-mobile"]
 	body.mobile-view-output
-	.external-output-container,
-[data-layout="texlyre-mobile"] body.mobile-view-output .external-output,
-[data-layout="texlyre-mobile"] body.mobile-view-output .latex-output-container,
-[data-layout="texlyre-mobile"] body.mobile-view-output .latex-output,
-[data-layout="texlyre-mobile"] body.mobile-view-output .typst-output-container,
-[data-layout="texlyre-mobile"] body.mobile-view-output .typst-output,
-[data-layout="texlyre-mobile"] body.mobile-view-output .output-content,
-[data-layout="texlyre-mobile"] body.mobile-view-output .pdf-viewer,
-[data-layout="texlyre-mobile"] body.mobile-view-output .log-view-container {
-	width: 100% !important;
-	height: 100% !important;
-	flex: 1 !important;
-	overflow-y: auto !important;
-}
-
-[data-layout="texlyre-mobile"] body.mobile-view-output .external-output,
-[data-layout="texlyre-mobile"] body.mobile-view-output .latex-output,
-[data-layout="texlyre-mobile"] body.mobile-view-output .typst-output,
-[data-layout="texlyre-mobile"] body.mobile-view-output .output-content {
-	flex-direction: column !important;
+	.ui-viewer[data-role="typeset-output"] {
+	flex-direction: column;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-output .log-viewer {
-	display: block !important;
-	overflow-y: auto !important;
+	display: block;
+	overflow-y: auto;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-output .pdf-viewer embed {
-	width: 100% !important;
-	height: 100% !important;
+	width: 100%;
+	height: 100%;
 }
 
-/* View: chat */
 [data-layout="texlyre-mobile"] body.mobile-view-chat .main-content {
-	display: none !important;
+	display: none;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-chat footer {
-	flex: 1 !important;
-	display: flex !important;
-	flex-direction: column !important;
-	margin: 0 !important;
-	margin-bottom: var(--mobile-nav-height) !important;
-	padding: 0 !important;
-	width: 100% !important;
-	height: auto !important;
-	position: relative !important;
-	top: auto !important;
-	left: auto !important;
-	right: auto !important;
-	bottom: auto !important;
-	transform: none !important;
-	min-height: 0 !important;
-	overflow: hidden !important;
-}
-
-[data-layout="texlyre-mobile"] body.mobile-view-chat .chat-panel {
-	display: flex !important;
-	position: static !important;
-	width: 100% !important;
-	height: 100% !important;
-	flex: 1 !important;
-	min-height: 0 !important;
-	border: none !important;
-	border-radius: 0 !important;
-	transform: none !important;
-	flex-direction: column !important;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+	margin-bottom: var(--mobile-nav-height);
+	padding: 0;
+	width: 100%;
+	height: auto;
+	position: relative;
+	top: auto;
+	left: auto;
+	right: auto;
+	bottom: auto;
+	transform: none;
+	min-height: 0;
+	overflow: hidden;
 }
 
 [data-layout="texlyre-mobile"]
 	body.mobile-view-chat
-	.chat-panel
-	.chat-panel-content {
-	width: 98% !important;
+	.ui-panel[data-role="chat"] {
+	display: flex;
+	position: static;
+	width: 100%;
+	height: 100%;
+	flex: 1;
+	min-height: 0;
+	border: none;
+	border-radius: 0;
+	transform: none;
+	flex-direction: column;
 }
 
 [data-layout="texlyre-mobile"]
 	body.mobile-view-chat
-	.chat-panel-input-container {
-	margin-bottom: 0 !important;
+	.ui-panel[data-role="chat"]
+	.ui-panel-content[data-role="chat"] {
+	width: 100%;
+	min-height: 0;
+}
+
+[data-layout="texlyre-mobile"]
+	body.mobile-view-chat
+	.ui-toolbar[data-role="chat-input"] {
+	margin-top: auto;
+	margin-bottom: 0;
+	flex-shrink: 0;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-chat footer,
-[data-layout="texlyre-mobile"] body.mobile-view-chat .chat-panel {
-	z-index: 0 !important;
-}
-
-[data-layout="texlyre-mobile"] body:not(.mobile-view-chat) .chat-panel {
-	z-index: 0 !important;
-}
-
-/* Cross-view utilities */
 [data-layout="texlyre-mobile"]
-	body[class*="mobile-view-"]
-	.modal-overlay:has(.project-export-modal) {
-	display: flex !important;
-}
-
-[data-layout="texlyre-mobile"]
-	body[class*="mobile-view-"]
-	.project-export-modal {
-	display: block !important;
+	body.mobile-view-chat
+	.ui-panel[data-role="chat"] {
+	z-index: 0;
 }

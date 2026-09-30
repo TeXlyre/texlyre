@@ -54,8 +54,8 @@ const CommentModal: React.FC<CommentModalProps> = ({
 			size='small'
 		>
 			<div className='comment-modal'>
-				<form onSubmit={handleSubmit} className='comment-form'>
-					<div className='form-group'>
+				<form onSubmit={handleSubmit} className='comment-form ui-stack'>
+					<div className='ui-field' data-spacing='section'>
 						<label htmlFor='comment-content'>{t('Comment')}</label>
 						<textarea
 							id='comment-content'
@@ -64,12 +64,18 @@ const CommentModal: React.FC<CommentModalProps> = ({
 							onKeyDown={handleKeyDown}
 							placeholder={t('Enter your comment...')}
 							rows={4}
-							/* biome-ignore lint/a11y/noAutofocus: Comment modal expects immediate typing focus */
+							className='ui-field-control'
+							/* biome-ignore lint/a11y/noAutofocus: Comment modal expects immediate typing focus. */
 							autoFocus
 						/>
 					</div>
 
-					<div className='modal-actions'>
+					<div
+						className='ui-actions'
+						data-variant='modal'
+						data-align='end'
+						data-cross='stretch'
+					>
 						<button
 							type='button'
 							className='button secondary'
@@ -78,8 +84,9 @@ const CommentModal: React.FC<CommentModalProps> = ({
 							{t('Cancel')}
 						</button>
 						<button
-							type='submit'
+							type='button'
 							className='button primary'
+							onClick={handleSubmit}
 							disabled={!content.trim()}
 						>
 							{t('Add Comment')}

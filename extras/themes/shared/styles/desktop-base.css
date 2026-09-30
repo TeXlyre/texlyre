@@ -1,0 +1,103 @@
+/* Shared desktop theme base used by Wide and Compact. */
+[data-theme-plugin="texlyre"] {
+	--texlyre-font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+	--project-title-width: 460px;
+
+	--texlyre-radius-sm: 4px;
+	--texlyre-radius-md: 8px;
+
+	--texlyre-transition-fast: 0.15s ease;
+	--texlyre-transition-normal: 0.25s ease;
+	--ui-field-control-height: var(--button-height-md);
+	--ui-field-control-min-height: var(--button-height-md);
+	--ui-field-control-font-size: var(--font-size-small);
+	--ui-field-control-line-height: 1.2;
+	--ui-field-control-radius: var(--texlyre-radius-md);
+	--ui-action-control-height: var(--control-height-compact);
+	--ui-action-control-font-size: var(--font-size-small);
+	--ui-action-control-line-height: 1.2;
+	--ui-action-control-radius: var(--texlyre-radius-md);
+	--ui-button-height: var(--ui-field-control-height);
+	--ui-button-min-height: var(--ui-field-control-height);
+	--ui-button-font-size: var(--ui-field-control-font-size);
+	--ui-button-line-height: var(--ui-field-control-line-height);
+	--ui-button-radius: var(--ui-field-control-radius);
+	--ui-icon-button-size: var(--ui-action-control-height);
+	--ui-icon-button-radius: var(--ui-action-control-radius);
+	--ui-joined-control-height: var(--ui-action-control-height);
+	--ui-field-label-font-size: var(--font-size-small);
+	--ui-field-hint-font-size: var(--font-size-meta);
+	--ui-search-result-font-size: var(--font-size-small);
+	--ui-search-result-meta-font-size: var(--font-size-meta);
+	--ui-editor-tab-font-size: var(
+		--ui-file-name-font-size,
+		var(--font-size-small)
+	);
+	--ui-outline-item-font-size: var(
+		--ui-file-name-font-size,
+		var(--font-size-small)
+	);
+	--ui-outline-line-font-size: var(--font-size-meta);
+	--ui-project-font-size: var(--font-size-small);
+	--ui-project-title-font-size: var(--font-size-small);
+	--ui-project-control-font-size: var(--font-size-small);
+	--ui-project-list-item-font-size: var(--font-size-small);
+	--ui-project-meta-font-size: var(--font-size-meta);
+	--ui-project-tag-font-size: var(--font-size-meta);
+	--ui-modal-font-size: var(--font-size-small);
+	--ui-message-font-size: var(--font-size-small);
+	--ui-message-compact-font-size: var(--font-size-small);
+	--ui-tab-font-size: var(--font-size-small);
+	--ui-menu-compact-item-font-size: var(--font-size-meta);
+	--ui-menu-compact-item-padding: var(--space-xs) var(--space-sm);
+
+	--texlyre-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+	--ui-resize-handle-hit-size: 10px;
+	--ui-resize-handle-line-size: 2px;
+
+	font-family: var(--texlyre-font-family);
+}
+
+[data-theme-plugin="texlyre"] .app-container {
+	font-size: var(--font-size-ui);
+}
+
+[data-theme-plugin="texlyre"] .texlyre-info {
+	display: inline-flex;
+	align-items: center;
+	padding: var(--space-xs) var(--space-sm);
+	border-radius: var(--texlyre-radius-md);
+	font-size: var(--font-size-meta);
+	background-color: var(--accent-background);
+	transition: all var(--texlyre-transition-normal);
+	color: var(--text-color);
+	margin: 0;
+	line-height: 1;
+}
+
+[data-theme-plugin="texlyre"] .texlyre-info:hover {
+	background-color: var(--pico-primary-focus);
+	color: var(--pico-secondary);
+}
+
+[data-theme-plugin="texlyre"] *:focus-visible {
+	outline: 2px solid var(--pico-primary);
+	outline-offset: 2px;
+}
+
+[data-theme-plugin="texlyre"] ::-webkit-scrollbar {
+	width: 8px;
+}
+
+[data-theme-plugin="texlyre"] ::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+[data-theme-plugin="texlyre"] ::-webkit-scrollbar-thumb {
+	background-color: var(--accent-border);
+	border-radius: var(--radius-sm);
+}
+
+[data-theme-plugin="texlyre"] ::-webkit-scrollbar-thumb:hover {
+	background-color: var(--pico-primary);
+}

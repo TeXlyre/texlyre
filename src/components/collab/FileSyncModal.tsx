@@ -52,20 +52,16 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
 		}
 	};
 
-	const getNotificationColor = (type: string) => {
+	const getNotificationTone = (type: string) => {
 		switch (type) {
 			case 'sync_error':
-				return '#dc3545';
+				return 'error' as const;
 			case 'sync_complete':
-				return '#28a745';
-			case 'sync_request':
-				return '#007bff';
-			case 'sync_response':
-				return '#6f42c1';
+				return 'success' as const;
 			case 'sync_progress':
-				return '#ffc107';
+				return 'warning' as const;
 			default:
-				return '#6c757d';
+				return 'info' as const;
 		}
 	};
 
@@ -79,7 +75,10 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
 				size='medium'
 				headerActions={
 					<button
-						className='modal-close-button'
+						type='button'
+						className='ui-icon-button'
+						data-role='modal-close'
+						data-variant='subtle'
 						onClick={() => setShowSettings(true)}
 						title={t('File Synchronization Settings')}
 					>
@@ -87,14 +86,29 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
 					</button>
 				}
 			>
-				<div className='file-sync-modal'>
-					<div className='sync-status'>
-						<div className='status-header'>
-							<div className='sync-controls'>
+				<div className='ui-stack' data-gap='lg'>
+					<section
+						className='ui-card ui-stack'
+						data-gap='md'
+						data-padding='md'
+						data-surface='secondary'
+					>
+						<div className='ui-stack' data-gap='md'>
+							<div className='ui-stack' data-gap='sm'>
 								{!isEnabled ? (
-									<div className='sync-toolbar'>
-										<div className='primary-actions'>
+									<div
+										className='ui-toolbar'
+										data-width='full'
+										data-justify='between'
+										data-gap='md'
+									>
+										<div
+											className='ui-toolbar-actions'
+											data-role='primary'
+											data-gap='sm'
+										>
 											<button
+												type='button'
 												className='button primary'
 												onClick={enableSync}
 												disabled={isSyncing}
@@ -105,9 +119,19 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
 										</div>
 									</div>
 								) : (
-									<div className='sync-toolbar'>
-										<div className='primary-actions'>
+									<div
+										className='ui-toolbar'
+										data-width='full'
+										data-justify='between'
+										data-gap='md'
+									>
+										<div
+											className='ui-toolbar-actions'
+											data-role='primary'
+											data-gap='sm'
+										>
 											<button
+												type='button'
 												className='button primary'
 												onClick={() => requestSync()}
 												disabled={isSyncing}
@@ -116,8 +140,13 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
 												{isSyncing ? t('Syncing...') : t('Sync Now')}
 											</button>
 										</div>
-										<div className='secondary-actions'>
+										<div
+											className='ui-toolbar-actions'
+											data-role='secondary'
+											data-gap='xs'
+										>
 											<button
+												type='button'
 												className='button secondary icon-only'
 												onClick={disableSync}
 												disabled={isSyncing}
@@ -131,33 +160,34 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
 							</div>
 						</div>
 
-						<div className='status-info'>
-							<div className='status-item'>
+						<div className='ui-list' data-gap='sm'>
+							<div className='ui-meta' data-layout='row'>
 								<strong>{t('File Sync:')}</strong>{' '}
 								{isEnabled ? t('Enabled') : t('Disabled')}
 							</div>
 							{isEnabled && (
 								<>
-									<div className='status-item'>
+									<div className='ui-meta' data-layout='row'>
 										<strong>{t('Sync Status:')}</strong>{' '}
 										{isSyncing ? t('Syncing...') : t('Ready')}
 									</div>
 									{lastSync && (
-										<div className='status-item'>
+										<div className='ui-meta' data-layout='row'>
 											<strong>{t('Last Sync:')}</strong> {formatDate(lastSync)}
 										</div>
 									)}
 								</>
 							)}
 						</div>
-					</div>
+					</section>
 
 					{notifications.length > 0 && (
-						<div className='sync-notifications'>
-							<div className='notifications-header'>
-								<h3>{t('Recent Activity')}</h3>
+						<div className='ui-list' data-gap='md'>
+							<div className='ui-toolbar' data-justify='between' data-gap='sm'>
+								<h3 className='ui-panel-title'>{t('Recent Activity')}</h3>
 								<button
-									className='button small secondary'
+									type='button'
+									className='button secondary'
 									onClick={clearAllNotifications}
 									title={t('Clear all notifications')}
 								>
@@ -166,36 +196,39 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
 								</button>
 							</div>
 
-							<div className='notifications-list'>
+							<div className='ui-list' data-gap='sm' data-scroll='medium'>
 								{notifications
 									.slice(-10)
 									.reverse()
 									.map((notification) => (
 										<div
 											key={notification.id}
-											className='notification-item'
-											style={{
-												borderLeft: `3px solid ${getNotificationColor(notification.type)}`,
-											}}
+											className='ui-message ui-stack'
+											data-tone={getNotificationTone(notification.type)}
+											data-density='compact'
+											data-gap='xs'
 										>
-											<div className='notification-content'>
-												<div className='notification-header'>
-													<span className='notification-icon'>
+											<div className='ui-list-content'>
+												<div className='ui-actions'>
+													<span className='ui-icon'>
 														{getNotificationIcon(notification.type)}
 													</span>
-													<span className='notification-message'>
+													<span className='ui-list-content' data-grow='true'>
 														{notification.message}
 													</span>
 													<button
+														type='button'
 														aria-label={t('Dismiss notification')}
-														className='notification-close'
+														className='ui-icon-button'
+														data-variant='subtle'
+														data-size='xs'
 														onClick={() => clearNotification(notification.id)}
 														title={t('Dismiss notification')}
 													>
 														<span aria-hidden='true'>×</span>
 													</button>
 												</div>
-												<div className='notification-time'>
+												<div className='ui-meta'>
 													{formatDate(notification.timestamp)}
 												</div>
 											</div>
@@ -205,9 +238,9 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
 						</div>
 					)}
 
-					<div className='sync-info'>
+					<div className='ui-message' data-tone='info'>
 						<h3>{t('How File Sync Works')}</h3>
-						<div className='info-content'>
+						<div>
 							<p>
 								{t(
 									'File synchronization automatically keeps non-linked files in sync between all collaborators:',

@@ -37,7 +37,7 @@ const isMobileDevice = (): boolean => {
 	return isMobileUserAgent() || window.innerWidth <= 768;
 };
 
-// Guest account cleanup - runs every hour when app is active
+// The Guest account cleanup runs every hour when app is active
 const setupGuestCleanup = () => {
 	let cleanupInterval: NodeJS.Timeout;
 

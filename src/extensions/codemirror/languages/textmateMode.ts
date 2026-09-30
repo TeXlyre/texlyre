@@ -35,7 +35,7 @@ import {
 	getTextMateGrammars,
 	getTextMateLanguageForFile,
 	type TextMateGrammarEntry,
-	whenGrammarsReady,
+	grammarsReady,
 } from './textmateRegistry';
 
 const moduleLog = createNamedLogger('TextMateMode');
@@ -206,7 +206,7 @@ function withSnippets(
 export async function getTextMateGrammar(
 	fileName: string | undefined,
 ): Promise<IGrammar | null> {
-	await whenGrammarsReady();
+	await grammarsReady();
 
 	for (const grammar of getTextMateGrammars()) {
 		registerTextMateGrammar(grammar);
@@ -224,7 +224,7 @@ export function createTextMateLanguageForFile(
 	return [
 		compartment.of([]),
 		ViewPlugin.define((view: EditorView) => {
-			void whenGrammarsReady()
+			void grammarsReady()
 				.then(() => {
 					for (const grammar of getTextMateGrammars()) {
 						registerTextMateGrammar(grammar);

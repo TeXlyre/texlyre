@@ -37,8 +37,6 @@ export function useRegisterLatexSettings() {
 			'http://texlive2026.localhost:8082';
 		const initialBusyTeXBundles =
 			(getSetting('latex-busytex-bundles')?.value as string) ?? 'recommended';
-		const initialNotifications =
-			(getSetting('latex-notifications')?.value as boolean) ?? true;
 
 		registerSetting({
 			id: 'latex-engine',
@@ -189,21 +187,6 @@ export function useRegisterLatexSettings() {
 			label: t('Store working directory'),
 			description: t('Save all working directory files after compilation'),
 			defaultValue: initialStoreWorkingDirectory,
-		});
-
-		registerSetting({
-			id: 'latex-notifications',
-			category: t('Compilation'),
-			subcategory: t('LaTeX'),
-			type: 'checkbox',
-			label: t('Show compilation notifications'),
-			description: t(
-				'Display notifications for {typesetter} compilation activities (PDF only)',
-				{
-					typesetter: t('LaTeX'),
-				},
-			),
-			defaultValue: initialNotifications,
 		});
 	}, [registerSetting, getSetting]);
 }

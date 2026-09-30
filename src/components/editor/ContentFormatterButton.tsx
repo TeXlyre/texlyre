@@ -111,13 +111,16 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 	};
 
 	return (
-		<div
-			className={`formatter-button-container ${className}`}
-			ref={dropdownRef}
-		>
-			<div className='formatter-button-group'>
+		<div className={`ui-control-cluster ${className}`} ref={dropdownRef}>
+			<div
+				className='ui-button-group ui-split-button'
+				data-role='plugin-control'
+				data-layout='weighted'
+				data-trigger-group='true'
+			>
 				<button
-					className={`control-button format-button ${isFormatting ? 'formatting' : ''}`}
+					type='button'
+					className='button ui-split-main'
 					onClick={handleFormat}
 					disabled={disabled || isFormatting}
 					title={t('Format Content (Ctrl+Shift+I)')}
@@ -126,7 +129,8 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 				</button>
 
 				<button
-					className='control-button dropdown-toggle'
+					type='button'
+					className='button ui-split-toggle dropdown-toggle'
 					onClick={toggleDropdown}
 					disabled={disabled || isFormatting}
 					title={t('Format Options')}
@@ -140,12 +144,12 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 					isOpen={isDropdownOpen}
 					triggerElement={
 						dropdownRef.current?.querySelector(
-							'.formatter-button-group',
+							'[data-trigger-group]',
 						) as HTMLElement
 					}
 					className='formatter-dropdown'
 				>
-					<div className='dropdown-option'>
+					<div className='ui-menu-section' data-variant='control'>
 						<label>
 							<input
 								type='checkbox'
@@ -162,7 +166,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 					</div>
 
 					{latexOptions.wrap && (
-						<div className='dropdown-option'>
+						<div className='ui-menu-section' data-variant='control'>
 							<label>
 								{t('Wrap length:')}
 
@@ -179,7 +183,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 						</div>
 					)}
 
-					<div className='dropdown-option'>
+					<div className='ui-menu-section' data-variant='control'>
 						<label>
 							{t('Tab size:')}
 
@@ -195,7 +199,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 						</label>
 					</div>
 
-					<div className='dropdown-option'>
+					<div className='ui-menu-section' data-variant='control'>
 						<label>
 							<input
 								type='checkbox'
@@ -218,12 +222,12 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 					isOpen={isDropdownOpen}
 					triggerElement={
 						dropdownRef.current?.querySelector(
-							'.formatter-button-group',
+							'[data-trigger-group]',
 						) as HTMLElement
 					}
 					className='formatter-dropdown'
 				>
-					<div className='dropdown-option'>
+					<div className='ui-menu-section' data-variant='control'>
 						<label>
 							{t('Line width:')}
 
@@ -239,7 +243,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 						</label>
 					</div>
 
-					<div className='dropdown-option'>
+					<div className='ui-menu-section' data-variant='control'>
 						<label>
 							{t('Indent width:')}
 
@@ -255,7 +259,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 						</label>
 					</div>
 
-					<div className='dropdown-option'>
+					<div className='ui-menu-section' data-variant='control'>
 						<label>
 							<input
 								type='checkbox'
@@ -271,7 +275,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 						</label>
 					</div>
 
-					<div className='dropdown-option'>
+					<div className='ui-menu-section' data-variant='control'>
 						<label>
 							<input
 								type='checkbox'

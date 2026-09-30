@@ -9,9 +9,7 @@ export interface TransportConfig {
 	url?: string;
 	workerPath?: string;
 	signaling?: string[];
-	/** Stable service identity, not a second WebRTC data room. */
 	roomId?: string;
-	/** Awareness/Yjs room whose existing WebRTC peer connection carries data. */
 	controlRoomId?: string;
 	controlMode?: ControlMode;
 	contentLength?: boolean;

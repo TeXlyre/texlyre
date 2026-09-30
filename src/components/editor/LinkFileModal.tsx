@@ -108,14 +108,14 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 			title={t('Link Document to New File')}
 			size='medium'
 		>
-			<div className='link-file-modal-content'>
+			<div className='ui-stack' data-gap='md'>
 				<p>
 					{t('Create a new file and link it to the document "')}
 					{documentName}
 					{t('".')}
 				</p>
 
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<label htmlFor='fileName'>{t('File name')}</label>
 					<input
 						type='text'
@@ -127,11 +127,17 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 					/>
 				</div>
 
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<label>{t('Select destination folder')}</label>
-					<div className='directory-tree'>
+					<div className='ui-list ui-card' data-scroll='medium'>
 						<div
-							className={`directory-option ${selectedDirectory === '/' ? 'selected' : ''}`}
+							className='ui-list-item'
+							data-align='center'
+							data-gap='sm'
+							data-padding='sm'
+							data-appearance='flat'
+							data-interactive='true'
+							data-selected={selectedDirectory === '/' ? 'true' : undefined}
 							onClick={() => setSelectedDirectory('/')}
 						>
 							<FolderIcon />
@@ -141,7 +147,15 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 						{getDirectoryOptions().map((dir) => (
 							<div
 								key={dir.path}
-								className={`directory-option ${selectedDirectory === dir.path ? 'selected' : ''}`}
+								className='ui-list-item'
+								data-align='center'
+								data-gap='sm'
+								data-padding='sm'
+								data-appearance='flat'
+								data-interactive='true'
+								data-selected={
+									selectedDirectory === dir.path ? 'true' : undefined
+								}
 								onClick={() => setSelectedDirectory(dir.path)}
 							>
 								<FolderIcon />
@@ -151,7 +165,12 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 					</div>
 				</div>
 
-				<div className='modal-actions'>
+				<div
+					className='ui-actions'
+					data-variant='modal'
+					data-align='end'
+					data-cross='stretch'
+				>
 					<button
 						type='button'
 						className='button secondary'

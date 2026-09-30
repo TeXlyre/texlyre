@@ -18,10 +18,63 @@ export interface PdfRenderContext {
 	scale: number;
 	renderingRef: RefObject<Set<number>>;
 	pendingRenderRef: RefObject<Set<number>>;
+	memoryOptimized?: boolean;
 }
 
 const REFERENCE_SCALE = 1;
+
 const TEXT_LAYER_CHUNK_SIZE = 80;
+const MEMORY_OPTIMIZED_CACHE_PAGES = 12;
+const MEMORY_OPTIMIZED_METADATA_BATCH = 16;
+const MAX_CANVAS_PIXELS = 2 ** 24;
+const MAX_CANVAS_DIMENSION = 16_384;
+
+function getSafePixelRatio(
+	width: number,
+	height: number,
+	scale: number,
+): number {
+	const requested = Math.min(window.devicePixelRatio || 1, 2);
+	const scaledWidth = Math.max(1, width * scale);
+	const scaledHeight = Math.max(1, height * scale);
+	const byPixels = Math.sqrt(
+		MAX_CANVAS_PIXELS / Math.max(1, scaledWidth * scaledHeight),
+	);
+	const byWidth = MAX_CANVAS_DIMENSION / scaledWidth;
+	const byHeight = MAX_CANVAS_DIMENSION / scaledHeight;
+	return Math.max(0.1, Math.min(requested, byPixels, byWidth, byHeight));
+}
+
+function getCacheValue<T>(
+	cache: Map<number, T>,
+	pageNumber: number,
+	memoryOptimized: boolean,
+): T | undefined {
+	const value = cache.get(pageNumber);
+	if (value === undefined || !memoryOptimized) return value;
+	cache.delete(pageNumber);
+	cache.set(pageNumber, value);
+	return value;
+}
+
+function setCacheValue<T>(
+	cache: Map<number, T>,
+	pageNumber: number,
+	value: T,
+	memoryOptimized: boolean,
+	onEvict?: (value: T) => void,
+): void {
+	cache.set(pageNumber, value);
+	if (!memoryOptimized) return;
+
+	while (cache.size > MEMORY_OPTIMIZED_CACHE_PAGES) {
+		const oldest = cache.keys().next().value as number | undefined;
+		if (oldest === undefined) break;
+		const evicted = cache.get(oldest);
+		cache.delete(oldest);
+		if (evicted !== undefined) onEvict?.(evicted);
+	}
+}
 
 type TextLayerJob = {
 	cancelled: boolean;
@@ -52,7 +105,7 @@ export async function destroyPdf(pdfDocRef: RefObject<any>): Promise<void> {
 	resetPdfCaches();
 	if (!doc) return;
 	try {
-		await doc.destroy();
+		await doc.loadingTask?.destroy();
 	} catch {}
 }
 
@@ -65,16 +118,26 @@ function resetPdfCaches(): void {
 async function getCachedPage(
 	pdfDocRef: RefObject<any>,
 	pageNumber: number,
+	memoryOptimized = false,
 ): Promise<any> {
-	let page = pageObjectCache.get(pageNumber);
+	let page = getCacheValue(pageObjectCache, pageNumber, memoryOptimized);
 	if (!page) {
 		page = await pdfDocRef.current.getPage(pageNumber);
-		pageObjectCache.set(pageNumber, page);
+		setCacheValue(
+			pageObjectCache,
+			pageNumber,
+			page,
+			memoryOptimized,
+			(evicted) => evicted.cleanup?.(),
+		);
 	}
 	return page;
 }
 
-export async function parsePdfPages(pdfBuffer: ArrayBuffer): Promise<{
+export async function parsePdfPages(
+	pdfBuffer: ArrayBuffer,
+	options: { memoryOptimized?: boolean } = {},
+): Promise<{
 	pdfDoc: any;
 	metadata: Map<number, { width: number; height: number }>;
 }> {
@@ -86,21 +149,50 @@ export async function parsePdfPages(pdfBuffer: ArrayBuffer): Promise<{
 		cMapPacked: true,
 	});
 	const pdfDoc = await loadingTask.promise;
-
 	const metadata = new Map<number, { width: number; height: number }>();
-	const pagePromises: Promise<void>[] = [];
 
-	for (let i = 1; i <= pdfDoc.numPages; i++) {
-		pagePromises.push(
-			pdfDoc.getPage(i).then((page: any) => {
-				const viewport = page.getViewport({ scale: 1.0 });
-				metadata.set(i, { width: viewport.width, height: viewport.height });
-				pageObjectCache.set(i, page);
-			}),
-		);
+	if (!options.memoryOptimized) {
+		const pagePromises: Promise<void>[] = [];
+
+		for (let i = 1; i <= pdfDoc.numPages; i++) {
+			pagePromises.push(
+				pdfDoc.getPage(i).then((page: any) => {
+					const viewport = page.getViewport({ scale: 1.0 });
+					metadata.set(i, { width: viewport.width, height: viewport.height });
+					pageObjectCache.set(i, page);
+				}),
+			);
+		}
+
+		await Promise.all(pagePromises);
+		return { pdfDoc, metadata };
 	}
 
-	await Promise.all(pagePromises);
+	for (
+		let startPage = 1;
+		startPage <= pdfDoc.numPages;
+		startPage += MEMORY_OPTIMIZED_METADATA_BATCH
+	) {
+		const endPage = Math.min(
+			pdfDoc.numPages,
+			startPage + MEMORY_OPTIMIZED_METADATA_BATCH - 1,
+		);
+		const batch = await Promise.all(
+			Array.from({ length: endPage - startPage + 1 }, async (_, offset) => {
+				const pageNumber = startPage + offset;
+				const page = await pdfDoc.getPage(pageNumber);
+				const viewport = page.getViewport({ scale: 1 });
+				return [
+					pageNumber,
+					{ width: viewport.width, height: viewport.height },
+				] as const;
+			}),
+		);
+
+		for (const [pageNumber, size] of batch) metadata.set(pageNumber, size);
+		await new Promise<void>((resolve) => setTimeout(resolve, 0));
+	}
+
 	return { pdfDoc, metadata };
 }
 
@@ -108,7 +200,14 @@ export async function renderPdfPageToCanvas(
 	ctx: PdfRenderContext,
 	pageNumber: number,
 ): Promise<void> {
-	const { pdfDocRef, canvasRefs, scale, renderingRef, pendingRenderRef } = ctx;
+	const {
+		pdfDocRef,
+		canvasRefs,
+		scale,
+		renderingRef,
+		pendingRenderRef,
+		memoryOptimized = false,
+	} = ctx;
 
 	if (!pdfDocRef.current || renderingRef.current.has(pageNumber)) {
 		if (renderingRef.current.has(pageNumber)) {
@@ -123,9 +222,15 @@ export async function renderPdfPageToCanvas(
 	renderingRef.current.add(pageNumber);
 
 	try {
-		const page = await getCachedPage(pdfDocRef, pageNumber);
+		const page = await getCachedPage(pdfDocRef, pageNumber, memoryOptimized);
 		const viewport = page.getViewport({ scale });
-		const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+		const pixelRatio = memoryOptimized
+			? getSafePixelRatio(
+					viewport.width / scale,
+					viewport.height / scale,
+					scale,
+				)
+			: Math.min(window.devicePixelRatio || 1, 2);
 		const scaledViewport = page.getViewport({ scale: scale * pixelRatio });
 
 		const off = document.createElement('canvas');
@@ -134,10 +239,11 @@ export async function renderPdfPageToCanvas(
 		const offCtx = off.getContext('2d');
 		if (!offCtx) return;
 
-		await page.render({
+		const renderTask = page.render({
 			canvasContext: offCtx,
 			viewport: scaledViewport,
-		}).promise;
+		});
+		await renderTask.promise;
 
 		const ctx2d = canvas.getContext('2d');
 		if (ctx2d) {
@@ -162,6 +268,7 @@ export async function renderTextLayer(
 	pageNumber: number,
 	container: HTMLDivElement,
 	scale: number,
+	memoryOptimized = false,
 ): Promise<void> {
 	if (!pdfDocRef.current) return;
 	if (overlayScaleCache.get(container) === scale) return;
@@ -169,7 +276,7 @@ export async function renderTextLayer(
 	const builtForPage = textLayerBuiltCache.get(container);
 
 	if (builtForPage === pageNumber) {
-		const page = await getCachedPage(pdfDocRef, pageNumber);
+		const page = await getCachedPage(pdfDocRef, pageNumber, memoryOptimized);
 		const viewport = page.getViewport({ scale });
 		container.style.setProperty('--scale-factor', String(scale));
 		container.style.width = `${viewport.width}px`;
@@ -186,16 +293,20 @@ export async function renderTextLayer(
 
 	container.innerHTML = '';
 
-	const page = await getCachedPage(pdfDocRef, pageNumber);
+	const page = await getCachedPage(pdfDocRef, pageNumber, memoryOptimized);
 	if (job.cancelled) return;
 
 	const referenceViewport = page.getViewport({ scale: REFERENCE_SCALE });
 	const viewport = page.getViewport({ scale });
 
-	let textContent = textContentCache.get(pageNumber);
+	let textContent = getCacheValue(
+		textContentCache,
+		pageNumber,
+		memoryOptimized,
+	);
 	if (!textContent) {
 		textContent = await page.getTextContent();
-		textContentCache.set(pageNumber, textContent);
+		setCacheValue(textContentCache, pageNumber, textContent, memoryOptimized);
 	}
 	if (job.cancelled) return;
 
@@ -333,18 +444,29 @@ export async function renderAnnotationLayer(
 	pageNumber: number,
 	container: HTMLDivElement,
 	scale: number,
+	memoryOptimized = false,
 ): Promise<void> {
 	if (!pdfDocRef.current) return;
 	if (annotationScaleCache.get(container) === scale) return;
 
 	container.innerHTML = '';
-	const page = await getCachedPage(pdfDocRef, pageNumber);
+	const page = await getCachedPage(pdfDocRef, pageNumber, memoryOptimized);
 	const viewport = page.getViewport({ scale });
 
-	let annotations = annotationDataCache.get(pageNumber);
+	let annotations = getCacheValue(
+		annotationDataCache,
+		pageNumber,
+		memoryOptimized,
+	);
 	if (!annotations) {
-		annotations = await page.getAnnotations();
-		annotationDataCache.set(pageNumber, annotations);
+		const loadedAnnotations: unknown = await page.getAnnotations();
+		annotations = Array.isArray(loadedAnnotations) ? loadedAnnotations : [];
+		setCacheValue(
+			annotationDataCache,
+			pageNumber,
+			annotations,
+			memoryOptimized,
+		);
 	}
 
 	if (!annotations || annotations.length === 0) {

@@ -30,21 +30,25 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 
 	return (
 		<div className='bibtex-sidebar'>
-			<div className='sidebar-header'>
-				<h4>{t('Tidy Options')}</h4>
-				<div className='header-buttons'>
+			<div className='ui-section-header ui-toolbar' data-justify='between'>
+				<h4 className='ui-section-title'>{t('Tidy Options')}</h4>
+				<div className='ui-toolbar-actions' data-gap='sm'>
 					<button
-						className='reset-button'
+						type='button'
+						className='ui-icon-button'
+						data-variant='subtle'
+						data-size='sm'
 						onClick={onResetToDefaults}
 						title={t('Reset to Default Preset')}
 					>
 						<ResetIcon />
 					</button>
 					<button
+						type='button'
 						onClick={onProcessBibtex}
 						disabled={isProcessing}
 						title={t('Process BibTeX with Current Settings')}
-						className='tidy-button'
+						className='button primary'
 					>
 						<CleanIcon />
 						{t('Tidy')}
@@ -52,11 +56,11 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 				</div>
 			</div>
 
-			<div className='options-container'>
-				<div className='option-group'>
-					<h5>{t('Fields')}</h5>
+			<div className='ui-stack' data-gap='md' data-padding='sm'>
+				<div className='ui-stack' data-gap='sm'>
+					<h5 className='ui-panel-title'>{t('Fields')}</h5>
 
-					<div className='option-item'>
+					<div className='ui-field' data-gap='xs'>
 						<span>{t('Remove fields:')}</span>
 						<TagInput
 							values={options.omit || []}
@@ -65,7 +69,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						/>
 					</div>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.removeEmptyFields)}
@@ -76,7 +80,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<span>{t('Remove empty fields')}</span>
 					</label>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.removeDuplicateFields)}
@@ -87,19 +91,17 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<span>{t('Remove duplicate fields')}</span>
 					</label>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.sortFields)}
-							onChange={(e) =>
-								updateOption('sortFields', e.target.checked ? true : false)
-							}
+							onChange={(e) => updateOption('sortFields', e.target.checked)}
 						/>
 						<span>{t('Sort fields within entries')}</span>
 					</label>
 
 					{options.sortFields && (
-						<div className='option-item sub-option'>
+						<div className='ui-field bibtex-sub-option' data-gap='xs'>
 							<span>{t('Field order:')}</span>
 							<TagInput
 								values={
@@ -110,7 +112,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 								}
 								placeholder={t('Add keys (press Enter or comma to add)')}
 							/>
-							<div className='info-message'>
+							<div className='ui-message' data-tone='info'>
 								{t(
 									'Leave empty to use default order: title, author, year, journal, …',
 								)}
@@ -119,10 +121,10 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 					)}
 				</div>
 
-				<div className='option-group'>
-					<h5>{t('Values')}</h5>
+				<div className='ui-stack' data-gap='sm'>
+					<h5 className='ui-panel-title'>{t('Values')}</h5>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.curly)}
@@ -131,7 +133,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<span>{t('Enclose values in braces')}</span>
 					</label>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.numeric)}
@@ -140,7 +142,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<span>{t('Use numeric values')}</span>
 					</label>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.months)}
@@ -149,7 +151,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<span>{t('Abbreviate months')}</span>
 					</label>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.stripEnclosingBraces)}
@@ -160,7 +162,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<span>{t('Strip double braces')}</span>
 					</label>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.dropAllCaps)}
@@ -169,7 +171,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<span>{t('Convert ALL CAPS to Title Case')}</span>
 					</label>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.escape)}
@@ -178,7 +180,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<span>{t('Escape special characters')}</span>
 					</label>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.lowercase)}
@@ -187,7 +189,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<span>{t('Lowercase field names')}</span>
 					</label>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.trailingCommas)}
@@ -196,7 +198,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<span>{t('Trailing commas')}</span>
 					</label>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.encodeUrls)}
@@ -206,10 +208,10 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 					</label>
 				</div>
 
-				<div className='option-group'>
-					<h5>{t('Braces')}</h5>
+				<div className='ui-stack' data-gap='sm'>
+					<h5 className='ui-panel-title'>{t('Braces')}</h5>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.enclosingBraces)}
@@ -224,7 +226,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 					</label>
 
 					{options.enclosingBraces && (
-						<div className='option-item sub-option'>
+						<div className='ui-field bibtex-sub-option' data-gap='xs'>
 							<span>{t('Fields to enclose:')}</span>
 							<TagInput
 								values={
@@ -243,7 +245,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						</div>
 					)}
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.removeBraces)}
@@ -258,7 +260,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 					</label>
 
 					{options.removeBraces && (
-						<div className='option-item sub-option'>
+						<div className='ui-field bibtex-sub-option' data-gap='xs'>
 							<span>{t('Fields to remove braces from:')}</span>
 							<TagInput
 								values={
@@ -278,10 +280,10 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 					)}
 				</div>
 
-				<div className='option-group'>
-					<h5>{t('Formatting')}</h5>
+				<div className='ui-stack' data-gap='sm'>
+					<h5 className='ui-panel-title'>{t('Formatting')}</h5>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.tab)}
@@ -291,9 +293,10 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 					</label>
 
 					{!options.tab && (
-						<label className='option-item sub-option'>
+						<label className='ui-field bibtex-sub-option' data-gap='xs'>
 							<span>{t('Space indentation:')}</span>
 							<NumberInput
+								className='ui-field-control'
 								min='1'
 								max='8'
 								value={typeof options.space === 'number' ? options.space : 2}
@@ -302,9 +305,10 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						</label>
 					)}
 
-					<label className='option-item'>
+					<label className='ui-field' data-gap='xs'>
 						<span>{t('Align values:')}</span>
 						<NumberInput
+							className='ui-field-control'
 							min='0'
 							max='50'
 							value={typeof options.align === 'number' ? options.align : 14}
@@ -312,7 +316,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						/>
 					</label>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.blankLines)}
@@ -321,7 +325,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<span>{t('Insert blank lines between entries')}</span>
 					</label>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.wrap)}
@@ -333,9 +337,10 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 					</label>
 
 					{options.wrap && (
-						<label className='option-item sub-option'>
+						<label className='ui-field bibtex-sub-option' data-gap='xs'>
 							<span>{t('Wrap at column:')}</span>
 							<NumberInput
+								className='ui-field-control'
 								min='40'
 								max='200'
 								value={typeof options.wrap === 'number' ? options.wrap : 80}
@@ -345,10 +350,10 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 					)}
 				</div>
 
-				<div className='option-group'>
-					<h5>{t('Sorting')}</h5>
+				<div className='ui-stack' data-gap='sm'>
+					<h5 className='ui-panel-title'>{t('Sorting')}</h5>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.sort)}
@@ -360,7 +365,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 					</label>
 
 					{options.sort && (
-						<div className='option-item sub-option'>
+						<div className='ui-field bibtex-sub-option' data-gap='xs'>
 							<span>{t('Sort by fields:')}</span>
 							<TagInput
 								values={Array.isArray(options.sort) ? options.sort : ['key']}
@@ -369,7 +374,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 								}
 								placeholder={t('Add keys (press Enter or comma to add)')}
 							/>
-							<div className='info-message'>
+							<div className='ui-message' data-tone='info'>
 								{t(
 									'Prefix a field with - for descending order (e.g. -year). Use key for citation key or type for entry type.',
 								)}
@@ -378,10 +383,10 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 					)}
 				</div>
 
-				<div className='option-group'>
-					<h5>{t('Duplicates')}</h5>
+				<div className='ui-stack' data-gap='sm'>
+					<h5 className='ui-panel-title'>{t('Duplicates')}</h5>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.duplicates)}
@@ -397,7 +402,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 
 					{options.duplicates && (
 						<>
-							<div className='option-item sub-option'>
+							<div className='ui-field bibtex-sub-option' data-gap='xs'>
 								<span>{t('Check by:')}</span>
 								<TagInput
 									values={
@@ -419,14 +424,15 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 									allowedValues={[...DUPLICATE_RULES]}
 									placeholder={t('Add keys (press Enter or comma to add)')}
 								/>
-								<div className='info-message'>
+								<div className='ui-message' data-tone='info'>
 									{t('Allowed values: doi, key, abstract, citation')}
 								</div>
 							</div>
 
-							<label className='option-item sub-option'>
+							<label className='ui-field bibtex-sub-option' data-gap='xs'>
 								<span>{t('Merge strategy:')}</span>
 								<select
+									className='ui-field-control'
 									value={
 										typeof options.merge === 'string' ? options.merge : 'false'
 									}
@@ -448,10 +454,10 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 					)}
 				</div>
 
-				<div className='option-group'>
-					<h5>{t('Comments')}</h5>
+				<div className='ui-stack' data-gap='sm'>
+					<h5 className='ui-panel-title'>{t('Comments')}</h5>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.stripComments)}
@@ -460,7 +466,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<span>{t('Remove comments')}</span>
 					</label>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.tidyComments)}
@@ -470,10 +476,10 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 					</label>
 				</div>
 
-				<div className='option-group'>
-					<h5>{t('Advanced')}</h5>
+				<div className='ui-stack' data-gap='sm'>
+					<h5 className='ui-panel-title'>{t('Advanced')}</h5>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.generateKeys)}
@@ -490,9 +496,10 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 					</label>
 
 					{options.generateKeys && (
-						<label className='option-item sub-option'>
+						<label className='ui-field bibtex-sub-option' data-gap='xs'>
 							<span>{t('Key template:')}</span>
 							<input
+								className='ui-field-control'
 								type='text'
 								value={
 									typeof options.generateKeys === 'string'
@@ -502,12 +509,12 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 								onChange={(e) => updateOption('generateKeys', e.target.value)}
 								placeholder={t('JabRef pattern')}
 							/>
-							<div className='warning-message'>
+							<div className='ui-message' data-tone='warning'>
 								{t(
 									'This is an experimental feature and may change without notice.',
 								)}
 							</div>
-							<div className='info-message'>
+							<div className='ui-message' data-tone='info'>
 								{t(
 									'Uses JabRef citation key patterns, e.g. [auth:lower][year][veryshorttitle:lower]',
 								)}
@@ -516,7 +523,6 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 									href='https://flamingtempura.github.io/bibtex-tidy/manual/key-generation.html'
 									target='_blank'
 									rel='noopener noreferrer'
-									className='dropdown-link'
 								>
 									{t('Learn more about key patterns')}
 								</a>
@@ -524,9 +530,10 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						</label>
 					)}
 
-					<label className='option-item'>
+					<label className='ui-field' data-gap='xs'>
 						<span>{t('Max authors:')}</span>
 						<input
+							className='ui-field-control'
 							type='number'
 							min='1'
 							max='20'
@@ -534,14 +541,16 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 							onChange={(e) =>
 								updateOption(
 									'maxAuthors',
-									e.target.value ? Number.parseInt(e.target.value) : undefined,
+									e.target.value
+										? Number.parseInt(e.target.value, 10)
+										: undefined,
 								)
 							}
 							placeholder={t('No limit')}
 						/>
 					</label>
 
-					<label className='option-item'>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={Boolean(options.lookupDois)}
@@ -551,7 +560,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 					</label>
 
 					{options.lookupDois && (
-						<div className='warning-message'>
+						<div className='ui-message' data-tone='warning'>
 							{t(
 								'Queries CrossRef API for each entry missing a DOI. May be slow for large files.',
 							)}

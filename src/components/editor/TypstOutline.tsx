@@ -8,18 +8,16 @@ import { useFileTree } from '../../hooks/useFileTree';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { TypstOutlineParser } from '../../utils/typstOutlineParser';
 import TypstOutlineItem from './TypstOutlineItem';
+import OutlinePreviewToggle, {
+	OutlineStateToggle,
+} from './OutlinePreviewToggle';
 import StatisticsModal from './StatisticsModal';
 import { typstStatisticsService } from '../../services/TypstStatisticsService';
 import type {
 	DocumentStatistics,
 	StatisticsOptions,
 } from '../../types/statistics';
-import {
-	ChevronDownIcon,
-	ChevronRightIcon,
-	RefreshIcon,
-	WordCountIcon,
-} from '../common/Icons';
+import { RefreshIcon, WordCountIcon } from '../common/Icons';
 
 interface TypstOutlineProps {
 	content: string;
@@ -33,6 +31,11 @@ interface TypstOutlineProps {
 	} | null;
 	currentFilePath?: string;
 	isEditingFile?: boolean;
+	previewEnabled?: boolean;
+	onPreviewToggle?: () => void;
+	maximized?: boolean;
+	onMaximizeToggle?: () => void;
+	onCollapsedChange?: (collapsed: boolean) => void;
 }
 
 const TypstOutline: React.FC<TypstOutlineProps> = ({
@@ -43,6 +46,11 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 	linkedFileInfo,
 	currentFilePath,
 	isEditingFile = false,
+	previewEnabled = false,
+	onPreviewToggle,
+	maximized = false,
+	onMaximizeToggle,
+	onCollapsedChange,
 }) => {
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const { fileTree } = useFileTree();
@@ -111,9 +119,23 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 	};
 
 	const handleToggleCollapse = () => {
-		const newCollapsed = !isCollapsed;
-		setIsCollapsed(newCollapsed);
-		setProperty('typst-outline-collapsed', newCollapsed);
+		if (isCollapsed) {
+			if (maximized && onMaximizeToggle) onMaximizeToggle();
+			setIsCollapsed(false);
+			setProperty('typst-outline-collapsed', false);
+			onCollapsedChange?.(false);
+			return;
+		}
+
+		if (onMaximizeToggle && !maximized) {
+			onMaximizeToggle();
+			return;
+		}
+
+		if (maximized && onMaximizeToggle) onMaximizeToggle();
+		setIsCollapsed(true);
+		setProperty('typst-outline-collapsed', true);
+		onCollapsedChange?.(true);
 	};
 
 	const handleShowStatistics = async () => {
@@ -143,31 +165,56 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 
 	if (sections.length === 0) {
 		return (
-			<div className='typst-outline'>
-				<div className='typst-outline-header scroll-x' ref={headerRef}>
-					<button className='outline-toggle-btn' onClick={handleToggleCollapse}>
-						{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
-					</button>
-					<span className='outline-header-title'>{t('OUTLINE')}</span>
-					<button
-						className='action-btn'
-						title={t('Refresh Outline')}
-						onClick={handleRefresh}
+			<div
+				className='outline-panel ui-panel'
+				data-collapsed={isCollapsed ? 'true' : undefined}
+			>
+				<div
+					className='ui-panel-header ui-section-header ui-explorer-heading scroll-x'
+					data-role='outline'
+					ref={headerRef}
+				>
+					<OutlineStateToggle
+						collapsed={isCollapsed}
+						maximized={maximized}
+						threeState={Boolean(onMaximizeToggle)}
+						onToggle={handleToggleCollapse}
+					/>
+					<span className='outline-header-title ui-panel-title ui-section-title'>
+						{t('OUTLINE')}
+					</span>
+					<div
+						className='ui-toolbar-actions ui-section-actions'
+						data-active-style='filled'
 					>
-						<RefreshIcon />
-					</button>
-					{hasValidFilePath && (
+						<OutlinePreviewToggle
+							enabled={previewEnabled}
+							onToggle={isCollapsed ? undefined : onPreviewToggle}
+						/>
 						<button
-							className='action-btn'
-							title={t('Word Count Statistics')}
-							onClick={handleShowStatistics}
+							type='button'
+							className='ui-icon-button'
+							data-variant='subtle'
+							title={t('Refresh Outline')}
+							onClick={handleRefresh}
 						>
-							<WordCountIcon />
+							<RefreshIcon />
 						</button>
-					)}
+						{hasValidFilePath && (
+							<button
+								type='button'
+								className='ui-icon-button'
+								data-variant='subtle'
+								title={t('Word Count Statistics')}
+								onClick={handleShowStatistics}
+							>
+								<WordCountIcon />
+							</button>
+						)}
+					</div>
 				</div>
 				{!isCollapsed && (
-					<div className='outline-empty-state'>
+					<div className='ui-empty-state'>
 						<p>{t('No headings found')}</p>
 						<small>{t('Use = for headings')}</small>
 					</div>
@@ -188,32 +235,57 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 	}
 
 	return (
-		<div className='typst-outline'>
-			<div className='typst-outline-header scroll-x' ref={headerRef}>
-				<button className='outline-toggle-btn' onClick={handleToggleCollapse}>
-					{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
-				</button>
-				<span className='outline-header-title'>{t('OUTLINE')}</span>
+		<div
+			className='outline-panel ui-panel'
+			data-collapsed={isCollapsed ? 'true' : undefined}
+		>
+			<div
+				className='ui-panel-header ui-section-header ui-explorer-heading scroll-x'
+				data-role='outline'
+				ref={headerRef}
+			>
+				<OutlineStateToggle
+					collapsed={isCollapsed}
+					maximized={maximized}
+					threeState={Boolean(onMaximizeToggle)}
+					onToggle={handleToggleCollapse}
+				/>
+				<span className='outline-header-title ui-panel-title ui-section-title'>
+					{t('OUTLINE')}
+				</span>
+				<span className='ui-badge' data-variant='label'>
+					{sections.length}
+				</span>
 
-				<button
-					className='action-btn'
-					title={t('Refresh Outline')}
-					onClick={handleRefresh}
+				<div
+					className='ui-toolbar-actions ui-section-actions'
+					data-active-style='filled'
 				>
-					<RefreshIcon />
-				</button>
-
-				<span className='outline-section-count'>{sections.length}</span>
-
-				{hasValidFilePath && (
+					<OutlinePreviewToggle
+						enabled={previewEnabled}
+						onToggle={isCollapsed ? undefined : onPreviewToggle}
+					/>
 					<button
-						className='action-btn'
-						title={t('Word Count Statistics')}
-						onClick={handleShowStatistics}
+						type='button'
+						className='ui-icon-button'
+						data-variant='subtle'
+						title={t('Refresh Outline')}
+						onClick={handleRefresh}
 					>
-						<WordCountIcon />
+						<RefreshIcon />
 					</button>
-				)}
+					{hasValidFilePath && (
+						<button
+							type='button'
+							className='ui-icon-button'
+							data-variant='subtle'
+							title={t('Word Count Statistics')}
+							onClick={handleShowStatistics}
+						>
+							<WordCountIcon />
+						</button>
+					)}
+				</div>
 			</div>
 
 			{!isCollapsed && (

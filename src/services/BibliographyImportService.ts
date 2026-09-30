@@ -304,16 +304,6 @@ export class BibliographyImportService {
 		};
 	}
 
-	private notifyCallbacks(result: ImportResult): void {
-		this.notificationCallbacks.forEach((callback) => {
-			try {
-				callback(result);
-			} catch (error) {
-				moduleLog.error('Error in import notification callback:', error);
-			}
-		});
-	}
-
 	private async dispatchFileReload(filePath: string): Promise<void> {
 		const file = await fileStoreService.getFileByPath(filePath);
 		if (!file) return;

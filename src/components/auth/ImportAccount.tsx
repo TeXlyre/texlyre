@@ -63,17 +63,22 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 	};
 
 	return (
-		<div className='import-account-container'>
+		<div className='ui-stack' data-gap='md'>
 			<h3>{t('Import Account')}</h3>
 
-			{error && <div className='error-message'>{error}</div>}
+			{error && (
+				<div className='ui-message' data-tone='error'>
+					{error}
+				</div>
+			)}
 
 			{success && (
-				<div className='success-message'>
+				<div className='ui-message' data-tone='success'>
 					{success}{' '}
 					<button
 						type='button'
-						className='refresh-import-button secondary'
+						className='button secondary'
+						data-width='full'
 						onClick={handleRefresh}
 					>
 						{t('Refresh page to access dashboard')}
@@ -83,8 +88,8 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 
 			{!success && (
 				<>
-					<form onSubmit={handleImport}>
-						<div className='form-group'>
+					<form onSubmit={handleImport} className='ui-stack' data-gap='md'>
+						<div className='ui-field' data-spacing='section'>
 							<label htmlFor='importFile'>
 								{t('Select account export archive')}
 							</label>
@@ -99,17 +104,19 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 
 						<button
 							type='submit'
-							className='auth-button'
+							className='button primary'
 							disabled={!file || isImporting}
 						>
 							{isImporting ? t('Importing...') : t('Import Account')}
 						</button>
 					</form>
 
-					<div className='auth-alt-action'>
+					<div className='ui-actions' data-align='center' data-wrap='true'>
 						<span>{t('Back to log in?')}</span>
 						<button
-							className='text-button'
+							type='button'
+							className='button'
+							data-variant='text'
 							onClick={onSwitchToLogin}
 							disabled={isImporting}
 						>

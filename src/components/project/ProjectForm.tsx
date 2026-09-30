@@ -149,22 +149,24 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 	};
 
 	return (
-		<form className='project-form' onSubmit={handleSubmit}>
+		<form className='ui-stack' data-gap='md' onSubmit={handleSubmit}>
 			{error && <div className='form-error'>{error}</div>}
 
-			<div className='form-group'>
+			<div className='ui-field' data-spacing='section'>
 				<label htmlFor='project-name'>
 					{t('Project Name')}
 					<span className='required'>*</span>
 				</label>
 
 				{disableNameAndDescription ? (
-					<div className='disabled-field'>
-						<span>{name}</span>
-						<div className='field-note'>
+					<>
+						<div className='ui-field-control' data-disabled='true'>
+							<span>{name}</span>
+						</div>
+						<div className='ui-note ui-field-hint'>
 							{t('Open the project to edit its name')}
 						</div>
-					</div>
+					</>
 				) : (
 					<input
 						type='text'
@@ -177,16 +179,22 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 				)}
 			</div>
 
-			<div className='form-group'>
+			<div className='ui-field' data-spacing='section'>
 				<label htmlFor='project-description'>{t('Description')}</label>
 
 				{disableNameAndDescription ? (
-					<div className='disabled-field'>
-						<span>{description || 'No description'}</span>
-						<div className='field-note'>
+					<>
+						<div
+							className='ui-field-control'
+							data-disabled='true'
+							style={{ height: 'auto', minHeight: 'auto', maxHeight: 'none' }}
+						>
+							<span>{description || 'No description'}</span>
+						</div>
+						<div className='ui-note ui-field-hint'>
 							{t('Open the project to edit its description')}
 						</div>
-					</div>
+					</>
 				) : (
 					<textarea
 						id='project-description'
@@ -198,22 +206,24 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 				)}
 			</div>
 
-			<div className='form-group'>
+			<div className='ui-field' data-spacing='section'>
 				<label htmlFor='project-type'>{t('Typesetter Type')}</label>
 
 				{disableNameAndDescription ? (
-					<div className='disabled-field'>
-						<span>
-							{selectedProjectTypeOptions.find(
-								(option) =>
-									option.projectType === selectedGroup &&
-									option.source === selectedSource,
-							)?.label ?? selectedGroup}
-						</span>
-						<div className='field-note'>
+					<>
+						<div className='ui-field-control' data-disabled='true'>
+							<span>
+								{selectedProjectTypeOptions.find(
+									(option) =>
+										option.projectType === selectedGroup &&
+										option.source === selectedSource,
+								)?.label ?? selectedGroup}
+							</span>
+						</div>
+						<div className='ui-note ui-field-hint'>
 							{t('Open the project to edit its typesetter type')}
 						</div>
-					</div>
+					</>
 				) : (
 					<select
 						id='project-type'
@@ -261,19 +271,21 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 			</div>
 
 			{selectedGroup !== type && (
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<label htmlFor='project-compiler'>{t('Compiler')}</label>
 
 					{disableNameAndDescription ? (
-						<div className='disabled-field'>
-							<span>
-								{typesetterOptions.find(({ id }) => id === compilerId)?.label ??
-									typesetterOptions[0]?.label}
-							</span>
-							<div className='field-note'>
+						<>
+							<div className='ui-field-control' data-disabled='true'>
+								<span>
+									{typesetterOptions.find(({ id }) => id === compilerId)
+										?.label ?? typesetterOptions[0]?.label}
+								</span>
+							</div>
+							<div className='ui-note ui-field-hint'>
 								{t('Open the project to edit its compiler')}
 							</div>
-						</div>
+						</>
 					) : (
 						<select
 							id='project-compiler'
@@ -312,7 +324,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 
 			{!simpleMode && (
 				<>
-					<div className='form-group'>
+					<div className='ui-field' data-spacing='section'>
 						<label htmlFor='project-tags'>{t('Tags')}</label>
 						<TagInput
 							values={tags}
@@ -323,7 +335,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 					</div>
 
 					{!project && (
-						<div className='form-group checkbox-group'>
+						<div
+							className='checkbox-group ui-field'
+							data-direction='row'
+							data-spacing='section'
+						>
 							<label>
 								<input
 									type='checkbox'
@@ -338,7 +354,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 				</>
 			)}
 
-			<div className='form-actions'>
+			<div
+				className='ui-actions'
+				data-variant='modal'
+				data-align='end'
+				data-cross='stretch'
+				data-fill='true'
+			>
 				<button
 					type='button'
 					className='button secondary'

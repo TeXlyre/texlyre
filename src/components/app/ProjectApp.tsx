@@ -18,7 +18,6 @@ import {
 	pushHash,
 } from '../../utils/urlUtils';
 import BackupDiscoveryModal from '../backup/BackupDiscoveryModal';
-import BackupModal from '../backup/BackupModal';
 import BackupStatusIndicator from '../backup/BackupStatusIndicator';
 import Modal from '../common/Modal';
 import ResizablePanel from '../common/ResizablePanel';
@@ -76,17 +75,8 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		showDiscoveryModal,
 		dismissDiscovery,
 		getRootHandle,
-		shouldShowAutoBackupModal,
-		status,
-		activities,
-		requestAccess,
-		synchronize,
-		importChanges,
-		disconnect,
-		clearActivity,
-		clearAllActivities,
-		changeDirectory,
 	} = useDiskBackup();
+	const backupRootHandle = getRootHandle();
 
 	const [projects, setProjects] = useState<Project[]>([]);
 	const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
@@ -110,7 +100,6 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [showCreateModal, setShowCreateModal] = useState(false);
 	const [showEditModal, setShowEditModal] = useState(false);
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
-	const [showAutoBackupModal, setShowAutoBackupModal] = useState(false);
 	const [showGuestUpgradeModal, setShowGuestUpgradeModal] = useState(false);
 	const [currentProject, setCurrentProject] = useState<Project | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -127,10 +116,6 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		Project[]
 	>([]);
 	const [showPrivacy, setShowPrivacy] = useState(false);
-
-	useEffect(() => {
-		setShowAutoBackupModal(shouldShowAutoBackupModal);
-	}, [shouldShowAutoBackupModal]);
 
 	const loadProjects = useCallback(async () => {
 		try {
@@ -406,7 +391,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			return;
 		}
 
-		// Build URL with last opened file/doc if available
+		// This builds URL with last opened file/doc if available
 		let finalUrl = project.docUrl;
 		if (project.lastOpenedDocId || project.lastOpenedFilePath) {
 			const currentFragment = parseUrlFragments(finalUrl);
@@ -470,8 +455,8 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			)}
 			<ServiceStatusBanner />
 			<QuotaBanner />
-			<header>
-				<div className='header-left'>
+			<header data-role='projects'>
+				<div className='header-left ui-actions'>
 					<h1>{t('All Projects')}</h1>
 				</div>
 
@@ -481,7 +466,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					</a>
 				</div>
 
-				<div className='header-right scroll-x' ref={headerRightRef}>
+				<div className='header-right scroll-x ui-actions' ref={headerRightRef}>
 					{!isGuestUser(user) && (
 						<BackupStatusIndicator className='header-backup-indicator' />
 					)}
@@ -528,7 +513,8 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				<div className='editor-container'>
 					{error && (
 						<div
-							className='error-message'
+							className='ui-message'
+							data-tone='error'
 							style={{
 								padding: '1rem',
 								margin: '1rem',
@@ -540,7 +526,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					)}
 
 					{isLoading ? (
-						<div className='loading-container'>
+						<div className='ui-loading-state' data-fill='true'>
 							<div className='loading-spinner' />
 							<p>{t('Loading projects...')}</p>
 						</div>
@@ -644,12 +630,18 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 							projectName: currentProject?.name || '',
 						})}
 					</p>
-					<p className='warning-message'>
+					<p className='ui-message' data-tone='warning'>
 						{t('This action cannot be undone.')}
 					</p>
 
-					<div className='modal-actions'>
+					<div
+						className='ui-actions'
+						data-variant='modal'
+						data-align='end'
+						data-cross='stretch'
+					>
 						<button
+							type='button'
 							className='button secondary'
 							onClick={() => setShowDeleteModal(false)}
 							disabled={isSubmitting}
@@ -657,6 +649,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 							{t('Cancel')}
 						</button>
 						<button
+							type='button'
 							className='button danger'
 							onClick={handleDeleteProject}
 							disabled={isSubmitting}
@@ -706,31 +699,14 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			/>
 
 			{/* Guest users cannot access backup features */}
-			{!isGuestUser(user) && (
+			{!isGuestUser(user) && backupRootHandle && (
 				<>
 					<BackupDiscoveryModal
 						isOpen={showDiscoveryModal}
 						onClose={dismissDiscovery}
-						rootHandle={getRootHandle()}
+						rootHandle={backupRootHandle}
 						discoveredProjects={discoveredProjects}
 						onProjectsImported={handleDiscoveryImport}
-					/>
-
-					<BackupModal
-						isOpen={showAutoBackupModal}
-						onClose={() => setShowAutoBackupModal(false)}
-						status={status}
-						activities={activities}
-						onRequestAccess={requestAccess}
-						onSynchronize={synchronize}
-						onExportToFileSystem={synchronize}
-						onImportChanges={importChanges}
-						onDisconnect={disconnect}
-						onClearActivity={clearActivity}
-						onClearAllActivities={clearAllActivities}
-						onChangeDirectory={changeDirectory}
-						currentProjectId={sessionStorage.getItem('currentProjectId')}
-						isInEditor={true}
 					/>
 				</>
 			)}

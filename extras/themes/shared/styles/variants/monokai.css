@@ -1,0 +1,15 @@
+/* Shared monokai palette. */
+[data-theme="monokai"][data-theme-plugin="texlyre"],
+[data-theme="monokai"][data-theme-plugin="texlyre-mobile"],
+[data-theme="monokai"][data-theme-plugin="texlyre-slim"] {
+	--accent-background: #383830;
+	--accent-border: #49483e;
+	--editor-background: #272822;
+	--editor-text: #f8f8f2;
+	--sidebar-background: #1e1f1c;
+	--sidebar-border: #49483e;
+	--text-color: #f8f8f2;
+
+	--pico-primary-rgb: 166, 226, 46;
+	--pico-secondary-rgb: 253, 151, 31;
+}

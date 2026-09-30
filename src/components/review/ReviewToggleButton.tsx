@@ -30,10 +30,16 @@ export const TrackChangesButton: React.FC<ReviewButtonProps> = ({
 	const groupRef = useRef<HTMLDivElement>(null);
 
 	return (
-		<div className={`tracking-button-container ${className}`}>
-			<div className='tracking-button-group' ref={groupRef}>
+		<div className={`ui-control-cluster ${className}`}>
+			<div
+				className='ui-button-group ui-split-button'
+				data-layout='weighted'
+				data-trigger-group='true'
+				ref={groupRef}
+			>
 				<button
-					className={`control-button tracking-button ${trackChanges ? 'active' : ''}`}
+					type='button'
+					className={`button ui-split-main tracking-button ${trackChanges ? 'active' : ''}`}
 					onClick={toggleTrackChanges}
 					title={
 						trackChangesShared
@@ -47,7 +53,8 @@ export const TrackChangesButton: React.FC<ReviewButtonProps> = ({
 				</button>
 
 				<button
-					className='control-button dropdown-toggle'
+					type='button'
+					className='button ui-split-toggle dropdown-toggle'
 					onClick={() => setIsDropdownOpen(!isDropdownOpen)}
 					title={t('Tracking Options')}
 				>
@@ -61,10 +68,12 @@ export const TrackChangesButton: React.FC<ReviewButtonProps> = ({
 				className='tracking-dropdown'
 				onClose={() => setIsDropdownOpen(false)}
 			>
-				<div className='dropdown-section'>
-					<div className='dropdown-title'>{t('Track Changes:')}</div>
+				<div className='ui-menu-section' data-variant='control'>
+					<div className='ui-menu-title' data-variant='control'>
+						{t('Track Changes:')}
+					</div>
 
-					<label className='dropdown-checkbox'>
+					<label className='ui-menu-item checkbox-control'>
 						<input
 							type='checkbox'
 							checked={trackChangesLocal}
@@ -73,7 +82,7 @@ export const TrackChangesButton: React.FC<ReviewButtonProps> = ({
 						{t('Track my changes in this file')}
 					</label>
 
-					<label className='dropdown-checkbox'>
+					<label className='ui-menu-item checkbox-control'>
 						<input
 							type='checkbox'
 							checked={trackChangesShared}
@@ -95,17 +104,20 @@ const ReviewToggleButton: React.FC<ReviewButtonProps> = ({
 
 	return (
 		<button
-			className={`control-button ${className} ${showReviews ? 'active' : ''}`}
+			type='button'
+			className={`button ui-count-control ${className} ${showReviews ? 'active' : ''}`}
 			onClick={toggleReviews}
 			title={t('{action} Changes{numReviews}', {
 				action: showReviews ? t('Hide') : t('Show'),
 				numReviews: reviews.length > 0 ? ` (${reviews.length})` : '',
 			})}
 		>
-			<div className='review-button-container'>
+			<div className='review-button-container ui-count-inline'>
 				<ReviewPanelIcon />
 				{reviews.length > 0 && (
-					<span className='review-count-badge'>{reviews.length}</span>
+					<span className='ui-badge' data-variant='count'>
+						{reviews.length}
+					</span>
 				)}
 			</div>
 		</button>

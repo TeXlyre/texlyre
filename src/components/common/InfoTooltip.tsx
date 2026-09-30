@@ -24,7 +24,9 @@ const InfoTooltip: React.FC<InfoTooltipProps> = ({
 			<button
 				ref={buttonRef}
 				type='button'
-				className={`info-tooltip-trigger ${className}`}
+				className={`ui-icon-button ${className}`}
+				data-variant='ghost'
+				data-size='xs'
 				onMouseEnter={() => setShowTooltip(true)}
 				onMouseLeave={() => setShowTooltip(false)}
 				onClick={() => setShowTooltip(!showTooltip)}
@@ -34,7 +36,7 @@ const InfoTooltip: React.FC<InfoTooltipProps> = ({
 			<Popover
 				anchor={buttonRef}
 				open={showTooltip}
-				className='info-tooltip'
+				className='ui-tooltip'
 				axis='inline'
 				align='center'
 				spacing={12}
@@ -42,13 +44,8 @@ const InfoTooltip: React.FC<InfoTooltipProps> = ({
 				onMouseEnter={() => setShowTooltip(true)}
 				onMouseLeave={() => setShowTooltip(false)}
 			>
-				{title && <h4 className='info-tooltip-title'>{title}</h4>}
-				<div
-					className='info-tooltip-content'
-					onMouseDown={(event) => event.stopPropagation()}
-				>
-					{content}
-				</div>
+				{title && <h4 className='ui-tooltip-title'>{title}</h4>}
+				<div onMouseDown={(event) => event.stopPropagation()}>{content}</div>
 			</Popover>
 		</>
 	);

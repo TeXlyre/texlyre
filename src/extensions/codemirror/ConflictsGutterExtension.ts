@@ -17,7 +17,7 @@ class CopyChunkMarker extends GutterMarker {
 	toDOM(): HTMLElement {
 		const btn = document.createElement('button');
 		btn.className = 'cm-conflict-copy-btn';
-		btn.textContent = t('←');
+		btn.textContent = t('→');
 		btn.title = 'Copy chunk to merged';
 		btn.addEventListener('mousedown', (e) => {
 			e.preventDefault();
@@ -36,13 +36,13 @@ class CopyChunkMarker extends GutterMarker {
 		const chunk = result.chunks.find((c) => c.fromB === this.fromB);
 		if (!chunk) return;
 
-		const leftDoc = mv.a.state.doc;
+		const targetDoc = mv.a.state.doc;
 		const remoteText = mv.b.state.doc.sliceString(chunk.fromB, chunk.toB);
-		const leftFrom = Math.min(chunk.fromA, leftDoc.length);
-		const leftTo = Math.min(chunk.toA, leftDoc.length);
+		const targetFrom = Math.min(chunk.fromA, targetDoc.length);
+		const targetTo = Math.min(chunk.toA, targetDoc.length);
 
 		mv.a.dispatch({
-			changes: { from: leftFrom, to: leftTo, insert: remoteText },
+			changes: { from: targetFrom, to: targetTo, insert: remoteText },
 		});
 	}
 }

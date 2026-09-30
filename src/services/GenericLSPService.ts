@@ -24,12 +24,12 @@ type SemanticTokensRefreshListener = (configId: string) => void;
 type CapabilitiesListener = (configId: string) => void;
 type JsonRecord = Record<string, any>;
 
-interface ExtendedClientConfig extends LSPClientConfig {
+export type LSPClientConfiguration = Omit<LSPClientConfig, 'rootUri'> & {
 	capabilities?: JsonRecord;
 	rootUri?: string | null;
 	workspaceFolders?: unknown[];
 	initializationOptions?: unknown;
-}
+};
 
 interface ConfigurationItem {
 	section?: string;
@@ -46,7 +46,7 @@ export interface LSPServerConfig extends ExternalServiceConfig {
 	fileExtensions: string[];
 	languageIdMap?: Record<string, string>;
 	transportConfig: TransportConfig;
-	clientConfig: LSPClientConfig;
+	clientConfig: LSPClientConfiguration;
 }
 
 const defaultClientCapabilities: JsonRecord = {
@@ -325,12 +325,26 @@ class GenericLSPService extends ExternalServiceBase<LSPServerConfig> {
 
 	private async doInitializeClient(config: LSPServerConfig): Promise<void> {
 		try {
-			const clientConfig = config.clientConfig as ExtendedClientConfig;
-			const { capabilities, ...rest } = clientConfig;
-			const client = new LSPClient({ ...rest, extensions: [] });
+			const clientConfig = config.clientConfig;
+			const {
+				capabilities,
+				rootUri,
+				workspaceFolders,
+				initializationOptions,
+				...rest
+			} = clientConfig;
+			const client = new LSPClient({
+				...rest,
+				rootUri: rootUri ?? undefined,
+				extensions: [],
+			});
 			const transport = await this.createTransport(config);
 			client.connect(
-				this.wrapTransport(config.id, transport, capabilities, rest),
+				this.wrapTransport(config.id, transport, capabilities, {
+					rootUri,
+					workspaceFolders,
+					initializationOptions,
+				}),
 			);
 			this.clients.set(config.id, client);
 			this.clientIds.set(client, config.id);
@@ -346,7 +360,10 @@ class GenericLSPService extends ExternalServiceBase<LSPServerConfig> {
 		configId: string,
 		transport: Transport,
 		userCapabilities: JsonRecord | undefined,
-		clientConfig: ExtendedClientConfig,
+		clientConfig: Pick<
+			LSPClientConfiguration,
+			'rootUri' | 'workspaceFolders' | 'initializationOptions'
+		>,
 	): Transport {
 		let handshakeComplete = false;
 		let downstreamHandler: ((value: string) => void) | null = null;

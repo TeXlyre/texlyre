@@ -35,26 +35,30 @@ const FileExplorerOptionsMenu: React.FC<FileExplorerOptionsMenuProps> = ({
 		align='right'
 		onClose={onClose}
 	>
-		<div className='file-toolbar-content'>
-			<div className='file-toolbar-section'>
-				<div className='file-toolbar-label'>{t('Show')}</div>
+		<div className='ui-menu-content'>
+			<div className='ui-menu-section' data-gap='xs' data-divided='true'>
+				<div className='ui-menu-title' data-tone='secondary' data-size='sm'>
+					{t('Show')}
+				</div>
 				<select
 					value={showTemporaryFiles ? 'all' : 'project'}
 					onChange={(e) => onShowTemporaryFilesChange(e.target.value === 'all')}
-					className='file-toolbar-select'
+					className='ui-field-control ui-menu-control'
 				>
 					<option value='all'>{t('All Files')}</option>
 					<option value='project'>{t('Project Files Only')}</option>
 				</select>
 			</div>
 
-			<div className='file-toolbar-section'>
-				<div className='file-toolbar-label'>{t('Sort')}</div>
-				<div className='file-toolbar-sort-row'>
+			<div className='ui-menu-section' data-gap='xs' data-divided='true'>
+				<div className='ui-menu-title' data-tone='secondary' data-size='sm'>
+					{t('Sort')}
+				</div>
+				<div className='ui-menu-sort-row'>
 					<select
 						value={sortField}
 						onChange={(e) => onSortFieldChange(e.target.value as FileSortField)}
-						className='file-toolbar-select file-toolbar-sort-field'
+						className='ui-field-control ui-menu-control ui-menu-sort-field'
 					>
 						<option value='name'>{t('Name')}</option>
 						<option value='modified'>{t('Date Modified')}</option>
@@ -62,7 +66,8 @@ const FileExplorerOptionsMenu: React.FC<FileExplorerOptionsMenuProps> = ({
 						<option value='type'>{t('Type')}</option>
 					</select>
 					<button
-						className={`file-sort-order-toggle ${sortDirection === 'desc' ? 'desc' : ''}`}
+						type='button'
+						className={`ui-menu-sort-toggle ${sortDirection === 'desc' ? 'desc' : ''}`}
 						onClick={() =>
 							onSortDirectionChange(sortDirection === 'asc' ? 'desc' : 'asc')
 						}

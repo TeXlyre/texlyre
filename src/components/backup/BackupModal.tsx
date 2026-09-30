@@ -45,7 +45,7 @@ interface BackupModalProps {
 	onClose: () => void;
 	status: BackupStatus;
 	activities: BackupActivity[];
-	onRequestAccess: (isAutoStart?: boolean) => Promise<boolean>;
+	onRequestAccess: () => Promise<boolean>;
 	onSynchronize: (projectId?: string) => Promise<void>;
 	onExportToFileSystem: (projectId?: string) => Promise<void>;
 	onImportChanges: (projectId?: string) => Promise<void>;
@@ -123,20 +123,19 @@ const BackupModal: React.FC<BackupModalProps> = ({
 		}
 	};
 
-	const getActivityColor = (type: string) => {
+	const getActivityTone = (type: string) => {
 		switch (type) {
 			case 'backup_error':
 			case 'import_error':
-				return '#dc3545';
+				return 'error' as const;
 			case 'backup_complete':
 			case 'import_complete':
-				return '#28a745';
+				return 'success' as const;
 			case 'backup_start':
-				return '#007bff';
 			case 'import_start':
-				return '#6f42c1';
+				return 'info' as const;
 			default:
-				return '#6c757d';
+				return 'info' as const;
 		}
 	};
 
@@ -309,7 +308,10 @@ const BackupModal: React.FC<BackupModalProps> = ({
 				size='medium'
 				headerActions={
 					<button
-						className='modal-close-button'
+						type='button'
+						className='ui-icon-button'
+						data-role='modal-close'
+						data-variant='subtle'
 						onClick={() => setShowSettings(true)}
 						title={t('File System Settings')}
 					>
@@ -317,12 +319,18 @@ const BackupModal: React.FC<BackupModalProps> = ({
 					</button>
 				}
 			>
-				<div className='backup-modal'>
-					<div className='backup-status'>
-						<div className='status-header'>
-							<div className='backup-controls'>
+				<div className='ui-stack' data-gap='lg'>
+					<section
+						className='ui-card ui-stack'
+						data-gap='md'
+						data-padding='md'
+						data-surface='secondary'
+					>
+						<div className='ui-stack' data-gap='md'>
+							<div className='ui-stack' data-gap='sm'>
 								{!status.isConnected ? (
 									<button
+										type='button'
 										className='button primary'
 										onClick={handleRequestAccess}
 										disabled={isOperating}
@@ -334,26 +342,15 @@ const BackupModal: React.FC<BackupModalProps> = ({
 									<>
 										{isInEditor && (
 											<div
-												className='sync-scope-selector'
-												style={{ marginBottom: '1rem' }}
+												className='ui-card ui-stack'
+												data-gap='sm'
+												data-padding='sm'
 											>
-												<label
-													style={{
-														display: 'block',
-														marginBottom: '0.5rem',
-														fontWeight: 'bold',
-													}}
-												>
+												<div className='ui-field-label'>
 													{t('Backup Scope:')}
-												</label>
-												<div style={{ display: 'flex', gap: '1rem' }}>
-													<label
-														style={{
-															display: 'flex',
-															alignItems: 'center',
-															gap: '0.5rem',
-														}}
-													>
+												</div>
+												<div className='ui-actions' data-wrap='true'>
+													<label className='checkbox-control'>
 														<input
 															type='radio'
 															name='syncScope'
@@ -372,13 +369,7 @@ const BackupModal: React.FC<BackupModalProps> = ({
 															{currentProjectName})
 														</span>
 													</label>
-													<label
-														style={{
-															display: 'flex',
-															alignItems: 'center',
-															gap: '0.5rem',
-														}}
-													>
+													<label className='checkbox-control'>
 														<input
 															type='radio'
 															name='syncScope'
@@ -397,9 +388,19 @@ const BackupModal: React.FC<BackupModalProps> = ({
 												</div>
 											</div>
 										)}
-										<div className='backup-toolbar'>
-											<div className='primary-actions'>
+										<div
+											className='ui-toolbar'
+											data-width='full'
+											data-justify='between'
+											data-gap='md'
+										>
+											<div
+												className='ui-toolbar-actions'
+												data-role='primary'
+												data-gap='sm'
+											>
 												<button
+													type='button'
 													className='button secondary'
 													onClick={handleExport}
 													disabled={status.status === 'syncing' || isOperating}
@@ -408,6 +409,7 @@ const BackupModal: React.FC<BackupModalProps> = ({
 													{t('Export To PC')}
 												</button>
 												<button
+													type='button'
 													className='button secondary'
 													onClick={handleImport}
 													disabled={status.status === 'syncing' || isOperating}
@@ -416,8 +418,13 @@ const BackupModal: React.FC<BackupModalProps> = ({
 													{t('Import From PC')}
 												</button>
 											</div>
-											<div className='secondary-actions'>
+											<div
+												className='ui-toolbar-actions'
+												data-role='secondary'
+												data-gap='xs'
+											>
 												<button
+													type='button'
 													className='button secondary icon-only'
 													onClick={handleChangeDirectory}
 													disabled={isOperating}
@@ -426,6 +433,7 @@ const BackupModal: React.FC<BackupModalProps> = ({
 													<FolderIcon />
 												</button>
 												<button
+													type='button'
 													className='button secondary icon-only'
 													onClick={handleDisconnect}
 													disabled={isOperating}
@@ -440,28 +448,31 @@ const BackupModal: React.FC<BackupModalProps> = ({
 							</div>
 						</div>
 
-						<div className='status-info'>
-							<div className='status-item'>
+						<div className='ui-list' data-gap='sm'>
+							<div className='ui-meta' data-layout='row'>
 								<strong>{t('File System Backup:')}</strong>{' '}
 								{status.isConnected ? t('Connected') : t('Disconnected')}
 							</div>
 							{status.isConnected && (
-								<div className='status-item'>
+								<div className='ui-meta' data-layout='row'>
 									<strong>{t('Status: ')}</strong> {getStatusText()}
 								</div>
 							)}
 							{status.error && (
-								<div className='error-message'>{status.error}</div>
+								<div className='ui-message' data-tone='error'>
+									{status.error}
+								</div>
 							)}
 						</div>
-					</div>
+					</section>
 
 					{activities.length > 0 && (
-						<div className='backup-activities'>
-							<div className='activities-header'>
-								<h3>{t('Recent Activity')}</h3>
+						<div className='ui-list' data-gap='md'>
+							<div className='ui-toolbar' data-justify='between' data-gap='sm'>
+								<h3 className='ui-panel-title'>{t('Recent Activity')}</h3>
 								<button
-									className='button small secondary'
+									type='button'
+									className='button secondary'
 									onClick={onClearAllActivities}
 									title={t('Clear all activities')}
 									disabled={isOperating}
@@ -471,29 +482,32 @@ const BackupModal: React.FC<BackupModalProps> = ({
 								</button>
 							</div>
 
-							<div className='activities-list'>
+							<div className='ui-list' data-gap='sm' data-scroll='medium'>
 								{activities
 									.slice(-10)
 									.reverse()
 									.map((activity) => (
 										<div
 											key={activity.id}
-											className='activity-item'
-											style={{
-												borderLeft: `3px solid ${getActivityColor(activity.type)}`,
-											}}
+											className='ui-message ui-stack'
+											data-tone={getActivityTone(activity.type)}
+											data-density='compact'
+											data-gap='xs'
 										>
-											<div className='activity-content'>
-												<div className='activity-header'>
-													<span className='activity-icon'>
+											<div className='ui-list-content'>
+												<div className='ui-actions'>
+													<span className='ui-icon'>
 														{getActivityIcon(activity.type)}
 													</span>
-													<span className='activity-message'>
+													<span className='ui-list-content' data-grow='true'>
 														{activity.message}
 													</span>
 													<button
+														type='button'
 														aria-label={t('Dismiss activity')}
-														className='activity-close'
+														className='ui-icon-button'
+														data-variant='subtle'
+														data-size='xs'
 														onClick={() => onClearActivity(activity.id)}
 														title={t('Dismiss activity')}
 														disabled={isOperating}
@@ -501,7 +515,7 @@ const BackupModal: React.FC<BackupModalProps> = ({
 														<span aria-hidden='true'>×</span>
 													</button>
 												</div>
-												<div className='activity-time'>
+												<div className='ui-meta'>
 													{formatDate(activity.timestamp)}
 												</div>
 											</div>
@@ -511,9 +525,9 @@ const BackupModal: React.FC<BackupModalProps> = ({
 						</div>
 					)}
 
-					<div className='backup-info'>
+					<div className='ui-message' data-tone='info'>
 						<h3>{t('How File System Backup Works')}</h3>
-						<div className='info-content'>
+						<div>
 							<p>
 								{t(
 									'File system backup creates a copy of your local TeXlyre data on your PC that you can sync with cloud storage:',

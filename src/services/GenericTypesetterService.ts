@@ -90,6 +90,7 @@ interface WireCompileResult {
 const MISSING_FILES_STATUS = -2;
 const DEFAULT_COMPILE_TIMEOUT_MS = 10 * 60 * 1000;
 const BASE64_CHUNK_SIZE = 0x8000;
+const BASE64_YIELD_BYTES = 4 * 1024 * 1024;
 
 class GenericTypesetterService extends ExternalServiceBase<TypesetterServerConfig> {
 	protected readonly transportLabel = 'typesetter';
@@ -296,7 +297,7 @@ class GenericTypesetterService extends ExternalServiceBase<TypesetterServerConfi
 		const connection: Connection = { transport, pending: new Map() };
 		this.connections.set(config.id, connection);
 		transport.onMessage((payload) => {
-			this.handleMessage(
+			void this.handleMessage(
 				config.id,
 				typeof payload === 'string'
 					? payload
@@ -306,7 +307,7 @@ class GenericTypesetterService extends ExternalServiceBase<TypesetterServerConfi
 		return connection;
 	}
 
-	private handleMessage(configId: string, data: string): void {
+	private async handleMessage(configId: string, data: string): Promise<void> {
 		const connection = this.connections.get(configId);
 		if (!connection) return;
 
@@ -321,19 +322,42 @@ class GenericTypesetterService extends ExternalServiceBase<TypesetterServerConfi
 		if (!pending) return;
 		connection.pending.delete(payload.requestId);
 		clearTimeout(pending.timer);
-		pending.resolve({
-			status: payload.status,
-			log: payload.log,
-			format: payload.format,
-			mimeType: payload.mimeType,
-			output: payload.output ? this.decodeBytes(payload.output) : undefined,
-			artifacts: payload.artifacts?.map((artifact) => ({
-				id: artifact.id,
-				name: artifact.name,
-				mimeType: artifact.mimeType,
-				data: this.decodeBytes(artifact.data),
-			})),
-		});
+		data = '';
+
+		try {
+			const encodedOutput = payload.output;
+			payload.output = undefined;
+			const output = encodedOutput
+				? await this.decodeBytes(encodedOutput)
+				: undefined;
+			const artifacts: CompileArtifact[] | undefined = payload.artifacts?.length
+				? []
+				: undefined;
+
+			if (artifacts) {
+				for (const artifact of payload.artifacts ?? []) {
+					const encodedData = artifact.data;
+					artifact.data = '';
+					artifacts.push({
+						id: artifact.id,
+						name: artifact.name,
+						mimeType: artifact.mimeType,
+						data: await this.decodeBytes(encodedData),
+					});
+				}
+			}
+
+			pending.resolve({
+				status: payload.status,
+				log: payload.log,
+				format: payload.format,
+				mimeType: payload.mimeType,
+				output,
+				artifacts,
+			});
+		} catch (error) {
+			pending.reject(error instanceof Error ? error : new Error(String(error)));
+		}
 	}
 
 	private async buildManifest(
@@ -361,11 +385,10 @@ class GenericTypesetterService extends ExternalServiceBase<TypesetterServerConfi
 	}
 
 	private async hashContent(content: Uint8Array): Promise<string> {
-		const buffer = content.buffer.slice(
-			content.byteOffset,
-			content.byteOffset + content.byteLength,
+		const digest = await crypto.subtle.digest(
+			'SHA-256',
+			toArrayBuffer(content),
 		);
-		const digest = await crypto.subtle.digest('SHA-256', toArrayBuffer(buffer));
 		return Array.from(new Uint8Array(digest), (byte) =>
 			byte.toString(16).padStart(2, '0'),
 		).join('');
@@ -420,9 +443,28 @@ class GenericTypesetterService extends ExternalServiceBase<TypesetterServerConfi
 		return btoa(chunks.join(''));
 	}
 
-	private decodeBytes(encoded: string): Uint8Array {
-		const binary = atob(encoded);
-		return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+	private async decodeBytes(encoded: string): Promise<Uint8Array> {
+		const padding = encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0;
+		const bytes = new Uint8Array(
+			Math.floor((encoded.length * 3) / 4) - padding,
+		);
+		let writeOffset = 0;
+
+		let bytesSinceYield = 0;
+		for (let offset = 0; offset < encoded.length; offset += BASE64_CHUNK_SIZE) {
+			const binary = atob(encoded.slice(offset, offset + BASE64_CHUNK_SIZE));
+			for (let index = 0; index < binary.length; index++) {
+				bytes[writeOffset++] = binary.charCodeAt(index);
+			}
+
+			bytesSinceYield += binary.length;
+			if (bytesSinceYield >= BASE64_YIELD_BYTES) {
+				bytesSinceYield = 0;
+				await new Promise<void>((resolve) => setTimeout(resolve, 0));
+			}
+		}
+
+		return bytes;
 	}
 }
 

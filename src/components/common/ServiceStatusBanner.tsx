@@ -47,18 +47,22 @@ const ServiceStatusBanner: React.FC = () => {
 	if (!status) return null;
 
 	return (
-		<div className='offline-banner service-status-banner'>
-			<div className='offline-content'>
-				<span className='offline-icon'>
+		<div
+			className='ui-message'
+			data-role='banner'
+			data-tone={status.status === 'down' ? 'error' : 'warning'}
+		>
+			<div className='ui-actions'>
+				<span className='ui-icon'>
 					<OfflineIcon />
 				</span>
-				<div className='offline-text'>
+				<div className='ui-stack' data-gap='xs'>
 					<strong>
 						{status.status === 'down'
 							? t('Some TeXlyre services are unavailable')
 							: t('Some TeXlyre services are degraded')}
 					</strong>
-					<div className='offline-details'>
+					<div className='ui-note'>
 						{t('Affected services:')} {status.down + status.degraded}
 						{pageUrl ? (
 							<>

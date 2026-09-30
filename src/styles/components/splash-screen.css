@@ -4,7 +4,8 @@
 	left: 0;
 	width: 100vw;
 	height: 100vh;
-	background: #1a1a1a; /* Start with dark background to avoid flash */
+	background: #1a1a1a;
+	/* Start with dark background to avoid flash */
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -15,7 +16,6 @@
 		opacity 0.3s ease-out;
 }
 
-/* Once theme is loaded, apply the proper background */
 .splash-screen.theme-loaded {
 	background: var(--pico-background);
 }
@@ -26,7 +26,7 @@
 }
 
 .splash-logo {
-	margin-bottom: 1rem;
+	margin-bottom: var(--space-md);
 	animation: splash-logo-pulse 2s ease-in-out infinite;
 }
 
@@ -36,15 +36,14 @@
 }
 
 .splash-title {
-	font-size: 2.5rem;
+	font-size: var(--font-size-display-xl);
 	font-weight: 300;
-	color: #ffffff; /* Start with white text */
-	margin: 1rem 0 2rem 0;
+	color: #ffffff;
+	margin: var(--space-md) 0 var(--space-xl) 0;
 	letter-spacing: 0.1em;
 	transition: color 0.3s ease-out;
 }
 
-/* Once theme is loaded, apply the proper text color */
 .splash-screen.theme-loaded .splash-title {
 	color: var(--text-color);
 }
@@ -53,17 +52,16 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 1rem;
+	gap: var(--space-md);
 }
 
 .splash-loading p {
-	color: #b0b0b0; /* Start with light gray */
-	font-size: 0.9rem;
+	color: #b0b0b0;
+	font-size: var(--font-size-ui);
 	margin: 0;
 	transition: color 0.3s ease-out;
 }
 
-/* Once theme is loaded, apply the proper secondary text color */
 .splash-screen.theme-loaded .splash-loading p {
 	color: var(--pico-secondary);
 }
@@ -73,6 +71,7 @@
 		opacity: 0;
 		transform: translateY(20px);
 	}
+
 	to {
 		opacity: 1;
 		transform: translateY(0);
@@ -84,6 +83,7 @@
 	100% {
 		transform: scale(1);
 	}
+
 	50% {
 		transform: scale(1.05);
 	}

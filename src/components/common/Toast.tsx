@@ -3,6 +3,7 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 
 import { t } from '@/i18n';
+import type { ToastNotification } from '../../types/notifications';
 import {
 	AlertCircleIcon,
 	CheckIcon,
@@ -11,22 +12,7 @@ import {
 	SyncIcon,
 } from './Icons';
 
-export interface ToastAction {
-	label: string;
-	onClick: () => void;
-	variant?: 'primary' | 'secondary' | 'danger';
-}
-
-export interface ToastNotification {
-	id: string;
-	type: 'loading' | 'success' | 'error' | 'info' | 'sync';
-	message: string;
-	timestamp: number;
-	operationId?: string;
-	duration?: number; // Auto-dismiss duration in ms, 0 for persistent
-	data?: Record<string, any>;
-	actions?: ToastAction[];
-}
+export type { ToastAction, ToastNotification } from '../../types/notifications';
 
 interface ToastProps {
 	notification: ToastNotification;
@@ -70,34 +56,37 @@ const Toast: React.FC<ToastProps> = ({ notification, onDismiss }) => {
 		}
 	};
 
-	const getTypeClass = () => {
+	const getTone = () => {
 		switch (notification.type) {
 			case 'loading':
-				return 'toast-loading';
+				return 'warning';
 			case 'success':
-				return 'toast-success';
+				return 'success';
 			case 'error':
-				return 'toast-error';
-			case 'sync':
-				return 'toast-sync';
+				return 'error';
 			default:
-				return 'toast-info';
+				return 'info';
 		}
 	};
 
 	return (
 		<div
-			className={`toast ${getTypeClass()} ${isVisible ? 'toast-visible' : 'toast-hidden'}`}
+			className='toast ui-message'
+			data-layout='inline'
+			data-tone={getTone()}
+			data-state={notification.type === 'loading' ? 'loading' : undefined}
+			data-visible={isVisible ? 'true' : 'false'}
 		>
-			<div className='toast-icon'>{getIcon()}</div>
-			<div className='toast-body'>
-				<span className='toast-message'>{notification.message}</span>
+			<span className='ui-icon'>{getIcon()}</span>
+			<div className='ui-stack' data-gap='xs' data-grow='true'>
+				<span>{notification.message}</span>
 				{notification.actions && notification.actions.length > 0 && (
-					<div className='toast-actions'>
+					<div className='ui-actions' data-wrap='true'>
 						{notification.actions.map((action) => (
 							<button
+								type='button'
 								key={action.label}
-								className={`button smaller ${action.variant ?? 'secondary'}`}
+								className={`button ${action.variant ?? 'secondary'}`}
 								onClick={() => {
 									action.onClick();
 									onDismiss(notification.id, notification.operationId);
@@ -111,8 +100,11 @@ const Toast: React.FC<ToastProps> = ({ notification, onDismiss }) => {
 			</div>
 			{notification.type !== 'loading' && (
 				<button
+					type='button'
 					aria-label={t('Dismiss notification')}
-					className='toast-dismiss'
+					className='ui-icon-button'
+					data-variant='ghost'
+					data-size='xs'
 					onClick={() => onDismiss(notification.id, notification.operationId)}
 					title={t('Dismiss notification')}
 				>

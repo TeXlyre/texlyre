@@ -5,50 +5,55 @@ import { t } from '@/i18n';
 import { useSettings } from '../hooks/useSettings';
 
 export function useRegisterContentFormatterSettings() {
-	const { registerSetting, getSetting } = useSettings();
+	const { registerSetting } = useSettings();
 	const registered = useRef(false);
 
 	useEffect(() => {
 		if (registered.current) return;
 		registered.current = true;
 
-		const initialLatexNotifications =
-			(getSetting('formatter-latex-notifications')?.value as boolean) ?? true;
-		const initialTypstNotifications =
-			(getSetting('formatter-typst-notifications')?.value as boolean) ?? true;
-
 		registerSetting({
 			id: 'formatter-latex-notifications',
 			category: t('Viewers'),
 			subcategory: t('Text Editor'),
-			type: 'checkbox',
+			type: 'select',
 			label: t('{typesetter} formatting notifications', {
 				typesetter: t('LaTeX'),
 			}),
 			description: t(
-				'Display notifications for {typesetter} content formatting activities',
+				'Choose which {typesetter} formatting notifications to show',
 				{
 					typesetter: t('LaTeX'),
 				},
 			),
-			defaultValue: initialLatexNotifications,
+			defaultValue: 'all',
+			options: [
+				{ label: t('All notifications'), value: 'all' },
+				{ label: t('Errors only'), value: 'errors' },
+				{ label: t('Off'), value: 'off' },
+			],
 		});
 
 		registerSetting({
 			id: 'formatter-typst-notifications',
 			category: t('Viewers'),
 			subcategory: t('Text Editor'),
-			type: 'checkbox',
+			type: 'select',
 			label: t('{typesetter} formatting notifications', {
 				typesetter: t('Typst'),
 			}),
 			description: t(
-				'Display notifications for {typesetter} content formatting activities',
+				'Choose which {typesetter} formatting notifications to show',
 				{
 					typesetter: t('Typst'),
 				},
 			),
-			defaultValue: initialTypstNotifications,
+			defaultValue: 'all',
+			options: [
+				{ label: t('All notifications'), value: 'all' },
+				{ label: t('Errors only'), value: 'errors' },
+				{ label: t('Off'), value: 'off' },
+			],
 		});
-	}, [registerSetting, getSetting]);
+	}, [registerSetting]);
 }

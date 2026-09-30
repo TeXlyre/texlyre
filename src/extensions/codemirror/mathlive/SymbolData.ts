@@ -1,4 +1,4 @@
-/* biome-ignore-all lint/style/useNamingConvention: Unicode math symbol keys map to LaTeX commands */
+/* biome-ignore-all lint/style/useNamingConvention: Unicode math symbol keys map to LaTeX commands. */
 // src/extensions/codemirror/mathlive/SymbolData.ts
 import { inferSyms, type SymbolInfo } from 'detypify-service';
 

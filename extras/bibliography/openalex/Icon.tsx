@@ -7,7 +7,7 @@ export const OpenAlexIcon: React.FC = () => (
 		xmlns='http://www.w3.org/2000/svg'
 		width='16'
 		height='16'
-		viewBox='40 40 140 140'
+		viewBox='34 39 132 127'
 		className='brand-icon--monochrome'
 		fill='currentColor'
 	>
