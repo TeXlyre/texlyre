@@ -35,6 +35,15 @@
 	justify-self: end;
 }
 
+[data-layout="texlyre-wide"]
+	footer
+	.footer-chat.collapsed
+	> .ui-panel-header[data-role="chat"] {
+	height: var(--texlyre-footer-height);
+	min-height: var(--texlyre-footer-height);
+	padding-block: 0;
+}
+
 [data-layout="texlyre-wide"] footer p {
 	margin: 0;
 	display: inline-flex;

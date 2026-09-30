@@ -10,8 +10,6 @@ const createTeXlyreCompactTheme = (): ThemePlugin => {
 	let currentThemeId = 'dark';
 
 	let dockObserver: MutationObserver | null = null;
-	let chatResizeObserver: ResizeObserver | null = null;
-	let observedChat: HTMLElement | null = null;
 	let resizeHandler: (() => void) | null = null;
 	let dockFrame = 0;
 
@@ -22,9 +20,6 @@ const createTeXlyreCompactTheme = (): ThemePlugin => {
 		}
 		dockObserver?.disconnect();
 		dockObserver = null;
-		chatResizeObserver?.disconnect();
-		chatResizeObserver = null;
-		observedChat = null;
 		if (resizeHandler) {
 			window.removeEventListener('resize', resizeHandler);
 			resizeHandler = null;
@@ -81,23 +76,61 @@ const createTeXlyreCompactTheme = (): ThemePlugin => {
 		dockFrame = requestAnimationFrame(updateFooterDock);
 	};
 
+	const observeFooterDockTargets = () => {
+		dockObserver?.disconnect();
+		dockObserver?.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ['data-layout', 'dir'],
+		});
+
+		const root = document.getElementById('root');
+		if (!root) return;
+		dockObserver?.observe(root, { childList: true });
+
+		const app = document.querySelector<HTMLElement>('.app-container');
+		if (!app) return;
+		dockObserver?.observe(app, { childList: true });
+
+		const header = app.querySelector<HTMLElement>(':scope > header');
+		const footer = app.querySelector<HTMLElement>(':scope > footer');
+		if (header) {
+			dockObserver?.observe(header, {
+				childList: true,
+				subtree: true,
+				characterData: true,
+			});
+		}
+		if (footer) {
+			dockObserver?.observe(footer, { childList: true });
+			const chat = footer.querySelector<HTMLElement>('.footer-chat');
+			if (chat) {
+				dockObserver?.observe(chat, {
+					attributes: true,
+					attributeFilter: ['class'],
+				});
+			}
+		}
+	};
+
 	const updateFooterDock = () => {
 		dockFrame = 0;
 		if (
 			document.documentElement.getAttribute('data-layout') !== 'texlyre-compact'
 		)
 			return;
+		const root = document.getElementById('root');
 		const app = document.querySelector<HTMLElement>('.app-container');
-		const footer = app?.querySelector<HTMLElement>(':scope > footer');
-		const header = app?.querySelector<HTMLElement>(':scope > header');
-		if (!app || !footer || !header) return;
+		if (!root || !app) return;
+		const footer = app.querySelector<HTMLElement>(':scope > footer');
+		const header = app.querySelector<HTMLElement>(':scope > header');
+		const chat = footer?.querySelector<HTMLElement>('.footer-chat') ?? null;
+		if (!footer || !header) return;
 		const backup = header.querySelector<HTMLElement>(
 			'.backup-status-dropdown-container',
 		);
 		const collab = header.querySelector<HTMLElement>(
 			'.collab-status-dropdown-container',
 		);
-		const chat = footer.querySelector<HTMLElement>('.footer-chat');
 		const isRtl = document.documentElement.dir === 'rtl';
 		if (window.innerWidth < 760 || (!backup && !collab)) {
 			[backup, collab].forEach((element) => {
@@ -115,12 +148,6 @@ const createTeXlyreCompactTheme = (): ThemePlugin => {
 		const backupWidth = getDockWidth(backup);
 		const collabWidth = getDockWidth(collab);
 		if (chat) {
-			if (observedChat !== chat) {
-				chatResizeObserver?.disconnect();
-				observedChat = chat;
-				chatResizeObserver = new ResizeObserver(scheduleFooterDock);
-				chatResizeObserver.observe(chat);
-			}
 			const chatRect = chat.getBoundingClientRect();
 			let collabLeft: number;
 			let backupLeft: number;
@@ -170,9 +197,6 @@ const createTeXlyreCompactTheme = (): ThemePlugin => {
 				'important',
 			);
 		} else {
-			chatResizeObserver?.disconnect();
-			chatResizeObserver = null;
-			observedChat = null;
 			const primary = backup ?? collab;
 			const primaryWidth = backup ? backupWidth : collabWidth;
 			if (primary) {
@@ -201,7 +225,6 @@ const createTeXlyreCompactTheme = (): ThemePlugin => {
 
 	const setupFooterDock = () => {
 		clearFooterDock();
-		scheduleFooterDock();
 		dockObserver = new MutationObserver(() => {
 			if (
 				document.documentElement.getAttribute('data-layout') !==
@@ -210,24 +233,13 @@ const createTeXlyreCompactTheme = (): ThemePlugin => {
 				clearFooterDock();
 				return;
 			}
+			observeFooterDockTargets();
 			scheduleFooterDock();
 		});
-		dockObserver.observe(document.documentElement, {
-			attributes: true,
-			attributeFilter: ['data-layout', 'dir'],
-		});
-		if (document.body) {
-			dockObserver.observe(document.body, {
-				childList: true,
-				subtree: true,
-				attributes: true,
-				attributeFilter: ['class'],
-			});
-		}
+		observeFooterDockTargets();
 		resizeHandler = scheduleFooterDock;
 		window.addEventListener('resize', resizeHandler);
-		setTimeout(scheduleFooterDock, 0);
-		setTimeout(scheduleFooterDock, 100);
+		scheduleFooterDock();
 	};
 
 	const layout: ThemeLayout = {
