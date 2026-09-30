@@ -267,7 +267,11 @@ TeXlyre builds upon several key technologies:
 
 Third-party logo and icon attributions: http://texlyre.org/docs/attributions.
 
-Development of TeXlyre was assisted by **Anthropic Claude** for debugging and architectural guidance.
+### Generative AI
+
+Generative AI has been used for selected development and maintenance tasks, including scoped code changes, adaptation of existing integrations, debugging, refactoring, tests, and project configuration.
+
+The tools, interaction summaries, and AI-assisted development areas are documented in [`genai/`](genai/README.md).
 
 
 ## Contributing 

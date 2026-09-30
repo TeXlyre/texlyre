@@ -63,6 +63,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		onSelectDocument,
 		onUpdateContent,
 		content,
+		docUrl,
 		targetDocId,
 		targetFilePath,
 		setOutputForFileName: output.setOutputForFileName,
