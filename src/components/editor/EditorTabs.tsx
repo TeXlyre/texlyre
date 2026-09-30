@@ -114,7 +114,6 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 		const resizeObserver = new ResizeObserver(handleResize);
 		resizeObserver.observe(tabs);
 
-		// Initial check
 		updateScrollState();
 
 		return () => {
@@ -124,12 +123,12 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 		};
 	}, [updateScrollState]);
 
-	/* biome-ignore lint/correctness/useExhaustiveDependencies: tabs.length triggers recompute when overflow changes */
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: tabs.length triggers recompute when overflow changes. */
 	useEffect(() => {
 		updateScrollState();
 	}, [tabs.length, updateScrollState]);
 
-	/* biome-ignore lint/correctness/useExhaustiveDependencies: tabs.length triggers scroll-into-view after tab list updates */
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: tabs.length triggers scroll-into-view after tab list updates. */
 	useEffect(() => {
 		const tabsContainer = tabsRef.current;
 		if (!tabsContainer || !activeTabId) return;
@@ -359,7 +358,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 	if (tabs.length === 0) return null;
 
 	const getTabClasses = (index: number, tabId: string) => {
-		let classes = `editor-tab ${tabId === activeTabId ? 'active' : ''}`;
+		let classes = `editor-tab ui-tab ${tabId === activeTabId ? 'active' : ''}`;
 
 		const tab = tabs[index];
 		if (tab?.isDirty) {
@@ -393,14 +392,22 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 		<>
 			<div ref={tabsContainerRef} className='editor-tabs-container'>
 				<button
-					className='scroll-button scroll-left'
+					type='button'
+					className='scroll-button scroll-left ui-icon-button'
+					data-variant='subtle'
+					data-size='sm'
 					onClick={scrollLeft}
 					title={t('Scroll tabs left')}
 				>
 					<ChevronLeftIcon />
 				</button>
 
-				<div ref={setTabsRef} className='editor-tabs' role='tablist'>
+				<div
+					ref={setTabsRef}
+					className='editor-tabs ui-tab-list scroll-x'
+					data-role='editor'
+					role='tablist'
+				>
 					{tabs.map((tab, index) => (
 						<div
 							key={tab.id}
@@ -427,23 +434,35 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 								}
 							}}
 						>
-							<span className='tab-icon'>
+							<span className='tab-icon ui-icon' data-tone='muted'>
 								{getTabIcon(tab)}
 								{tab.type === 'document' && (
-									<span className='file-linked-indicator'>•</span>
+									<span
+										className='ui-status-dot'
+										data-tone='accent'
+										data-placement='corner'
+									/>
 								)}
 							</span>
-							<span className='tab-title'>
+							<span className='tab-title ui-control-label'>
 								{tab.title}
-								{tab.isDirty && <span className='dirty-indicator'>•</span>}
+								{tab.isDirty && (
+									<span className='ui-status' data-tone='warning'>
+										•
+									</span>
+								)}
 								{tab.editorState.currentLine && (
-									<span className='line-indicator'>
+									<span className='ui-meta'>
 										:{tab.editorState.currentLine}
 									</span>
 								)}
 							</span>
 							<button
-								className='tab-close'
+								type='button'
+								className='tab-close ui-icon-button'
+								data-variant='ghost'
+								data-tone='danger'
+								data-size='xs'
 								onClick={(e) => handleCloseClick(e, tab.id)}
 								title={t('Close tab')}
 							>
@@ -454,7 +473,10 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 				</div>
 
 				<button
-					className='scroll-button scroll-right'
+					type='button'
+					className='scroll-button scroll-right ui-icon-button'
+					data-variant='subtle'
+					data-size='sm'
 					onClick={scrollRight}
 					title={t('Scroll tabs right')}
 				>
@@ -462,7 +484,10 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 				</button>
 
 				<button
-					className={`tabs-header-toggle ${headerVisible ? 'active' : ''}`}
+					type='button'
+					className={`ui-icon-button ${headerVisible ? 'active' : ''}`}
+					data-variant='subtle'
+					data-size='sm'
 					onClick={() => setHeaderVisible(!headerVisible)}
 					title={headerVisible ? t('Hide Header') : t('Show Header')}
 				>
@@ -473,28 +498,31 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 			{contextMenu.isVisible && (
 				<div
 					ref={contextMenuRef}
-					className='editor-tab-context-menu'
+					className='ui-menu editor-tab-context-menu'
 					style={{
 						left: contextMenu.x,
 						top: contextMenu.y,
 					}}
 				>
 					<button
-						className='context-menu-item'
+						type='button'
+						className='ui-menu-item'
 						onClick={() => handleContextMenuAction('closeOthers')}
 						disabled={!hasOtherTabs}
 					>
 						{t('Close Others')}
 					</button>
 					<button
-						className='context-menu-item'
+						type='button'
+						className='ui-menu-item'
 						onClick={() => handleContextMenuAction('closeLeft')}
 						disabled={!hasTabsToLeft}
 					>
 						{t('Close Tabs to the Left')}
 					</button>
 					<button
-						className='context-menu-item'
+						type='button'
+						className='ui-menu-item'
 						onClick={() => handleContextMenuAction('closeRight')}
 						disabled={!hasTabsToRight}
 					>

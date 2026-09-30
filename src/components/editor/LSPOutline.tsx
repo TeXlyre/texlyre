@@ -10,12 +10,11 @@ import {
 } from '../../extensions/codemirror/lsp/lspDocumentSymbols';
 import { useProperties } from '../../hooks/useProperties';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
-import {
-	ChevronDownIcon,
-	ChevronRightIcon,
-	RefreshIcon,
-} from '../common/Icons';
+import { RefreshIcon } from '../common/Icons';
 import OutlineItem from './LSPOutlineItem';
+import OutlinePreviewToggle, {
+	OutlineStateToggle,
+} from './OutlinePreviewToggle';
 
 interface LSPOutlineProps {
 	content: string;
@@ -23,6 +22,11 @@ interface LSPOutlineProps {
 	currentLine?: number;
 	onSectionClick: (line: number, column?: number) => void;
 	onRefresh?: () => Promise<void>;
+	previewEnabled?: boolean;
+	onPreviewToggle?: () => void;
+	maximized?: boolean;
+	onMaximizeToggle?: () => void;
+	onCollapsedChange?: (collapsed: boolean) => void;
 }
 
 const LSPOutline: React.FC<LSPOutlineProps> = ({
@@ -31,6 +35,11 @@ const LSPOutline: React.FC<LSPOutlineProps> = ({
 	currentLine = 1,
 	onSectionClick,
 	onRefresh,
+	previewEnabled = false,
+	onPreviewToggle,
+	maximized = false,
+	onMaximizeToggle,
+	onCollapsedChange,
 }) => {
 	const { getProperty, setProperty } = useProperties();
 	const headerRef = useWheelScroll<HTMLDivElement>();
@@ -75,37 +84,74 @@ const LSPOutline: React.FC<LSPOutlineProps> = ({
 	};
 
 	const handleToggleCollapse = () => {
-		const collapsed = !isCollapsed;
+		if (isCollapsed) {
+			if (maximized && onMaximizeToggle) onMaximizeToggle();
+			setIsCollapsed(false);
+			setProperty('lsp-outline-collapsed', false);
+			onCollapsedChange?.(false);
+			return;
+		}
 
-		setIsCollapsed(collapsed);
-		setProperty('lsp-outline-collapsed', collapsed);
+		if (onMaximizeToggle && !maximized) {
+			onMaximizeToggle();
+			return;
+		}
+
+		if (maximized && onMaximizeToggle) onMaximizeToggle();
+		setIsCollapsed(true);
+		setProperty('lsp-outline-collapsed', true);
+		onCollapsedChange?.(true);
 	};
 
 	return (
-		<div className='lsp-outline'>
-			<div className='lsp-outline-header scroll-x' ref={headerRef}>
-				<button className='outline-toggle-btn' onClick={handleToggleCollapse}>
-					{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
-				</button>
+		<div
+			className='outline-panel ui-panel'
+			data-collapsed={isCollapsed ? 'true' : undefined}
+		>
+			<div
+				className='ui-panel-header ui-section-header scroll-x'
+				data-role='outline'
+				ref={headerRef}
+			>
+				<OutlineStateToggle
+					collapsed={isCollapsed}
+					maximized={maximized}
+					threeState={Boolean(onMaximizeToggle)}
+					onToggle={handleToggleCollapse}
+				/>
 
-				<span className='outline-header-title'>{t('OUTLINE')}</span>
-
-				<button
-					className='action-btn'
-					title={t('Refresh Outline')}
-					onClick={handleRefresh}
-				>
-					<RefreshIcon />
-				</button>
-
+				<span className='outline-header-title ui-panel-title ui-section-title'>
+					{t('OUTLINE')}
+				</span>
 				{sections.length > 0 && (
-					<span className='outline-section-count'>{sections.length}</span>
+					<span className='ui-badge' data-variant='label'>
+						{sections.length}
+					</span>
 				)}
+
+				<div
+					className='ui-toolbar-actions ui-section-actions'
+					data-active-style='filled'
+				>
+					<OutlinePreviewToggle
+						enabled={previewEnabled}
+						onToggle={isCollapsed ? undefined : onPreviewToggle}
+					/>
+					<button
+						type='button'
+						className='ui-icon-button'
+						data-variant='subtle'
+						title={t('Refresh Outline')}
+						onClick={handleRefresh}
+					>
+						<RefreshIcon />
+					</button>
+				</div>
 			</div>
 
 			{!isCollapsed &&
 				(sections.length === 0 ? (
-					<div className='outline-empty-state'>
+					<div className='ui-empty-state'>
 						<p>{t('No symbols found')}</p>
 					</div>
 				) : (

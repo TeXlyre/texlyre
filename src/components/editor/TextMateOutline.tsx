@@ -9,12 +9,11 @@ import {
 	TextMateOutlineParser,
 	type TextMateOutlineSection,
 } from '../../utils/textmateOutlineParser';
-import {
-	ChevronDownIcon,
-	ChevronRightIcon,
-	RefreshIcon,
-} from '../common/Icons';
+import { RefreshIcon } from '../common/Icons';
 import OutlineItem from './TextMateOutlineItem';
+import OutlinePreviewToggle, {
+	OutlineStateToggle,
+} from './OutlinePreviewToggle';
 
 interface TextMateOutlineProps {
 	content: string;
@@ -22,6 +21,11 @@ interface TextMateOutlineProps {
 	currentLine?: number;
 	onSectionClick: (line: number) => void;
 	onRefresh?: () => Promise<void>;
+	previewEnabled?: boolean;
+	onPreviewToggle?: () => void;
+	maximized?: boolean;
+	onMaximizeToggle?: () => void;
+	onCollapsedChange?: (collapsed: boolean) => void;
 }
 
 const TextMateOutline: React.FC<TextMateOutlineProps> = ({
@@ -30,6 +34,11 @@ const TextMateOutline: React.FC<TextMateOutlineProps> = ({
 	currentLine = 1,
 	onSectionClick,
 	onRefresh,
+	previewEnabled = false,
+	onPreviewToggle,
+	maximized = false,
+	onMaximizeToggle,
+	onCollapsedChange,
 }) => {
 	const { getProperty, setProperty } = useProperties();
 	const headerRef = useWheelScroll<HTMLDivElement>();
@@ -73,37 +82,74 @@ const TextMateOutline: React.FC<TextMateOutlineProps> = ({
 	};
 
 	const handleToggleCollapse = () => {
-		const collapsed = !isCollapsed;
+		if (isCollapsed) {
+			if (maximized && onMaximizeToggle) onMaximizeToggle();
+			setIsCollapsed(false);
+			setProperty('textmate-outline-collapsed', false);
+			onCollapsedChange?.(false);
+			return;
+		}
 
-		setIsCollapsed(collapsed);
-		setProperty('textmate-outline-collapsed', collapsed);
+		if (onMaximizeToggle && !maximized) {
+			onMaximizeToggle();
+			return;
+		}
+
+		if (maximized && onMaximizeToggle) onMaximizeToggle();
+		setIsCollapsed(true);
+		setProperty('textmate-outline-collapsed', true);
+		onCollapsedChange?.(true);
 	};
 
 	return (
-		<div className='textmate-outline'>
-			<div className='textmate-outline-header scroll-x' ref={headerRef}>
-				<button className='outline-toggle-btn' onClick={handleToggleCollapse}>
-					{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
-				</button>
+		<div
+			className='outline-panel ui-panel'
+			data-collapsed={isCollapsed ? 'true' : undefined}
+		>
+			<div
+				className='ui-panel-header ui-section-header scroll-x'
+				data-role='outline'
+				ref={headerRef}
+			>
+				<OutlineStateToggle
+					collapsed={isCollapsed}
+					maximized={maximized}
+					threeState={Boolean(onMaximizeToggle)}
+					onToggle={handleToggleCollapse}
+				/>
 
-				<span className='outline-header-title'>{t('OUTLINE')}</span>
-
-				<button
-					className='action-btn'
-					title={t('Refresh Outline')}
-					onClick={handleRefresh}
-				>
-					<RefreshIcon />
-				</button>
-
+				<span className='outline-header-title ui-panel-title ui-section-title'>
+					{t('OUTLINE')}
+				</span>
 				{sections.length > 0 && (
-					<span className='outline-section-count'>{sections.length}</span>
+					<span className='ui-badge' data-variant='label'>
+						{sections.length}
+					</span>
 				)}
+
+				<div
+					className='ui-toolbar-actions ui-section-actions'
+					data-active-style='filled'
+				>
+					<OutlinePreviewToggle
+						enabled={previewEnabled}
+						onToggle={isCollapsed ? undefined : onPreviewToggle}
+					/>
+					<button
+						type='button'
+						className='ui-icon-button'
+						data-variant='subtle'
+						title={t('Refresh Outline')}
+						onClick={handleRefresh}
+					>
+						<RefreshIcon />
+					</button>
+				</div>
 			</div>
 
 			{!isCollapsed &&
 				(sections.length === 0 ? (
-					<div className='outline-empty-state'>
+					<div className='ui-empty-state'>
 						<p>{t('No sections found')}</p>
 					</div>
 				) : (
