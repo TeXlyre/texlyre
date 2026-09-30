@@ -42,7 +42,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
 		const awarenessTimeoutSetting = getSetting('collab-awareness-timeout');
 		const autoReconnectSetting = getSetting('collab-auto-reconnect');
 
-		// Wait until all collaboration settings are available
+		// This waits until all collaboration settings are available
 		if (
 			!signalingServersSetting ||
 			!awarenessTimeoutSetting ||

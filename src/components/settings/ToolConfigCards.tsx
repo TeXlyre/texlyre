@@ -34,6 +34,16 @@ const STATUS_LABELS: Record<TransportStatus, string> = {
 	error: 'Error',
 };
 
+const STATUS_TONES: Record<
+	TransportStatus,
+	'success' | 'warning' | 'muted' | 'danger'
+> = {
+	connected: 'success',
+	connecting: 'warning',
+	disconnected: 'muted',
+	error: 'danger',
+};
+
 const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 	const KindIcon = kind.icon;
 	const store = kind.useStore();
@@ -142,51 +152,65 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 		return (
 			<div
 				key={config.id}
-				className={`tool-config-card${enabled ? '' : ' inactive'}`}
+				className='ui-card ui-stack'
+				data-gap='sm'
+				data-padding='md'
+				data-radius='lg'
+				data-muted={enabled ? undefined : 'true'}
 			>
-				<div className='tool-config-card-main'>
-					<div className='tool-config-card-info'>
+				<div
+					className='ui-toolbar'
+					data-justify='between'
+					data-gap='sm'
+					data-wrap='true'
+				>
+					<div className='ui-toolbar' data-gap='sm' data-wrap='true'>
 						{config.icon ? (
 							<span
-								className='tool-config-icon'
+								className='ui-icon'
+								data-tone='muted'
 								aria-hidden='true'
-								/* biome-ignore lint/security/noDangerouslySetInnerHtml: Icons are trusted pre-rendered SVG strings */
+								/* biome-ignore lint/security/noDangerouslySetInnerHtml: Icons are trusted pre-rendered SVG strings. */
 								dangerouslySetInnerHTML={{ __html: config.icon }}
 							/>
 						) : (
-							<span className='tool-config-icon' aria-hidden='true'>
+							<span className='ui-icon' data-tone='muted' aria-hidden='true'>
 								<KindIcon />
 							</span>
 						)}
-						<span className='tool-config-name'>{config.name}</span>
+						<strong>{config.name}</strong>
 						{origin && (
-							<span className='tool-config-badge'>
+							<span className='ui-badge' data-variant='label'>
 								{t('Shared by')} {origin.ownerName}
 							</span>
 						)}
 						{kind.badges(config).map((badge) => (
-							<span key={badge} className='tool-config-badge'>
+							<span key={badge} className='ui-badge' data-variant='label'>
 								{badge}
 							</span>
 						))}
 					</div>
 					{enabled && (
 						<span
-							className={`tool-config-state tool-config-state-${statuses[config.id] ?? 'disconnected'}`}
+							className='ui-status'
+							data-variant='label'
+							data-tone={STATUS_TONES[statuses[config.id] ?? 'disconnected']}
 						>
 							{t(STATUS_LABELS[statuses[config.id] ?? 'disconnected'])}
 						</span>
 					)}
 				</div>
 
-				<div className='tool-config-actions'>
+				<div className='ui-toolbar-actions' data-gap='sm' data-wrap='true'>
 					<button
+						type='button'
 						className={enabled ? 'button danger' : 'button primary'}
 						onClick={() => store.setConfigEnabled(config.id, !enabled)}
 					>
 						{enabled ? t('Disable') : t('Enable')}
 					</button>
 					<button
+						type='button'
 						className='button'
 						disabled={Boolean(origin)}
 						title={
@@ -200,6 +224,7 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 						{t('Edit')}
 					</button>
 					<button
+						type='button'
 						className='button danger'
 						onClick={() => {
 							sharing.detachLocalTool(sharedKind, config.id);
@@ -209,13 +234,14 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 						<TrashIcon />
 						{t('Remove')}
 					</button>
-					<div className='tool-config-actions-utility'>
+					<span className='ui-toolbar-spacer' />
+					<div className='ui-toolbar-actions' data-gap='xs'>
 						<ToolConfigShareActions config={config} />
 					</div>
 				</div>
 
 				<label
-					className='checkbox-control shared-tool-toggle'
+					className='checkbox-control'
 					title={!canAdvertise && share.message ? t(share.message) : undefined}
 				>
 					<input
@@ -233,28 +259,35 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 					<span>{t('Share with all collaborators')}</span>
 				</label>
 				{!canAdvertise && share.message && (
-					<div className='shared-tool-note'>{t(share.message)}</div>
+					<div className='ui-note'>{t(share.message)}</div>
 				)}
 			</div>
 		);
 	};
 
 	return (
-		<div className='tool-config-list'>
-			<div className='tool-config-list-header'>
+		<div className='ui-list' data-gap='sm'>
+			<div className='ui-toolbar' data-gap='sm' data-wrap='true'>
 				<button
-					className='action-button primary'
+					type='button'
+					className='button primary'
 					onClick={() => setEditing('new')}
 				>
 					<PlusIcon />
 					{t('Add recipe')}
 				</button>
-				<button className='action-button' onClick={() => setImporting(true)}>
+				<button
+					type='button'
+					className='button'
+					onClick={() => setImporting(true)}
+				>
 					<ImportIcon />
 					{t('Import recipe')}
 				</button>
+				<span className='ui-toolbar-spacer' />
 				<button
-					className='button secondary smaller tool-config-json-toggle'
+					type='button'
+					className='button secondary '
 					onClick={() =>
 						setJsonDraft(
 							jsonDraft === null
@@ -267,7 +300,8 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 				</button>
 				{jsonDraft !== null && (
 					<button
-						className='button secondary smaller tool-config-json-apply'
+						type='button'
+						className='button primary '
 						onClick={applyJsonDraft}
 					>
 						{t('Apply')}
@@ -275,24 +309,31 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 				)}
 			</div>
 
-			{error && <div className='error-message'>{error}</div>}
+			{error && (
+				<div className='ui-message' data-tone='error'>
+					{error}
+				</div>
+			)}
 
 			{jsonDraft !== null && (
-				<div className='tool-config-json'>
+				<div className='ui-stack' data-gap='sm'>
 					<ToolConfigJsonEditor value={jsonDraft} onChange={setJsonDraft} />
 				</div>
 			)}
 
 			{activeConfigs.length === 0 && inactiveConfigs.length === 0 && (
-				<p className='tool-config-empty'>{t(kind.emptyMessage)}</p>
+				<p className='ui-note' data-style='empty'>
+					{t(kind.emptyMessage)}
+				</p>
 			)}
 
 			{activeConfigs.map((config) => renderCard(config, true))}
 
 			{inactiveConfigs.length > 0 && (
-				<div className='tool-config-disabled'>
+				<div className='ui-stack' data-gap='sm' data-divided='true'>
 					<button
-						className='button secondary smaller'
+						type='button'
+						className='button secondary '
 						onClick={() => setShowDisabled(!showDisabled)}
 					>
 						{showDisabled ? <ChevronUpIcon /> : <ChevronDownIcon />}

@@ -68,12 +68,6 @@ const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 		syncing: isFileSyncing || isSyncing,
 	};
 
-	const getStatusColor = () => {
-		if (showOffline) return '#666';
-		if (mainStatus.syncing) return '#ffc107';
-		return '#28a745';
-	};
-
 	const getStatusText = () => {
 		if (isOfflineMode) return t('Working offline - collaboration disabled');
 		if (isCollabOfflineMode) return t('Collaboration offline');
@@ -115,10 +109,21 @@ const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 
 	return (
 		<>
-			<div className='collab-status-dropdown-container' ref={dropdownRef}>
-				<div className='collab-button-group'>
-					<div
-						className={`collab-status-indicator main-button ${className} ${showOffline ? 'offline' : mainStatus.connected ? 'connected' : 'disconnected'}`}
+			<div
+				className='collab-status-dropdown-container ui-menu-anchor'
+				data-role='status-menu'
+				ref={dropdownRef}
+			>
+				<div
+					className='ui-button-group ui-split-button collab-button-group'
+					data-role='status'
+					data-variant='joined'
+					data-size='control'
+					data-tone={mainStatus.connected && !showOffline ? 'success' : 'muted'}
+				>
+					<button
+						type='button'
+						className={`ui-split-main ${className}`}
 						onClick={handleMainButtonClick}
 						title={
 							isFileSyncEnabled && isCollabConnected && !isCollabOfflineMode
@@ -127,20 +132,25 @@ const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 						}
 					>
 						<div
-							className='status-dot'
-							style={{
-								backgroundColor: getStatusColor(),
-								animation: mainStatus.syncing ? 'pulse 1.5s infinite' : 'none',
-							}}
+							className='ui-status-dot'
+							data-tone={
+								showOffline
+									? 'muted'
+									: mainStatus.syncing
+										? 'warning'
+										: 'success'
+							}
+							data-state={mainStatus.syncing ? 'syncing' : undefined}
 						/>
 						{showOffline ? <OfflineIcon /> : <UsersIcon />}
-						<span className='collab-label'>
+						<span className='ui-status-label'>
 							{showOffline ? t('Offline') : t('Collab')}
 						</span>
-					</div>
+					</button>
 
 					<button
-						className={`collab-dropdown-toggle ${showOffline ? 'offline' : mainStatus.connected ? 'connected' : 'disconnected'}`}
+						type='button'
+						className='ui-split-toggle'
 						onClick={(event) => {
 							event.stopPropagation();
 							setIsDropdownOpen(!isDropdownOpen);
@@ -162,13 +172,14 @@ const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 					className='collab-dropdown'
 				>
 					<div
-						className='collab-dropdown-item'
+						className='ui-menu-item'
+						data-density='compact'
 						onClick={() => {
 							setShowCollabModal(true);
 							setIsDropdownOpen(false);
 						}}
 					>
-						<span className='service-indicator'>
+						<span className='ui-menu-indicator'>
 							{getServiceStatusIndicator('collab')}
 						</span>
 						<SyncIcon />
@@ -176,7 +187,8 @@ const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 					</div>
 
 					<div
-						className='collab-dropdown-item'
+						className='ui-menu-item'
+						data-density='compact'
 						onClick={() => {
 							if (isCollabConnected && !isCollabOfflineMode) {
 								setShowFileSyncModal(true);
@@ -185,7 +197,7 @@ const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 						}}
 						aria-disabled={!isCollabConnected || isCollabOfflineMode}
 					>
-						<span className='service-indicator'>
+						<span className='ui-menu-indicator'>
 							{getServiceStatusIndicator('filesync')}
 						</span>
 						<FileIcon />
@@ -193,17 +205,18 @@ const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 					</div>
 
 					<div
-						className='collab-dropdown-item'
+						className='ui-menu-item'
+						data-density='compact'
 						onClick={() => {
 							setShowSharedToolsModal(true);
 							setIsDropdownOpen(false);
 						}}
 					>
-						<span className='service-indicator' />
+						<span className='ui-menu-indicator' />
 						<ShareIcon />
 						{t('Tools')}
 						{sharedTools.pendingCount > 0 && (
-							<span className='coming-soon'>
+							<span className='ui-menu-meta'>
 								{sharedTools.pendingCount} {t('new')}
 							</span>
 						)}

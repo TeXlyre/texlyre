@@ -115,7 +115,7 @@ const ToolConfigForm: React.FC<ToolConfigFormProps> = ({
 		const value = values[field.key] ?? '';
 
 		return (
-			<div key={field.key} className='form-group'>
+			<div key={field.key} className='ui-field' data-spacing='section'>
 				<label htmlFor={`tool-config-${field.key}`}>{t(field.label)}</label>
 				{field.kind === 'select' ? (
 					<select
@@ -153,18 +153,25 @@ const ToolConfigForm: React.FC<ToolConfigFormProps> = ({
 	};
 
 	return (
-		<div className='tool-config-form'>
-			<div className='tool-config-form-header'>
-				<h4>{config ? t('Edit recipe') : t('Add recipe')}</h4>
+		<div className='ui-stack' data-gap='sm'>
+			<div className='ui-toolbar' data-justify='between' data-gap='sm'>
+				<h4 className='ui-panel-title' data-size='body'>
+					{config ? t('Edit recipe') : t('Add recipe')}
+				</h4>
 				<button
-					className='button secondary smaller'
+					type='button'
+					className='button secondary '
 					onClick={jsonMode ? leaveJsonMode : enterJsonMode}
 				>
 					{jsonMode ? t('Edit fields') : t('Edit as JSON')}
 				</button>
 			</div>
 
-			{error && <div className='error-message'>{error}</div>}
+			{error && (
+				<div className='ui-message' data-tone='error'>
+					{error}
+				</div>
+			)}
 
 			{jsonMode ? (
 				<ToolConfigJsonEditor value={jsonDraft} onChange={setJsonDraft} />
@@ -172,11 +179,16 @@ const ToolConfigForm: React.FC<ToolConfigFormProps> = ({
 				kind.fields.map(renderField)
 			)}
 
-			<div className='form-actions'>
-				<button className='button secondary' onClick={onCancel}>
+			<div
+				className='ui-actions'
+				data-variant='form'
+				data-align='end'
+				data-cross='stretch'
+			>
+				<button type='button' className='button secondary' onClick={onCancel}>
 					{t('Cancel')}
 				</button>
-				<button className='button primary' onClick={handleSave}>
+				<button type='button' className='button primary' onClick={handleSave}>
 					{t('Save')}
 				</button>
 			</div>

@@ -49,19 +49,30 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 		.slice(0, 5);
 
 	return (
-		<div className='file-explorer'>
-			<div className='file-explorer-header'>
-				<h3>{t('Projects')}</h3>
-				<div className='file-explorer-actions scroll-x' ref={headerActionsRef}>
+		<div className='file-explorer' data-role='project-panel'>
+			<div className='ui-panel-header' data-role='explorer' data-position='top'>
+				<h3 className='ui-panel-title' data-size='body' data-shrink='true'>
+					{t('Projects')}
+				</h3>
+				<div
+					className='ui-toolbar-actions scroll-x'
+					data-gap='sm'
+					data-active-style='filled'
+					ref={headerActionsRef}
+				>
 					<button
-						className='action-btn'
+						type='button'
+						className='ui-icon-button'
+						data-variant='subtle'
 						title={t('New Project')}
 						onClick={onCreateProject}
 					>
 						<NewProjectIcon />
 					</button>
 					<button
-						className='action-btn'
+						type='button'
+						className='ui-icon-button'
+						data-variant='subtle'
 						title={t('Import Projects')}
 						onClick={onImportProject}
 					>
@@ -69,37 +80,45 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 					</button>
 				</div>
 			</div>
-			<div className='project-search-container'>
-				<input
-					type='text'
-					placeholder={t('Search projects...')}
-					value={searchQuery}
-					onChange={(event) => {
-						setSearchQuery(event.target.value);
-						onSearch(event.target.value);
-					}}
-					className='search-input'
-				/>
-				{searchQuery && (
-					<button
-						aria-label={t('Clear search')}
-						className='clear-search-button'
-						onClick={() => {
-							setSearchQuery('');
-							onSearch('');
+			<div
+				className='ui-stack'
+				data-role='project-search'
+				data-gap='sm'
+				data-padding='sm'
+			>
+				<div className='ui-search-field'>
+					<input
+						type='text'
+						placeholder={t('Search projects...')}
+						value={searchQuery}
+						onChange={(event) => {
+							setSearchQuery(event.target.value);
+							onSearch(event.target.value);
 						}}
-						title={t('Clear search')}
-					>
-						<span aria-hidden='true'>×</span>
-					</button>
-				)}
+						className='search-input ui-field-control ui-search-control'
+					/>
+					{searchQuery && (
+						<button
+							type='button'
+							aria-label={t('Clear search')}
+							className='ui-search-clear'
+							onClick={() => {
+								setSearchQuery('');
+								onSearch('');
+							}}
+							title={t('Clear search')}
+						>
+							<span aria-hidden='true'>×</span>
+						</button>
+					)}
+				</div>
 				<select
 					value={selectedTag}
 					onChange={(event) => {
 						setSelectedTag(event.target.value);
 						onFilterByTag(event.target.value);
 					}}
-					className='tag-filter'
+					className='tag-filter ui-field-control'
 				>
 					<option value=''>{t('All tags')}</option>
 					{availableTags.map((tag) => (
@@ -114,7 +133,7 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 						setSelectedType(event.target.value);
 						onFilterByType(event.target.value);
 					}}
-					className='type-filter'
+					className='type-filter ui-field-control'
 				>
 					<option value=''>{t('All types')}</option>
 					{availableTypes.map((type) => (
@@ -123,45 +142,62 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 						</option>
 					))}
 				</select>
-				{/* <select value={selectedGroup} onChange={(event) => { setSelectedGroup(event.target.value); onFilterByGroup(event.target.value); }} className='type-filter'>
+				{/* <select value={selectedGroup} onChange={(event) => { setSelectedGroup(event.target.value); onFilterByGroup(event.target.value); }} className='type-filter ui-field-control'>
 					<option value=''>{t('All groups')}</option>
 					{availableGroups.map((group) => <option key={group} value={group}>{typesetterRegistryService.getProjectGroupLabel(group)}</option>)}
 				</select> */}
 				{favoriteProjects.length > 0 && (
-					<div className='project-quick-list'>
-						<h4>{t('Favorites')}</h4>
-						<div className='quick-list-container'>
+					<section className='ui-stack' data-gap='xs'>
+						<h4 className='ui-meta'>{t('Favorites')}</h4>
+						<div className='ui-list' data-gap='xs' data-scroll='medium'>
 							{favoriteProjects.map((project) => (
 								<div
 									key={project.id}
-									className='quick-project-item'
+									className='ui-list-item'
+									data-interactive='true'
+									data-border='none'
+									data-surface='secondary'
+									data-align='center'
+									data-gap='xs'
+									data-padding='xs'
 									onClick={() => onOpenProject?.(project)}
 									title={project.description}
 								>
-									<StarIcon /> {project.name}
+									<span className='ui-icon' data-tone='warning'>
+										<StarIcon />
+									</span>
+									<span>{project.name}</span>
 								</div>
 							))}
 						</div>
-					</div>
+					</section>
 				)}
-				<div className='project-quick-list'>
-					<h4>{t('Recent')}</h4>
-					<div className='quick-list-container'>
+				<section className='ui-stack' data-gap='xs'>
+					<h4 className='ui-meta'>{t('Recent')}</h4>
+					<div className='ui-list' data-gap='xs' data-scroll='medium'>
 						{recentProjects.map((project) => (
 							<div
 								key={project.id}
-								className='quick-project-item quick-project-item-recent'
+								className='ui-list-item'
+								data-interactive='true'
+								data-border='none'
+								data-surface='secondary'
+								data-align='center'
+								data-justify='between'
+								data-padding='xs'
 								onClick={() => onOpenProject?.(project)}
 								title={project.description}
 							>
-								<span className='quick-project-name'>{project.name}</span>
-								<span className='quick-project-time'>
+								<span className='ui-list-content' data-grow='true'>
+									{project.name}
+								</span>
+								<span className='ui-meta'>
 									{formatLastModified(project.updatedAt)}
 								</span>
 							</div>
 						))}
 					</div>
-				</div>
+				</section>
 			</div>
 		</div>
 	);

@@ -101,7 +101,7 @@ const handleTableSelect = (
 
 export const createTableCommand = (type: TableType) => {
 	return (view: EditorView): boolean => {
-		const toolbar = document.querySelector('.plugin-toolbar');
+		const toolbar = document.querySelector('.ui-toolbar[data-role="plugin"]');
 		if (!toolbar) return false;
 
 		const button = toolbar.querySelector(
@@ -118,7 +118,7 @@ export const createTableCommand = (type: TableType) => {
 		) {
 			selector.destroy();
 			gridSelectors.delete(view);
-			selector = null;
+			selector = undefined;
 		}
 
 		if (!selector) {

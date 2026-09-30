@@ -103,21 +103,6 @@ export function useRegisterTypstSettings() {
 			defaultValue: initialAllowRemoteContent,
 		});
 
-		registerSetting({
-			id: 'typst-notifications',
-			category: t('Compilation'),
-			subcategory: t('Typst'),
-			type: 'checkbox',
-			label: t('Show compilation notifications'),
-			description: t(
-				'Display notifications for {typesetter} compilation activities (PDF only)',
-				{
-					typesetter: t('Typst'),
-				},
-			),
-			defaultValue: true,
-		});
-
 		typstService.setDefaultFormat(initialDefaultFormat);
 	}, [registerSetting, getSetting]);
 }

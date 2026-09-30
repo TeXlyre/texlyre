@@ -26,8 +26,6 @@ export function useRegisterFileSyncSettings() {
 		const initialServerUrl =
 			(getSetting('file-sync-server-url')?.value as string) ??
 			'http://filepizza.localhost:8082';
-		const initialNotifications =
-			(getSetting('file-sync-notifications')?.value as boolean) ?? true;
 
 		registerSetting({
 			id: 'file-sync-enable',
@@ -116,10 +114,15 @@ export function useRegisterFileSyncSettings() {
 			id: 'file-sync-notifications',
 			category: t('Connectivity'),
 			subcategory: t('File Synchronization'),
-			type: 'checkbox',
-			label: t('Show sync notifications'),
-			description: t('Display notifications for file sync activities'),
-			defaultValue: initialNotifications,
+			type: 'select',
+			label: t('Sync notifications'),
+			description: t('Choose which file sync notifications to show'),
+			defaultValue: 'all',
+			options: [
+				{ label: t('All notifications'), value: 'all' },
+				{ label: t('Errors only'), value: 'errors' },
+				{ label: t('Off'), value: 'off' },
+			],
 			dependsOn: { id: 'file-sync-enable', value: true, nest: true },
 			disabledReason: t('Requires: File synchronization'),
 		});

@@ -77,10 +77,14 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
 			<div className='password-modal'>
 				<p>{message}</p>
 
-				{error && <div className='error-message'>{error}</div>}
+				{error && (
+					<div className='ui-message' data-tone='error'>
+						{error}
+					</div>
+				)}
 
 				<form onSubmit={handleSubmit} className='password-form'>
-					<div className='form-group'>
+					<div className='ui-field' data-spacing='section'>
 						<label htmlFor='password'>{t('Password')}</label>
 						<input
 							type='password'
@@ -92,7 +96,12 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
 						/>
 					</div>
 
-					<div className='modal-actions'>
+					<div
+						className='ui-actions'
+						data-variant='modal'
+						data-align='end'
+						data-cross='stretch'
+					>
 						<button
 							type='button'
 							className='button secondary'

@@ -62,19 +62,25 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
 	return (
 		<div
-			className={`comment-item ${comment.resolved ? 'resolved' : ''}`}
+			className='comment-item ui-card'
+			data-role='thread-item'
+			data-state={comment.resolved ? 'resolved' : undefined}
 			data-comment-id={comment.id}
 		>
-			<div className='comment-header'>
-				<div className='comment-author-container'>
-					<div className='comment-author' title={comment.user}>
+			<div className='ui-item-header'>
+				<div className='ui-item-author-group'>
+					<div className='ui-item-author' title={comment.user}>
 						{truncateUsername(comment.user)}
 					</div>
-					<div className='comment-time'>{formatDate(comment.timestamp)}</div>
+					<div className='ui-item-time'>{formatDate(comment.timestamp)}</div>
 				</div>
-				<div className='comment-header-actions'>
+				<div className='ui-actions'>
 					<button
-						className='resolve-button'
+						type='button'
+						className='ui-icon-button'
+						data-variant='ghost'
+						data-tone='success'
+						data-size='sm'
 						onClick={handleResolveComment}
 						title={
 							comment.resolved ? t('Mark as unresolved') : t('Mark as resolved')
@@ -83,7 +89,11 @@ const CommentItem: React.FC<CommentItemProps> = ({
 						<ResolveIcon />
 					</button>
 					<button
-						className='delete-button'
+						type='button'
+						className='ui-icon-button'
+						data-variant='ghost'
+						data-tone='danger'
+						data-size='sm'
 						onClick={() => deleteComment(comment.id)}
 						title={t('Delete comment')}
 					>
@@ -95,7 +105,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
 			{comment.line && (
 				<div className='comment-line-section'>
 					<button
-						className='comment-line-button'
+						type='button'
+						className='button secondary'
 						onClick={handleLineClick}
 						title={t('Go to line {line}', { line: comment.line })}
 					>
@@ -104,30 +115,34 @@ const CommentItem: React.FC<CommentItemProps> = ({
 				</div>
 			)}
 
-			<div className='comment-content'>{comment.content}</div>
+			<div className='ui-item-content'>{comment.content}</div>
 
 			{comment.responses.length > 0 && (
-				<div className='comment-responses'>
+				<div className='ui-thread'>
 					{comment.responses.map((response) => (
-						<div key={response.id} className='response-item'>
-							<div className='response-header'>
-								<div className='response-author-container'>
-									<div className='response-author' title={response.user}>
+						<div key={response.id} className='ui-thread-item'>
+							<div className='ui-item-header'>
+								<div className='ui-item-author-group'>
+									<div className='ui-item-author' title={response.user}>
 										{truncateUsername(response.user)}
 									</div>
-									<div className='response-time'>
+									<div className='ui-item-time'>
 										{formatDate(response.timestamp)}
 									</div>
 								</div>
 								<button
-									className='delete-button small'
+									type='button'
+									className='ui-icon-button'
+									data-variant='ghost'
+									data-tone='danger'
+									data-size='xs'
 									onClick={() => handleDeleteResponse(response.id)}
 									title={t('Delete response')}
 								>
 									<TrashIcon />
 								</button>
 							</div>
-							<div className='response-content'>{response.content}</div>
+							<div className='ui-item-content'>{response.content}</div>
 						</div>
 					))}
 				</div>
@@ -135,18 +150,25 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
 			{!comment.resolved &&
 				(isAddingResponse ? (
-					<div className='add-response-form'>
+					<div className='ui-stack' data-gap='sm'>
 						<textarea
 							value={newResponse}
 							onChange={(e) => setNewResponse(e.target.value)}
 							onKeyDown={handleKeyDown}
 							placeholder={t('Type your response...')}
 							rows={2}
+							className='ui-field-control'
 						/>
 
-						<div className='form-actions'>
+						<div
+							className='ui-actions'
+							data-variant='form'
+							data-align='end'
+							data-cross='stretch'
+						>
 							<button
-								className='cancel-response-button'
+								type='button'
+								className='button secondary'
 								onClick={() => {
 									setIsAddingResponse(false);
 									setNewResponse('');
@@ -155,7 +177,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
 								{t('Cancel')}
 							</button>
 							<button
-								className='submit-response-button'
+								type='button'
+								className='button primary'
 								onClick={handleAddResponse}
 								disabled={!newResponse.trim()}
 							>
@@ -165,7 +188,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
 					</div>
 				) : (
 					<button
-						className='add-response-button'
+						type='button'
+						className='button secondary'
 						onClick={() => setIsAddingResponse(true)}
 					>
 						{t('Add response')}

@@ -56,31 +56,46 @@ const GuestUpgradeBanner: React.FC<GuestUpgradeBannerProps> = ({
 	}
 
 	return (
-		<div className='guest-upgrade-banner'>
-			<div className='banner-content'>
-				<div className='banner-icon'>
-					<UserIcon />
-				</div>
-				<div className='banner-text'>
-					<div className='banner-main'>
+		<div
+			className='guest-upgrade-banner ui-message'
+			data-role='banner'
+			data-tone='info'
+		>
+			<div
+				className='ui-toolbar'
+				data-gap='md'
+				data-width='full'
+				data-wrap='true'
+			>
+				<button
+					className='button icon-only'
+					data-role='banner-dismiss'
+					data-variant='ghost'
+					type='button'
+					onClick={() => setIsVisible(false)}
+					title={t('Dismiss upgrade banner')}
+					aria-label={t('Dismiss upgrade banner')}
+				>
+					<CloseIcon />
+				</button>
+				<UserIcon />
+				<div className='ui-list-content' data-grow='true' data-gap='xs'>
+					<div className='ui-toolbar' data-gap='sm' data-wrap='true'>
 						<strong>{t('Guest Session Active')}</strong>
-						<span className='time-remaining'>{timeRemaining}</span>
+						<span className='ui-note'>{timeRemaining}</span>
 					</div>
-					<div className='banner-sub'>
+					<div className='ui-note'>
 						{t('Create an account to keep your projects permanently')}
 					</div>
 				</div>
-				<div className='banner-actions'>
-					<button className='button primary small' onClick={onOpenUpgradeModal}>
+				<div className='ui-actions'>
+					<button
+						className='button primary'
+						type='button'
+						onClick={onOpenUpgradeModal}
+					>
 						<UpgradeAccountIcon />
 						{t('Upgrade Account')}
-					</button>
-					<button
-						className='button icon-only small'
-						onClick={() => setIsVisible(false)}
-						title={t('Dismiss upgrade banner')}
-					>
-						<CloseIcon />
 					</button>
 				</div>
 			</div>

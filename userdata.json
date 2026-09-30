@@ -1,5 +1,5 @@
 {
-  "version": "1.3.3",
+  "version": "1.3.5",
   "settings": {
     "bibtex-viewer-auto-tidy": false,
     "bibtex-viewer-tidy-options": "standard",
@@ -23,7 +23,7 @@
     "file-sync-conflict-resolution": "prefer-latest",
     "file-sync-enable": true,
     "file-sync-hold-timeout": 30,
-    "file-sync-notifications": true,
+    "file-sync-notifications": "all",
     "file-sync-request-timeout": 60,
     "file-sync-server-url": "https://filepizza.texlyre.org",
     "file-sys-backup-auto-backup": false,
@@ -50,7 +50,7 @@
     "status-json-url": "https://raw.githubusercontent.com/TeXlyre/upptime/master/status.json",
     "status-page-url": "https://texlyre.org/upptime",
     "templates-api-url": "https://texlyre.github.io/texlyre-templates/api/templates.json",
-    "theme-plugin": "texlyre-wide-theme",
+    "theme-plugin": "texlyre-compact-theme",
     "theme-variant": "system",
     "typst-auto-compile-on-open": false,
     "typst-default-format": "canvas",
@@ -76,7 +76,8 @@
     "settings": [
       "status-page-url",
       "status-json-url",
-      "theme-variant"
+      "theme-plugin",
+      "file-sync-notifications"
     ],
     "properties": []
   },

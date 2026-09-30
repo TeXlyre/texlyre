@@ -49,7 +49,7 @@ class ReviewService {
 			return {
 				id: match.id,
 				user: userMatch ? userMatch[1].trim() : 'Anonymous',
-				timestamp: timeMatch ? Number.parseInt(timeMatch[1]) : Date.now(),
+				timestamp: timeMatch ? Number.parseInt(timeMatch[1], 10) : Date.now(),
 				originalText: originalMatch
 					? decodeAnnotationText(originalMatch[1])
 					: '',

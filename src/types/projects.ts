@@ -21,6 +21,13 @@ export interface Project {
 	isDiskLinked?: boolean;
 }
 
+export type ProjectCreateInput = Omit<
+	Project,
+	'id' | 'createdAt' | 'updatedAt' | 'ownerId' | 'docUrl'
+> & {
+	docUrl?: string;
+};
+
 export interface TemplateVersion {
 	version: string;
 	downloadUrl: string;

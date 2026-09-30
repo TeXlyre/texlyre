@@ -22,7 +22,7 @@ import { useProperties } from '@/hooks/useProperties';
 import { BibliographyProvider } from '@/contexts/BibliographyContext';
 import { useEditorView } from '@/hooks/editor/useEditorView';
 import { useCollab } from '@/hooks/useCollab';
-import LSPToggleButton from '@/components/bibliography/LSPToggleButton';
+import BibliographyToggleButton from '@/components/bibliography/BibliographyToggleButton';
 import BibliographyPanel from '@/components/bibliography/BibliographyPanel';
 import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
 import { pluginRegistry } from '@/plugins/PluginRegistry';
@@ -618,6 +618,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		<>
 			<PluginControlGroup>
 				<button
+					type='button'
 					className={`${showSidebar ? 'active' : ''}`}
 					onClick={() => {
 						const next = !showSidebar;
@@ -634,6 +635,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				</button>
 				{currentView === 'processed' && (
 					<button
+						type='button'
 						className={`${viewMode === 'table' ? 'active' : ''}`}
 						onClick={() =>
 							setViewMode(viewMode === 'editor' ? 'table' : 'editor')
@@ -651,6 +653,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			<PluginControlGroup>
 				{currentView === 'original' && (
 					<button
+						type='button'
 						onClick={() => {
 							document.dispatchEvent(
 								new CustomEvent('trigger-save', {
@@ -659,13 +662,14 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 							);
 						}}
 						title={t('Save Document (Ctrl+S)')}
-						className='control-button'
+						className='button'
 					>
 						<SaveIcon />
 					</button>
 				)}
 				{fileId && currentView === 'processed' && (
 					<button
+						type='button'
 						onClick={handleSaveProcessed}
 						title={t('Save Processed to Original')}
 						disabled={isSaving || !processedContent.trim()}
@@ -674,6 +678,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					</button>
 				)}
 				<button
+					type='button'
 					onClick={() =>
 						handleExport(
 							displayContent,
@@ -689,14 +694,14 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			{hasPluginToggles && (
 				<PluginControlGroup>
 					{availableLSPPlugins.map((plugin) => (
-						<LSPToggleButton
+						<BibliographyToggleButton
 							key={plugin.id}
 							pluginId={plugin.id}
 							className='header-lsp-button'
 						/>
 					))}
 					{availableBibPlugins.map((plugin) => (
-						<LSPToggleButton
+						<BibliographyToggleButton
 							key={plugin.id}
 							pluginId={plugin.id}
 							className='header-lsp-button'
@@ -709,7 +714,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
 	return (
 		<BibliographyProvider>
-			<div className='bibtex-viewer-container'>
+			<div className='bibtex-viewer-container ui-viewer'>
 				<PluginHeader
 					fileName={fileInfo.fileName}
 					filePath={fileInfo.filePath}
@@ -752,11 +757,21 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
 					<div className='bibtex-content-area'>
 						{error && (
-							<div className='bib-error-message error-message'>{error}</div>
+							<div
+								className='ui-message'
+								data-tone='error'
+								data-spacing='inset'
+							>
+								{error}
+							</div>
 						)}
 
 						{warnings.length > 0 && (
-							<div className='bib-warnings-container warning-message'>
+							<div
+								className='bib-warnings-container ui-message'
+								data-tone='warning'
+								data-spacing='inset'
+							>
 								<h5>{t('Warnings: ')}</h5>
 								{warnings.map((w, i) => (
 									<div key={i} className='warning-item'>
@@ -772,15 +787,21 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 								style={{ position: 'relative' }}
 							>
 								<div className='editor-header'>
-									<div className='view-tabs'>
+									<div
+										className='ui-tab-list'
+										data-role='viewer'
+										data-variant='switcher'
+									>
 										<button
-											className={`tab-button ${currentView === 'original' ? 'active' : ''}`}
+											type='button'
+											className={`ui-tab ${currentView === 'original' ? 'active' : ''}`}
 											onClick={() => setCurrentView('original')}
 										>
 											{t('Original')}
 										</button>
 										<button
-											className={`tab-button ${currentView === 'processed' ? 'active' : ''}`}
+											type='button'
+											className={`ui-tab ${currentView === 'processed' ? 'active' : ''}`}
 											onClick={() => setCurrentView('processed')}
 											disabled={!processedContent.trim()}
 										>
@@ -836,7 +857,12 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 								)}
 
 								{showSaveIndicator && currentView === 'original' && (
-									<div className='save-indicator'>
+									<div
+										className='ui-message'
+										data-role='save-indicator'
+										data-tone='success'
+										data-density='compact'
+									>
 										<span>{t('Saved')}</span>
 									</div>
 								)}

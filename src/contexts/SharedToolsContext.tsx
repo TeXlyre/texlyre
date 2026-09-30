@@ -144,7 +144,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 		typesetters.configs,
 		lsps.configs,
 		lsps.getConfigsForFile,
-		preferences.preferences.shareWithAll,
+		preferences.isSharedWithAll,
 	]);
 
 	const projectShareEnabled = preferences.isShareProjectTools(projectKey);
@@ -219,7 +219,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 		user?.name,
 		user?.username,
 		advertisedTools,
-		preferences.preferences.origins,
+		preferences.getOrigin,
 	]);
 
 	useEffect(() => {
@@ -268,7 +268,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 				}
 				return { ...tool, identity, conflict, status: 'new', localId };
 			}),
-		[observed, localConfigs, preferences.preferences.decisions],
+		[observed, localConfigs, preferences.getDecision],
 	);
 
 	const accept = useCallback(

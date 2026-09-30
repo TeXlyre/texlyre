@@ -1,4 +1,4 @@
-/* biome-ignore-all lint/suspicious/noControlCharactersInRegex: Filename validator must reject control characters */
+/* biome-ignore-all lint/suspicious/noControlCharactersInRegex: Filename validator must reject control characters. */
 // src/utils/fileUtils.ts
 import mime from 'mime';
 
@@ -767,7 +767,7 @@ export function isTemporaryFile(fileName: string): boolean {
 	return temporaryPaths.some((tempPath) => fileName.startsWith(tempPath));
 }
 
-export function isLatexFile(pathOrName: string): boolean {
+export function isLatexFile(pathOrName?: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return (
@@ -779,7 +779,7 @@ export function isLatexFile(pathOrName: string): boolean {
 	); // || lower.endsWith('.ind') || lower.endsWith('.bbl')
 }
 
-export function isLatexMainFile(pathOrName: string): boolean {
+export function isLatexMainFile(pathOrName?: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return (
@@ -787,7 +787,7 @@ export function isLatexMainFile(pathOrName: string): boolean {
 	);
 }
 
-export function isTypstFile(pathOrName: string): boolean {
+export function isTypstFile(pathOrName?: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.typ') || lower.endsWith('.typst');
@@ -799,31 +799,31 @@ export function isTypstFile(pathOrName: string): boolean {
 // 	return lower.endsWith('.typ') || lower.endsWith('.typst');
 // };
 
-export function isBibFile(pathOrName: string): boolean {
+export function isBibFile(pathOrName?: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.bib') || lower.endsWith('.bibtex');
 }
 
-export function isMarkdownFile(pathOrName: string): boolean {
+export function isMarkdownFile(pathOrName?: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.md') || lower.endsWith('.markdown');
 }
 
-export function isYamlFile(pathOrName: string): boolean {
+export function isYamlFile(pathOrName?: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.yml') || lower.endsWith('.yaml');
 }
 
-export function isJsonFile(pathOrName: string): boolean {
+export function isJsonFile(pathOrName?: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.json');
 }
 
-export function isHtmlFile(pathOrName: string): boolean {
+export function isHtmlFile(pathOrName?: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return (
@@ -833,25 +833,25 @@ export function isHtmlFile(pathOrName: string): boolean {
 	);
 }
 
-export function isCssFile(pathOrName: string): boolean {
+export function isCssFile(pathOrName?: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.css');
 }
 
-export function isXmlFile(pathOrName: string): boolean {
+export function isXmlFile(pathOrName?: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.xml') || lower.endsWith('.xsl');
 }
 
-export function isRstFile(pathOrName: string): boolean {
+export function isRstFile(pathOrName?: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.rst');
 }
 
-export function isTomlFile(pathOrName: string): boolean {
+export function isTomlFile(pathOrName?: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.toml');
@@ -906,6 +906,9 @@ export const detectFileType = (
 		if (isHtmlFile(fileName)) return 'html';
 		if (isCssFile(fileName)) return 'css';
 		if (isXmlFile(fileName)) return 'xml';
+
+		const baseName = fileName.split('/').pop() ?? fileName;
+		if (baseName.lastIndexOf('.') > 0) return 'unknown';
 	}
 	if (content) {
 		if (isBibContent(content)) return 'bib';

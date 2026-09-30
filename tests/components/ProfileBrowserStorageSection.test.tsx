@@ -178,7 +178,11 @@ describe('ProfileBrowserStorageSection Component', () => {
     it('should explain why Keep my data is disabled outside the installed app', () => {
         renderSection();
 
-        const infoButton = document.querySelector('.info-tooltip-trigger');
+        const keepDataButton = screen.getByRole('button', { name: 'Keep my data' });
+        const actions = keepDataButton.closest('.ui-actions');
+        const infoButton = actions?.querySelector<HTMLButtonElement>(
+            'button.ui-icon-button',
+        );
         expect(infoButton).not.toBeNull();
 
         fireEvent.click(infoButton as HTMLButtonElement);
@@ -225,8 +229,12 @@ describe('ProfileBrowserStorageSection Component', () => {
         mockedUseStorageQuota.mockReturnValue(buildState({ isPersisted: true }));
         renderSection();
 
-        const infoButton = document.querySelector(
-            '.browser-storage-persistence-actions .info-tooltip-trigger',
+        const status = screen.getByText(
+            'This data is protected from automatic deletion',
+        );
+        const storageRow = status.closest('.ui-list-item');
+        const infoButton = storageRow?.querySelector<HTMLButtonElement>(
+            '.ui-actions button.ui-icon-button',
         );
         expect(infoButton).not.toBeNull();
 
@@ -265,10 +273,11 @@ describe('ProfileBrowserStorageSection Component', () => {
         renderSection();
 
         const button = screen.getByRole('button', { name: 'Keep my data' });
-        const actions = button.closest('.browser-storage-persistence-actions');
+        const actions = button.closest('.ui-actions');
+        const storageRow = button.closest('.ui-list-item');
 
         expect(actions).not.toBeNull();
-        expect((actions as HTMLElement).style.alignItems).toBe('center');
+        expect(storageRow).toHaveAttribute('data-align', 'center');
         expect((button as HTMLButtonElement).style.margin).toBe('0px');
     });
 

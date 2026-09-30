@@ -12,14 +12,14 @@ const QuotaBanner: React.FC = () => {
 	if (!isLow || hideBanner) return null;
 
 	return (
-		<div className='offline-banner storage-banner'>
-			<div className='offline-content'>
-				<span className='offline-icon'>
+		<div className='ui-message' data-role='banner' data-tone={'warning'}>
+			<div className='ui-actions'>
+				<span className='ui-icon'>
 					<AlertCircleIcon />
 				</span>
-				<div className='offline-text'>
+				<div className='ui-stack' data-gap='xs'>
 					<strong>{t('Browser storage is almost full')}</strong>
-					<div className='offline-details'>
+					<div className='ui-note'>
 						{availableBytes > 0
 							? t('{size} left. Saving files and compiling may fail.', {
 									size: formatFileSize(availableBytes),

@@ -9,7 +9,7 @@ import type {
 	BackupStatus,
 } from '../types/backup';
 import type { Project } from '../types/projects';
-import { mergeAnnotatedSources } from '../utils/annotationMerge';
+import { mergeAnnotatedSources } from '../utils/annotationMergeUtils';
 import { stripAnnotationTagsWithSpans } from '../utils/annotationTagUtils';
 import { authService } from './AuthService';
 import { DiskHandleStore, ensurePermission } from './DiskHandleStore';
@@ -24,6 +24,20 @@ import { projectImportService } from './ProjectImportService';
 import { DirectoryTarget, WriteTargetService } from './WriteTargetService';
 
 const moduleLog = createNamedLogger('DiskBackupService');
+
+type DirectoryPicker = (options?: {
+	id?: string;
+	mode?: 'read' | 'readwrite';
+}) => Promise<FileSystemDirectoryHandle>;
+
+type DirectoryPickerWindow = Window & {
+	showDirectoryPicker?: DirectoryPicker;
+};
+
+const getDirectoryPicker = (): DirectoryPicker | null => {
+	const picker = (window as DirectoryPickerWindow).showDirectoryPicker;
+	return typeof picker === 'function' ? picker.bind(window) : null;
+};
 
 class DiskBackupService {
 	private rootHandle: FileSystemDirectoryHandle | null = null;
@@ -97,13 +111,14 @@ class DiskBackupService {
 		return this.rootHandle;
 	}
 
-	async requestAccess(isAutoStart = false, scope = 'global'): Promise<boolean> {
+	async requestAccess(scope = 'global'): Promise<boolean> {
 		try {
-			if (!('showDirectoryPicker' in window)) {
+			const showDirectoryPicker = getDirectoryPicker();
+			if (!showDirectoryPicker) {
 				throw new Error(t('File System Access API not supported'));
 			}
 
-			this.rootHandle = await (window as any).showDirectoryPicker({
+			this.rootHandle = await showDirectoryPicker({
 				mode: 'readwrite',
 				id: 'texlyre-backup',
 			});
@@ -114,10 +129,9 @@ class DiskBackupService {
 				status: 'idle',
 				error: undefined,
 			});
-			this.performDiscoveryScan();
 			return true;
 		} catch (error) {
-			this.handleAccessError(error, isAutoStart);
+			this.handleAccessError(error);
 			return false;
 		}
 	}
@@ -130,13 +144,17 @@ class DiskBackupService {
 
 		this.rootHandle = handle;
 		this.updateStatus({ isConnected: true, status: 'idle', error: undefined });
-		this.performDiscoveryScan();
 		return true;
 	}
 
 	async changeDirectory(scope = 'global'): Promise<boolean> {
 		try {
-			this.rootHandle = await (window as any).showDirectoryPicker({
+			const showDirectoryPicker = getDirectoryPicker();
+			if (!showDirectoryPicker) {
+				throw new Error(t('File System Access API not supported'));
+			}
+
+			this.rootHandle = await showDirectoryPicker({
 				mode: 'readwrite',
 				id: 'texlyre-backup-new',
 			});
@@ -151,7 +169,6 @@ class DiskBackupService {
 				type: 'backup_complete',
 				message: t('Backup directory changed successfully'),
 			});
-			this.performDiscoveryScan();
 			return true;
 		} catch (error) {
 			this.updateStatus({
@@ -278,15 +295,11 @@ class DiskBackupService {
 		};
 	}
 
-	private handleAccessError(error: any, isAutoStart: boolean): void {
+	private handleAccessError(error: any): void {
 		let errorMessage = t('Failed to access file system');
 
 		if (error instanceof DOMException) {
-			if (error.name === 'SecurityError' && isAutoStart) {
-				errorMessage = t(
-					'Auto-backup requires manual folder selection. Click to select backup folder.',
-				);
-			} else if (error.name === 'AbortError') {
+			if (error.name === 'AbortError') {
 				errorMessage = t('Folder selection was cancelled');
 			}
 		} else if (error instanceof Error) {
@@ -720,33 +733,31 @@ class DiskBackupService {
 		await authDb.put('projects', newProject);
 	}
 
-	private async performDiscoveryScan(): Promise<void> {
+	async scanMissingProjects(): Promise<void> {
 		if (!this.rootHandle) return;
 
-		setTimeout(async () => {
-			try {
-				const projects = await projectImportService.scanBackupDirectory(
-					this.rootHandle!,
-				);
-				if (projects.length > 0) {
-					this.addActivity({
-						type: 'backup_complete',
-						message: t('Found {count} importable project in backup directory', {
-							count: projects.length,
-						}),
-					});
-					this.notifyDiscoveryListeners({
-						hasImportableProjects: true,
-						projects,
-					});
-				}
-			} catch (_error) {
+		try {
+			const projects = await projectImportService.scanBackupDirectory(
+				this.rootHandle,
+			);
+			if (projects.length > 0) {
 				this.addActivity({
-					type: 'backup_error',
-					message: t('Error scanning for importable projects'),
+					type: 'backup_complete',
+					message: t('Found {count} importable project in backup directory', {
+						count: projects.length,
+					}),
+				});
+				this.notifyDiscoveryListeners({
+					hasImportableProjects: true,
+					projects,
 				});
 			}
-		}, 1000);
+		} catch (_error) {
+			this.addActivity({
+				type: 'backup_error',
+				message: t('Error scanning for importable projects'),
+			});
+		}
 	}
 
 	private updateStatus(updates: Partial<BackupStatus>): void {

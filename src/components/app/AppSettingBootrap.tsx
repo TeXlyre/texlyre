@@ -6,6 +6,7 @@ import { useRegisterThemeSettings } from '../../settings/registerThemeSettings';
 import { useRegisterEditorSettings } from '../../settings/registerEditorSettings';
 import { useRegisterLanguageFeatureSettings } from '../../settings/registerLanguageFeatureSettings';
 import { useRegisterCollabSettings } from '../../settings/registerCollabSettings';
+import { useRegisterCompilationSettings } from '../../settings/registerCompilationSettings';
 import { useRegisterContentFormatterSettings } from '../../settings/registerContentFormatterSettings';
 import { useRegisterFileSyncSettings } from '../../settings/registerFileSyncSettings';
 import { useRegisterFileSystemBackupSettings } from '../../settings/registerFileSystemBackupSettings';
@@ -22,6 +23,7 @@ const AppBootstrap: React.FC = () => {
 	useRegisterEditorSettings();
 	useRegisterLanguageFeatureSettings();
 	useRegisterCollabSettings();
+	useRegisterCompilationSettings();
 	useRegisterContentFormatterSettings();
 	useRegisterFileSyncSettings();
 	useRegisterFileSystemBackupSettings();

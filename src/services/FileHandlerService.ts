@@ -2,15 +2,17 @@
 import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
 import type { FileNode } from '../types/files';
-import { mergeAnnotatedContent } from '../utils/annotationMerge';
+import { mergeAnnotatedSources } from '../utils/annotationMergeUtils';
 import { stripAnnotationTagsWithSpans } from '../utils/annotationTagUtils';
 import { stripAnnotations, hasAnnotations } from '../utils/fileCommentUtils';
 import { isBinaryFile, isTemporaryFile } from '../utils/fileUtils';
 import { mergeResolutionService } from './MergeResolutionService';
 import { ensurePermission } from './DiskHandleStore';
+import { fileStoreService } from './FileStoreService';
 import type { DirectoryTarget } from './WriteTargetService';
 
 const moduleLog = createNamedLogger('FileHandlerService');
+const WORKSPACE_CLEAN_PREFIX = 'texlyre-workspace-clean-annotations:';
 
 export interface LaunchedFile {
 	name: string;
@@ -199,7 +201,8 @@ class FileHandlerService {
 		incoming: string,
 	): Promise<string | null> {
 		const local = decodeText(file.content) ?? '';
-		const stripped = stripAnnotationTagsWithSpans(local);
+		const localStripped = stripAnnotationTagsWithSpans(local);
+		const incomingStripped = stripAnnotationTagsWithSpans(incoming);
 
 		const resolutions = await mergeResolutionService.resolveConflicts(
 			[
@@ -209,8 +212,10 @@ class FileHandlerService {
 					baseContent: undefined,
 					localContent: incoming,
 					remoteContent: local,
-					remoteViewContent: stripped.content,
-					annotationSpans: stripped.spans,
+					localViewContent: incomingStripped.content,
+					remoteViewContent: localStripped.content,
+					localAnnotationSpans: incomingStripped.spans,
+					annotationSpans: localStripped.spans,
 				},
 			],
 			{ keepLocal: t('Keep Folder'), keepRemote: t('Keep TeXlyre') },
@@ -234,7 +239,8 @@ class FileHandlerService {
 		if (this.isMirroringSuppressed) return false;
 
 		try {
-			await target.write(stripAnnotations(content));
+			const shouldClean = this.shouldCleanTarget(file);
+			await target.write(shouldClean ? stripAnnotations(content) : content);
 
 			const lastModified = await target.stat();
 			if (lastModified !== null) {
@@ -281,11 +287,12 @@ class FileHandlerService {
 			const localText = isBinary ? null : decodeText(file.content);
 
 			if (
+				this.shouldCleanTarget(file) &&
 				typeof incoming === 'string' &&
 				localText !== null &&
-				hasAnnotations(localText)
+				(hasAnnotations(localText) || hasAnnotations(incoming))
 			) {
-				const result = mergeAnnotatedContent(localText, incoming);
+				const result = mergeAnnotatedSources([localText, incoming], incoming);
 				merged = true;
 
 				if (result.dropped > 0 && options.promptOnAnnotationLoss) {
@@ -414,6 +421,29 @@ class FileHandlerService {
 		} finally {
 			this.isMirroringSuppressed = false;
 		}
+	}
+
+	getWorkspaceCleanAnnotations(
+		projectId = fileStoreService.getCurrentProjectId(),
+	): boolean {
+		if (!projectId || typeof localStorage === 'undefined') return true;
+		return (
+			localStorage.getItem(`${WORKSPACE_CLEAN_PREFIX}${projectId}`) !== 'false'
+		);
+	}
+
+	setWorkspaceCleanAnnotations(projectId: string, clean: boolean): void {
+		if (typeof localStorage !== 'undefined') {
+			localStorage.setItem(
+				`${WORKSPACE_CLEAN_PREFIX}${projectId}`,
+				String(clean),
+			);
+		}
+	}
+
+	private shouldCleanTarget(file: FileNode): boolean {
+		if (file.launchHandle || !this.workspace) return true;
+		return this.getWorkspaceCleanAnnotations();
 	}
 
 	shouldMirror(file: FileNode): boolean {

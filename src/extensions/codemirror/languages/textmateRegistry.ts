@@ -34,6 +34,13 @@ let grammarEntries: TextMateGrammarEntry[] = [];
 let languageEntries: TextMateLanguageEntry[] = [];
 let indexLoad: Promise<void> | null = null;
 
+export const grammarsReady = (): Promise<void> => {
+	if (!indexLoad) {
+		indexLoad = loadIndex();
+	}
+	return indexLoad;
+};
+
 function loadIndex(): Promise<void> {
 	if (typeof fetch !== 'function') return Promise.resolve();
 
@@ -67,13 +74,6 @@ function loadIndex(): Promise<void> {
 			grammarEntries = [];
 			languageEntries = [];
 		});
-}
-
-export function whenGrammarsReady(): Promise<void> {
-	if (!indexLoad) {
-		indexLoad = loadIndex();
-	}
-	return indexLoad;
 }
 
 export function getTextMateGrammars(): TextMateGrammarEntry[] {

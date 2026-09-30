@@ -27,149 +27,217 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
 				icon={KeyboardIcon}
 				size='medium'
 			>
-				<div className='shortcuts-content'>
-					<section className='shortcuts-section'>
-						<h3>{t('Global Shortcuts')}</h3>
-						<p className='section-description'>
+				<div className='ui-stack' data-gap='xl'>
+					<section className='ui-stack' data-gap='md'>
+						<h3 className='ui-panel-title'>{t('Global Shortcuts')}</h3>
+						<p className='ui-note'>
 							{t('These shortcuts work anywhere in the application')}
 						</p>
 
-						<div className='shortcuts-list'>
-							<div className='shortcut-item'>
-								<div className='shortcut-keys'>
+						<div className='ui-list' data-gap='sm'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-gap='md'
+								data-padding='sm'
+								data-surface='secondary'
+							>
+								<div className='ui-actions' data-wrap='true'>
 									<kbd>{t('F9')}</kbd>
 								</div>
-								<div className='shortcut-description'>
-									{t('Compile document')}
-								</div>
+								<div className='ui-list-content'>{t('Compile document')}</div>
 							</div>
 
-							<div className='shortcut-item'>
-								<div className='shortcut-keys'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-gap='md'
+								data-padding='sm'
+								data-surface='secondary'
+							>
+								<div className='ui-actions' data-wrap='true'>
 									<kbd>{t('Shift')}</kbd> + <kbd>{t('F9')}</kbd>
 								</div>
-								<div className='shortcut-description'>
+								<div className='ui-list-content'>
 									{t('Compile with cleared cache')}
 								</div>
 							</div>
 
-							<div className='shortcut-item'>
-								<div className='shortcut-keys'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-gap='md'
+								data-padding='sm'
+								data-surface='secondary'
+							>
+								<div className='ui-actions' data-wrap='true'>
 									<kbd>{t('F8')}</kbd>
 								</div>
-								<div className='shortcut-description'>
-									{t('Stop compilation')}
-								</div>
+								<div className='ui-list-content'>{t('Stop compilation')}</div>
 							</div>
 
-							<div className='shortcut-item'>
-								<div className='shortcut-keys'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-gap='md'
+								data-padding='sm'
+								data-surface='secondary'
+							>
+								<div className='ui-actions' data-wrap='true'>
 									<kbd>{t('Ctrl')}</kbd> + <kbd>{t('Shift')}</kbd> +{' '}
 									<kbd>F</kbd>
 								</div>
-								<div className='shortcut-description'>
-									{t('Open search panel')}
-								</div>
+								<div className='ui-list-content'>{t('Open search panel')}</div>
 							</div>
 
-							<div className='shortcut-item'>
-								<div className='shortcut-keys'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-gap='md'
+								data-padding='sm'
+								data-surface='secondary'
+							>
+								<div className='ui-actions' data-wrap='true'>
 									<kbd>{t('Ctrl')}</kbd> + <kbd>{t('Shift')}</kbd> +{' '}
 									<kbd>H</kbd>
 								</div>
-								<div className='shortcut-description'>
+								<div className='ui-list-content'>
 									{t('Open search and replace panel')}
 								</div>
 							</div>
 						</div>
 					</section>
 
-					<section className='shortcuts-section'>
-						<h3>{t('Editor Shortcuts')}</h3>
-						<p className='section-description'>
+					<section className='ui-stack' data-gap='md'>
+						<h3 className='ui-panel-title'>{t('Editor Shortcuts')}</h3>
+						<p className='ui-note'>
 							{t('These shortcuts work when the editor is focused')}
 						</p>
 
-						<div className='shortcuts-list'>
-							<div className='shortcut-item'>
-								<div className='shortcut-keys'>
+						<div className='ui-list' data-gap='sm'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-gap='md'
+								data-padding='sm'
+								data-surface='secondary'
+							>
+								<div className='ui-actions' data-wrap='true'>
 									<kbd>{t('Ctrl')}</kbd> + <kbd>S</kbd>
 								</div>
-								<div className='shortcut-description'>
-									{t('Save current file')}
-								</div>
+								<div className='ui-list-content'>{t('Save current file')}</div>
 							</div>
 
-							<div className='shortcut-item'>
-								<div className='shortcut-keys'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-gap='md'
+								data-padding='sm'
+								data-surface='secondary'
+							>
+								<div className='ui-actions' data-wrap='true'>
 									<kbd>{t('Ctrl')}</kbd> + <kbd>{t('Shift')}</kbd> +{' '}
 									<kbd>I</kbd>
 								</div>
-								<div className='shortcut-description'>
-									{t('Format document')}
-								</div>
+								<div className='ui-list-content'>{t('Format document')}</div>
 							</div>
-							<div className='shortcut-item'>
-								<div className='shortcut-keys'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-gap='md'
+								data-padding='sm'
+								data-surface='secondary'
+							>
+								<div className='ui-actions' data-wrap='true'>
 									<kbd>{t('Ctrl')}</kbd> + <kbd>I</kbd>
 								</div>
-								<div className='shortcut-description'>
-									{t('Expand selection')}
-								</div>
+								<div className='ui-list-content'>{t('Expand selection')}</div>
 							</div>
-							<div className='shortcut-item'>
-								<div className='shortcut-keys'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-gap='md'
+								data-padding='sm'
+								data-surface='secondary'
+							>
+								<div className='ui-actions' data-wrap='true'>
 									<kbd>{t('Alt')}</kbd> + <kbd>C</kbd>
 								</div>
-								<div className='shortcut-description'>
+								<div className='ui-list-content'>
 									{t('Add comment to selection')}
 								</div>
 							</div>
 
-							<div className='shortcut-item'>
-								<div className='shortcut-keys'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-gap='md'
+								data-padding='sm'
+								data-surface='secondary'
+							>
+								<div className='ui-actions' data-wrap='true'>
 									<kbd>{t('Tab')}</kbd>
 								</div>
-								<div className='shortcut-description'>
-									{t('Indent selection')}
-								</div>
+								<div className='ui-list-content'>{t('Indent selection')}</div>
 							</div>
 
-							<div className='shortcut-item'>
-								<div className='shortcut-keys'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-gap='md'
+								data-padding='sm'
+								data-surface='secondary'
+							>
+								<div className='ui-actions' data-wrap='true'>
 									<kbd>{t('Ctrl')}</kbd> + <kbd>F</kbd>
 								</div>
-								<div className='shortcut-description'>
-									{t('Find in document')}
-								</div>
+								<div className='ui-list-content'>{t('Find in document')}</div>
 							</div>
 
-							<div className='shortcut-item'>
-								<div className='shortcut-keys'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-gap='md'
+								data-padding='sm'
+								data-surface='secondary'
+							>
+								<div className='ui-actions' data-wrap='true'>
 									<kbd>{t('Ctrl')}</kbd> + <kbd>H</kbd>
 								</div>
-								<div className='shortcut-description'>
+								<div className='ui-list-content'>
 									{t('Find and replace in document')}
 								</div>
 							</div>
 
-							<div className='shortcut-item'>
-								<div className='shortcut-keys'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-gap='md'
+								data-padding='sm'
+								data-surface='secondary'
+							>
+								<div className='ui-actions' data-wrap='true'>
 									<kbd>{t('Ctrl')}</kbd> + <kbd>Z</kbd>
 								</div>
-								<div className='shortcut-description'>{t('Undo')}</div>
+								<div className='ui-list-content'>{t('Undo')}</div>
 							</div>
 
-							<div className='shortcut-item'>
-								<div className='shortcut-keys'>
+							<div
+								className='ui-list-item'
+								data-align='center'
+								data-gap='md'
+								data-padding='sm'
+								data-surface='secondary'
+							>
+								<div className='ui-actions' data-wrap='true'>
 									<kbd>{t('Ctrl')}</kbd> + <kbd>Y</kbd>
 								</div>
-								<div className='shortcut-description'>{t('Redo')}</div>
+								<div className='ui-list-content'>{t('Redo')}</div>
 							</div>
 						</div>
 					</section>
 
-					<div className='info-message'>
+					<div className='ui-message' data-tone='info'>
 						<p>
 							<strong>{t('Note: ')}&nbsp;</strong>
 							{t(
@@ -180,7 +248,8 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
 							{t('Use')}{' '}
 							<button
 								type='button'
-								className='inline-link-button'
+								className='button'
+								data-variant='text'
 								onClick={() => setShowSettings(true)}
 							>
 								{t('Editor keybindings')}

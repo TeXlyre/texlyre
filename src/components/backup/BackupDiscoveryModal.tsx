@@ -99,14 +99,18 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 			title={t('Projects Found in Backup')}
 			size='medium'
 		>
-			<div className='backup-discovery-modal'>
+			<div className='ui-stack' data-gap='md'>
 				{error && (
-					<div className='error-message' style={{ marginBottom: '1rem' }}>
+					<div
+						className='ui-message'
+						data-tone='error'
+						style={{ marginBottom: '1rem' }}
+					>
 						{error}
 					</div>
 				)}
 
-				<div className='discovery-info'>
+				<div className='ui-message' data-tone='info'>
 					<p>
 						{t(
 							'We found {count} project in your backup that are not on TeXlyre. Would you like to import them?',
@@ -115,9 +119,10 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 					</p>
 				</div>
 
-				<div className='selection-header'>
+				<div className='ui-section-header'>
 					<button
-						className='button secondary small'
+						type='button'
+						className='button secondary '
 						onClick={handleSelectAll}
 						disabled={isImporting}
 					>
@@ -127,11 +132,18 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 					</button>
 				</div>
 
-				<div className='projects-list'>
+				<div className='projects-list ui-list' data-gap='xs'>
 					{discoveredProjects.map((project) => (
 						<div
 							key={project.id}
-							className={`project-item ${selectedProjects.has(project.id) ? 'selected' : ''}`}
+							className='ui-list-item'
+							data-appearance='flat'
+							data-align='center'
+							data-padding='md'
+							data-interactive='true'
+							data-selected={
+								selectedProjects.has(project.id) ? 'true' : undefined
+							}
 							onClick={() => !isImporting && handleProjectToggle(project.id)}
 						>
 							<input
@@ -140,12 +152,12 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 								onChange={() => handleProjectToggle(project.id)}
 								disabled={isImporting}
 							/>
-							<div className='project-details'>
-								<div className='project-name'>{project.name}</div>
-								<div className='project-description'>
+							<div className='ui-list-content' data-grow='true' data-gap='xs'>
+								<strong>{project.name}</strong>
+								<span className='ui-note'>
 									{project.description || t('No description')}
-								</div>
-								<div className='project-meta'>
+								</span>
+								<div className='ui-meta'>
 									<span>
 										{t('Last Modified: {lastModified}', {
 											lastModified: formatDate(project.lastModified),
@@ -157,7 +169,12 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 					))}
 				</div>
 
-				<div className='import-note'>
+				<div
+					className='ui-message'
+					data-tone='info'
+					data-density='compact'
+					data-layout='inline'
+				>
 					<ImportIcon />
 					<span>
 						{t(
@@ -166,7 +183,12 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 					</span>
 				</div>
 
-				<div className='modal-actions'>
+				<div
+					className='ui-actions'
+					data-variant='modal'
+					data-align='end'
+					data-cross='stretch'
+				>
 					<button
 						type='button'
 						className='button secondary'

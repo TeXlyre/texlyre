@@ -19,7 +19,15 @@ import { isQuotaExceededError, quotaService } from './QuotaService';
 
 const moduleLog = createNamedLogger('FileStoreService');
 
-type FileStorageListener = () => void;
+export interface FileStorageChange {
+	kind: 'content' | 'structure';
+	fileId?: string;
+	filePath?: string;
+	size?: number;
+	lastModified?: number;
+}
+
+type FileStorageListener = (change: FileStorageChange) => void;
 const listeners: FileStorageListener[] = [];
 
 export const fileStorageEventEmitter = {
@@ -32,11 +40,20 @@ export const fileStorageEventEmitter = {
 			}
 		};
 	},
-	emitChange() {
+	emitChange(change: FileStorageChange = { kind: 'structure' }) {
 		for (const listener of listeners) {
-			listener();
+			listener(change);
 		}
-		document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+
+		if (change.kind === 'structure') {
+			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		} else {
+			document.dispatchEvent(
+				new CustomEvent<FileStorageChange>('file-content-changed', {
+					detail: change,
+				}),
+			);
+		}
 	},
 };
 
@@ -465,6 +482,7 @@ class FileStoreService {
 		const preserveDeletionStatus = options?.preserveDeletionStatus ?? false;
 		const storedIds: string[] = [];
 		const filesToStore: FileNode[] = [];
+		const existingByPath = new Map<string, FileNode | undefined>();
 
 		const conflicts: { existing: FileNode; new: FileNode }[] = [];
 
@@ -512,6 +530,7 @@ class FileStoreService {
 			}
 
 			const existingFile = await this.getFileByPath(file.path, true);
+			existingByPath.set(file.path, existingFile);
 
 			file.createdAt =
 				existingFile?.createdAt ?? file.createdAt ?? file.lastModified;
@@ -623,7 +642,42 @@ class FileStoreService {
 				await tx.done;
 			});
 			await fileHandlerService.mirrorFiles(filesToStore);
-			fileStorageEventEmitter.emitChange();
+
+			const structureChanged = filesToStore.some((file) => {
+				const existing = existingByPath.get(file.path);
+				return (
+					!existing ||
+					existing.id !== file.id ||
+					existing.type !== 'file' ||
+					file.type !== 'file' ||
+					Boolean(existing.isDeleted) !== Boolean(file.isDeleted) ||
+					existing.name !== file.name ||
+					existing.documentId !== file.documentId ||
+					existing.mimeType !== file.mimeType ||
+					existing.isBinary !== file.isBinary ||
+					existing.excludeFromSync !== file.excludeFromSync ||
+					Boolean(existing.launchHandle) !== Boolean(file.launchHandle)
+				);
+			});
+
+			if (structureChanged) {
+				fileStorageEventEmitter.emitChange();
+			} else {
+				const changedFiles = filesToStore.filter(
+					(file) => !file.excludeFromSync,
+				);
+				if (changedFiles.length > 0) {
+					const changedFile =
+						changedFiles.length === 1 ? changedFiles[0] : undefined;
+					fileStorageEventEmitter.emitChange({
+						kind: 'content',
+						fileId: changedFile?.id,
+						filePath: changedFile?.path,
+						size: changedFile?.size,
+						lastModified: changedFile?.lastModified,
+					});
+				}
+			}
 		}
 
 		return storedIds;
@@ -1100,34 +1154,49 @@ class FileStoreService {
 	async updateFileContent(
 		id: string,
 		content: ArrayBuffer | string,
-		options: { showConflictDialog?: boolean; preserveTimestamp?: boolean } = {},
-	): Promise<void> {
+		options: { preserveTimestamp?: boolean } = {},
+	): Promise<FileNode | undefined> {
 		if (!this.db) await this.initialize();
 		const file = await this.getFile(id);
-		if (file) {
-			file.content = content;
+		if (!file) return undefined;
 
-			file.size =
-				typeof content === 'string'
-					? new Blob([content]).size
-					: content.byteLength;
+		const wasDeleted = Boolean(file.isDeleted);
+		file.content = content;
+		file.size =
+			typeof content === 'string'
+				? new Blob([content]).size
+				: content.byteLength;
 
-			if (!options.preserveTimestamp) {
-				file.lastModified = Date.now();
-			}
-
-			const hasContent =
-				content &&
-				((typeof content === 'string' && content.length > 0) ||
-					(content instanceof ArrayBuffer && content.byteLength > 0));
-
-			if (hasContent && file.isDeleted) {
-				file.isDeleted = false;
-			}
-
-			const finalOptions = { showConflictDialog: false, ...options };
-			await this.storeFile(file, finalOptions);
+		if (!options.preserveTimestamp) {
+			file.lastModified = Date.now();
 		}
+
+		const hasContent =
+			(typeof content === 'string' && content.length > 0) ||
+			(content instanceof ArrayBuffer && content.byteLength > 0);
+
+		if (hasContent && file.isDeleted) {
+			file.isDeleted = false;
+		}
+
+		await quotaService.ensureSpace(this.getContentSize(file));
+		await this.guardWrite(async () => {
+			await this.db?.put(this.FILES_STORE, file);
+		});
+		await fileHandlerService.mirrorFiles([file]);
+
+		fileStorageEventEmitter.emitChange(
+			wasDeleted !== Boolean(file.isDeleted)
+				? { kind: 'structure' }
+				: {
+						kind: 'content',
+						fileId: file.id,
+						filePath: file.path,
+						size: file.size,
+						lastModified: file.lastModified,
+					},
+		);
+		return file;
 	}
 
 	private async createUniqueFile(file: FileNode): Promise<FileNode> {

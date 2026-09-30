@@ -43,6 +43,9 @@
 		}
 	},
 	"linter": {
+		"domains": {
+			"react": "recommended"
+		},
 		"rules": {
 			"correctness": {
 				"useImportExtensions": "off"

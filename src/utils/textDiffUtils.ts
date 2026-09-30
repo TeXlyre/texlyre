@@ -80,7 +80,7 @@ export function computeReplacementChange(
 		prefixLen++;
 	}
 
-	// If the entire shorter string is a prefix, we need to handle it carefully
+	// TODO (fabawi) If the entire shorter string is a prefix, we need to handle it carefully instead of this hack
 	if (prefixLen === minLen) {
 		// One string is a prefix of the other
 		if (normalizedOriginal.length > normalizedFormatted.length) {

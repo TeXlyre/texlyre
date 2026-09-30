@@ -2,14 +2,13 @@
 import debounce from 'lodash/debounce';
 
 import { createNamedLogger } from '@/logging';
-import { fileStoreService } from './FileStoreService';
 
 const moduleLog = createNamedLogger('AutoSaveService');
 
 interface AutoSaveOptions {
 	enabled: boolean;
 	delay: number;
-	onSave?: (fileId: string, content: string) => void | Promise<void>;
+	onSave: (fileId: string, content: string) => void | Promise<void>;
 	onError?: (error: Error) => void;
 }
 
@@ -34,17 +33,13 @@ class AutoSaveService {
 					return;
 				}
 
-				const encoder = new TextEncoder();
-				const dataToSave = encoder.encode(contentToSave).buffer;
-
-				await fileStoreService.updateFileContent(fileId, dataToSave);
-				await options.onSave?.(fileId, contentToSave);
+				await options.onSave(fileId, contentToSave);
 			} catch (error) {
 				options.onError?.(error as Error);
 			}
 		}, options.delay);
 
-		// Clean up any existing callback for this file
+		// This cleans up any existing callback for this file
 		this.clearAutoSaver(fileId);
 
 		this.saveCallbacks.set(fileId, debouncedSave);
@@ -54,7 +49,6 @@ class AutoSaveService {
 	clearAutoSaver(fileId: string): void {
 		const callback = this.saveCallbacks.get(fileId);
 		if (callback) {
-			// Cancel any pending saves
 			(callback as any).cancel?.();
 			this.saveCallbacks.delete(fileId);
 		}

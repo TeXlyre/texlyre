@@ -652,7 +652,7 @@ export class GitBackupService<TTarget> {
 
 		const target = this.adapter.targetFromStoredValue(
 			targetSecret.value,
-			targetMetadata,
+			targetMetadata ?? undefined,
 		);
 		this.status = {
 			...this.status,

@@ -195,7 +195,7 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 		<>
 			<h3 style={{ paddingTop: '1rem' }}>{t('Local Storage Data')}</h3>
 
-			<div className='warning-message'>
+			<div className='ui-message' data-tone='warning'>
 				<h4>{t('\u26A0\uFE0F Warning: This action cannot be undone')}</h4>
 				<p>
 					{t(
@@ -207,14 +207,21 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 				</p>
 			</div>
 
-			<div className='local-storage-actions'>
+			<div className='ui-stack' data-gap='md'>
 				{STORES.map(({ type, title, description }) => (
-					<div className='storage-action-group' key={type}>
-						<div className='storage-action-info'>
+					<div
+						className='ui-list-item'
+						data-surface='secondary'
+						data-padding='md'
+						data-align='center'
+						data-justify='between'
+						key={type}
+					>
+						<div className='ui-list-content' data-grow='true' data-gap='xs'>
 							<strong>{t(title)}</strong>
 							<p>{t(description)}</p>
 						</div>
-						<div className='storage-action-buttons'>
+						<div className='ui-actions' data-gap='xs'>
 							<IconButton
 								icon={<DownloadIcon />}
 								label={t('Download {type} data', {
@@ -237,8 +244,14 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 					</div>
 				))}
 
-				<div className='storage-action-group danger-zone'>
-					<div className='storage-action-info'>
+				<div
+					className='ui-list-item'
+					data-tone='danger'
+					data-padding='md'
+					data-align='center'
+					data-justify='between'
+				>
+					<div className='ui-list-content' data-grow='true' data-gap='xs'>
 						<strong>{t('All Local Storage Data')}</strong>
 						<p>
 							{t(
@@ -246,7 +259,7 @@ const LocalStorageDataSection: React.FC<LocalStorageDataSectionProps> = ({
 							)}
 						</p>
 					</div>
-					<div className='storage-action-buttons'>
+					<div className='ui-actions' data-gap='xs'>
 						<IconButton
 							icon={<ImportIcon />}
 							label={t('Import all data')}

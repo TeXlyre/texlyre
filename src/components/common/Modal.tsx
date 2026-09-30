@@ -49,7 +49,7 @@ const Modal: React.FC<ModalProps> = ({
 			) {
 				const clickedElement = event.target as Element;
 				const isInsideAnyModal = clickedElement.closest(
-					'.modal-container, .popover-panel',
+					'[data-role="modal"], .popover-panel',
 				);
 
 				if (!isInsideAnyModal) {
@@ -79,9 +79,14 @@ const Modal: React.FC<ModalProps> = ({
 
 	return createPortal(
 		<div className='modal-overlay'>
-			<div className={`modal-container modal-${size}`} ref={modalRef}>
-				<div className='modal-header'>
-					<h2>
+			<div
+				className='ui-panel'
+				data-role='modal'
+				data-size={size}
+				ref={modalRef}
+			>
+				<div className='ui-panel-header' data-role='modal'>
+					<h2 className='ui-panel-title'>
 						{IconComponent && (
 							<span>
 								<IconComponent />
@@ -89,12 +94,15 @@ const Modal: React.FC<ModalProps> = ({
 						)}{' '}
 						{title}
 					</h2>
-					<div style={{ display: 'flex', gap: '0.5rem' }}>
+					<div className='ui-toolbar-actions' data-gap='sm'>
 						{headerActions}
 						{showCloseButton && (
 							<button
+								type='button'
 								aria-label={t('Close modal')}
-								className='modal-close-button'
+								className='ui-icon-button'
+								data-role='modal-close'
+								data-variant='subtle'
 								onClick={onClose}
 								title={t('Close modal')}
 							>
@@ -103,7 +111,9 @@ const Modal: React.FC<ModalProps> = ({
 						)}
 					</div>
 				</div>
-				<div className='modal-content'>{children}</div>
+				<div className='ui-panel-content' data-role='modal' data-overflow='y'>
+					{children}
+				</div>
 			</div>
 		</div>,
 		document.body,

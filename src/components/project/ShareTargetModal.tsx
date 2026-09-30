@@ -195,29 +195,31 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 	);
 
 	const renderChoose = () => (
-		<div className='share-target-choose'>
-			<div className='share-target-file-list'>
+		<div className='ui-stack' data-gap='md'>
+			<div className='ui-list'>
 				{files.map((f, i) => (
-					<div key={i} className='export-project-item'>
+					<div
+						key={i}
+						className='ui-list-item'
+						data-appearance='flat'
+						data-padding='sm'
+					>
 						<strong>{f.name}</strong>
-						<div className='export-project-details'>
+						<div className='ui-meta'>
 							{(f.buffer.byteLength / 1024).toFixed(1)} KB
 						</div>
 					</div>
 				))}
 			</div>
 			<div className='import-options' style={{ marginTop: '1rem' }}>
-				<label
-					className='import-option-button'
-					onClick={() => setMode('existing')}
-				>
+				<label className='ui-choice-card' onClick={() => setMode('existing')}>
 					<ImportIcon />
 					<div>
 						<strong>{t('Add to existing project')}</strong>
 						<p>{t('Choose a project to add these files to')}</p>
 					</div>
 				</label>
-				<label className='import-option-button' onClick={() => setMode('new')}>
+				<label className='ui-choice-card' onClick={() => setMode('new')}>
 					<NewProjectIcon />
 					<div>
 						<strong>{t('Create new project')}</strong>
@@ -229,27 +231,37 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 	);
 
 	const renderExisting = () => (
-		<div className='share-target-existing'>
-			<div className='share-target-file-list'>
+		<div className='ui-stack' data-gap='md'>
+			<div className='ui-list'>
 				{files.map((f, i) => (
-					<div key={i} className='export-project-item'>
+					<div
+						key={i}
+						className='ui-list-item'
+						data-appearance='flat'
+						data-padding='sm'
+					>
 						<strong>{f.name}</strong>
 					</div>
 				))}
 			</div>
 			<input
 				type='text'
-				className='search-input'
+				className='search-input ui-field-control'
 				placeholder={t('Search projects...')}
 				value={search}
 				onChange={(e) => setSearch(e.target.value)}
 				style={{ margin: '0.75rem 0' }}
 			/>
-			<div className='projects-compact-list'>
+			<div className='ui-list' data-scroll='medium'>
 				{filteredProjects.map((p) => (
 					<div
 						key={p.id}
-						className={`project-item ${selectedProjectId === p.id ? 'selected' : ''}`}
+						className='ui-list-item'
+						data-appearance='flat'
+						data-align='center'
+						data-padding='md'
+						data-interactive='true'
+						data-selected={selectedProjectId === p.id ? 'true' : undefined}
 						onClick={() => setSelectedProjectId(p.id)}
 					>
 						<input
@@ -257,10 +269,10 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 							checked={selectedProjectId === p.id}
 							onChange={() => setSelectedProjectId(p.id)}
 						/>
-						<div className='project-details'>
-							<div className='project-name'>{p.name}</div>
+						<div className='ui-list-content' data-grow='true' data-gap='xs'>
+							<strong>{p.name}</strong>
 							{p.description && (
-								<div className='project-description'>{p.description}</div>
+								<span className='ui-note'>{p.description}</span>
 							)}
 						</div>
 					</div>
@@ -269,8 +281,14 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 					<p style={{ padding: '0.5rem' }}>{t('No projects found')}</p>
 				)}
 			</div>
-			<div className='modal-actions'>
+			<div
+				className='ui-actions'
+				data-variant='modal'
+				data-align='end'
+				data-cross='stretch'
+			>
 				<button
+					type='button'
 					className='button secondary'
 					onClick={() => setMode('choose')}
 					disabled={isSubmitting}
@@ -278,6 +296,7 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 					{t('Back')}
 				</button>
 				<button
+					type='button'
 					className='button primary'
 					onClick={handleAddToExisting}
 					disabled={!selectedProjectId || isSubmitting}
@@ -290,15 +309,24 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 
 	const renderNew = () => (
 		<div className='share-target-new'>
-			<div className='share-target-file-list'>
+			<div className='ui-list'>
 				{files.map((f, i) => (
-					<div key={i} className='export-project-item'>
+					<div
+						key={i}
+						className='ui-list-item'
+						data-appearance='flat'
+						data-padding='sm'
+					>
 						<strong>{f.name}</strong>
 					</div>
 				))}
 			</div>
 			{isTexlyreStructuredZip ? (
-				<div className='info-message' style={{ marginTop: '0.75rem' }}>
+				<div
+					className='ui-message'
+					data-tone='info'
+					style={{ marginTop: '0.75rem' }}
+				>
 					<p>
 						{t(
 							'TeXlyre project archive detected. Projects will be imported using their original names.',
@@ -307,7 +335,11 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 				</div>
 			) : (
 				<>
-					<div className='form-group' style={{ marginTop: '0.75rem' }}>
+					<div
+						className='ui-field'
+						data-spacing='section'
+						style={{ marginTop: '0.75rem' }}
+					>
 						<label htmlFor='share-project-name'>
 							{t('Project Name')}
 							<span className='required'>*</span>
@@ -320,7 +352,7 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 							disabled={isSubmitting}
 						/>
 					</div>
-					<div className='form-group'>
+					<div className='ui-field' data-spacing='section'>
 						<label htmlFor='share-project-type'>{t('Typesetter Type')}</label>
 						<select
 							id='share-project-type'
@@ -336,9 +368,15 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 					</div>
 				</>
 			)}
-			<div className='modal-actions'>
+			<div
+				className='ui-actions'
+				data-variant='modal'
+				data-align='end'
+				data-cross='stretch'
+			>
 				{!isZip && (
 					<button
+						type='button'
 						className='button secondary'
 						onClick={() => setMode('choose')}
 						disabled={isSubmitting}
@@ -347,6 +385,7 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 					</button>
 				)}
 				<button
+					type='button'
 					className='button primary'
 					onClick={handleCreateNew}
 					disabled={
@@ -369,7 +408,11 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 		>
 			<div className='share-target-modal'>
 				{error && (
-					<div className='error-message' style={{ marginBottom: '1rem' }}>
+					<div
+						className='ui-message'
+						data-tone='error'
+						style={{ marginBottom: '1rem' }}
+					>
 						{error}
 					</div>
 				)}

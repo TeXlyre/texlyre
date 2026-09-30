@@ -22,6 +22,30 @@ interface StatisticsModalProps {
 	contentType: 'latex' | 'typst';
 }
 
+interface StatisticsRowProps {
+	label: string;
+	value: React.ReactNode;
+	emphasis?: boolean;
+}
+
+const StatisticsRow: React.FC<StatisticsRowProps> = ({
+	label,
+	value,
+	emphasis,
+}) => (
+	<div
+		className='ui-list-item'
+		data-align='center'
+		data-justify='between'
+		data-gap='md'
+		data-padding='sm'
+		data-emphasis={emphasis ? 'strong' : undefined}
+	>
+		<span className='ui-note'>{label}</span>
+		<strong>{value}</strong>
+	</div>
+);
+
 interface StatisticsOptionsPanelProps {
 	contentType: 'latex' | 'typst';
 	includeFiles: boolean;
@@ -55,17 +79,17 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
 }) => {
 	if (contentType === 'typst') {
 		return (
-			<div className='statistics-options-panel'>
-				<div className='warning-note warning-message'>
+			<div className='ui-stack' data-gap='md'>
+				<div className='ui-message' data-tone='warning' data-density='compact'>
 					<p>
 						{t(
 							'\u26A0\uFE0F Wordometer is experimental and may not count all Typst elements (e.g., CV templates, Touying presentation elements).',
 						)}
 					</p>
 				</div>
-				<div className='options-group'>
-					<h4>{t('Detail Level')}</h4>
-					<label>
+				<div className='ui-stack' data-gap='xs'>
+					<h4 className='ui-panel-title'>{t('Detail Level')}</h4>
+					<label className='ui-field' data-direction='row'>
 						{t('Verbosity: ')}
 
 						<NumberInput
@@ -74,6 +98,8 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
 							integer
 							value={verbose}
 							onChange={onVerboseChange}
+							className='ui-field-control'
+							data-width='short'
 						/>
 					</label>
 				</div>
@@ -82,10 +108,10 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
 	}
 
 	return (
-		<div className='statistics-options-panel'>
-			<div className='options-group'>
-				<h4>{t('File Processing')}</h4>
-				<label>
+		<div className='ui-stack' data-gap='md'>
+			<div className='ui-stack' data-gap='xs'>
+				<h4 className='ui-panel-title'>{t('File Processing')}</h4>
+				<label className='checkbox-control'>
 					<input
 						type='checkbox'
 						checked={includeFiles}
@@ -94,7 +120,7 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
 					{t('Include referenced files')}
 				</label>
 				{includeFiles && (
-					<label>
+					<label className='checkbox-control'>
 						<input
 							type='checkbox'
 							checked={merge}
@@ -105,9 +131,9 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
 				)}
 			</div>
 
-			<div className='options-group'>
-				<h4>{t('Display Options')}</h4>
-				<label>
+			<div className='ui-stack' data-gap='xs'>
+				<h4 className='ui-panel-title'>{t('Display Options')}</h4>
+				<label className='checkbox-control'>
 					<input
 						type='checkbox'
 						checked={brief}
@@ -115,7 +141,7 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
 					/>
 					{t('Brief output')}
 				</label>
-				<label>
+				<label className='checkbox-control'>
 					<input
 						type='checkbox'
 						checked={total}
@@ -123,7 +149,7 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
 					/>
 					{t('Show total only')}
 				</label>
-				<label>
+				<label className='checkbox-control'>
 					<input
 						type='checkbox'
 						checked={sum}
@@ -133,9 +159,9 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
 				</label>
 			</div>
 
-			<div className='options-group'>
-				<h4>{t('Detail Level')}</h4>
-				<label>
+			<div className='ui-stack' data-gap='xs'>
+				<h4 className='ui-panel-title'>{t('Detail Level')}</h4>
+				<label className='ui-field' data-direction='row'>
 					{t('Verbosity: ')}
 
 					<NumberInput
@@ -144,6 +170,8 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
 						integer
 						value={verbose}
 						onChange={onVerboseChange}
+						className='ui-field-control'
+						data-width='short'
 					/>
 				</label>
 			</div>
@@ -179,7 +207,7 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({
 			icon={WordCountIcon}
 		>
 			<div className='statistics-modal-content'>
-				<div className='statistics-controls'>
+				<div className='ui-stack' data-gap='md'>
 					<StatisticsOptionsPanel
 						contentType={contentType}
 						includeFiles={options.includeFiles}
@@ -206,7 +234,7 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({
 						}
 					/>
 
-					<div className='modal-actions'>
+					<div className='ui-actions' data-variant='modal' data-cross='stretch'>
 						<button
 							type='button'
 							className='button primary'
@@ -225,128 +253,109 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({
 					</div>
 				</div>
 				{isLoading && (
-					<div className='statistics-loading'>
+					<div className='ui-empty-state'>
 						<div className='loading-spinner' />
 						<p>{t('Calculating statistics...')}</p>
 					</div>
 				)}
 
 				{error && (
-					<div className='statistics-error'>
-						<pre>{error}</pre>
+					<div
+						className='ui-message'
+						data-tone='error'
+						data-role='statistics-error'
+					>
+						<pre
+							className='ui-code-block'
+							data-appearance='plain'
+							data-wrap='true'
+						>
+							{error}
+						</pre>
 					</div>
 				)}
 
 				{statistics && !isLoading && !error && (
-					<div className='statistics-data'>
-						<div className='stat-item stat-total'>
-							<span className='stat-label'>{t('Total Words')}</span>
-							<span className='stat-value'>{totalWords.toLocaleString()}</span>
-						</div>
+					<div className='ui-list' data-gap='sm'>
+						<StatisticsRow
+							label={t('Total Words')}
+							value={totalWords.toLocaleString()}
+							emphasis
+						/>
 
-						<div className='stat-item'>
-							<span className='stat-label'>{t('Words in Text')}</span>
-							<span className='stat-value'>
-								{statistics.words.toLocaleString()}
-							</span>
-						</div>
+						<StatisticsRow
+							label={t('Words in Text')}
+							value={statistics.words.toLocaleString()}
+						/>
 
-						<div className='stat-item'>
-							<span className='stat-label'>{t('Words in Headers')}</span>
-							<span className='stat-value'>
-								{statistics.headers.toLocaleString()}
-							</span>
-						</div>
+						<StatisticsRow
+							label={t('Words in Headers')}
+							value={statistics.headers.toLocaleString()}
+						/>
 
-						<div className='stat-item'>
-							<span className='stat-label'>{t('Words in Captions')}</span>
-							<span className='stat-value'>
-								{statistics.captions.toLocaleString()}
-							</span>
-						</div>
+						<StatisticsRow
+							label={t('Words in Captions')}
+							value={statistics.captions.toLocaleString()}
+						/>
 
-						<div className='stat-item'>
-							<span className='stat-label'>{t('Math Inline')}</span>
-							<span className='stat-value'>
-								{statistics.mathInline.toLocaleString()}
-							</span>
-						</div>
+						<StatisticsRow
+							label={t('Math Inline')}
+							value={statistics.mathInline.toLocaleString()}
+						/>
 
-						<div className='stat-item'>
-							<span className='stat-label'>{t('Math Displayed')}</span>
-							<span className='stat-value'>
-								{statistics.mathDisplay.toLocaleString()}
-							</span>
-						</div>
+						<StatisticsRow
+							label={t('Math Displayed')}
+							value={statistics.mathDisplay.toLocaleString()}
+						/>
 
 						{statistics.numHeaders !== undefined && (
-							<div className='stat-item'>
-								<span className='stat-label'>{t('Number of Headers')}</span>
-								<span className='stat-value'>
-									{statistics.numHeaders.toLocaleString()}
-								</span>
-							</div>
+							<StatisticsRow
+								label={t('Number of Headers')}
+								value={statistics.numHeaders.toLocaleString()}
+							/>
 						)}
 
 						{statistics.numFloats !== undefined && (
-							<div className='stat-item'>
-								<span className='stat-label'>{t('Number of Floats')}</span>
-								<span className='stat-value'>
-									{statistics.numFloats.toLocaleString()}
-								</span>
-							</div>
+							<StatisticsRow
+								label={t('Number of Floats')}
+								value={statistics.numFloats.toLocaleString()}
+							/>
 						)}
 
 						{statistics.files !== undefined && statistics.files > 1 && (
-							<div className='stat-item'>
-								<span className='stat-label'>{t('Files Processed')}</span>
-								<span className='stat-value'>{statistics.files}</span>
-							</div>
+							<StatisticsRow
+								label={t('Files Processed')}
+								value={statistics.files}
+							/>
 						)}
 
 						{statistics.fileStats && statistics.fileStats.length > 0 && (
-							<div className='file-statistics'>
-								<h4>{t('Individual Files')}</h4>
+							<div className='ui-stack' data-gap='sm'>
+								<h4 className='ui-panel-title'>{t('Individual Files')}</h4>
 								{statistics.fileStats.map((fileStat, index) => (
-									<details key={index} className='file-stat-details'>
+									<details key={index} className='ui-details'>
 										<summary>{fileStat.filename}</summary>
-										<div className='file-stat-content'>
-											<div className='stat-item'>
-												<span className='stat-label'>{t('Words in Text')}</span>
-												<span className='stat-value'>
-													{fileStat.words.toLocaleString()}
-												</span>
-											</div>
-											<div className='stat-item'>
-												<span className='stat-label'>
-													{t('Words in Headers')}
-												</span>
-												<span className='stat-value'>
-													{fileStat.headers.toLocaleString()}
-												</span>
-											</div>
-											<div className='stat-item'>
-												<span className='stat-label'>
-													{t('Words in Captions')}
-												</span>
-												<span className='stat-value'>
-													{fileStat.captions.toLocaleString()}
-												</span>
-											</div>
-											<div className='stat-item'>
-												<span className='stat-label'>{t('Math Inline')}</span>
-												<span className='stat-value'>
-													{fileStat.mathInline.toLocaleString()}
-												</span>
-											</div>
-											<div className='stat-item'>
-												<span className='stat-label'>
-													{t('Math Displayed')}
-												</span>
-												<span className='stat-value'>
-													{fileStat.mathDisplay.toLocaleString()}
-												</span>
-											</div>
+										<div className='ui-details-content ui-list' data-gap='xs'>
+											<StatisticsRow
+												label={t('Words in Text')}
+												value={fileStat.words.toLocaleString()}
+											/>
+											<StatisticsRow
+												label={t('Words in Headers')}
+												value={fileStat.headers.toLocaleString()}
+											/>
+											<StatisticsRow
+												label={t('Words in Captions')}
+												value={fileStat.captions.toLocaleString()}
+											/>
+											<StatisticsRow
+												label={t('Math Inline')}
+												value={fileStat.mathInline.toLocaleString()}
+											/>
+											<StatisticsRow
+												label={t('Math Displayed')}
+												value={fileStat.mathDisplay.toLocaleString()}
+											/>
 										</div>
 									</details>
 								))}
@@ -354,9 +363,11 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({
 						)}
 
 						{statistics.rawOutput && (
-							<details className='raw-output'>
+							<details className='ui-details' data-width='fit'>
 								<summary>{t('Raw Output')}</summary>
-								<pre>{statistics.rawOutput}</pre>
+								<pre className='ui-code-block' data-wrap='true'>
+									{statistics.rawOutput}
+								</pre>
 							</details>
 						)}
 					</div>

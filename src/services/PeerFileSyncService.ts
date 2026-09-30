@@ -17,7 +17,10 @@ import {
 	toArrayBuffer,
 } from '../utils/fileUtils';
 import { fileStoreService } from './FileStoreService';
-import { notificationService } from './NotificationService';
+import {
+	notificationService,
+	shouldShowNotification,
+} from './NotificationService';
 
 const moduleLog = createNamedLogger('PeerFileSyncService');
 
@@ -34,7 +37,7 @@ class PeerFileSyncService {
 	>();
 
 	showLoadingNotification(message: string, operationId?: string): void {
-		if (this.areNotificationsEnabled()) {
+		if (shouldShowNotification('file-sync-notifications', 'loading')) {
 			notificationService.showLoading(message, operationId);
 		}
 	}
@@ -47,7 +50,7 @@ class PeerFileSyncService {
 			data?: Record<string, any>;
 		} = {},
 	): void {
-		if (this.areNotificationsEnabled()) {
+		if (shouldShowNotification('file-sync-notifications', 'success')) {
 			notificationService.showSuccess(message, options);
 		}
 	}
@@ -60,7 +63,7 @@ class PeerFileSyncService {
 			data?: Record<string, any>;
 		} = {},
 	): void {
-		if (this.areNotificationsEnabled()) {
+		if (shouldShowNotification('file-sync-notifications', 'error')) {
 			notificationService.showError(message, options);
 		}
 	}
@@ -73,7 +76,7 @@ class PeerFileSyncService {
 			data?: Record<string, any>;
 		} = {},
 	): void {
-		if (this.areNotificationsEnabled()) {
+		if (shouldShowNotification('file-sync-notifications', 'info')) {
 			notificationService.showInfo(message, options);
 		}
 	}
@@ -86,14 +89,14 @@ class PeerFileSyncService {
 			data?: Record<string, any>;
 		} = {},
 	): void {
-		if (this.areNotificationsEnabled()) {
+		if (shouldShowNotification('file-sync-notifications', 'sync')) {
 			notificationService.showSync(message, options);
 		}
 	}
 
 	trackSyncFailure(peerId: string): boolean {
 		const key = `sync-failures-${peerId}`;
-		const failures = Number.parseInt(localStorage.getItem(key) || '0') + 1;
+		const failures = Number.parseInt(localStorage.getItem(key) || '0', 10) + 1;
 		localStorage.setItem(key, failures.toString());
 
 		if (failures >= 3) {
@@ -818,19 +821,6 @@ class PeerFileSyncService {
 		return () => {
 			this.listeners = this.listeners.filter((l) => l !== callback);
 		};
-	}
-
-	private areNotificationsEnabled(): boolean {
-		const userId = localStorage.getItem('texlyre-current-user');
-		const storageKey = userId
-			? `texlyre-user-${userId}-settings`
-			: 'texlyre-settings';
-		try {
-			const settings = JSON.parse(localStorage.getItem(storageKey) || '{}');
-			return settings['file-sync-notifications'] !== false;
-		} catch {
-			return true;
-		}
 	}
 
 	private notifyListeners(notification: FileSyncNotification): void {

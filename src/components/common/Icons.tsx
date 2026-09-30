@@ -1713,6 +1713,65 @@ export const GitBranchIcon: React.FC = () => (
 	</svg>
 );
 
+export const HistoryIcon: React.FC = () => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		width='16'
+		height='16'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+	>
+		<path d='M3 12a9 9 0 1 0 3-6.7L3 8' />
+		<path d='M3 3v5h5' />
+		<path d='M12 7v5l3 2' />
+	</svg>
+);
+
+export const RepositoryIcon: React.FC = () => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		width='16'
+		height='16'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+	>
+		<path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20' />
+		<path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z' />
+		<path d='M8 6h7' />
+		<path d='M8 10h5' />
+	</svg>
+);
+
+export const GitRemoteIcon: React.FC = () => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		width='16'
+		height='16'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+	>
+		<rect x='3' y='5' width='9' height='14' rx='1.5' />
+		<path d='M6 9h3' />
+		<path d='M6 13h3' />
+		<path d='M14 9h6' />
+		<polyline points='17 6 20 9 17 12' />
+		<path d='M20 15h-6' />
+		<polyline points='17 12 14 15 17 18' />
+	</svg>
+);
+
 export const KeyIcon: React.FC = () => (
 	<svg
 		xmlns='http://www.w3.org/2000/svg'

@@ -16,6 +16,8 @@ export function useRegisterFileSystemBackupSettings() {
 			(getSetting('file-sys-backup-enable')?.value as boolean) ?? false;
 		const initialAutoBackup =
 			(getSetting('file-sys-backup-auto-backup')?.value as boolean) ?? false;
+		const initialAutoScan =
+			(getSetting('file-sys-backup-auto-scan')?.value as boolean) ?? true;
 		// const initialAutoSync =
 		// 	(getSetting('file-sys-backup-auto-sync')?.value as boolean) ?? false;
 
@@ -39,12 +41,26 @@ export function useRegisterFileSystemBackupSettings() {
 			type: 'checkbox',
 			label: t('Auto-backup connection on startup'),
 			description: t(
-				'Automatically start connection to file system when the application loads (requires folder authorization)',
+				'Automatically reconnect the authorized backup folder when the application loads',
 			),
 
 			defaultValue: initialAutoBackup,
 			dependsOn: { id: 'file-sys-backup-enable', value: true, nest: true },
 			disabledReason: t('Requires: File system backup'),
+		});
+
+		registerSetting({
+			id: 'file-sys-backup-auto-scan',
+			category: t('Backup'),
+			subcategory: t('File System'),
+			type: 'checkbox',
+			label: t('Auto-scan missing projects on startup'),
+			description: t(
+				'Scan the connected backup folder on startup for projects missing from this device',
+			),
+			defaultValue: initialAutoScan,
+			dependsOn: { id: 'file-sys-backup-auto-backup', value: true, nest: true },
+			disabledReason: t('Requires: Auto-backup connection on startup'),
 		});
 
 		// registerSetting({

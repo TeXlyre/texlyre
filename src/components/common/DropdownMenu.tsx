@@ -5,7 +5,7 @@ import Popover from './Popover';
 
 interface DropdownMenuProps {
 	children: React.ReactNode;
-	targetRef: React.RefObject<HTMLElement>;
+	targetRef: React.RefObject<HTMLElement | null>;
 	isOpen: boolean;
 	onClose: () => void;
 	mode?: 'dropdown' | 'submenu';
@@ -27,12 +27,12 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
 	<Popover
 		anchor={targetRef}
 		open={isOpen}
-		className={`dropdown-menu ${className}`}
+		className={className ? `ui-menu ${className}` : 'ui-menu'}
 		axis={mode === 'submenu' ? 'inline' : 'block'}
 		align={mode === 'submenu' ? 'start' : 'end'}
 		clampHeight
 		style={{
-			zIndex: 1001,
+			zIndex: 'var(--z-dropdown)',
 			minWidth: `${width}px`,
 			maxHeight: `${maxHeight}px`,
 		}}

@@ -17,6 +17,10 @@ import { isInsideAnnotationTag } from './annotations/annotationMasking';
 
 const BASE_PATH = __BASE_PATH__;
 
+type MathLiveWindow = Window & {
+	lastMouseEvent?: MouseEvent | null;
+};
+
 const setFileType = StateEffect.define<'latex' | 'typst'>();
 const setEditingRegion = StateEffect.define<MathRegion | null>();
 const setPreviewMode = StateEffect.define<
@@ -105,7 +109,8 @@ class MathLiveProcessor {
 		const check = () => {
 			if (this.isDestroyed) return;
 
-			const previewMode = this.view.state.field(previewModeField, false);
+			const previewMode =
+				this.view.state.field(previewModeField, false) ?? 'never';
 			const editingRegion = this.view.state.field(editingRegionField, false);
 
 			if (previewMode !== 'never' && !editingRegion) {
@@ -199,7 +204,7 @@ class MathLiveProcessor {
 
 	private getMousePosition(): number | null {
 		const rect = this.view.dom.getBoundingClientRect();
-		const lastMouseEvent = (window as any).lastMouseEvent;
+		const lastMouseEvent = (window as MathLiveWindow).lastMouseEvent;
 
 		if (
 			lastMouseEvent &&
@@ -267,11 +272,11 @@ class MathLiveProcessor {
 	}
 
 	private handleMouseMove(event: MouseEvent): void {
-		(window as any).lastMouseEvent = event;
+		(window as MathLiveWindow).lastMouseEvent = event;
 	}
 
 	private handleMouseLeave(): void {
-		(window as any).lastMouseEvent = null;
+		(window as MathLiveWindow).lastMouseEvent = null;
 	}
 
 	private startEdit(region: MathRegion): void {
@@ -525,7 +530,7 @@ class MathLiveProcessor {
 
 if (typeof window !== 'undefined') {
 	document.addEventListener('mousemove', (e) => {
-		(window as any).lastMouseEvent = e;
+		(window as MathLiveWindow).lastMouseEvent = e;
 	});
 }
 

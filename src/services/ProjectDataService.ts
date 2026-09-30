@@ -15,6 +15,8 @@ import {
 	type DocumentMetadata,
 	type FileMetadata,
 	type ProjectMetadata,
+	type SerializedProjectDocuments,
+	type SerializedProjectFiles,
 	UnifiedDataStructureService,
 } from './BackupLayoutService';
 import { collabService } from './CollabService';
@@ -71,13 +73,9 @@ export class ProjectDataService {
 		);
 	}
 
-	async serializeProjectDocuments(project: Project): Promise<{
-		documents: DocumentMetadata[];
-		documentContents: Map<
-			string,
-			{ yjsState?: Uint8Array; readableContent?: string }
-		>;
-	}> {
+	async serializeProjectDocuments(
+		project: Project,
+	): Promise<SerializedProjectDocuments> {
 		const documents: DocumentMetadata[] = [];
 		const documentContents = new Map<
 			string,
@@ -172,11 +170,7 @@ export class ProjectDataService {
 		project: Project,
 		includeDeleted = false,
 		includeTemporaryFiles = true,
-	): Promise<{
-		files: FileMetadata[];
-		fileContents: Map<string, ArrayBuffer | string>;
-		deletedFiles: FileMetadata[];
-	}> {
+	): Promise<SerializedProjectFiles> {
 		const files: FileMetadata[] = [];
 		const deletedFiles: FileMetadata[] = [];
 		const fileContents = new Map<string, ArrayBuffer | string>();

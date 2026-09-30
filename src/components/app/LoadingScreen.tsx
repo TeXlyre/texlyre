@@ -5,7 +5,7 @@ import { t } from '@/i18n';
 
 const LoadingScreen: React.FC = () => {
 	return (
-		<div className='loading-container'>
+		<div className='ui-loading-state' data-fill='true'>
 			<div className='loading-spinner' />
 			<p>{t('Loading TeXlyre...')}</p>
 		</div>

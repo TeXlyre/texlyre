@@ -411,6 +411,7 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		<>
 			<PluginControlGroup>
 				<button
+					type='button'
 					className={showToolbar ? 'active' : ''}
 					onClick={toggleToolbar}
 					title={showToolbar ? t('Hide Toolbar') : t('Show Toolbar')}
@@ -419,6 +420,7 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					<ToolbarShowIcon />
 				</button>
 				<button
+					type='button'
 					className={isTextView ? 'active' : ''}
 					onClick={switchView}
 					title={t('Switch to {viewMode}', {
@@ -433,6 +435,7 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			<PluginControlGroup>
 				{fileId && (
 					<button
+						type='button'
 						onClick={() => {
 							if (isTextView) {
 								document.dispatchEvent(
@@ -452,6 +455,7 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				)}
 
 				<button
+					type='button'
 					onClick={() => copyCleanTextToClipboard(currentContent())}
 					title={t('Copy Text')}
 					disabled={isLoadingContent}
@@ -460,6 +464,7 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				</button>
 
 				<button
+					type='button'
 					onClick={handleExport}
 					title={t('Download Markdown')}
 					disabled={isLoadingContent}
@@ -471,7 +476,7 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	);
 
 	return (
-		<div className='milkdown-viewer-container'>
+		<div className='milkdown-viewer-container ui-viewer'>
 			<PluginHeader
 				fileName={fileInfo.fileName}
 				filePath={fileInfo.filePath}
@@ -482,13 +487,18 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				awareness={awareness}
 			/>
 
-			<div className='milkdown-viewer-content'>
+			<div
+				className='milkdown-viewer-content ui-viewer-content'
+				data-layout='fill'
+			>
 				{error && (
-					<div className='milkdown-error-message error-message'>{error}</div>
+					<div className='ui-message' data-tone='error' data-spacing='inset'>
+						{error}
+					</div>
 				)}
 
 				{isLoadingContent ? (
-					<div className='milkdown-loading-message'>
+					<div className='ui-message' data-spacing='inset'>
 						{t('Loading Markdown…')}
 					</div>
 				) : !isTextView ? (

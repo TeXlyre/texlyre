@@ -8,7 +8,10 @@ import {
 	isMarkdownFile,
 	isTemporaryFile,
 } from '../utils/fileUtils';
-import { fileStorageEventEmitter } from './FileStoreService';
+import {
+	fileStorageEventEmitter,
+	type FileStorageChange,
+} from './FileStoreService';
 
 const moduleLog = createNamedLogger('FilePathCacheService');
 
@@ -54,15 +57,21 @@ class FilePathCacheService {
 		}
 	>();
 	private readonly MAX_LABEL_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+	private consumers = 0;
+	private unsubscribeStorageChange: (() => void) | null = null;
+	private pendingContentCacheNotify = false;
+	private readonly handleRefreshFileTree = () => this.invalidateCache();
 
 	initialize() {
-		fileStorageEventEmitter.onChange(() => {
-			this.invalidateCache();
-		});
+		this.consumers++;
+		if (this.consumers > 1) return;
 
-		document.addEventListener('refresh-file-tree', () => {
-			this.invalidateCache();
-		});
+		this.unsubscribeStorageChange = fileStorageEventEmitter.onChange(
+			(change) => {
+				if (change.kind === 'content') this.invalidateContentCache(change);
+			},
+		);
+		document.addEventListener('refresh-file-tree', this.handleRefreshFileTree);
 	}
 
 	onCacheUpdate(callback: CacheUpdateCallback) {
@@ -355,8 +364,48 @@ class FilePathCacheService {
 		if (this.cacheUpdateTimeout) {
 			clearTimeout(this.cacheUpdateTimeout);
 		}
+		this.pendingContentCacheNotify = false;
 		this.cacheUpdateTimeout = setTimeout(() => {
 			this.updateCache();
+		}, 500);
+	}
+
+	private invalidateContentCache(change: FileStorageChange) {
+		if (!change.fileId || this.cachedFiles.length === 0) {
+			this.invalidateCache();
+			return;
+		}
+
+		let matchedFile: FileNode | undefined;
+		const updateNodes = (nodes: FileNode[]): FileNode[] =>
+			nodes.map((node) => {
+				if (node.id === change.fileId) {
+					matchedFile = {
+						...node,
+						size: change.size ?? node.size,
+						lastModified: change.lastModified ?? node.lastModified,
+					};
+					return matchedFile;
+				}
+				if (!node.children) return node;
+				return { ...node, children: updateNodes(node.children) };
+			});
+
+		this.cachedFiles = updateNodes(this.cachedFiles);
+		if (!matchedFile) {
+			this.invalidateCache();
+			return;
+		}
+
+		this.pendingContentCacheNotify ||= isBibFile(matchedFile.name);
+		if (this.cacheUpdateTimeout) {
+			clearTimeout(this.cacheUpdateTimeout);
+		}
+		this.cacheUpdateTimeout = setTimeout(() => {
+			this.lastCacheUpdate = Date.now();
+			if (this.pendingContentCacheNotify) this.notifyCacheUpdate();
+			this.pendingContentCacheNotify = false;
+			void this.updateLabelsCache();
 		}, 500);
 	}
 
@@ -587,6 +636,16 @@ class FilePathCacheService {
 	}
 
 	cleanup() {
+		if (this.consumers > 0) this.consumers--;
+		if (this.consumers > 0) return;
+
+		this.unsubscribeStorageChange?.();
+		this.unsubscribeStorageChange = null;
+		document.removeEventListener(
+			'refresh-file-tree',
+			this.handleRefreshFileTree,
+		);
+
 		this.cachedFiles = [];
 		this.mainFilePath = '';
 		this.cacheUpdateCallbacks.clear();
@@ -602,6 +661,7 @@ class FilePathCacheService {
 			lastUpdate: 0,
 		};
 		this.labelContentCache.clear();
+		this.pendingContentCacheNotify = false;
 		if (this.cacheUpdateTimeout) {
 			clearTimeout(this.cacheUpdateTimeout);
 			this.cacheUpdateTimeout = null;

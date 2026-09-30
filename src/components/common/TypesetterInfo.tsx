@@ -40,8 +40,8 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 		if (isInternalLatex) {
 			return (
 				<>
-					<h4 className='typesetter-tooltip-title'>{t('LaTeX')}</h4>
-					<div className='typesetter-tooltip-section'>
+					<h4 className='ui-tooltip-title'>{t('LaTeX')}</h4>
+					<div className='ui-stack' data-gap='xs'>
 						<strong>
 							{t('{typesetter} Engine:', { typesetter: t('LaTeX') })}
 						</strong>{' '}
@@ -55,7 +55,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 							<li>{t('XeTeX (2020)')}</li>
 						</ul>
 					</div>
-					<div className='typesetter-tooltip-section'>
+					<div className='ui-stack' data-gap='xs'>
 						<strong>
 							{t('{typesetter} Engine:', { typesetter: t('LaTeX') })}
 						</strong>{' '}
@@ -70,7 +70,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 							<li>{t('LuaHBTeX (2026)')}</li>
 						</ul>
 					</div>
-					<div className='typesetter-tooltip-section'>
+					<div className='ui-stack' data-gap='xs'>
 						<strong>{t('Output Format:')}</strong> {t('PDF')}
 					</div>
 				</>
@@ -80,32 +80,32 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 		if (isInternalTypst) {
 			return (
 				<>
-					<h4 className='typesetter-tooltip-title'>{t('Typst')}</h4>
-					<div className='typesetter-tooltip-section'>
+					<h4 className='ui-tooltip-title'>{t('Typst')}</h4>
+					<div className='ui-stack' data-gap='xs'>
 						<strong>
 							{t('{typesetter} Engine:', { typesetter: t('Typst') })}
 						</strong>{' '}
 						{t('@myriaddreamin/typst.ts v0.8.0-rc3')}
 					</div>
-					<div className='typesetter-tooltip-section'>
+					<div className='ui-stack' data-gap='xs'>
 						<strong>
 							{t('{typesetter} Renderer:', { typesetter: t('Typst') })}
 						</strong>{' '}
 						{t('@texlyre/typst-ts-renderer v0.8.0-rc3')}
 					</div>
-					<div className='typesetter-tooltip-section'>
+					<div className='ui-stack' data-gap='xs'>
 						<strong>
 							{t('{typesetter} Compiler:', { typesetter: t('Typst') })}
 						</strong>{' '}
 						{t('@texlyre/typst-ts-compiler v0.8.0-rc3')}
 					</div>
-					<div className='typesetter-tooltip-section'>
+					<div className='ui-stack' data-gap='xs'>
 						<strong>
 							{t('{typesetter} Version:', { typesetter: t('Typst') })}
 						</strong>{' '}
 						{t('0.15.1 (17/07/2026)')}
 					</div>
-					<div className='typesetter-tooltip-section'>
+					<div className='ui-stack' data-gap='xs'>
 						<strong>{t('Output Format:')}</strong>
 						<ul>
 							<li>{t('PDF')}</li>
@@ -119,12 +119,13 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 		if (externalInfo) {
 			return (
 				<>
-					<h4 className='typesetter-tooltip-title'>
+					<h4 className='ui-tooltip-title'>
 						{resolveLabel(externalInfo.title)}
 					</h4>
 					{externalInfo.rows.map((row, index) => (
 						<div
-							className='typesetter-tooltip-section'
+							className='ui-stack'
+							data-gap='xs'
 							key={`${resolveLabel(row.label)}-${index}`}
 						>
 							<strong>{resolveLabel(row.label)}</strong>{' '}
@@ -137,8 +138,8 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 
 		return (
 			<>
-				<h4 className='typesetter-tooltip-title'>{provider?.label ?? type}</h4>
-				<div className='typesetter-tooltip-section'>
+				<h4 className='ui-tooltip-title'>{provider?.label ?? type}</h4>
+				<div className='ui-stack' data-gap='xs'>
 					{t('No typesetter information available.')}
 				</div>
 			</>
@@ -150,7 +151,9 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 			<button
 				ref={buttonRef}
 				type='button'
-				className='type-info-help'
+				className='button type-info-help'
+				data-variant='text'
+				data-nowrap='true'
 				onMouseEnter={() => setShowTooltip(true)}
 				onMouseLeave={() => setShowTooltip(false)}
 				onClick={() => setShowTooltip(!showTooltip)}
@@ -158,7 +161,8 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 				{getLabel()}
 				{isExternal && (
 					<span
-						className='external-typesetter-status'
+						className='ui-icon'
+						data-tone='accent'
 						title={t('External compiler')}
 						aria-hidden='true'
 					>
@@ -169,7 +173,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 			<Popover
 				anchor={buttonRef}
 				open={showTooltip}
-				className='typesetter-tooltip'
+				className='ui-tooltip'
 				axis='inline'
 				align='center'
 				spacing={12}
@@ -177,7 +181,9 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 				onMouseEnter={() => setShowTooltip(true)}
 				onMouseLeave={() => setShowTooltip(false)}
 			>
-				{getTooltipContent()}
+				<div className='ui-stack' data-gap='sm'>
+					{getTooltipContent()}
+				</div>
 			</Popover>
 		</>
 	);

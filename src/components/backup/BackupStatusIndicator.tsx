@@ -9,6 +9,10 @@ import PositionedDropdown from '../common/PositionedDropdown';
 import BackupModal from './BackupModal';
 import { BackupIcon, ChevronDownIcon, FileSystemIcon } from '../common/Icons';
 
+type EnabledBackupService =
+	| { type: 'filesystem'; name: string }
+	| { type: 'plugin'; name: string; id: string };
+
 interface BackupStatusIndicatorProps {
 	className?: string;
 	currentProjectId?: string | null;
@@ -30,7 +34,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 	const fileSystemEnabled = fileSystemBackup.status.isEnabled;
 
 	const getEnabledServices = () => {
-		const enabled = [];
+		const enabled: EnabledBackupService[] = [];
 
 		if (fileSystemBackup.status.isConnected) {
 			enabled.push({ type: 'filesystem', name: 'File System' });
@@ -112,12 +116,6 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 
 	const mainStatus = getMainStatus();
 
-	const getStatusColor = () => {
-		if (!mainStatus.connected) return '#666';
-		if (mainStatus.syncing) return '#ffc107';
-		return '#28a745';
-	};
-
 	const getServiceStatusIndicator = (
 		serviceType: string,
 		serviceId?: string,
@@ -137,10 +135,22 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 
 	return (
 		<>
-			<div className='backup-status-dropdown-container' ref={dropdownRef}>
-				<div className='backup-button-group'>
-					<div
-						className={`backup-status-indicator main-button ${className} ${backupPlugins.length === 0 ? 'single-service' : ''} ${mainStatus.connected ? 'connected' : 'disconnected'}`}
+			<div
+				className='backup-status-dropdown-container ui-menu-anchor'
+				data-role='status-menu'
+				ref={dropdownRef}
+			>
+				<div
+					className='ui-button-group ui-split-button backup-button-group'
+					data-role='status'
+					data-variant='joined'
+					data-size='control'
+					data-tone={mainStatus.connected ? 'success' : 'muted'}
+					data-single={backupPlugins.length === 0 ? 'true' : undefined}
+				>
+					<button
+						type='button'
+						className={`ui-split-main ${className}`}
 						onClick={handleMainButtonClick}
 						title={
 							enabledServices.length === 1
@@ -149,17 +159,24 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 						}
 					>
 						<div
-							className='status-dot'
-							style={{ backgroundColor: getStatusColor() }}
+							className='ui-status-dot'
+							data-tone={
+								!mainStatus.connected
+									? 'muted'
+									: mainStatus.syncing
+										? 'warning'
+										: 'success'
+							}
 						/>
 
 						<BackupIcon />
-						<span className='backup-label'>{t('Backup')}</span>
-					</div>
+						<span className='ui-status-label'>{t('Backup')}</span>
+					</button>
 
 					{backupPlugins.length > 0 && (
 						<button
-							className={`backup-dropdown-toggle ${mainStatus.connected ? 'connected' : 'disconnected'}`}
+							type='button'
+							className='ui-split-toggle'
 							onClick={toggleDropdown}
 							title={t('Backup Options')}
 						>
@@ -179,10 +196,11 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 				>
 					{fileSystemEnabled && (
 						<div
-							className='backup-dropdown-item'
+							className='ui-menu-item'
+							data-density='compact'
 							onClick={handleFileSystemClick}
 						>
-							<span className='service-indicator'>
+							<span className='ui-menu-indicator'>
 								{getServiceStatusIndicator('filesystem')}
 							</span>
 							<FileSystemIcon />
@@ -195,10 +213,11 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 						return (
 							<div
 								key={plugin.id}
-								className='backup-dropdown-item'
+								className='ui-menu-item'
+								data-density='compact'
 								onClick={() => handlePluginClick(plugin.id)}
 							>
-								<span className='service-indicator'>
+								<span className='ui-menu-indicator'>
 									{getServiceStatusIndicator('plugin', plugin.id)}
 								</span>
 								<IconComponent /> {plugin.name}

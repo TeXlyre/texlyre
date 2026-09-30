@@ -21,6 +21,7 @@ import { useCollab } from '../../hooks/useCollab';
 import { useGlobalKeyboard } from '../../hooks/useGlobalKeyboard';
 import { useDiskBackup } from '../../hooks/useDiskBackup';
 import { useOffline } from '../../hooks/useOffline';
+import { useSettings } from '../../hooks/useSettings';
 import { fileStoreService } from '../../services/FileStoreService';
 import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import { popoutViewerService } from '../../services/PopoutViewerService';
@@ -33,6 +34,7 @@ import BackupModal from '../backup/BackupModal';
 import BackupStatusIndicator from '../backup/BackupStatusIndicator';
 import ChatPanel from '../chat/ChatPanel';
 import CollabStatusIndicator from '../collab/CollabStatusIndicator';
+import CollaboratorAvatars from '../common/CollaboratorAvatars';
 import { EditIcon, ProjectsIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 import OfflineBanner from '../common/OfflineBanner';
@@ -84,9 +86,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	targetFilePath,
 }) => {
 	const {
+		collabService,
 		data: doc,
 		changeData: changeDoc,
 		isConnected,
+		provider,
 	} = useCollab<DocumentList>();
 	const hasDoc = !!doc;
 
@@ -114,6 +118,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const [isEditingMetadata, setIsEditingMetadata] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [localDocId, setLocalDocId] = useState<string>('');
+	const externalAutoCompiledRef = useRef<string | null>(null);
 	const [linkedFileInfo, setLinkedFileInfo] = useState<{
 		fileName?: string;
 		filePath?: string;
@@ -136,6 +141,14 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		triggerAutoCompile: triggerTypstAutoCompile,
 	} = useTypst();
 	const { isOfflineMode, hideOfflineBanner } = useOffline();
+	const { getSetting } = useSettings();
+
+	useEffect(() => {
+		if (!provider?.awareness || !user) return;
+		const projectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
+		collabService.setUserInfo(projectId, 'yjs_metadata', user);
+	}, [collabService, docUrl, provider?.awareness, user]);
+
 	const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
 	const [showPrivacy, setShowPrivacy] = useState(false);
 
@@ -151,6 +164,9 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		projectType,
 		projectCompilerId,
 	);
+	const externalAutoCompileOnOpen =
+		(getSetting('external-typesetter-auto-compile-on-open')
+			?.value as boolean) ?? false;
 
 	useGlobalKeyboard();
 
@@ -430,15 +446,38 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	}, [isCompiling, isTypstCompiling, projectType]);
 
 	useEffect(() => {
-		if (!hasDoc) return;
+		if (!hasDoc || !activeTypesetterProvider) return;
 
 		const timer = setTimeout(() => {
-			triggerAutoCompile();
-			triggerTypstAutoCompile();
+			if (activeTypesetterProvider.id === 'internal:latex') {
+				triggerAutoCompile();
+				return;
+			}
+
+			if (activeTypesetterProvider.id === 'internal:typst') {
+				triggerTypstAutoCompile();
+				return;
+			}
+
+			if (
+				activeTypesetterProvider.source === 'chelys' &&
+				externalAutoCompileOnOpen
+			) {
+				const key = `${fileStoreService.getCurrentProjectId() ?? ''}:${activeTypesetterProvider.id}`;
+				if (externalAutoCompiledRef.current === key) return;
+				externalAutoCompiledRef.current = key;
+				document.dispatchEvent(new CustomEvent('trigger-compile'));
+			}
 		}, 1000);
 
 		return () => clearTimeout(timer);
-	}, [hasDoc, triggerAutoCompile, triggerTypstAutoCompile]);
+	}, [
+		hasDoc,
+		activeTypesetterProvider,
+		externalAutoCompileOnOpen,
+		triggerAutoCompile,
+		triggerTypstAutoCompile,
+	]);
 
 	useEffect(() => {
 		if (doc) {
@@ -577,8 +616,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					<ExternalCompileButton
 						provider={activeTypesetterProvider}
 						className='header-compile-button'
+						selectedDocId={localDocId}
+						onNavigateToLinkedFile={handleNavigateToLinkedFile}
 						onExpandExternalOutput={handleExpandExternalOutput}
 						linkedFileInfo={linkedFileInfo}
+						shouldNavigateOnCompile={true}
 						useSharedSettings={true}
 					/>
 					<ExternalExportButton
@@ -614,7 +656,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	if (!isConnected && !doc) {
 		return (
 			<div className='app-container'>
-				<div className='loading-container'>
+				<div className='ui-loading-state' data-fill='true'>
 					<div className='loading-spinner' />
 					<p>{t('Connecting to project...')}</p>
 				</div>
@@ -632,9 +674,9 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)}
 				/>
 			)}
-			<header>
-				<div className='header-left'>
-					<button className='back-button' onClick={onBackToProjects}>
+			<header data-role='editor'>
+				<div className='header-left ui-actions'>
+					<button type='button' className='button' onClick={onBackToProjects}>
 						<ProjectsIcon />
 						{t('Projects')}
 					</button>
@@ -647,7 +689,10 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						<div className='project-title-header'>
 							<h3 className='project-title'>{projectName}</h3>
 							<button
-								className='edit-title-button'
+								type='button'
+								className='ui-icon-button'
+								data-variant='subtle'
+								data-size='sm'
 								title={t('Edit Project Details')}
 								onClick={(e) => {
 									e.stopPropagation();
@@ -656,6 +701,18 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 							>
 								<EditIcon />
 							</button>
+							{provider?.awareness && (
+								<div
+									className='project-awareness'
+									onClick={(event) => event.stopPropagation()}
+								>
+									<CollaboratorAvatars
+										awareness={provider.awareness}
+										excludeLocal
+										maxVisible={2}
+									/>
+								</div>
+							)}
 						</div>
 					</div>
 					{projectDescription && (
@@ -664,7 +721,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						</div>
 					)}
 				</div>
-				<div className='header-right scroll-x' ref={headerRightRef}>
+				<div className='header-right scroll-x ui-actions' ref={headerRightRef}>
 					<CompileButtons />
 
 					<ShareProjectButton
@@ -717,8 +774,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			)}
 
 			<footer>
-				<div className='footer-status'>
-					<div className='project-type-badge'>
+				<div className='footer-status ui-actions'>
+					<div className='project-type-badge ui-badge' data-variant='label'>
 						{t('Typesetter: ')}{' '}
 						<TypesetterInfo
 							type={projectType}
@@ -842,9 +899,13 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 	if (!isValidYjsUrl(props.docUrl)) {
 		return (
 			<div className='app-container'>
-				<div className='error-message'>
+				<div className='ui-message' data-tone='error'>
 					<p>{t('Invalid project URL.')}</p>
-					<button className='button primary' onClick={props.onBackToProjects}>
+					<button
+						type='button'
+						className='button primary'
+						onClick={props.onBackToProjects}
+					>
 						{t('Back to Projects')}
 					</button>
 				</div>

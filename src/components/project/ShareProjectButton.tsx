@@ -48,17 +48,24 @@ const ShareProjectButton: React.FC<ShareProjectButtonProps> = ({
 	};
 
 	return (
-		<div className={`share-project-buttons ${className}`} ref={dropdownRef}>
-			<div className='share-button-group'>
+		<div className={`ui-control-cluster ${className}`} ref={dropdownRef}>
+			<div
+				className='ui-button-group ui-split-button'
+				data-variant='joined'
+				data-size='control'
+				data-trigger-group='true'
+			>
 				<button
-					className='share-button main-button'
+					type='button'
+					className='button ui-split-main'
 					onClick={handleShareClick}
 					title={t('Share Project')}
 				>
 					<ShareIcon />
 				</button>
 				<button
-					className='share-button dropdown-toggle'
+					type='button'
+					className='button ui-split-toggle'
 					onClick={toggleDropdown}
 					title={t('Share Options')}
 				>
@@ -69,22 +76,26 @@ const ShareProjectButton: React.FC<ShareProjectButtonProps> = ({
 				isOpen={isDropdownOpen}
 				triggerElement={
 					dropdownRef.current?.querySelector(
-						'.share-button-group',
+						'[data-trigger-group]',
 					) as HTMLElement
 				}
 				className='share-dropdown'
 			>
-				<div className='share-dropdown-item' onClick={handleShareClick}>
+				<div
+					className='ui-menu-item'
+					data-density='compact'
+					onClick={handleShareClick}
+				>
 					<ShareIcon />
 					<span>{t('Share with Link')}</span>
 				</div>
-				<div className='share-dropdown-item disabled'>
+				<div className='ui-menu-item disabled' data-density='compact'>
 					<span>{t('Publish to Journal')}</span>
-					<span className='coming-soon'>{t('(Coming Soon)')}</span>
+					<span className='ui-menu-meta'>{t('(Coming Soon)')}</span>
 				</div>
-				<div className='share-dropdown-item disabled'>
+				<div className='ui-menu-item disabled' data-density='compact'>
 					<span>{t('Share Template')}</span>
-					<span className='coming-soon'>{t('(Coming Soon)')}</span>
+					<span className='ui-menu-meta'>{t('(Coming Soon)')}</span>
 				</div>
 			</PositionedDropdown>
 		</div>

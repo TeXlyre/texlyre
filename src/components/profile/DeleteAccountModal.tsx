@@ -141,9 +141,13 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 			size='medium'
 		>
 			<div className='delete-account-container'>
-				{error && <div className='error-message'>{error}</div>}
+				{error && (
+					<div className='ui-message' data-tone='error'>
+						{error}
+					</div>
+				)}
 
-				<div className='warning-message'>
+				<div className='ui-message' data-tone='warning'>
 					<h4>{t('\u26A0\uFE0F Warning: This action cannot be undone')}</h4>
 					<p>{t('Deleting your account will permanently remove:')}</p>
 					<ul>
@@ -173,7 +177,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 					</p>
 				</div>
 
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<label htmlFor='current-password'>
 						{t('Enter your password to confirm')}
 					</label>
@@ -187,7 +191,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 					/>
 				</div>
 
-				<div className='form-group'>
+				<div className='ui-field' data-spacing='section'>
 					<label htmlFor='confirmation-text'>
 						{t('Type the following text to confirm:')}
 						&nbsp;<strong>{expectedConfirmationText}</strong>
@@ -209,7 +213,8 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 						{onOpenExport ? (
 							<button
 								type='button'
-								className='export-link-button'
+								className='button'
+								data-variant='text'
 								onClick={handleOpenExport}
 								disabled={isDeleting}
 							>
@@ -223,7 +228,12 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 					</p>
 				</div>
 
-				<div className='modal-actions'>
+				<div
+					className='ui-actions'
+					data-variant='modal'
+					data-align='end'
+					data-cross='stretch'
+				>
 					<button
 						type='button'
 						className='button secondary'

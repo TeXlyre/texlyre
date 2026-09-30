@@ -1,7 +1,7 @@
 // src/services/ProjectImportService.ts
 import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
-import type { Project } from '../types/projects';
+import type { Project, ProjectCreateInput } from '../types/projects';
 import { authService } from './AuthService';
 import { UnifiedDataStructureService } from './BackupLayoutService';
 import { ProjectDataService } from './ProjectDataService';
@@ -314,7 +314,7 @@ class ProjectImportService {
 	}
 
 	private async createProjectDirectly(
-		projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>,
+		projectData: ProjectCreateInput,
 		projectId: string,
 		ownerId: string,
 	): Promise<void> {
@@ -327,6 +327,10 @@ class ProjectImportService {
 		}
 
 		const now = Date.now();
+		if (!projectData.docUrl) {
+			throw new Error(t('Imported project is missing its document URL'));
+		}
+
 		const newProject: Project = {
 			id: projectId,
 			name: projectData.name,
