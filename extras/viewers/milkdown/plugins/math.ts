@@ -1,10 +1,11 @@
 // extras/viewers/milkdown/plugins/math.ts
 import katex from 'katex';
 import remarkMath from 'remark-math';
-import type { Node as ProseNode, NodeType } from '@milkdown/kit/prose/model';
+import type { NodeType } from '@milkdown/kit/prose/model';
 import type {
 	EditorView as ProseMirrorEditorView,
 	NodeView,
+	NodeViewConstructor,
 } from '@milkdown/kit/prose/view';
 import { Selection } from '@milkdown/kit/prose/state';
 import { InputRule } from '@milkdown/kit/prose/inputrules';
@@ -19,17 +20,15 @@ import { latex } from 'codemirror-lang-latex';
 
 export const remarkMathPlugin = $remark('remarkMath', () => remarkMath);
 
-type GetPos = (() => number) | boolean;
+type GetPos = Parameters<NodeViewConstructor>[2];
 type MathKind = 'inline' | 'block';
 
 const isEditable = (view: ProseMirrorEditorView): boolean =>
 	view.props.editable?.(view.state) ?? true;
 
-const getPos = (getPos: GetPos): number | null => {
-	if (typeof getPos !== 'function') return null;
-
+const getPos = (getNodePos: GetPos): number | null => {
 	try {
-		return getPos();
+		return getNodePos() ?? null;
 	} catch {
 		return null;
 	}
@@ -42,8 +41,9 @@ const updateAttr = (
 	value: string,
 ): void => {
 	const pos = getPos(getNodePos);
-	const node = pos === null ? null : view.state.doc.nodeAt(pos);
+	if (pos === null) return;
 
+	const node = view.state.doc.nodeAt(pos);
 	if (!node || node.type !== type || node.attrs.value === value) return;
 
 	view.dispatch(
@@ -61,8 +61,9 @@ const clearAutofocus = (
 	type: NodeType,
 ): void => {
 	const pos = getPos(getNodePos);
-	const node = pos === null ? null : view.state.doc.nodeAt(pos);
+	if (pos === null) return;
 
+	const node = view.state.doc.nodeAt(pos);
 	if (!node || node.type !== type || !node.attrs.autofocus) return;
 
 	view.dispatch(
@@ -101,92 +102,80 @@ const mathAttrs = (dom: HTMLElement) => ({
 	autofocus: false,
 });
 
-const mathNodeSpec = (
+const createMathSchema = (
 	name: 'math_inline' | 'math_block',
 	markdownType: 'inlineMath' | 'math',
-) => ({
-	attrs: {
-		value: { default: '' },
-		autofocus: { default: false },
-	},
+	kind: MathKind,
+) =>
+	$nodeSchema(name, () => {
+		const inline = kind === 'inline';
+		const tag = inline ? 'span' : 'div';
+		const dataType = inline ? 'math-inline' : 'math-block';
+		const className = inline ? 'milkdown-math-inline' : 'milkdown-math-block';
 
-	parseMarkdown: {
-		match: (node) => node.type === markdownType,
-		runner: (state, node, type) => {
-			state.addNode(type, {
-				value: String(node.value ?? ''),
-				autofocus: false,
-			});
-		},
-	},
+		return {
+			attrs: {
+				value: { default: '' },
+				autofocus: { default: false },
+			},
 
-	toMarkdown: {
-		match: (node) => node.type.name === name,
-		runner: (state, node) => {
-			state.addNode(markdownType, undefined, node.attrs.value);
-		},
-	},
-});
+			group: inline ? 'inline' : 'block',
+			inline,
+			atom: true,
+			selectable: true,
+			isolating: !inline,
+			defining: !inline,
 
-export const mathInlineSchema = $nodeSchema('math_inline', () => ({
-	...mathNodeSpec('math_inline', 'inlineMath'),
+			parseMarkdown: {
+				match: (node) => node.type === markdownType,
+				runner: (state, node, type) => {
+					state.addNode(type, {
+						value: String(node.value ?? ''),
+						autofocus: false,
+					});
+				},
+			},
 
-	group: 'inline',
-	inline: true,
-	atom: true,
-	selectable: true,
+			toMarkdown: {
+				match: (node) => node.type.name === name,
+				runner: (state, node) => {
+					state.addNode(markdownType, undefined, node.attrs.value);
+				},
+			},
 
-	parseDOM: [
-		{
-			tag: 'span[data-type="math-inline"]',
-			getAttrs: (dom) => (dom instanceof HTMLElement ? mathAttrs(dom) : false),
-		},
-	],
+			parseDOM: [
+				{
+					tag: `${tag}[data-type="${dataType}"]`,
+					getAttrs: (dom) =>
+						dom instanceof HTMLElement ? mathAttrs(dom) : false,
+				},
+			],
 
-	toDOM: (node) => [
-		'span',
-		{
-			'data-type': 'math-inline',
-			'data-value': node.attrs.value,
-			class: 'milkdown-math-inline',
-		},
-		node.attrs.value,
-	],
-}));
+			toDOM: (node) => [
+				tag,
+				{
+					'data-type': dataType,
+					'data-value': node.attrs.value,
+					class: className,
+				},
+				node.attrs.value,
+			],
+		};
+	});
 
-export const mathBlockSchema = $nodeSchema('math_block', () => ({
-	...mathNodeSpec('math_block', 'math'),
+export const mathInlineSchema = createMathSchema(
+	'math_inline',
+	'inlineMath',
+	'inline',
+);
 
-	group: 'block',
-	atom: true,
-	selectable: true,
-	isolating: true,
-	defining: true,
+export const mathBlockSchema = createMathSchema('math_block', 'math', 'block');
 
-	parseDOM: [
-		{
-			tag: 'div[data-type="math-block"]',
-			getAttrs: (dom) => (dom instanceof HTMLElement ? mathAttrs(dom) : false),
-		},
-	],
-
-	toDOM: (node) => [
-		'div',
-		{
-			'data-type': 'math-block',
-			'data-value': node.attrs.value,
-			class: 'milkdown-math-block',
-		},
-		node.attrs.value,
-	],
-}));
-
-const createMathView = (kind: MathKind, getType: () => NodeType) => {
-	return (
-		node: ProseNode,
-		view: ProseMirrorEditorView,
-		getNodePos: GetPos,
-	): NodeView => {
+const createMathView = (
+	kind: MathKind,
+	getType: () => NodeType,
+): NodeViewConstructor => {
+	return (node, view, getNodePos): NodeView => {
 		const type = getType();
 		const displayMode = kind === 'block';
 		const dom = document.createElement(kind === 'inline' ? 'span' : 'div');

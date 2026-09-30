@@ -1,0 +1,15 @@
+/* Shared solarized light palette. */
+[data-theme="solarized_light"][data-theme-plugin="texlyre"],
+[data-theme="solarized_light"][data-theme-plugin="texlyre-mobile"],
+[data-theme="solarized_light"][data-theme-plugin="texlyre-slim"] {
+	--accent-background: #eee8d5;
+	--accent-border: #d3cbb7;
+	--editor-background: #fdf6e3;
+	--editor-text: #657b83;
+	--sidebar-background: #eee8d5;
+	--sidebar-border: #d3cbb7;
+	--text-color: #657b83;
+
+	--pico-primary-rgb: 38, 139, 210;
+	--pico-secondary-rgb: 147, 161, 161;
+}

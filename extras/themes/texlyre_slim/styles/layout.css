@@ -1,16 +1,49 @@
 /* extras/themes/texlyre_slim/styles/layout.css */
+[data-layout="texlyre-slim"] {
+	--ui-header-actions-gap: 6px;
+	--ui-status-icon-gap: 4px;
+	--ui-status-font-size: var(--font-size-meta);
+	--ui-status-line-height: 1;
+	--ui-settings-modal-height: min(700px, 90vh);
+	--ui-settings-modal-width: min(820px, 92vw);
+	--ui-settings-sidebar-width: min(220px, 28%);
+	--ui-chat-background: var(--pico-background);
+	--ui-chat-border: 1px solid var(--pico-secondary);
+	--ui-chat-header-background: var(--pico-secondary-background);
+	--ui-chat-count-background: var(--pico-primary);
+	--ui-chat-count-color: var(--pico-primary-inverse);
+	--ui-chat-empty-color: var(--pico-secondary);
+	--ui-chat-input-container-background: var(--pico-background);
+	--ui-chat-input-border-color: var(--pico-secondary);
+	--ui-chat-own-background: var(--pico-primary);
+	--ui-chat-own-color: var(--pico-primary-inverse);
+	--ui-chat-other-background: var(--pico-secondary-background);
+	--ui-chat-other-color: var(--text-color);
+}
+
+[data-layout="texlyre-slim"]
+	.explorer-container:not(.dragging):hover
+	> .resize-handle.vertical:not(:hover)::after {
+	height: 1px;
+	background-color: var(--accent-border);
+}
+
 [data-layout="texlyre-slim"] footer {
 	display: flex;
 	align-items: center;
-	padding: 0 var(--spacing-md);
+	padding: 0 var(--space-md);
 	min-height: 28px;
-	font-size: 0.75rem;
+	font-size: var(--font-size-meta);
 	margin: 0;
 }
 
-[data-layout="texlyre-slim"] footer .project-type-badge {
+[data-layout="texlyre-slim"] footer .footer-status {
 	flex-basis: 0;
 	flex-grow: 1;
+	align-items: center;
+	gap: var(--ui-footer-status-gap, 5px);
+	min-width: 0;
+	line-height: 1;
 }
 
 [data-layout="texlyre-slim"] footer .texlyre-info {
@@ -22,7 +55,7 @@
 	margin: 0;
 	display: inline-flex;
 	align-items: center;
-	gap: var(--spacing-xs);
+	gap: var(--space-xs);
 	white-space: nowrap;
 	line-height: 1;
 }
@@ -31,14 +64,33 @@
 	height: 1.2em;
 	width: 1.2em;
 	padding: 0;
-	margin: 0 var(--spacing-xs);
+	margin: 0 var(--space-xs);
 }
 
-[data-layout="texlyre-slim"] footer .footer-links {
-	font-size: 0.75rem;
-	white-space: nowrap;
-}
-
-[data-layout="texlyre-slim"] .chat-panel.collapsed {
+[data-layout="texlyre-slim"] .ui-panel[data-role="chat"].collapsed {
 	transform: translateY(calc(100% - 28px));
+}
+
+[data-layout="texlyre-slim"]
+	header[data-role="editor"]
+	.project-title-container,
+[data-layout="texlyre-slim"] header[data-role="editor"] .project-title-header {
+	display: contents;
+}
+
+[data-layout="texlyre-slim"]
+	header[data-role="editor"]
+	.project-title-header
+	> .ui-icon-button {
+	margin-inline-start: calc(var(--space-sm) - var(--space-md));
+}
+
+[data-layout="texlyre-slim"] header[data-role="editor"] .project-description {
+	order: 1;
+}
+
+[data-layout="texlyre-slim"] header[data-role="editor"] .project-awareness {
+	order: 2;
+	flex: 0 0 auto;
+	margin-inline-start: calc(var(--space-sm) - var(--space-md));
 }

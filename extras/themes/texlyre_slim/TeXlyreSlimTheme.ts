@@ -4,7 +4,7 @@ import type {
 	ThemePlugin,
 	ThemeVariant,
 } from '@/plugins/PluginInterface';
-import { themes } from './colors';
+import { isThemeColorId, themes } from '../shared/colors';
 import './styles/index.css';
 
 const createTeXlyreSlimTheme = (): ThemePlugin => {
@@ -21,8 +21,8 @@ const createTeXlyreSlimTheme = (): ThemePlugin => {
 	};
 
 	const applyThemeColors = (themeId: string) => {
+		if (!isThemeColorId(themeId)) return;
 		const colors = themes[themeId];
-		if (!colors) return;
 
 		Object.entries(colors).forEach(([key, value]) => {
 			document.documentElement.style.setProperty(

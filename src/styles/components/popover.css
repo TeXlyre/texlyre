@@ -38,7 +38,7 @@
 
 .popover-grid-label {
 	margin-top: var(--space-xs);
-	font-size: var(--space-sd);
+	font-size: var(--font-size-meta);
 	color: var(--pico-secondary);
 	text-align: center;
 }
@@ -88,23 +88,13 @@
 	border-radius: 2px;
 }
 
-.popover-image-input {
-	border: none;
-	border-bottom: 1px solid var(--accent-color);
-	padding: 0.5rem 0.6rem;
-	background: transparent;
-	color: var(--text-color);
-	outline: none;
-	font-size: 0.9em;
-}
-
 .popover-image-list {
 	max-height: 220px;
 	overflow-y: auto;
 }
 
 .popover-image-item {
-	padding: 0.4rem 0.6rem;
+	padding: var(--space-ss) 0.6rem;
 	cursor: pointer;
 	font-size: 0.85em;
 	white-space: nowrap;

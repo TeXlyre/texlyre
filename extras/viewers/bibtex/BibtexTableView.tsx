@@ -161,7 +161,7 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 
 	return (
 		<div className='bibtex-table-container'>
-			<table ref={tableRef} className='bibtex-table resizable-table'>
+			<table ref={tableRef} className='bibtex-table'>
 				<thead>
 					<tr>
 						{allFields.map((field) => (
@@ -173,18 +173,36 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 										: ''
 								}
 							>
-								<div className='header-content'>
-									<span className='field-name'>{field}</span>
+								<div
+									className='ui-toolbar'
+									data-justify='between'
+									data-gap='xs'
+								>
+									<span className='ui-panel-title'>{field}</span>
 									<div className='sort-buttons'>
 										<button
-											className={`sort-btn ${sortConfig.key === field && sortConfig.direction === 'asc' ? 'active' : ''}`}
+											type='button'
+											className='ui-icon-button'
+											data-variant='subtle'
+											data-size='xs'
+											aria-pressed={
+												sortConfig.key === field &&
+												sortConfig.direction === 'asc'
+											}
 											onClick={() => handleSort(field, 'asc')}
 											title={`Sort ${field} ascending`}
 										>
 											▲
 										</button>
 										<button
-											className={`sort-btn ${sortConfig.key === field && sortConfig.direction === 'desc' ? 'active' : ''}`}
+											type='button'
+											className='ui-icon-button'
+											data-variant='subtle'
+											data-size='xs'
+											aria-pressed={
+												sortConfig.key === field &&
+												sortConfig.direction === 'desc'
+											}
 											onClick={() => handleSort(field, 'desc')}
 											title={`Sort ${field} descending`}
 										>
@@ -224,13 +242,13 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 													onChange={(e) => setEditValue(e.target.value)}
 													onBlur={saveEdit}
 													onKeyDown={handleKeyDown}
-													/* biome-ignore lint/a11y/noAutofocus: Cell edit input requires immediate focus for usability */
+													/* biome-ignore lint/a11y/noAutofocus: Cell edit input requires immediate focus for usability. */
 													autoFocus
-													className='cell-input'
+													className='ui-field-control'
 												/>
 											) : (
 												<span className='cell-content'>
-													{value || <em className='empty-field'>—</em>}
+													{value || <em className='ui-meta'>—</em>}
 												</span>
 											)}
 										</td>

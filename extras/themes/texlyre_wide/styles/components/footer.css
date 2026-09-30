@@ -1,7 +1,7 @@
 /* extras/themes/texlyre_wide/styles/components/footer.css */
 [data-layout="texlyre-wide"] footer {
-	font-size: 0.75rem;
-	padding: 0 var(--texlyre-spacing-md);
+	font-size: var(--font-size-meta);
+	padding: 0 var(--space-md);
 	min-height: 0;
 	overflow: visible;
 	display: grid;
@@ -11,14 +11,22 @@
 	width: 100%;
 }
 
-[data-layout="texlyre-wide"] footer .project-type-badge {
+[data-layout="texlyre-wide"] footer .footer-status {
 	grid-area: badge;
 	justify-self: start;
+	align-items: center;
+	gap: var(--ui-footer-status-gap, 5px);
+	min-width: 0;
+	line-height: 1;
 }
 
 [data-layout="texlyre-wide"] footer .texlyre-info {
 	grid-area: info;
 	justify-self: center;
+	align-items: center;
+	height: 100%;
+	min-width: 0;
+	padding-block: 0;
 	text-align: center;
 }
 
@@ -31,7 +39,7 @@
 	margin: 0;
 	display: inline-flex;
 	align-items: center;
-	gap: var(--texlyre-spacing-xs);
+	gap: var(--space-xs);
 	white-space: nowrap;
 	line-height: 1;
 }
@@ -40,16 +48,16 @@
 	height: 1.2em;
 	width: 1.2em;
 	padding: 0;
-	margin: 0 var(--texlyre-spacing-xs);
+	margin: 0 var(--space-xs);
 }
 
-[data-layout="texlyre-wide"] footer .footer-links {
-	font-size: 0.75rem;
-	white-space: nowrap;
-}
-
-[data-layout="texlyre-wide"] footer .footer-links-toggle {
-	display: none;
+@media (min-width: 1281px) {
+	[data-layout="texlyre-wide"] footer .footer-links.open {
+		padding: 0;
+		border: 0;
+		background: transparent;
+		box-shadow: none;
+	}
 }
 
 @media (max-width: 1280px) {
@@ -61,37 +69,12 @@
 
 	[data-layout="texlyre-wide"] footer:has(.footer-chat) .footer-links-toggle {
 		display: inline-flex;
-		align-items: center;
-		justify-content: center;
 		height: 1.2em;
-		padding: 0;
-		margin: 0;
-		background: none;
-		border: 0;
-		color: var(--text-secondary);
-		font: inherit;
-		line-height: 1;
-		cursor: pointer;
 	}
 
-	[data-layout="texlyre-wide"] footer:has(.footer-chat) .footer-links {
+	[data-layout="texlyre-wide"]
+		footer:has(.footer-chat)
+		.footer-links:not(.open) {
 		display: none;
-	}
-
-	[data-layout="texlyre-wide"] footer:has(.footer-chat) .footer-links.open {
-		position: absolute;
-		bottom: calc(100% + var(--texlyre-spacing-xs));
-		left: 50%;
-		translate: -50% 0;
-		display: inline-flex;
-		align-items: center;
-		gap: var(--texlyre-spacing-xs);
-		width: max-content;
-		padding: var(--texlyre-spacing-sm);
-		background-color: var(--pico-background);
-		border: 1px solid var(--accent-border);
-		border-radius: var(--radius-sm);
-		box-shadow: var(--shadow-md);
-		z-index: var(--z-dropdown);
 	}
 }

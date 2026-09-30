@@ -485,6 +485,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			<PluginControlGroup>
 				{fileId && (
 					<button
+						type='button'
 						onClick={() => {
 							pendingSaveRef.current = true;
 							triggerSaveInDrawio();
@@ -497,6 +498,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					</button>
 				)}
 				<button
+					type='button'
 					onClick={handleDownload}
 					title={t('Download as Draw.io XML')}
 					disabled={!iframeLoaded}
@@ -521,7 +523,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	);
 
 	return (
-		<div className='drawio-viewer-container'>
+		<div className='ui-viewer' data-surface='secondary'>
 			<PluginHeader
 				fileName={fileInfo.fileName}
 				filePath={fileInfo.filePath}
@@ -531,20 +533,26 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				controls={headerControls}
 			/>
 
-			<div className='drawio-viewer-content'>
+			<div className='ui-viewer-content' data-layout='fill'>
 				{error && (
-					<div className='drawio-error-message error-message'>{error}</div>
+					<div className='ui-message' data-tone='error' data-spacing='inset'>
+						{error}
+					</div>
 				)}
 
 				{!isOnline && showOfflineBanner && (
-					<div className='drawio-warning-message warning-message'>
+					<div
+						className='drawio-warning-message ui-message'
+						data-tone='warning'
+					>
 						<span>
 							{t(
 								'You are currently offline. Draw.io is cached and will work, but some features may be limited.',
 							)}
 						</span>
 						<button
-							className='button icon-only small'
+							type='button'
+							className='button icon-only '
 							onClick={() => setShowOfflineBanner(false)}
 							title={t('Dismiss offline banner')}
 						>
@@ -554,7 +562,13 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				)}
 
 				{isLoading && (
-					<div className='loading-indicator'>{t('Loading diagram...')}</div>
+					<div
+						className='ui-message'
+						data-variant='loading'
+						data-placement='overlay-center'
+					>
+						{t('Loading diagram...')}
+					</div>
 				)}
 
 				{!isLoading && !error && (
@@ -576,7 +590,12 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				)}
 
 				{showSaveIndicator && (
-					<div className='save-indicator'>
+					<div
+						className='ui-message'
+						data-role='save-indicator'
+						data-tone='success'
+						data-density='compact'
+					>
 						<span>{t('Saved')}</span>
 					</div>
 				)}

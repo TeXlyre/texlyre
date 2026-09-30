@@ -1,69 +1,184 @@
-.resizable-panel {
+.resizable-panel-group {
+	display: flex;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
 	overflow: hidden;
-	flex-shrink: 0;
+}
+
+.resizable-panel-group.vertical {
+	flex-direction: column;
+}
+
+.resizable-panel-group.horizontal {
+	flex-direction: row;
+}
+
+.resizable-panel {
 	position: relative;
 	display: flex;
 	flex-direction: column;
+	flex-shrink: 0;
+	width: 100%;
 	height: 100%;
-	padding-right: var(--space-xs);
+	padding-inline-end: var(--space-xs);
+	overflow: visible;
+}
+
+.resizable-panel:not(.stacked).horizontal {
+	width: var(--ui-resizable-size);
+	min-width: var(--ui-resizable-min-size);
+	max-width: var(--ui-resizable-max-size);
+	transition: width 0.2s ease-in-out;
+}
+
+.resizable-panel:not(.stacked).vertical {
+	height: var(--ui-resizable-size);
+	min-height: var(--ui-resizable-min-size);
+	max-height: var(--ui-resizable-max-size);
+	transition: height 0.2s ease-in-out;
+}
+
+.resizable-panel:not(.stacked).dragging {
+	transition: none;
+}
+
+.resizable-panel.stacked {
+	padding-right: 0;
+	transition:
+		flex-grow 0.18s ease,
+		height 0.18s ease,
+		width 0.18s ease;
+}
+
+.resizable-panel.stacked.dragging {
+	transition: none;
+}
+
+.resizable-panel.stacked.collapsed {
+	overflow: hidden;
+	opacity: 1;
+}
+
+.resizable-panel.stacked.collapsed > .panel-content {
+	height: auto;
+	flex: 0 0 auto;
+}
+
+.resizable-panel.collapsed {
+	overflow: visible;
 }
 
 .resize-handle {
+	--resize-handle-hit-size: var(--ui-resize-handle-hit-size, 10px);
+	--resize-handle-line-size: var(--ui-resize-handle-line-size, 4px);
+
 	position: absolute;
-	background-color: transparent;
 	z-index: 110;
+	background-color: transparent;
 }
 
-.resize-handle:hover,
-.resize-handle:active {
-	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.3);
+.resize-handle::after {
+	position: absolute;
+	content: "";
+	background-color: transparent;
+}
+
+.resize-handle:hover::after,
+.resize-handle:active::after {
+	background-color: var(
+		--ui-resize-handle-active-color,
+		rgba(var(--pico-primary-rgb, 16, 149, 193), 0.3)
+	);
 }
 
 .resize-handle.horizontal {
-	cursor: col-resize;
-	height: 100%;
-	width: 4px;
 	top: 0;
+	width: var(--resize-handle-hit-size);
+	height: 100%;
+	cursor: col-resize;
 }
 
-.resize-handle.horizontal.right {
-	right: 0;
+.resize-handle.horizontal::after {
+	top: 0;
+	left: 50%;
+	width: var(--resize-handle-line-size);
+	height: 100%;
+	transform: translateX(-50%);
 }
 
-.resize-handle.horizontal.left {
-	left: 0;
+.resize-handle.horizontal.start {
+	inset-inline-start: calc(var(--resize-handle-hit-size) * -0.5);
+}
+
+.resize-handle.horizontal.end {
+	inset-inline-end: calc(var(--resize-handle-hit-size) * -0.5);
+}
+
+.resize-handle.horizontal.start::after {
+	left: calc(50% + var(--resize-handle-line-size) * 0.5);
+}
+
+.resize-handle.horizontal.end::after {
+	left: calc(50% - var(--resize-handle-line-size) * 0.5);
+}
+
+.resize-handle.horizontal.start:dir(rtl)::after {
+	left: calc(50% - var(--resize-handle-line-size) * 0.5);
+}
+
+.resize-handle.horizontal.end:dir(rtl)::after {
+	left: calc(50% + var(--resize-handle-line-size) * 0.5);
 }
 
 .resize-handle.vertical {
-	cursor: row-resize;
-	width: 100%;
-	height: 4px;
 	left: 0;
+	width: 100%;
+	height: var(--resize-handle-hit-size);
+	cursor: row-resize;
 }
 
-.resize-handle.vertical.bottom {
+.resize-handle.vertical::after {
+	top: 50%;
+	left: 0;
+	width: 100%;
+	height: var(--resize-handle-line-size);
+	transform: translateY(-50%);
+}
+
+.resizable-panel:not(.stacked) > .resize-handle.vertical,
+.resizable-panel.stacked > .resize-handle.vertical.bottom {
+	top: auto;
+	bottom: calc(var(--resize-handle-hit-size) * -0.5);
+}
+
+.resizable-panel.stacked > .resize-handle.vertical.top {
+	top: calc(var(--resize-handle-hit-size) * -0.5);
 	bottom: auto;
 }
 
-.resize-handle.vertical.top {
-	top: auto;
+.resizable-panel.dragging .resize-handle::after {
+	background-color: var(--pico-primary);
 }
 
 .collapse-button {
 	position: absolute;
-	z-index: 999;
-	background-color: var(--pico-primary);
-	border: 1px solid var(--pico-muted-border-color);
-	border-radius: var(--space-sm);
-	width: 24px;
-	height: 24px;
-	padding: 0;
-	clip-path: inset(0);
+	z-index: var(--z-focus);
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	overflow: visible;
 	cursor: pointer;
 	opacity: 0.2;
+	background-color: var(--pico-primary);
+	border: 1px solid var(--pico-muted-border-color);
+	border-radius: var(--space-sm);
+	clip-path: inset(0);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	transition:
 		opacity var(--transition-normal),
 		width var(--transition-normal),
@@ -74,39 +189,44 @@
 		left var(--transition-normal),
 		clip-path var(--transition-normal),
 		border-radius var(--transition-normal);
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.collapse-button:hover {
+/* Overrides shared button:hover styling without !important. */
+button.collapse-button:hover:not(:disabled) {
 	opacity: 1;
 	background-color: var(--pico-primary);
+	border-color: var(--pico-muted-border-color);
 	clip-path: inset(-8px);
 }
 
-.collapse-button:hover .collapse-icon {
-	color: var(--pico-primary-inverse);
+button.collapse-button:hover:not(:disabled) .collapse-icon {
+	color: var(--pico-color);
 }
 
-.collapse-button.right {
-	right: 0;
+.resizable-panel.horizontal > .collapse-button.start {
 	top: 50%;
+	inset-inline-start: 0;
 	width: 8px;
 	transform: translateY(-50%);
 }
 
-.collapse-button.right:hover {
+.resizable-panel.horizontal > .collapse-button.start:hover {
 	width: 24px;
 }
 
-.collapse-button.left {
-	left: 0;
+.resizable-panel.horizontal > .collapse-button.end {
 	top: 50%;
+	inset-inline-end: 0;
 	width: 8px;
 	transform: translateY(-50%);
 }
 
-.collapse-button.left:hover {
+.resizable-panel.horizontal > .collapse-button.end:hover {
 	width: 24px;
+}
+
+.resizable-panel.horizontal:dir(rtl) > .collapse-button .collapse-icon {
+	transform: scaleX(-1);
 }
 
 .collapse-button.top {
@@ -133,28 +253,35 @@
 
 .collapse-button.always-visible {
 	opacity: 1;
+	background-color: var(--pico-primary);
 	border-color: var(--pico-primary);
 	border-radius: 0;
 }
 
-.collapse-button.always-visible.right {
-	right: -4px;
+button.collapse-button.always-visible:hover:not(:disabled) {
+	opacity: 1;
+	background-color: var(--pico-primary);
+	border-color: var(--pico-primary);
+}
+
+.resizable-panel.horizontal > .collapse-button.always-visible.start {
+	inset-inline-start: -4px;
 	width: 8px;
 }
 
-.collapse-button.always-visible.right:hover {
-	right: -32px;
+.resizable-panel.horizontal > .collapse-button.always-visible.start:hover {
+	inset-inline-start: -32px;
 	width: 36px;
 	border-radius: var(--space-sm);
 }
 
-.collapse-button.always-visible.left {
-	left: -4px;
+.resizable-panel.horizontal > .collapse-button.always-visible.end {
+	inset-inline-end: -4px;
 	width: 8px;
 }
 
-.collapse-button.always-visible.left:hover {
-	left: -32px;
+.resizable-panel.horizontal > .collapse-button.always-visible.end:hover {
+	inset-inline-end: -32px;
 	width: 36px;
 	border-radius: var(--space-sm);
 }
@@ -182,39 +309,28 @@
 }
 
 .collapse-icon {
-	font-weight: 900;
-	font-size: 18px;
-	line-height: 1;
 	flex-shrink: 0;
-	transition: color var(--transition-normal);
 	color: var(--pico-color);
 	font-family:
 		-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-}
-
-.resizable-panel.collapsed {
-	overflow: visible;
-	opacity: 0.8;
-}
-
-.resizable-panel.collapsed:hover {
-	opacity: 1;
+	font-size: var(--font-size-title);
+	font-weight: 900;
+	line-height: 1;
+	transition: color var(--transition-normal);
 }
 
 .panel-content {
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
 	display: flex;
 	flex-direction: column;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
 }
 
 .panel-content.hidden {
 	display: none;
-}
-
-.resizable-panel.dragging .resize-handle {
-	background-color: var(--pico-primary);
 }
 
 body.resizing,

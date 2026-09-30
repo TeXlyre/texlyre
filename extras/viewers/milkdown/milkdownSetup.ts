@@ -24,6 +24,7 @@ import { TextSelection } from '@milkdown/kit/prose/state';
 import type { Ctx } from '@milkdown/kit/ctx';
 import type { EditorView } from '@milkdown/kit/prose/view';
 import type { MilkdownPlugin } from '@milkdown/kit/ctx';
+import type { Paragraph } from 'mdast';
 import {
 	codeBlockComponent,
 	codeBlockConfig,
@@ -121,6 +122,24 @@ export function configureMilkdownEditor(
 				setext: false,
 				listItemIndent: 'one',
 				tightDefinitions: true,
+				handlers: {
+					paragraph: (node, _parent, state, info) => {
+						const lastIndex = node.children.length - 1;
+						const children = node.children.map(
+							(child: Paragraph['children'][number], index: number) => {
+								if (child.type !== 'text') return child;
+
+								let value = child.value;
+								if (index === 0) value = value.replace(/^ +/, '');
+								if (index === lastIndex) value = value.replace(/ +$/, '');
+
+								return value === child.value ? child : { ...child, value };
+							},
+						);
+
+						return state.containerPhrasing({ ...node, children }, info);
+					},
+				},
 			});
 
 			ctx.update(editorViewOptionsCtx, (prev) => ({

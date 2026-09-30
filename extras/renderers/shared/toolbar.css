@@ -1,0 +1,22 @@
+/* Shared layout values used by the PDF and Canvas renderers. */
+.renderer-toolbar-select.ui-field-control {
+	width: auto;
+	min-width: calc(
+		5ch +
+		var(--ui-field-select-padding-inline-end, var(--space-xl)) +
+		var(--space-lg)
+	);
+	flex: 0 0 auto;
+	text-align: start;
+	padding-inline-start: var(--space-sm);
+	padding-inline-end: calc(
+		var(--ui-field-select-padding-inline-end, var(--space-xl)) +
+		var(--space-lg)
+	);
+	cursor: pointer;
+}
+
+.renderer-toolbar-select option {
+	background-color: var(--pico-background);
+	color: var(--text-color);
+}

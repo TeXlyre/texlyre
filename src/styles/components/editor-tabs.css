@@ -1,4 +1,7 @@
 .editor-tabs-container {
+	height: var(--ui-editor-tabs-container-height, auto);
+	min-height: var(--ui-editor-tabs-container-min-height, 0);
+	max-height: var(--ui-editor-tabs-container-max-height, none);
 	background: var(--pico-secondary-background);
 	border-bottom: 1px solid var(--accent-border);
 	overflow: hidden;
@@ -9,52 +12,18 @@
 }
 
 .editor-tabs {
-	display: flex;
-	align-items: center;
-	overflow-x: auto;
-	overflow-y: hidden;
-	scrollbar-width: none;
-	-ms-overflow-style: none;
-	min-height: 36px;
-	max-height: 36px;
+	position: relative;
+	min-height: var(--ui-editor-tab-list-height, 36px);
+	max-height: var(--ui-editor-tab-list-height, 36px);
 	scroll-behavior: smooth;
+	white-space: nowrap;
 	flex: 1;
-	min-width: 0;
 }
 
-.editor-tabs::-webkit-scrollbar {
-	display: none;
-}
-
-/* Scroll buttons */
 .scroll-button {
 	display: none;
-	align-items: center;
-	justify-content: center;
-	height: 32px;
-	padding: 0 8px;
-	border: 0;
-	border-radius: 0;
-	cursor: pointer;
-	color: var(--pico-secondary);
-	transition: all var(--transition-normal);
 	flex-shrink: 0;
 	z-index: 3;
-}
-
-.scroll-button:hover {
-	background: var(--pico-primary-focus);
-	color: var(--text-color);
-}
-
-.scroll-button:disabled {
-	opacity: 0.4;
-	cursor: not-allowed;
-}
-
-.scroll-button svg {
-	width: 12px;
-	height: 12px;
 }
 
 [dir="rtl"] .scroll-button svg {
@@ -130,25 +99,33 @@
 .editor-tab {
 	display: flex;
 	align-items: center;
-	gap: var(--space-sm);
-	padding: var(--space-sm) var(--space-md);
-	background: var(--pico-background);
+	gap: var(--ui-editor-tab-gap, var(--space-sm));
+	padding: var(--ui-editor-tab-padding, var(--space-sm) var(--space-md));
+	background: var(--ui-editor-tab-background, var(--pico-background));
 	border: 1px solid var(--accent-border);
 	border-bottom: none;
-	border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+	border-radius: var(
+		--ui-editor-tab-radius,
+		var(--radius-sm) var(--radius-sm) 0 0
+	);
 	cursor: pointer;
 	user-select: none;
 	position: relative;
-	min-width: 120px;
-	max-width: 200px;
+	min-width: var(--ui-editor-tab-min-width, 120px);
+	max-width: var(--ui-editor-tab-max-width, 200px);
 	transition: all var(--transition-normal) ease;
 	margin-right: -1px;
-	font-size: 0.8rem;
-	height: 32px;
+	--ui-control-label-font-size: var(
+		--ui-file-name-font-size,
+		var(--font-size-small)
+	);
+	font-size: var(--ui-file-name-font-size, var(--font-size-small));
+	height: var(--ui-editor-tab-height, 32px);
 	box-sizing: border-box;
 	color: var(--text-color);
 	flex-shrink: 0;
 	scroll-snap-align: start;
+	animation: fadeIn 0.2s ease-in-out;
 }
 
 .editor-tab:hover {
@@ -156,23 +133,21 @@
 }
 
 .editor-tab.active {
-	background: var(--pico-background);
-	border-color: var(--pico-primary);
-	border-bottom: 1px solid var(--pico-background);
+	background: var(--ui-editor-tab-active-background, var(--pico-background));
+	border-color: var(--ui-editor-tab-active-border-color, var(--pico-primary));
+	border-bottom: var(
+		--ui-editor-tab-active-border-bottom,
+		1px solid var(--pico-background)
+	);
 	z-index: 1;
-	margin-bottom: -1px;
-	font-weight: 500;
+	margin-bottom: var(--ui-editor-tab-active-margin-bottom, -1px);
+	font-weight: var(--ui-editor-tab-active-font-weight, 500);
 }
 
 .editor-tab.dirty .tab-title {
-	font-style: italic;
-	color: var(--color-warning);
-}
-
-.editor-tab {
-	cursor: pointer;
-	user-select: none;
-	transition: all var(--transition-normal) ease;
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
 }
 
 .editor-tab[draggable="true"]:hover {
@@ -228,10 +203,6 @@
 	}
 }
 
-.editor-tabs {
-	position: relative;
-}
-
 .editor-tabs.dragging {
 	pointer-events: none;
 }
@@ -240,68 +211,12 @@
 	pointer-events: auto;
 }
 
-.tab-close {
-	pointer-events: auto;
-}
-
 .editor-tab.dragging .tab-close {
-	pointer-events: none;
 	opacity: 0;
 }
 
 .tab-icon {
-	display: flex;
-	align-items: center;
-	flex-shrink: 0;
-	color: var(--pico-secondary);
 	position: relative;
-}
-
-.tab-icon .file-linked-indicator {
-	position: absolute;
-	top: -0.2rem;
-	right: -0.25rem;
-	width: 0.35rem;
-	height: 0.35rem;
-	margin: 0;
-	border-radius: 999px;
-	background-color: var(--pico-primary);
-	box-shadow: 0 0 0 1px var(--pico-background);
-	color: transparent;
-	font-size: 0;
-	line-height: 0;
-	pointer-events: none;
-}
-
-.tabs-header-toggle {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 32px;
-	padding: 0;
-	border: 0;
-	border-radius: 0;
-	background: none;
-	cursor: pointer;
-	color: var(--pico-secondary);
-	transition: all var(--transition-normal);
-	flex-shrink: 0;
-	z-index: 3;
-}
-
-.tabs-header-toggle:hover {
-	background: var(--pico-primary-focus);
-	color: var(--text-color);
-}
-
-.tabs-header-toggle.active {
-	color: var(--pico-primary);
-}
-
-.tabs-header-toggle svg {
-	width: 14px;
-	height: 14px;
 }
 
 .editor-tab.active .tab-icon {
@@ -317,20 +232,6 @@
 	display: flex;
 	align-items: center;
 	gap: var(--space-xs);
-}
-
-.dirty-indicator {
-	color: var(--color-warning);
-	font-weight: bold;
-	font-size: 1rem;
-	line-height: 1;
-	margin-left: var(--space-xs);
-}
-
-.line-indicator {
-	color: var(--pico-secondary);
-	font-size: 0.7rem;
-	opacity: 0.8;
 }
 
 .tab-close {
@@ -350,43 +251,14 @@
 	padding: 0;
 }
 
-.tab-close:hover {
-	background: rgba(220, 53, 69, 0.1);
-	color: var(--color-error);
-}
-
 .editor-tab:hover .tab-close,
 .editor-tab.active .tab-close {
 	opacity: 1;
 }
 
-.tab-close svg {
-	width: 12px;
-	height: 12px;
-}
-
-.tab-close:focus-visible,
 .editor-tab:focus-visible {
 	outline: 2px solid var(--pico-primary);
 	outline-offset: -2px;
-}
-
-.editor-container {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	min-height: 0;
-}
-
-.editor-wrapper {
-	flex: 1;
-	min-height: 0;
-	display: flex;
-	flex-direction: column;
-}
-
-.editor-tab {
-	animation: fadeIn 0.2s ease-in-out;
 }
 
 @keyframes fadeIn {
@@ -403,50 +275,8 @@
 
 .editor-tab-context-menu {
 	position: fixed;
-	background: var(--pico-background);
-	border: 1px solid var(--accent-border);
-	border-radius: var(--radius-sm);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-	z-index: 1000;
+	z-index: var(--z-focus);
 	min-width: 180px;
 	padding: var(--space-xs) 0;
-}
-
-.context-menu-item {
-	display: block;
-	width: 100%;
-	padding: var(--space-sm) var(--space-md);
-	background: none;
-	border: none;
-	text-align: left;
-	font-size: 0.85rem;
-	color: var(--text-color);
-	cursor: pointer;
-	transition: background-color var(--transition-normal);
-}
-
-.context-menu-item:hover:not(:disabled) {
-	background: var(--pico-primary-focus);
-}
-
-.context-menu-item:disabled {
-	color: var(--pico-muted-color);
-	cursor: not-allowed;
-}
-
-/* Enhanced scrolling experience */
-.editor-tabs {
-	overscroll-behavior-x: contain;
-}
-
-/* For better mouse wheel scrolling on tabs */
-@supports (scrollbar-width: none) {
-	.editor-tabs {
-		scrollbar-width: none;
-	}
-}
-
-/* Ensure tabs don't shrink and maintain minimum width for overflow */
-.editor-tabs {
-	white-space: nowrap;
 }

@@ -164,7 +164,7 @@ export const insertImage = (
 		return true;
 	}
 
-	const toolbar = document.querySelector('.plugin-toolbar');
+	const toolbar = document.querySelector('.ui-toolbar[data-role="plugin"]');
 	const button = toolbar?.querySelector(
 		'[data-item="image"]',
 	) as HTMLElement | null;
@@ -290,7 +290,7 @@ const insertSizedTable = (
 };
 
 export const insertTable = (view: EditorView): boolean => {
-	const toolbar = document.querySelector('.plugin-toolbar');
+	const toolbar = document.querySelector('.ui-toolbar[data-role="plugin"]');
 	const button = toolbar?.querySelector(
 		'[data-item="table"]',
 	) as HTMLElement | null;

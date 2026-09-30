@@ -1,0 +1,440 @@
+html[data-layout="texlyre-compact"] {
+	--compact-header-height: 38px;
+	--compact-footer-height: 28px;
+	--compact-control-height: 24px;
+	--compact-action-size: 22px;
+	--compact-action-icon-size: 15px;
+	--compact-action-small-size: 20px;
+	--compact-action-small-icon-size: 14px;
+	--compact-tab-height: 31px;
+	--compact-panel-header-height: 31px;
+	--compact-radius: 6px;
+	--compact-radius-lg: 9px;
+	--compact-gap: 7px;
+	--compact-padding: 8px;
+	--compact-font-size: 14px;
+	--compact-font-small: 13px;
+	--compact-font-title: 15px;
+	--compact-font-heading: 17px;
+
+	--pico-form-element-spacing-vertical: 4px;
+	--pico-form-element-spacing-horizontal: 9px;
+	--compact-footer-chat-width: 200px;
+	--compact-footer-chat-expanded-width: min(400px, calc(100vw - 24px));
+	--compact-footer-chat-current-width: var(--compact-footer-chat-width);
+	--compact-footer-service-width: 128px;
+	--compact-footer-service-min-width: 88px;
+	--compact-footer-service-max-width: 160px;
+	--compact-footer-service-gap: 6px;
+	--compact-footer-edge: 10px;
+	--compact-footer-controls-right: 14px;
+	--project-title-width: 320px;
+
+	--font-size-xxs: 9px;
+	--font-size-nano: 11px;
+	--font-size-tiny: 13px;
+	--font-size-caption: 15px;
+
+	--font-size-micro: 12px;
+	--font-size-meta: var(--compact-font-small);
+	--font-size-small: var(--compact-font-small);
+	--font-size-secondary: var(--compact-font-small);
+	--font-size-control: var(--compact-font-small);
+	--font-size-ui: var(--compact-font-size);
+	--font-size-body: var(--compact-font-size);
+	--font-size-title: var(--compact-font-title);
+	--font-size-heading: var(--compact-font-heading);
+	--font-size-heading-lg: var(--compact-font-heading);
+	--font-size-heading-xl: var(--compact-font-heading);
+
+	--ui-field-control-height: var(--compact-control-height);
+	--ui-field-control-min-height: var(--compact-control-height);
+	--ui-field-control-font-size: var(--font-size-micro);
+	--ui-field-control-line-height: 1.35;
+	--ui-field-control-radius: var(--compact-radius);
+	--ui-action-control-height: var(--compact-control-height);
+	--ui-action-control-font-size: var(--font-size-micro);
+	--ui-action-control-line-height: 1.35;
+	--ui-action-control-radius: var(--compact-radius);
+	--ui-action-control-padding: 0 9px;
+	--ui-button-height: var(--ui-action-control-height);
+	--ui-button-min-height: var(--ui-action-control-height);
+	--ui-button-font-size: var(--font-size-micro);
+	--ui-button-line-height: var(--ui-action-control-line-height);
+	--ui-text-button-padding: 0 var(--space-xs);
+	--ui-text-button-font-size: var(--font-size-micro);
+	--ui-text-button-line-height: var(--ui-action-control-line-height);
+	--ui-button-radius: var(--ui-action-control-radius);
+	--ui-icon-button-size: var(--ui-action-control-height);
+	--ui-icon-button-radius: var(--ui-action-control-radius);
+	--ui-joined-control-height: var(--ui-action-control-height);
+	--ui-field-gap: 3px;
+	--ui-field-label-font-size: var(--compact-font-small);
+	--ui-field-label-line-height: 1.65;
+	--ui-field-hint-font-size: var(--font-size-micro);
+	--ui-field-hint-line-height: 1.3;
+	--ui-field-control-padding: 0 7px;
+	--ui-field-select-padding-inline-end: 26px;
+	--ui-button-padding: 0 8px;
+	--ui-button-active-background: var(--pico-primary-focus);
+	--ui-button-active-color: var(--pico-primary);
+	--ui-button-active-border-color: color-mix(
+		in srgb,
+		var(--pico-primary) 50%,
+		transparent
+	);
+	--ui-multiselect-min-height: 54px;
+	--ui-multiselect-padding: 3px 5px;
+	--ui-multiselect-option-padding: 3px 5px;
+	--ui-multiselect-option-line-height: 1.65;
+
+	--ui-panel-title-font-size: var(--compact-font-size);
+	--ui-panel-controls-control-height: var(--ui-field-control-height);
+	--ui-panel-header-min-height: var(--compact-panel-header-height);
+	--ui-panel-header-padding: 0 10px;
+	--ui-panel-header-gap: 6px;
+	--ui-panel-header-line-height: 1.4;
+	--ui-panel-controls-padding-block: 8px;
+	--ui-panel-controls-padding-inline: 8px;
+	--ui-panel-content-padding-sm: 8px;
+	--ui-resize-handle-hit-size: 10px;
+	--ui-resize-handle-line-size: 2px;
+	--ui-resize-handle-active-color: var(--pico-primary);
+	--ui-modal-actions-gap: 8px;
+	--ui-modal-actions-margin-top: 12px;
+	--ui-menu-control-title-padding: 6px 0 5px;
+	--ui-menu-control-title-margin-bottom: 4px;
+	--ui-menu-control-title-font-size: var(--compact-font-small);
+	--ui-menu-control-title-line-height: 1.4;
+	--ui-menu-control-title-letter-spacing: 0.04em;
+	--ui-menu-label-font-size: var(--font-size-micro);
+	--ui-menu-value-font-size: var(--font-size-micro);
+	--ui-item-actions-gap: 4px;
+	--ui-empty-state-padding: var(--compact-padding);
+	--ui-empty-state-font-size: var(--compact-font-small);
+	--ui-empty-state-line-height: 1.6;
+	--ui-note-font-size: var(--font-size-micro);
+	--ui-search-result-font-size: var(--font-size-micro);
+	--ui-search-result-meta-font-size: var(--font-size-micro);
+	--ui-note-line-height: 1.5;
+	--ui-tooltip-font-size: var(--font-size-micro);
+	--ui-tooltip-line-height: 1.5;
+	--ui-tooltip-title-font-size: var(--compact-font-small);
+	--ui-tooltip-title-line-height: 1.45;
+	--ui-footer-links-padding: 0 var(--space-sm);
+	--ui-footer-links-font-size: var(--compact-font-small);
+	--ui-footer-links-open-max-width: min(720px, calc(100vw - 20px));
+	--ui-footer-links-open-padding: 9px 11px;
+	--ui-footer-links-open-background: var(--pico-background);
+	--ui-footer-links-open-border: 1px solid var(--accent-border);
+	--ui-footer-links-open-radius: var(--compact-radius);
+	--ui-footer-links-open-shadow: var(--shadow-md);
+
+	--ui-message-padding: 8px 10px;
+	--ui-message-margin-block: 8px;
+	--ui-message-font-size: var(--font-size-micro);
+	--ui-message-compact-font-size: var(--font-size-micro);
+	--ui-message-line-height: 1.5;
+
+	--ui-icon-button-padding: 6px;
+	--ui-icon-size: var(--compact-action-icon-size);
+	--ui-icon-button-sm-size: var(--compact-control-height);
+	--ui-icon-button-xs-size: var(--compact-action-small-size);
+	--ui-icon-sm-size: var(--compact-action-icon-size);
+	--ui-icon-xs-size: var(--compact-action-small-icon-size);
+
+	--ui-plugin-control-button-size: var(--compact-action-size);
+	--ui-plugin-control-button-padding: 6px;
+	--ui-plugin-control-icon-size: var(--compact-action-icon-size);
+	--ui-plugin-control-group-gap: 4px;
+	--ui-plugin-controls-gap: 5px;
+	--ui-plugin-controls-wrap: nowrap;
+	--ui-plugin-controls-overflow-x: auto;
+	--ui-plugin-toolbar-height: calc(var(--compact-action-size) + 2px);
+	--ui-plugin-toolbar-item-height: var(--compact-action-size);
+	--ui-plugin-toolbar-padding: 1px 3px;
+	--ui-plugin-toolbar-gap: 1px;
+	--ui-plugin-toolbar-icon-size: var(--compact-action-icon-size);
+	--ui-plugin-toolbar-separator-height: 14px;
+	--ui-plugin-toolbar-separator-margin: 2px;
+
+	--ui-menu-radius: var(--compact-radius);
+	--ui-menu-item-gap: 7px;
+	--ui-menu-item-min-height: 30px;
+	--ui-menu-item-padding: 6px 9px;
+	--ui-menu-item-font-size: var(--font-size-micro);
+	--ui-menu-compact-item-font-size: var(--font-size-micro);
+	--ui-menu-compact-item-padding: 6px 9px;
+	--ui-menu-compact-item-radius: var(--compact-radius);
+	--ui-menu-title-sm-font-size: var(--compact-font-small);
+	--ui-menu-meta-font-size: var(--font-size-micro);
+	--ui-menu-indicator-font-size: var(--font-size-micro);
+	--ui-dropdown-font-size: var(--compact-font-small);
+
+	--ui-tab-min-height: var(--compact-tab-height);
+	--ui-tab-font-size: var(--font-size-micro);
+	--ui-switcher-tab-font-size: var(--font-size-micro);
+	--ui-tab-line-height: 1.4;
+	--ui-panel-tab-font-size: var(--font-size-micro);
+	--ui-explorer-tabs-height: 32px;
+	--ui-explorer-tabs-min-height: 32px;
+	--ui-explorer-tabs-background: transparent;
+	--ui-explorer-tabs-border: 1px solid var(--accent-border);
+	--ui-explorer-tab-height: 32px;
+	--ui-explorer-tab-min-height: 32px;
+	--ui-explorer-tab-padding: 0 10px;
+	--ui-explorer-tab-font-size: var(--compact-font-small);
+	--ui-explorer-tab-icon-size: 16px;
+	--ui-explorer-tab-radius: 0;
+	--ui-explorer-tab-background: transparent;
+	--ui-explorer-tab-active-background: color-mix(
+		in srgb,
+		var(--pico-primary) 9%,
+		transparent
+	);
+	--ui-explorer-tab-active-border: 1px solid var(--pico-primary);
+	--ui-explorer-tab-active-font-weight: 600;
+	--ui-explorer-header-min-height: var(--compact-panel-header-height);
+	--ui-explorer-header-padding: 0 10px;
+	--ui-explorer-header-background: transparent;
+	--ui-explorer-header-border-color: var(--accent-border);
+	--ui-explorer-title-font-size: var(--compact-font-small);
+	--ui-explorer-title-font-weight: 600;
+	--ui-explorer-actions-gap: 4px;
+	--ui-explorer-background: var(--sidebar-background);
+	--ui-explorer-border: 0;
+	--ui-explorer-radius: 0;
+	--ui-explorer-font-size: var(--compact-font-size);
+	--ui-file-tree-padding: 5px 0;
+	--ui-file-node-min-height: 29px;
+	--ui-file-action-size: 25px;
+	--ui-file-action-padding: 5px;
+	--ui-file-node-padding: 4px 9px;
+	--ui-file-root-node-padding: 4px 9px;
+	--ui-file-node-margin: 0;
+	--ui-file-root-node-margin-left: 0;
+	--ui-file-node-gap: 7px;
+	--ui-file-node-radius: 0;
+	--ui-file-node-selected-background: color-mix(
+		in srgb,
+		var(--pico-primary) 13%,
+		transparent
+	);
+	--ui-file-node-selected-shadow: inset 2px 0 0 var(--pico-primary);
+	--ui-file-name-font-size: var(--compact-font-small);
+	--ui-file-icon-padding-top: 0;
+	--ui-file-icon-margin-top: 4px;
+	--ui-directory-indent: 14px;
+	--ui-editor-tabs-container-height: var(--compact-tab-height);
+	--ui-editor-tabs-container-min-height: var(--compact-tab-height);
+	--ui-editor-tabs-container-max-height: var(--compact-tab-height);
+	--ui-editor-tab-list-height: var(--compact-tab-height);
+	--ui-editor-tab-height: var(--compact-tab-height);
+	--ui-editor-tab-min-width: 98px;
+	--ui-editor-tab-max-width: 180px;
+	--ui-editor-tab-padding: 0 11px;
+	--ui-editor-tab-gap: 7px;
+	--ui-editor-tab-font-size: var(--ui-file-name-font-size);
+	--ui-editor-tab-radius: 0;
+	--ui-editor-tab-background: transparent;
+	--ui-editor-tab-active-background: var(--editor-background);
+	--ui-editor-tab-active-border-color: var(--accent-border);
+	--ui-editor-tab-active-border-bottom: 1px solid transparent;
+	--ui-editor-tab-active-margin-bottom: 0;
+	--ui-editor-tab-active-font-weight: 500;
+
+	--ui-modal-overlay-background: rgba(0, 0, 0, 0.58);
+	--ui-modal-background: var(--accent-background);
+	--ui-modal-border: 1px solid var(--accent-border);
+	--ui-modal-radius: var(--compact-radius-lg);
+	--ui-modal-shadow: 0 12px 34px rgba(0, 0, 0, 0.24);
+	--ui-modal-font-size: var(--compact-font-small);
+	--ui-modal-width-small: min(360px, calc(100vw - 20px));
+	--ui-modal-width-medium: min(620px, calc(100vw - 20px));
+	--ui-modal-width-large: min(780px, calc(100vw - 20px));
+	--ui-modal-header-min-height: 42px;
+	--ui-modal-header-padding: 9px 12px;
+	--ui-modal-title-font-size: var(--compact-font-heading);
+	--ui-modal-title-icon-size: 20px;
+	--ui-modal-title-icon-gap: 8px;
+	--ui-modal-content-padding: 12px;
+	--ui-section-header-min-height: var(--compact-panel-header-height);
+	--ui-section-header-padding: 0 10px;
+	--ui-section-header-gap: 6px;
+	--ui-section-actions-gap: var(--ui-explorer-actions-gap);
+	--ui-section-title-font-size: var(--ui-explorer-title-font-size);
+	--ui-section-title-font-weight: var(--ui-explorer-title-font-weight);
+	--ui-outline-item-font-size: var(--ui-file-name-font-size);
+	--ui-outline-icon-font-size: var(--compact-font-small);
+	--ui-outline-line-font-size: var(--font-size-micro);
+	--ui-outline-empty-font-size: var(--compact-font-size);
+	--ui-outline-empty-secondary-font-size: var(--compact-font-small);
+	--ui-outline-letter-spacing: 0.035em;
+	--ui-log-filter-gap: 8px;
+	--ui-log-content-padding: 12px;
+	--ui-log-item-padding: 12px;
+	--ui-log-item-radius: 7px;
+	--ui-log-header-margin-bottom: 7px;
+	--ui-log-message-margin-bottom: 7px;
+	--ui-history-item-font-size: var(--font-size-micro);
+	--ui-history-item-meta-font-size: var(--font-size-tiny);
+	--ui-thread-panel-width: var(--comment-panel-width);
+	--ui-thread-panel-background: var(--sidebar-background);
+	--ui-thread-panel-shadow: none;
+	--ui-thread-item-margin-bottom: 6px;
+	--ui-thread-item-padding: 9px 10px;
+	--ui-thread-item-radius: 5px;
+	--ui-thread-item-background: var(--accent-background);
+	--ui-thread-item-shadow: none;
+	--ui-thread-item-font-size: var(--compact-font-size);
+	--ui-thread-item-line-height: 1.55;
+	--ui-bibliography-font-size: var(--compact-font-size);
+	--ui-item-header-margin-bottom: 6px;
+	--ui-item-time-font-size: var(--compact-font-small);
+
+	--ui-status-dot-size: 8px;
+	--ui-status-control-padding-inline: 8px;
+	--ui-status-font-size: var(--ui-action-control-font-size);
+	--ui-status-line-height: 1;
+	--ui-status-icon-gap: 6px;
+	--ui-status-icon-size: 14px;
+	--ui-control-cluster-gap: 4px;
+	--ui-joined-control-padding: 4px 7px;
+	--ui-joined-toggle-width: 22px;
+	--ui-joined-toggle-padding-inline: var(--space-xs);
+
+	--ui-project-font-size: var(--font-size-micro);
+	--ui-project-title-font-size: var(--compact-font-small);
+	--ui-project-control-font-size: var(--font-size-micro);
+	--ui-project-list-item-font-size: var(--font-size-micro);
+	--ui-project-meta-font-size: var(--font-size-micro);
+	--ui-project-tag-font-size: var(--font-size-micro);
+	--ui-project-grid-card-min-width: 300px;
+	--ui-project-grid-gap: 10px;
+	--ui-project-grid-margin-top: 8px;
+	--ui-project-card-padding: 12px;
+	--ui-card-hover-transform: none;
+	--ui-card-hover-shadow: 0 0 0 1px
+		color-mix(in srgb, var(--pico-primary) 45%, transparent);
+	--ui-card-hover-border-color: var(--pico-primary);
+
+	--ui-settings-modal-height: min(620px, 86vh);
+	--ui-settings-modal-width: min(780px, 92vw);
+	--ui-settings-sidebar-width: min(210px, 28%);
+
+	--ui-chat-right: var(--compact-footer-controls-right);
+	--ui-chat-width: var(--compact-footer-chat-expanded-width);
+	--ui-chat-radius: var(--compact-radius) var(--compact-radius) 0 0;
+	--ui-chat-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+	--ui-chat-font-size: var(--compact-font-size);
+	--ui-chat-collapsed-width: var(--compact-footer-chat-width);
+	--ui-chat-collapsed-min-width: var(--compact-footer-chat-width);
+	--ui-chat-collapsed-max-width: var(--compact-footer-chat-width);
+	--ui-chat-collapsed-border: 1px solid var(--accent-border);
+	--ui-chat-collapsed-background: transparent;
+	--ui-chat-collapsed-shadow: none;
+	--ui-chat-collapsed-transform: translateY(
+		calc(100% - var(--compact-footer-height))
+	);
+	--ui-chat-header-height: var(--compact-footer-height);
+	--ui-chat-title-font-size: var(--ui-action-control-font-size);
+	--ui-chat-header-padding: 0 6px;
+	--ui-chat-header-radius: var(--compact-radius) var(--compact-radius) 0 0;
+	--ui-chat-header-background: var(--pico-background);
+	--ui-chat-content-height: 340px;
+	--ui-chat-messages-padding: 10px;
+	--ui-chat-messages-gap: 7px;
+	--ui-chat-input-container-padding: 9px;
+	--ui-chat-input-container-gap: 7px;
+	--ui-chat-input-min-height: 54px;
+	--ui-chat-input-max-height: 90px;
+	--ui-chat-user-font-size: var(--compact-font-small);
+	--ui-chat-time-font-size: var(--font-size-micro);
+	--ui-chat-message-padding: 7px 10px;
+	--ui-chat-message-font-size: var(--compact-font-size);
+	--ui-chat-message-line-height: 1.55;
+
+	--button-height-md: var(--compact-action-size);
+	--radius-sm: var(--compact-radius);
+	--radius-md: 7px;
+	--radius-lg: var(--compact-radius-lg);
+}
+
+html[data-layout="texlyre-compact"] body {
+	font-size: var(--font-size-ui);
+}
+
+[data-layout="texlyre-compact"] :where(button, .button) {
+	border-radius: var(--compact-radius);
+}
+
+html[data-layout="texlyre-compact"] body .button:not([data-variant="text"]) {
+	box-sizing: border-box;
+	height: var(--compact-control-height);
+	min-height: var(--compact-control-height);
+	padding: var(--ui-button-padding);
+	font-size: var(--ui-button-font-size);
+	line-height: var(--ui-button-line-height);
+}
+
+[data-layout="texlyre-compact"] .ui-field {
+	--ui-button-font-size: var(--font-size-micro);
+}
+
+html[data-layout="texlyre-compact"]
+	body
+	input:not(
+		[type="checkbox"],
+		[type="radio"],
+		[type="range"],
+		[type="color"],
+		[type="file"],
+		[type="hidden"],
+		[type="button"],
+		[type="submit"],
+		[type="reset"],
+		[type="image"]
+	),
+html[data-layout="texlyre-compact"] body select:not([multiple]),
+html[data-layout="texlyre-compact"]
+	body
+	.ui-field-control:not(textarea):not(select[multiple]) {
+	box-sizing: border-box;
+	height: var(--compact-control-height);
+	min-height: var(--compact-control-height);
+	max-height: var(--compact-control-height);
+	padding-block: 0;
+	font-size: var(--compact-font-small);
+	line-height: 1.35;
+}
+
+html[data-layout="texlyre-compact"] body textarea,
+html[data-layout="texlyre-compact"] body select[multiple] {
+	font-size: var(--compact-font-small);
+	line-height: 1.35;
+}
+
+[data-layout="texlyre-compact"] :where(input[type="file"]) {
+	font-size: var(--ui-field-control-font-size);
+}
+
+[data-layout="texlyre-compact"]
+	:where(input[type="file"])::file-selector-button {
+	padding: 0 9px;
+	margin: 0 9px 0 0;
+	border: 0;
+	background: var(--pico-secondary-background);
+	color: var(--text-color);
+	font: inherit;
+	font-size: var(--font-size-micro);
+}
+
+[data-layout="texlyre-compact"] ::-webkit-scrollbar {
+	width: 7px;
+	height: 7px;
+}
+
+[data-layout="texlyre-compact"] ::-webkit-scrollbar-thumb {
+	background-color: color-mix(in srgb, var(--pico-secondary) 48%, transparent);
+	border-radius: var(--compact-radius);
+}
