@@ -71,9 +71,11 @@ export class GiteaAPIService {
 
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => ({}));
-				throw new Error(
+				const error = new Error(
 					`Gitea API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
-				);
+				) as Error & { status?: number };
+				error.status = response.status;
+				throw error;
 			}
 
 			return response.status === 204 ? (null as T) : response.json();

@@ -3,7 +3,6 @@ import { t } from '@/i18n';
 import React, { useState } from 'react';
 import GitLabBackupModal from './GitLabBackupModal';
 import { gitLabBackupService } from './GitLabBackupService';
-import './styles.css';
 
 interface GitLabBackupStatusIndicatorProps {
 	className?: string;
@@ -31,13 +30,6 @@ const GitLabBackupStatusIndicator: React.FC<
 		};
 	}, []);
 
-	const getStatusColor = () => {
-		if (!status.isConnected) return '#666';
-		if (status.status === 'error') return '#dc3545';
-		if (status.status === 'syncing') return '#ffc107';
-		return '#28a745';
-	};
-
 	const getStatusText = () => {
 		if (!status.isConnected) return t('GitLab not connected');
 		if (status.status === 'error') return t('GitLab error');
@@ -53,18 +45,34 @@ const GitLabBackupStatusIndicator: React.FC<
 
 	return (
 		<>
-			<div
-				className={`backup-status-indicator main-button single-service ${className} ${status.isConnected ? t('connected') : t('disconnected')}`}
+			<button
+				type='button'
+				className={`button ui-status ${className}`}
+				data-tone={status.isConnected ? 'success' : 'muted'}
 				onClick={() => setShowModal(true)}
 				title={getStatusText()}
 			>
 				<div
-					className='status-dot'
-					style={{ backgroundColor: getStatusColor() }}
+					className='ui-status-dot'
+					data-tone={
+						!status.isConnected
+							? 'muted'
+							: status.status === 'error'
+								? 'danger'
+								: status.status === 'syncing'
+									? 'warning'
+									: 'success'
+					}
 				/>
-				<span className='backup-label'>{t('GitLab')}</span>
-				{hasUnreadActivities && <div className='activity-notification' />}
-			</div>
+				<span className='ui-status-label'>{t('GitLab')}</span>
+				{hasUnreadActivities && (
+					<div
+						className='ui-status-dot'
+						data-tone='danger'
+						data-placement='corner'
+					/>
+				)}
+			</button>
 
 			<GitLabBackupModal
 				isOpen={showModal}

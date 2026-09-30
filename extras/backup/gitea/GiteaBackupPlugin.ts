@@ -3,6 +3,7 @@ import type { BackupPlugin } from '@/plugins/PluginInterface';
 import GiteaBackupModal from './GiteaBackupModal';
 import { giteaBackupService } from './GiteaBackupService';
 import GiteaBackupStatusIndicator from './GiteaBackupStatusIndicator';
+import { giteaGitRemoteProvider } from './GiteaGitRemoteProvider';
 import { GiteaIcon } from './Icon';
 import { getGiteaBackupSettings } from './settings';
 
@@ -23,6 +24,7 @@ const giteaBackupPlugin: BackupPlugin = {
 	renderStatusIndicator: GiteaBackupStatusIndicator,
 	renderModal: GiteaBackupModal,
 	getService: () => giteaBackupService,
+	gitRemote: giteaGitRemoteProvider,
 };
 
 export default giteaBackupPlugin;

@@ -3,6 +3,7 @@ import type { BackupPlugin } from '@/plugins/PluginInterface';
 import GitLabBackupModal from './GitLabBackupModal';
 import { gitLabBackupService } from './GitLabBackupService';
 import GitLabBackupStatusIndicator from './GitLabBackupStatusIndicator';
+import { gitLabGitRemoteProvider } from './GitLabGitRemoteProvider';
 import { GitLabIcon } from './Icon';
 import { getGitLabBackupSettings } from './settings';
 
@@ -23,6 +24,7 @@ const gitLabBackupPlugin: BackupPlugin = {
 	renderStatusIndicator: GitLabBackupStatusIndicator,
 	renderModal: GitLabBackupModal,
 	getService: () => gitLabBackupService,
+	gitRemote: gitLabGitRemoteProvider,
 };
 
 export default gitLabBackupPlugin;
