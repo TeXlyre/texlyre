@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 
 import Modal from '@/components/common/Modal';
 import { OpenAlexIcon } from './Icon';
-import { openAlexAPIService } from './OpenAlexAPIService';
 
 interface OpenAlexConnectionModalProps {
 	isOpen: boolean;
@@ -26,7 +25,6 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 	const [email, setEmail] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [isTesting, setIsTesting] = useState(false);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -37,27 +35,8 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 	}, [isOpen, existingEmail]);
 
 	const handleSubmit = async () => {
-		setIsTesting(true);
-		setError(null);
-		try {
-			const isValid = await openAlexAPIService.testConnection(
-				apiKey.trim() || undefined,
-				email.trim() || undefined,
-			);
-			if (!isValid) {
-				setError(
-					t('Could not reach OpenAlex API. Please check your connection.'),
-				);
-				return;
-			}
-		} catch {
-			setError(t('Connection test failed'));
-			return;
-		} finally {
-			setIsTesting(false);
-		}
-
 		setIsLoading(true);
+		setError(null);
 		try {
 			await onConnect(apiKey.trim() || undefined, email.trim() || undefined);
 			onClose();
@@ -69,25 +48,8 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 	};
 
 	const handleConnectAnonymously = async () => {
-		setIsTesting(true);
-		setError(null);
-		try {
-			const isValid = await openAlexAPIService.testConnection(
-				undefined,
-				undefined,
-			);
-			if (!isValid) {
-				setError(t('Could not reach OpenAlex API.'));
-				return;
-			}
-		} catch {
-			setError(t('Connection test failed'));
-			return;
-		} finally {
-			setIsTesting(false);
-		}
-
 		setIsLoading(true);
+		setError(null);
 		try {
 			await onConnect(undefined, undefined);
 			onClose();
@@ -98,7 +60,7 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 		}
 	};
 
-	const busy = isLoading || isTesting;
+	const busy = isLoading;
 
 	return (
 		<Modal

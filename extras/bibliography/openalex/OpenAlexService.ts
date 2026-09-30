@@ -311,9 +311,11 @@ class OpenAlexService {
 			if (filters.authorQuery?.trim()) {
 				const authors = await openAlexAPIService.searchAuthors(
 					filters.authorQuery.trim(),
+					creds?.apiKey,
 					creds?.email,
 				);
 				authorId = authors[0]?.id;
+				if (!authorId) return [];
 			}
 
 			const { authorQuery: _, ...apiFilters } = filters;
@@ -331,8 +333,6 @@ class OpenAlexService {
 			return result.works.map((w) => this.convertWorkToBibEntry(w));
 		} catch (error) {
 			moduleLog.error('Search error:', error);
-			this.connectionStatus = 'error';
-			this.notifyStatusListeners();
 			return [];
 		}
 	}
