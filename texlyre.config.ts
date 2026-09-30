@@ -64,14 +64,14 @@ const config: TexlyreConfig = {
         bibliography: ['zotero', 'openalex'], // 'jabref'
         lsp: [],
         backup: ['github', 'gitlab', 'forgejo', 'gitea'],
-        themes: ['texlyre_slim', 'texlyre_wide', 'texlyre_mobile'],
+        themes: ['texlyre_slim', 'texlyre_wide', 'texlyre_compact', 'texlyre_mobile'],
     },
 
     // Overwrite priority is default < local < mobile for corresponding configs
     userdata: {
-        version: '1.3.3',
+        version: '1.3.5',
         forceUpdate: {
-            settings: ['statusPageUrl', 'statusJsonUrl', 'themeVariant'],
+            settings: ['statusPageUrl', 'statusJsonUrl', 'themePlugin', 'fileSyncNotifications'],
             properties: [],
         },
         default: {
@@ -98,7 +98,7 @@ const config: TexlyreConfig = {
                 fileSyncConflictResolution: 'prefer-latest',
                 fileSyncEnable: true,
                 fileSyncHoldTimeout: 30,
-                fileSyncNotifications: true,
+                fileSyncNotifications: 'all',
                 fileSyncRequestTimeout: 60,
                 fileSyncServerUrl: 'https://filepizza.texlyre.org',
                 fileSysBackupAutoBackup: false,
@@ -125,7 +125,7 @@ const config: TexlyreConfig = {
                 statusJsonUrl: 'https://raw.githubusercontent.com/TeXlyre/upptime/master/status.json',
                 statusPageUrl: 'https://texlyre.org/upptime',
                 templatesApiUrl: 'https://texlyre.github.io/texlyre-templates/api/templates.json',
-                themePlugin: 'texlyre-wide-theme',
+                themePlugin: 'texlyre-compact-theme',
                 themeVariant: 'system',
                 typstAutoCompileOnOpen: false,
                 typstDefaultFormat: 'canvas',

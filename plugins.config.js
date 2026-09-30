@@ -24,6 +24,7 @@ export default {
 		'backup/gitea',
 		'themes/texlyre_slim',
 		'themes/texlyre_wide',
+		'themes/texlyre_compact',
 		'themes/texlyre_mobile',
 	],
 };
