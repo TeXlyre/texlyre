@@ -25,6 +25,29 @@
 	margin: var(--mobile-spacing-xs);
 }
 
+[data-layout="texlyre-mobile"] [data-role="project-open"] .project-open-label {
+	display: none;
+}
+
+[data-layout="texlyre-mobile"] [data-role="project-open"] .ui-split-main > svg {
+	width: var(--mobile-icon-size-md);
+	height: var(--mobile-icon-size-md);
+}
+
+[data-layout="texlyre-mobile"]
+	.ui-panel-header[data-role="plugin"]
+	> .ui-list-content {
+	flex: 0 0 min(10rem, 50%);
+}
+
+[data-layout="texlyre-mobile"]
+	.ui-panel-header[data-role="plugin"]
+	> .ui-list-content
+	> .ui-toolbar {
+	width: 100%;
+	overflow: hidden;
+}
+
 [data-layout="texlyre-mobile"] .project-title {
 	font-size: var(--mobile-font-sm);
 	overflow: hidden;

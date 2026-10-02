@@ -1815,6 +1815,7 @@ textarea:focus,
 
 .ui-panel-header[data-role="plugin"] > .ui-list-content {
 	flex-basis: min(var(--ui-plugin-header-info-min-width, 8rem), 100%);
+	flex-shrink: 1;
 }
 
 .ui-panel-header[data-role="plugin"] [data-role="plugin-path"] {
