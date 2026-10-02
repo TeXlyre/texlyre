@@ -277,9 +277,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 								className='button primary ui-split-main'
 								onClick={handleDefaultOpen}
 								title={getDropdownDisplayText()}
+								aria-label={getDropdownDisplayText()}
 							>
 								<FolderIcon />
-								{t('Open')}
+								<span className='project-open-label'>{t('Open')}</span>
 							</button>
 							<button
 								type='button'
