@@ -169,6 +169,14 @@ export function findPeerConnection(
 	return connection?.connected && connection.peer.connected ? connection : null;
 }
 
+export function listPeerConnections(provider: unknown): WebrtcConn[] {
+	const connections = (provider as PeerProvider).room?.webrtcConns;
+	if (!connections) return [];
+	return Array.from(connections.values()).filter(
+		(connection) => connection.connected && connection.peer.connected,
+	);
+}
+
 export function subscribeProviderPeers(
 	provider: unknown,
 	handler: () => void,
