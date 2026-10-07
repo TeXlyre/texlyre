@@ -7,6 +7,7 @@ import {
 
 import type { TypesetterServerConfig } from '@src/services/GenericTypesetterService';
 import type { LSPConfigBlock } from '@src/types/lsp';
+import type { StorageConfigBlock } from '@src/types/storage';
 import type { SharedLocalTool } from '@src/types/sharedTools';
 import {
 	buildSharedToolAdvertisement,
@@ -45,6 +46,20 @@ const lsp = (overrides: Partial<LSPConfigBlock> = {}): LSPConfigBlock => ({
 	fileExtensions: ['tex'],
 	transportConfig: { type: 'websocket', url: 'wss://ltex.example' },
 	clientConfig: '{}',
+	...overrides,
+});
+
+const storage = (
+	overrides: Partial<StorageConfigBlock> = {},
+): StorageConfigBlock => ({
+	id: 'garage',
+	name: 'Garage',
+	enabled: true,
+	transportConfig: {
+		type: 'webrtc',
+		roomId: 'shared-garage',
+		signaling: ['wss://signal.example'],
+	},
 	...overrides,
 });
 
@@ -107,6 +122,18 @@ describe('shared tools', () => {
 		expect(projectSharingKey('yjs:paper-1')).toBe('yjs:paper-1');
 	});
 
+	it('keeps storage decisions project-specific while existing tool identities stay global', () => {
+		expect(sharedToolIdentity('typesetter', 'alice', 'sile')).toBe(
+			'typesetter:alice:sile',
+		);
+		expect(sharedToolIdentity('storage', 'alice', 'garage', 'project-a')).toBe(
+			'storage:alice:garage:project-a',
+		);
+		expect(sharedToolIdentity('storage', 'alice', 'garage', 'project-b')).not.toBe(
+			sharedToolIdentity('storage', 'alice', 'garage', 'project-a'),
+		);
+	});
+
 	it('selects global tools plus project-used tools only when project sharing is on', () => {
 		const tools: SharedLocalTool[] = [
 			{
@@ -134,6 +161,15 @@ describe('shared tools', () => {
 				sharedWithAll: true,
 				usedByProject: true,
 			},
+			{
+				kind: 'storage',
+				config: storage(),
+				shareable: true,
+				sharedWithAll: true,
+				usedByProject: true,
+				projectShared: false,
+				storage: { storageProjectId: 'opaque-project' },
+			},
 		];
 
 		expect(
@@ -142,6 +178,11 @@ describe('shared tools', () => {
 		expect(
 			selectAdvertisedTools(tools, true).map((tool) => tool.config.id),
 		).toEqual(['sile', 'ltex']);
+
+		tools[3].projectShared = true;
+		expect(
+			selectAdvertisedTools(tools, false).map((tool) => tool.config.id),
+		).toEqual(['sile', 'garage']);
 	});
 
 	it('preserves original ownership when a received tool is reshared', () => {
@@ -197,6 +238,7 @@ describe('shared tools', () => {
 	it('identifies typesetter and LSP recipes from their normalized shape', () => {
 		expect(getSharedToolKind(typesetter())).toBe('typesetter');
 		expect(getSharedToolKind(lsp())).toBe('lsp');
+		expect(getSharedToolKind(storage())).toBe('storage');
 	});
 
 	it('reads real Yjs awareness updates and deduplicates relayed tools by origin', () => {
@@ -236,6 +278,69 @@ describe('shared tools', () => {
 		receiver.destroy();
 		senderDoc.destroy();
 		receiverDoc.destroy();
+	});
+
+	it('round-trips a project-scoped storage advertisement through real awareness', () => {
+		const { senderDoc, receiverDoc, sender, receiver } = awarenessPair();
+		const advertisement = buildSharedToolAdvertisement(
+			'storage',
+			storage(),
+			{ id: 'alice', name: 'Alice' },
+			undefined,
+			{ storageProjectId: 'opaque-project', baseRevision: 'revision-1' },
+		);
+		const unsafeConfig = advertisement.config as unknown as Record<
+			string,
+			unknown
+		>;
+		unsafeConfig.accessToken = 'should-not-survive-normalization';
+		unsafeConfig.bucket = 'private-bucket';
+		sender.setLocalStateField('user', { id: 'alice', name: 'Alice' });
+		sender.setLocalStateField('sharedTools', [advertisement]);
+		applyAwarenessUpdate(
+			receiver,
+			encodeAwarenessUpdate(sender, [sender.clientID]),
+			'test',
+		);
+
+		const [observed] = readSharedToolsFromAwareness(receiver, 'bob');
+		expect(observed).toMatchObject({
+			kind: 'storage',
+			toolId: 'garage',
+			storage: {
+				storageProjectId: 'opaque-project',
+				baseRevision: 'revision-1',
+			},
+		});
+		expect(JSON.stringify(observed)).not.toContain(
+			'should-not-survive-normalization',
+		);
+		expect(JSON.stringify(observed)).not.toContain('private-bucket');
+		expect(JSON.stringify(observed)).not.toContain('accessToken');
+		expect(JSON.stringify(observed)).not.toContain('bucket');
+
+		sender.destroy();
+		receiver.destroy();
+		senderDoc.destroy();
+		receiverDoc.destroy();
+	});
+
+	it('rejects non-shareable storage transports through the existing shareability rules', () => {
+		expect(
+			describeSharedToolAvailability(
+				storage({ transportConfig: { type: 'webrtc' } }),
+			).shareable,
+		).toBe(false);
+		expect(
+			describeSharedToolAvailability(
+				storage({
+					transportConfig: {
+						type: 'websocket',
+						url: 'ws://localhost:9080',
+					},
+				}),
+			).shareable,
+		).toBe(false);
 	});
 
 	it('does not re-import a relayed copy of the current user own tool', () => {

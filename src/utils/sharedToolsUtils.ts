@@ -10,11 +10,13 @@ import type {
 	SharedToolKind,
 	SharedToolOrigin,
 	SharedToolPreferences,
+	SharedStorageAttachment,
 } from '../types/sharedTools';
 import { describeConfigShare } from './toolConfigShareUtils';
 import {
 	isRecord,
 	normalizeLspConfig,
+	normalizeStorageConfig,
 	normalizeTypesetterConfig,
 } from './toolConfigUtils';
 
@@ -113,7 +115,9 @@ export function normalizeSharedToolPreferences(
 const encodeKeyPart = (value: string): string => encodeURIComponent(value);
 
 export function getSharedToolKind(config: ToolConfigBlock): SharedToolKind {
-	return 'projectType' in config ? 'typesetter' : 'lsp';
+	if ('projectType' in config) return 'typesetter';
+	if ('fileExtensions' in config || 'clientConfig' in config) return 'lsp';
+	return 'storage';
 }
 
 export function localSharedToolKey(kind: SharedToolKind, id: string): string {
@@ -126,10 +130,10 @@ export function selectAdvertisedTools(
 ): SharedLocalTool[] {
 	const selected = new Map<string, SharedLocalTool>();
 	for (const tool of tools) {
-		if (
-			!tool.shareable ||
-			(!tool.sharedWithAll && !(shareProjectTools && tool.usedByProject))
-		) {
+		const sharedWithAll = tool.kind !== 'storage' && tool.sharedWithAll;
+		const sharedWithProject =
+			tool.usedByProject && (tool.projectShared ?? shareProjectTools);
+		if (!tool.shareable || (!sharedWithAll && !sharedWithProject)) {
 			continue;
 		}
 		selected.set(localSharedToolKey(tool.kind, tool.config.id), tool);
@@ -141,8 +145,12 @@ export function sharedToolIdentity(
 	kind: SharedToolKind,
 	ownerId: string,
 	toolId: string,
+	storageProjectId?: string,
 ): string {
-	return `${kind}:${encodeKeyPart(ownerId)}:${encodeKeyPart(toolId)}`;
+	const identity = `${kind}:${encodeKeyPart(ownerId)}:${encodeKeyPart(toolId)}`;
+	return kind === 'storage' && storageProjectId
+		? `${identity}:${encodeKeyPart(storageProjectId)}`
+		: identity;
 }
 
 export function projectSharingKey(value: string): string {
@@ -180,8 +188,15 @@ export function sharedToolConfigFingerprint(config: ToolConfigBlock): string {
 	return hashString(JSON.stringify(configWithoutDisplayFields(config)));
 }
 
-export function sharedToolRevision(config: ToolConfigBlock): string {
-	return hashString(JSON.stringify(config));
+export function sharedToolRevision(
+	config: ToolConfigBlock,
+	storage?: SharedStorageAttachment,
+): string {
+	return hashString(
+		JSON.stringify(
+			storage ? { config, storageProjectId: storage.storageProjectId } : config,
+		),
+	);
 }
 
 export function describeSharedToolAvailability(config: ToolConfigBlock): {
@@ -222,6 +237,7 @@ export function buildSharedToolAdvertisement(
 	config: ToolConfigBlock,
 	owner: { id: string; name: string },
 	origin?: SharedToolOrigin,
+	storage?: SharedStorageAttachment,
 ): SharedToolAdvertisement {
 	const resolvedOrigin = origin ?? {
 		ownerId: owner.id,
@@ -234,8 +250,9 @@ export function buildSharedToolAdvertisement(
 		kind,
 		...resolvedOrigin,
 		name: config.name,
-		revision: sharedToolRevision(sharedConfig),
+		revision: sharedToolRevision(sharedConfig, storage),
 		config: sharedConfig,
+		...(kind === 'storage' && storage ? { storage } : {}),
 	};
 }
 
@@ -244,7 +261,9 @@ export function normalizeSharedToolAdvertisement(
 ): SharedToolAdvertisement | null {
 	if (
 		!isRecord(value) ||
-		(value.kind !== 'typesetter' && value.kind !== 'lsp') ||
+		(value.kind !== 'typesetter' &&
+			value.kind !== 'lsp' &&
+			value.kind !== 'storage') ||
 		typeof value.ownerId !== 'string' ||
 		typeof value.ownerName !== 'string' ||
 		typeof value.toolId !== 'string' ||
@@ -256,10 +275,29 @@ export function normalizeSharedToolAdvertisement(
 	const normalized =
 		value.kind === 'typesetter'
 			? normalizeTypesetterConfig(value.config)
-			: normalizeLspConfig(value.config);
+			: value.kind === 'lsp'
+				? normalizeLspConfig(value.config)
+				: normalizeStorageConfig(value.config);
 
 	if (!normalized) {
 		return null;
+	}
+
+	let storage: SharedStorageAttachment | undefined;
+	if (value.kind === 'storage') {
+		if (
+			!isRecord(value.storage) ||
+			typeof value.storage.storageProjectId !== 'string' ||
+			!value.storage.storageProjectId.trim()
+		) {
+			return null;
+		}
+		storage = {
+			storageProjectId: value.storage.storageProjectId,
+			...(typeof value.storage.baseRevision === 'string'
+				? { baseRevision: value.storage.baseRevision }
+				: {}),
+		};
 	}
 
 	const config = canonicalSharedConfig(normalized, value.toolId);
@@ -273,8 +311,9 @@ export function normalizeSharedToolAdvertisement(
 		ownerName: value.ownerName,
 		toolId: value.toolId,
 		name: value.name,
-		revision: sharedToolRevision(config),
+		revision: sharedToolRevision(config, storage),
 		config,
+		...(storage ? { storage } : {}),
 	};
 }
 
@@ -301,7 +340,12 @@ export function readSharedToolsFromAwareness(
 			const tool = normalizeSharedToolAdvertisement(raw);
 			if (!tool || tool.ownerId === currentUserId) continue;
 
-			const identity = sharedToolIdentity(tool.kind, tool.ownerId, tool.toolId);
+			const identity = sharedToolIdentity(
+				tool.kind,
+				tool.ownerId,
+				tool.toolId,
+				tool.storage?.storageProjectId,
+			);
 			const candidate: ObservedSharedTool = {
 				...tool,
 				advertiserId:
