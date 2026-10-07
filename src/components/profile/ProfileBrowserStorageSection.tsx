@@ -192,9 +192,9 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 	const displaySegments =
 		detailedSegments.length > 0
 			? detailedSegments.map((segment) => ({
-				...segment,
-				label: t(STORAGE_SEGMENT_LABELS[segment.id]),
-			}))
+					...segment,
+					label: t(STORAGE_SEGMENT_LABELS[segment.id]),
+				}))
 			: segments;
 
 	const scanReclaimable = useCallback(async () => {
@@ -277,11 +277,11 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 
 	const persistenceHelp = !isStandalone
 		? t(
-			'Install TeXlyre as an app to enable this option. Your projects are still saved locally in this browser.',
-		)
+				'Install TeXlyre as an app to enable this option. Your projects are still saved locally in this browser.',
+			)
 		: t(
-			'Your browser does not support protecting local data from automatic deletion.',
-		);
+				'Your browser does not support protecting local data from automatic deletion.',
+			);
 
 	const protectedStorageHelp = (
 		<>
@@ -331,21 +331,21 @@ const BrowserStorageSection: React.FC<BrowserStorageSectionProps> = ({
 		title: string;
 		description: string;
 	}[] = [
-			{
-				kind: 'typesetter-cache',
-				title: t('Typesetter cache'),
-				description: t(
-					'SwiftLaTeX, BusyTeX, and Typst packages and compilation cache. They are downloaded or rebuilt again when needed; downloaded packages require an internet connection.',
-				),
-			},
-			{
-				kind: 'orphan-project',
-				title: t('Leftover project data'),
-				description: t(
-					'Data left behind by projects that no longer exist on this device.',
-				),
-			},
-		];
+		{
+			kind: 'typesetter-cache',
+			title: t('Typesetter cache'),
+			description: t(
+				'SwiftLaTeX, BusyTeX, and Typst packages and compilation cache. They are downloaded or rebuilt again when needed; downloaded packages require an internet connection.',
+			),
+		},
+		{
+			kind: 'orphan-project',
+			title: t('Leftover project data'),
+			description: t(
+				'Data left behind by projects that no longer exist on this device.',
+			),
+		},
+	];
 
 	return (
 		<>
