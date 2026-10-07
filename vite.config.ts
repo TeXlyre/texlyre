@@ -2,7 +2,6 @@ import path from 'node:path';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
 import wasm from 'vite-plugin-wasm';
 
 const useHttps = process.env.VITE_USE_HTTPS === 'true';
@@ -91,50 +90,6 @@ export default defineConfig({
 		wasm(),
 		react(),
 		...(useHttps ? [basicSsl()] : []),
-		viteStaticCopy({
-			targets: [
-				{
-					src: 'node_modules/pdfjs-dist/cmaps/*',
-					dest: 'assets/cmaps/',
-				},
-				{
-					src: 'node_modules/mathlive/fonts/*',
-					dest: 'assets/fonts/',
-				},
-				{
-					src: 'node_modules/@myriaddreamin/typst-ts-web-compiler/pkg/*',
-					dest: 'core/typst-ts-web-compiler/pkg/',
-				},
-				{
-					src: 'node_modules/@myriaddreamin/typst-ts-renderer/pkg/*',
-					dest: 'core/typst-ts-renderer/pkg/',
-				},
-				{
-					src: 'node_modules/detypify-service/train/model.onnx',
-					dest: 'core/detypify/',
-				},
-				{
-					src: 'node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm',
-					dest: 'core/detypify/',
-				},
-				{
-					src: 'userdata.json',
-					dest: '',
-				},
-				{
-					src: 'userdata.mobile.json',
-					dest: '',
-				},
-				{
-					src: 'userdata.local.json',
-					dest: '',
-				},
-				{
-					src: 'userdata.local.mobile.json',
-					dest: '',
-				},
-			],
-		}),
 	],
 
 	server: {

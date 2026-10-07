@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.13.1",
+	"version": "0.13.2",
 	"description": "A local-first LaTeX & Typst collaborative web editor ",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -87,9 +87,9 @@
 		"@lezer/generator": "^1.8.0",
 		"@lezer/highlight": "^1.2.3",
 		"@lezer/lr": "^1.4.10",
-		"@milkdown/crepe": "^7.22.1",
-		"@milkdown/kit": "^7.22.1",
-		"@milkdown/react": "^7.22.1",
+		"@milkdown/crepe": "^7.22.2",
+		"@milkdown/kit": "^7.22.2",
+		"@milkdown/react": "^7.22.2",
 		"@myriaddreamin/typst-ts-renderer": "npm:@texlyre/typst-ts-renderer@0.8.0-rc3",
 		"@myriaddreamin/typst-ts-web-compiler": "npm:@texlyre/typst-ts-web-compiler@0.8.0-rc3",
 		"@myriaddreamin/typst.ts": "npm:@texlyre/typst.ts@0.8.0-rc3",
@@ -115,7 +115,7 @@
 		"idb": "^8.0.3",
 		"isomorphic-git": "^1.41.9",
 		"jszip": "^3.10.1",
-		"katex": "^0.18.4",
+		"katex": "^0.19.0",
 		"lib0": "^0.2.117",
 		"libarchive-wasm": "^1.2.0",
 		"lodash": "^4.18.1",
@@ -161,6 +161,7 @@
 		"immutable": "^5.1.8",
 		"inflight": "npm:inflight-lru@^1.0.0",
 		"js-yaml": "^5.4.2",
+		"katex": "^0.19.0",
 		"minimatch": "^10.2.2",
 		"nanoid": "^6.0.1",
 		"postcss": "^8.5.25",
@@ -173,7 +174,10 @@
 		"whatwg-url": "^16.0.1",
 		"ws": "^8.21.0",
 		"browserslist": "^4.28.8",
-		"@humanfs/node@<0.16.8": "^0.16.8"
+		"@humanfs/node@<0.16.8": "^0.16.8",
+		"source-map-js@>=1.0.0 <1.2.2": ">=1.2.2",
+		"@vue/server-renderer@<3.5.42": ">=3.5.42",
+		"prosemirror-view@<1.42.3": ">=1.42.3"
 	},
 	"pnpm": {
 		"overrides": {
@@ -192,6 +196,7 @@
 			"immutable": "^5.1.8",
 			"inflight": "npm:inflight-lru@^1.0.0",
 			"js-yaml": "^5.4.2",
+			"katex": "^0.19.0",
 			"minimatch": "^10.2.2",
 			"nanoid": "^6.0.1",
 			"postcss": "^8.5.25",
@@ -204,7 +209,10 @@
 			"whatwg-url": "^16.0.1",
 			"ws": "^8.21.0",
 			"browserslist": "^4.28.8",
-			"@humanfs/node@<0.16.8": "^0.16.8"
+			"@humanfs/node@<0.16.8": "^0.16.8",
+			"source-map-js@>=1.0.0 <1.2.2": ">=1.2.2",
+			"@vue/server-renderer@<3.5.42": ">=3.5.42",
+			"prosemirror-view@<1.42.3": ">=1.42.3"
 		},
 		"peerDependencyRules": {
 			"allowedVersions": {
@@ -262,14 +270,13 @@
 		"typescript-eslint": "^8.67.0",
 		"vite": "^8.2.1",
 		"vite-plugin-pwa": "^1.3.0",
-		"vite-plugin-static-copy": "^4.1.1",
 		"vite-plugin-wasm": "^3.6.0",
 		"workbox-build": "^7.4.1",
 		"workbox-window": "^7.4.1"
 	},
 	"allowScripts": {
 		"protobufjs@7.6.4": true,
-		"esbuild@0.28.1": true,
+		"esbuild@0.28.2": true,
 		"unrs-resolver@1.12.2": true
 	}
 }
