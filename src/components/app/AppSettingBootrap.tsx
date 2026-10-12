@@ -13,6 +13,7 @@ import { useRegisterFileSystemBackupSettings } from '../../settings/registerFile
 import { useRegisterFileTreeSettings } from '../../settings/registerFileTreeSettings';
 import { useRegisterLatexSettings } from '../../settings/registerLatexSettings';
 import { useRegisterTypstSettings } from '../../settings/registerTypstSettings';
+import { useRegisterACPConfigSettings } from '../../settings/registerACPConfigSettings';
 import { useRegisterLSPConfigSettings } from '../../settings/registerLSPConfigSettings';
 import { useRegisterSharedToolSettings } from '../../settings/registerSharedToolSettings';
 import { useRegisterTypesetterConfigSettings } from '../../settings/registerTypesetterConfigSettings';
@@ -32,6 +33,7 @@ const AppBootstrap: React.FC = () => {
 	useRegisterTypstSettings();
 	useRegisterLSPConfigSettings();
 	useRegisterTypesetterConfigSettings();
+	useRegisterACPConfigSettings();
 	useRegisterSharedToolSettings();
 	useRegisterLanguageSettings();
 	useRegisterThemeSettings();

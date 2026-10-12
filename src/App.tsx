@@ -54,6 +54,7 @@ import FileConflictPromptModal from './components/conflicts/FileConflictPromptMo
 import { AuthProvider } from './contexts/AuthContext';
 import { ChelysProvider } from './contexts/ChelysContext';
 import { EditorProvider } from './contexts/EditorContext';
+import { ACPConfigProvider } from './contexts/ACPConfigContext';
 import { LSPConfigProvider } from './contexts/LSPConfigContext';
 import { SharedToolPreferencesProvider } from './contexts/SharedToolPreferencesContext';
 import { TypesetterConfigProvider } from './contexts/TypesetterConfigContext';
@@ -136,11 +137,13 @@ function App() {
 												<FileSystemBackupProvider>
 													<LSPConfigProvider>
 														<TypesetterConfigProvider>
-															<SharedToolPreferencesProvider>
-																<EditorProvider>
-																	<AppContent />
-																</EditorProvider>
-															</SharedToolPreferencesProvider>
+															<ACPConfigProvider>
+																<SharedToolPreferencesProvider>
+																	<EditorProvider>
+																		<AppContent />
+																	</EditorProvider>
+																</SharedToolPreferencesProvider>
+															</ACPConfigProvider>
 														</TypesetterConfigProvider>
 													</LSPConfigProvider>
 												</FileSystemBackupProvider>

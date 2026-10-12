@@ -240,25 +240,29 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 					</div>
 				</div>
 
-				<label
-					className='checkbox-control'
-					title={!canAdvertise && share.message ? t(share.message) : undefined}
-				>
-					<input
-						type='checkbox'
-						checked={sharedWithAll}
-						disabled={!canAdvertise && !sharedWithAll}
-						onChange={(event) =>
-							sharing.setSharedWithAll(
-								sharedKind,
-								config.id,
-								event.target.checked,
-							)
+				{kind.shareable !== false && (
+					<label
+						className='checkbox-control'
+						title={
+							!canAdvertise && share.message ? t(share.message) : undefined
 						}
-					/>
-					<span>{t('Share with all collaborators')}</span>
-				</label>
-				{!canAdvertise && share.message && (
+					>
+						<input
+							type='checkbox'
+							checked={sharedWithAll}
+							disabled={!canAdvertise && !sharedWithAll}
+							onChange={(event) =>
+								sharing.setSharedWithAll(
+									sharedKind,
+									config.id,
+									event.target.checked,
+								)
+							}
+						/>
+						<span>{t('Share with all collaborators')}</span>
+					</label>
+				)}
+				{kind.shareable !== false && !canAdvertise && share.message && (
 					<div className='ui-note'>{t(share.message)}</div>
 				)}
 			</div>

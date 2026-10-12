@@ -1,6 +1,7 @@
 // src/utils/toolConfigUtils.ts
 import type { TransportConfig } from '@chelys/types/transport';
 import type { TypesetterServerConfig } from '../services/GenericTypesetterService';
+import type { ACPServerConfig } from '../types/acp';
 import type {
 	TypesetterInputFile,
 	TypesetterOutputFormat,
@@ -535,6 +536,44 @@ export function parseLspConfigs(value: unknown): LSPConfigBlock[] {
 	return parseStoredList(value)
 		.map(normalizeLspConfig)
 		.filter((config): config is LSPConfigBlock => config !== null);
+}
+
+export function normalizeAcpConfig(value: unknown): ACPServerConfig | null {
+	if (!isRecord(value) || typeof value.id !== 'string' || !value.id) {
+		return null;
+	}
+
+	const transport = normalizeLspTransport(value.transportConfig);
+	if (!transport || transport.type === 'worker') {
+		return null;
+	}
+
+	return {
+		id: value.id,
+		name:
+			typeof value.name === 'string' && value.name.trim()
+				? value.name
+				: value.id,
+		enabled: value.enabled !== false,
+		...(typeof value.icon === 'string' ? { icon: value.icon } : {}),
+		// ACP is newline-delimited JSON-RPC regardless of what the block claims.
+		transportConfig: { ...transport, contentLength: false },
+		...(typeof value.cwd === 'string' && value.cwd.trim()
+			? { cwd: value.cwd.trim() }
+			: {}),
+		...(typeof value.mcpServers === 'string'
+			? { mcpServers: value.mcpServers }
+			: {}),
+		...(typeof value.sessionMeta === 'string'
+			? { sessionMeta: value.sessionMeta }
+			: {}),
+	};
+}
+
+export function parseAcpConfigs(value: unknown): ACPServerConfig[] {
+	return parseStoredList(value)
+		.map(normalizeAcpConfig)
+		.filter((config): config is ACPServerConfig => config !== null);
 }
 
 export function upsertConfig<T extends { id: string }>(

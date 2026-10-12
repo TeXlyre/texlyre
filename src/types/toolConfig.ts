@@ -3,9 +3,13 @@ import type React from 'react';
 
 import type { TransportStatus } from '@chelys/types/transport';
 import type { TypesetterServerConfig } from '../services/GenericTypesetterService';
+import type { ACPServerConfig } from './acp';
 import type { LSPConfigBlock } from './lsp';
 
-export type ToolConfigBlock = LSPConfigBlock | TypesetterServerConfig;
+export type ToolConfigBlock =
+	| LSPConfigBlock
+	| TypesetterServerConfig
+	| ACPServerConfig;
 
 export type ToolConfigFieldValues = Record<string, string>;
 
@@ -32,6 +36,8 @@ export interface ToolConfigKind {
 	icon: React.FC;
 	settingId: string;
 	emptyMessage: string;
+	// False for kinds that must never be offered to collaborators. Defaults to true.
+	shareable?: boolean;
 	fields: ToolConfigField[];
 	useStore: () => ToolConfigStore;
 	normalize: (value: unknown) => ToolConfigBlock | null;
