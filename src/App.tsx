@@ -39,6 +39,7 @@ import './styles/components/statistics.css';
 import './styles/components/sourcemap.css';
 import './styles/components/bibliography.css';
 import './styles/components/chat.css';
+import './styles/components/agent.css';
 import './styles/components/latex-typst.css';
 import './styles/components/popover.css';
 import './styles/components/collaborator-avatars.css';

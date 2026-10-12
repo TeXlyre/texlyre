@@ -3,10 +3,12 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { useACPConfig } from '../../hooks/useACPConfig';
 import { useAuth } from '../../hooks/useAuth';
 import { useChat } from '../../hooks/useChat';
 import { useOffline } from '../../hooks/useOffline';
 import { ChevronDownIcon, ChevronUpIcon } from '../common/Icons';
+import AgentPanel from '../agent/AgentPanel';
 import ChatMessage from './ChatMessage';
 
 interface ChatPanelProps {
@@ -17,6 +19,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
 	const { user } = useAuth();
 	const { messages, isConnected, sendMessage } = useChat();
 	const { isCollabOfflineMode } = useOffline();
+	const { configs: agentConfigs } = useACPConfig();
+	const hasAgents = agentConfigs.some((config) => config.enabled);
+	const [activeTab, setActiveTab] = useState<'chat' | 'agent'>('chat');
+	const showAgent = hasAgents && activeTab === 'agent';
 	const [isCollapsed, setIsCollapsed] = useState(true);
 	const [inputValue, setInputValue] = useState('');
 	const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -69,7 +75,37 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
 									: t('Disconnected')
 						}
 					/>
-					<span className='ui-panel-title'>{t('Project Chat')}</span>
+					{hasAgents ? (
+						<div
+							className='ui-tab-list'
+							data-role='panel'
+							data-variant='switcher'
+							onClick={(e) => e.stopPropagation()}
+						>
+							<button
+								type='button'
+								className={`ui-tab ${showAgent ? '' : 'active'}`}
+								onClick={() => {
+									setActiveTab('chat');
+									setIsCollapsed(false);
+								}}
+							>
+								{t('Project Chat')}
+							</button>
+							<button
+								type='button'
+								className={`ui-tab ${showAgent ? 'active' : ''}`}
+								onClick={() => {
+									setActiveTab('agent');
+									setIsCollapsed(false);
+								}}
+							>
+								{t('Agent')}
+							</button>
+						</div>
+					) : (
+						<span className='ui-panel-title'>{t('Project Chat')}</span>
+					)}
 					{messages.length > 0 && (
 						<span
 							className='ui-badge'
@@ -93,7 +129,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
 				</div>
 			</div>
 
-			{!isCollapsed && (
+			{!isCollapsed && showAgent && (
+				<div className='ui-panel-content' data-role='chat'>
+					<AgentPanel />
+				</div>
+			)}
+
+			{!isCollapsed && !showAgent && (
 				<div className='ui-panel-content' data-role='chat'>
 					<div className='ui-list' data-role='chat-messages'>
 						{messages.length === 0 ? (

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
+import { AgentSessionProvider } from '../../contexts/AgentSessionContext';
 import { ChatProvider } from '../../contexts/ChatContext';
 import { CollabProvider } from '../../contexts/CollabContext';
 import { FileSyncProvider } from '../../contexts/PeerFileSyncContext';
@@ -34,6 +35,7 @@ import type { LaTeXEngine } from '../../types/latex';
 import type { ProjectType, ProjectGroup } from '../../types/projects';
 import BackupModal from '../backup/BackupModal';
 import BackupStatusIndicator from '../backup/BackupStatusIndicator';
+import AgentPermissionModal from '../agent/AgentPermissionModal';
 import ChatPanel from '../chat/ChatPanel';
 import CollabStatusIndicator from '../collab/CollabStatusIndicator';
 import CollaboratorAvatars from '../common/CollaboratorAvatars';
@@ -1002,7 +1004,10 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 								<ExternalTypesetterProvider>
 									<SourceMapProvider>
 										<ContentFormatterProvider>
-											<EditorAppView {...props} />
+											<AgentSessionProvider>
+												<EditorAppView {...props} />
+												<AgentPermissionModal />
+											</AgentSessionProvider>
 										</ContentFormatterProvider>
 									</SourceMapProvider>
 								</ExternalTypesetterProvider>
