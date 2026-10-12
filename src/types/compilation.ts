@@ -15,6 +15,31 @@ export interface ExportOptions {
 
 export type TypesetterSource = 'builtin' | 'chelys';
 
+// A compile requested by code rather than the user, e.g. an agent's compile
+// tool. It waits for a running compile instead of being ignored, and may name
+// a main file for this compile only.
+export interface QueuedCompileRequest {
+	queue: true;
+	mainFile?: string;
+	// Clear the typesetter's caches first.
+	clean?: boolean;
+}
+
+export interface CompileRequestDetail {
+	mainFile?: string;
+	clean?: boolean;
+	// Called synchronously by the compile button that takes the request, with
+	// a reason when it cannot compile.
+	respond: (error?: string) => void;
+}
+
+declare global {
+	interface DocumentEventMap {
+		'trigger-compile': CustomEvent<QueuedCompileRequest | null>;
+		'compile-request': CustomEvent<CompileRequestDetail>;
+	}
+}
+
 export interface CompileArtifact {
 	id: string;
 	name: string;

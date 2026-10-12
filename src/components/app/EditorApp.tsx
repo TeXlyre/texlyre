@@ -22,10 +22,12 @@ import { useGlobalKeyboard } from '../../hooks/useGlobalKeyboard';
 import { useDiskBackup } from '../../hooks/useDiskBackup';
 import { useOffline } from '../../hooks/useOffline';
 import { useSettings } from '../../hooks/useSettings';
+import { compileResultService } from '../../services/CompileResultService';
 import { fileStoreService } from '../../services/FileStoreService';
 import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import { popoutViewerService } from '../../services/PopoutViewerService';
 import type { DocumentList } from '../../types/documents';
+import type { QueuedCompileRequest } from '../../types/compilation';
 import type { YjsDocUrl } from '../../types/yjs';
 import type { TypstOutputFormat } from '../../types/typst';
 import type { LaTeXEngine } from '../../types/latex';
@@ -135,11 +137,17 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		typstEngine: undefined as string | undefined,
 		typstOutputFormat: undefined as TypstOutputFormat | undefined,
 	});
-	const { isCompiling, triggerAutoCompile } = useLaTeX();
+	const { isCompiling, isInitializing, triggerAutoCompile } = useLaTeX();
 	const {
 		isCompiling: isTypstCompiling,
+		isInitializing: isTypstInitializing,
 		triggerAutoCompile: triggerTypstAutoCompile,
 	} = useTypst();
+	// While a compiler initializes, the compile button is disabled and turns
+	// into the stop button once compiling starts, so a click queued for it
+	// would stop that compile; treat both phases as busy.
+	const isCompileBusy =
+		isCompiling || isTypstCompiling || isInitializing || isTypstInitializing;
 	const { isOfflineMode, hideOfflineBanner } = useOffline();
 	const { getSetting } = useSettings();
 
@@ -365,22 +373,85 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		}
 	};
 
+	// Holds a queued `trigger-compile` request that arrived mid-compile, so it
+	// runs once the current compile ends instead of being dropped.
+	const pendingCompileRef = useRef<QueuedCompileRequest | null>(null);
+
+	const clickCompileButton = useCallback(async () => {
+		const buttonSelectors =
+			projectType === 'typst'
+				? [
+						'.header-typst-compile-button .compile-button',
+						'.header-compile-button .compile-button',
+					]
+				: [
+						'.header-compile-button .compile-button',
+						'.header-typst-compile-button .compile-button',
+					];
+
+		return clickWhenReady(buttonSelectors);
+	}, [projectType]);
+
+	// Hands a queued request to the header compile button, which reports why it
+	// cannot compile. Typesetters whose button does not take requests (Chelys)
+	// are compiled by clicking instead. Failures are published as compile
+	// results so the requester gets the reason rather than a timeout.
+	const runQueuedCompile = useCallback(
+		async (request: QueuedCompileRequest) => {
+			const fail = (log: string) =>
+				compileResultService.publish({
+					status: -1,
+					log,
+					logType: projectType === 'typst' ? 'typst' : 'latex',
+					startedAt: Date.now(),
+				});
+
+			let handled = false;
+			document.dispatchEvent(
+				new CustomEvent('compile-request', {
+					detail: {
+						mainFile: request.mainFile,
+						clean: request.clean,
+						respond: (error?: string) => {
+							handled = true;
+							if (error) fail(error);
+						},
+					},
+				}),
+			);
+			if (handled) return;
+
+			if (request.mainFile || request.clean) {
+				fail(
+					'The active typesetter does not support choosing the main file or a clean compile. Compile without them.',
+				);
+				return;
+			}
+			if (!(await clickCompileButton())) {
+				fail(
+					'The compile could not start: the compile button stayed unavailable. Check that the project has a main file.',
+				);
+			}
+		},
+		[projectType, clickCompileButton],
+	);
+
 	useEffect(() => {
-		const handleCompile = () => {
-			if (isCompiling || isTypstCompiling) return;
+		const request = pendingCompileRef.current;
+		if (isCompileBusy || !request) return;
+		pendingCompileRef.current = null;
+		void runQueuedCompile(request);
+	}, [isCompileBusy, runQueuedCompile]);
 
-			const buttonSelectors =
-				projectType === 'typst'
-					? [
-							'.header-typst-compile-button .compile-button',
-							'.header-compile-button .compile-button',
-						]
-					: [
-							'.header-compile-button .compile-button',
-							'.header-typst-compile-button .compile-button',
-						];
+	useEffect(() => {
+		const handleCompile = (event: CustomEvent<QueuedCompileRequest | null>) => {
+			const request = event.detail?.queue ? event.detail : null;
+			if (isCompileBusy) {
+				if (request) pendingCompileRef.current = request;
+				return;
+			}
 
-			clickWhenReady(buttonSelectors);
+			void (request ? runQueuedCompile(request) : clickCompileButton());
 		};
 
 		const handleCompileClean = () => {
@@ -443,7 +514,14 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			);
 			document.removeEventListener('trigger-typst-compile', handleTypstCompile);
 		};
-	}, [isCompiling, isTypstCompiling, projectType]);
+	}, [
+		isCompiling,
+		isTypstCompiling,
+		isCompileBusy,
+		projectType,
+		clickCompileButton,
+		runQueuedCompile,
+	]);
 
 	useEffect(() => {
 		if (!hasDoc || !activeTypesetterProvider) return;
@@ -567,6 +645,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				key='latex'
 				dropdownKey={'latex-header-dropdown'}
 				className='header-compile-button'
+				acceptsCompileRequests
 				selectedDocId={localDocId}
 				documents={doc?.documents}
 				onNavigateToLinkedFile={handleNavigateToLinkedFile}
@@ -591,6 +670,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				key='typst'
 				dropdownKey={'typst-header-dropdown'}
 				className='header-typst-compile-button'
+				acceptsCompileRequests
 				selectedDocId={localDocId}
 				documents={doc?.documents}
 				onNavigateToLinkedFile={handleNavigateToLinkedFile}
