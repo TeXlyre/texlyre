@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useACPConfig } from '../../hooks/useACPConfig';
+import { useAgentDock } from '../../hooks/useAgentDock';
 import { useAuth } from '../../hooks/useAuth';
 import { useChat } from '../../hooks/useChat';
 import { useOffline } from '../../hooks/useOffline';
@@ -20,12 +21,25 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
 	const { messages, isConnected, sendMessage } = useChat();
 	const { isCollabOfflineMode } = useOffline();
 	const { configs: agentConfigs } = useACPConfig();
-	const hasAgents = agentConfigs.some((config) => config.enabled);
+	const { docked: agentDocked } = useAgentDock();
+	// A docked agent lives in its side panel instead of a tab here.
+	const hasAgents =
+		!agentDocked && agentConfigs.some((config) => config.enabled);
 	const [activeTab, setActiveTab] = useState<'chat' | 'agent'>('chat');
 	const showAgent = hasAgents && activeTab === 'agent';
 	const [isCollapsed, setIsCollapsed] = useState(true);
 	const [inputValue, setInputValue] = useState('');
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+
+	// Docking the agent collapses this panel, which would cover the side
+	// panel's input; moving it back opens it here.
+	const wasAgentDockedRef = useRef(agentDocked);
+	useEffect(() => {
+		if (wasAgentDockedRef.current === agentDocked) return;
+		wasAgentDockedRef.current = agentDocked;
+		setIsCollapsed(agentDocked);
+		if (!agentDocked) setActiveTab('agent');
+	}, [agentDocked]);
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: messages is an intentional trigger; its change is the signal to scroll, even though the body reads it via the ref. */
 	useEffect(() => {

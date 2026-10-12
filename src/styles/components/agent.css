@@ -197,3 +197,16 @@
 	justify-content: flex-end;
 	margin-top: var(--space-md);
 }
+
+.agent-side-panel {
+	contain: layout;
+	height: 100%;
+	overflow: hidden;
+	border-left: 1px solid var(--accent-border);
+	background-color: var(--pico-background);
+}
+
+.agent-side-panel .ui-field-control[data-role="chat-input"] {
+	max-height: 40vh;
+	resize: vertical;
+}

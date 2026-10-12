@@ -3,8 +3,10 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { useAgentDock } from '../../hooks/useAgentDock';
 import { useAgentSession } from '../../hooks/useAgentSession';
 import type { AgentEntry } from '../../types/agentSession';
+import { ExpandIcon, MinimizeIcon } from '../common/Icons';
 import DiffView from './DiffView';
 import { toolLabel } from './toolLabel';
 
@@ -100,6 +102,7 @@ const AgentPanel: React.FC = () => {
 		cancel,
 		newSession,
 	} = useAgentSession();
+	const { canDock, docked, setDocked } = useAgentDock();
 	const [inputValue, setInputValue] = useState('');
 	const endRef = useRef<HTMLDivElement>(null);
 	const isBusy = status === 'prompting' || status === 'connecting';
@@ -155,6 +158,21 @@ const AgentPanel: React.FC = () => {
 				>
 					{t('New session')}
 				</button>
+				{canDock && (
+					<button
+						type='button'
+						className='ui-icon-button'
+						data-variant='ghost'
+						data-size='xs'
+						onClick={() => setDocked(!docked)}
+						title={docked ? t('Move to chat panel') : t('Open in side panel')}
+						aria-label={
+							docked ? t('Move to chat panel') : t('Open in side panel')
+						}
+					>
+						{docked ? <MinimizeIcon /> : <ExpandIcon />}
+					</button>
+				)}
 			</div>
 
 			<div className='ui-list agent-transcript'>

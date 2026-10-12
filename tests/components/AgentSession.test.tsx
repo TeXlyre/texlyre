@@ -53,8 +53,10 @@ jest.mock('@src/hooks/useOffline', () => ({
 
 import AgentPanel from '@src/components/agent/AgentPanel';
 import AgentPermissionModal from '@src/components/agent/AgentPermissionModal';
+import AgentSidePanel from '@src/components/agent/AgentSidePanel';
 import ChatPanel from '@src/components/chat/ChatPanel';
 import { AgentSessionProvider } from '@src/contexts/AgentSessionContext';
+import { PropertiesProvider } from '@src/contexts/PropertiesContext';
 
 const AGENT: ACPServerConfig = {
 	id: 'claude',
@@ -202,5 +204,40 @@ describe('ChatPanel agent tab', () => {
 
 		expect(screen.getByPlaceholderText('Ask the agent...')).toBeInTheDocument();
 		expect(screen.getByText('Claude Agent')).toBeInTheDocument();
+	});
+});
+
+describe('agent side panel', () => {
+	beforeEach(() => {
+		mockAgents = [AGENT];
+		localStorage.clear();
+	});
+
+	it('moves the agent between the chat panel and a docked side panel', async () => {
+		const { container } = render(
+			<PropertiesProvider>
+				<AgentSessionProvider>
+					<AgentSidePanel />
+					<ChatPanel />
+				</AgentSessionProvider>
+			</PropertiesProvider>,
+		);
+		const sidePanel = () => container.querySelector('.agent-side-panel');
+
+		await userEvent.click(screen.getByRole('button', { name: 'Agent' }));
+		await userEvent.click(screen.getByRole('button', { name: 'Open in side panel' }));
+
+		expect(sidePanel()).toBeInTheDocument();
+		expect(screen.getAllByPlaceholderText('Ask the agent...')).toHaveLength(1);
+		expect(screen.queryByRole('button', { name: 'Agent' })).not.toBeInTheDocument();
+		expect(localStorage.getItem('texlyre-properties')).toContain(
+			'"agent-panel-docked:global":true',
+		);
+
+		await userEvent.click(screen.getByRole('button', { name: 'Move to chat panel' }));
+
+		expect(sidePanel()).not.toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Agent' })).toHaveClass('active');
+		expect(screen.getAllByPlaceholderText('Ask the agent...')).toHaveLength(1);
 	});
 });

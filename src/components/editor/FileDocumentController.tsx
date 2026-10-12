@@ -19,6 +19,7 @@ import ProjectExportModal from '../project/ProjectExportModal';
 import Editor from './Editor';
 import EditorOutline from './EditorOutline';
 import EditorOutputPanels from './EditorOutputPanels';
+import AgentSidePanel from '../agent/AgentSidePanel';
 import EditorSidebar from './EditorSidebar';
 import EditorTabs from './EditorTabs';
 
@@ -324,6 +325,8 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					onExpandTypstOutput={output.handleTypstOutputExpand}
 					onExpandExternalOutput={output.handleExternalOutputExpand}
 				/>
+
+				<AgentSidePanel />
 			</div>
 
 			{showCurrentProjectExportModal && currentProjectForExport && (
