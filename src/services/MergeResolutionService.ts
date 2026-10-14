@@ -39,6 +39,11 @@ export interface ConflictResolutionRequest {
 	resolve: (resolutions: Map<string, ConflictResolution> | null) => void;
 }
 
+export interface ResolveConflictOptions {
+	initialResolutions?: Map<string, ConflictResolution>;
+	includeProjectMetadata?: boolean;
+}
+
 type AutoMergeResult =
 	| { resolved: true; content: string; unchanged?: boolean }
 	| { resolved: false };
@@ -155,7 +160,9 @@ class MergeResolutionService {
 	async resolveConflicts(
 		conflicts: FileConflict[],
 		labels?: { keepLocal?: string; keepRemote?: string },
+		options: ResolveConflictOptions = {},
 	): Promise<Map<string, ConflictResolution> | null> {
+		const initialResolutions = new Map(options.initialResolutions);
 		const metadataConflicts = conflicts.filter((c) =>
 			c.path.endsWith(FILES_METADATA),
 		);
@@ -175,8 +182,10 @@ class MergeResolutionService {
 
 		const realConflicts = conflicts.filter(
 			(c) =>
+				!initialResolutions.has(c.path) &&
 				!c.path.endsWith(FILES_METADATA) &&
-				!c.path.endsWith('/metadata.json') &&
+				(options.includeProjectMetadata ||
+					!c.path.endsWith('/metadata.json')) &&
 				!c.path.endsWith('.yjs') &&
 				!linkedTxtConflicts.includes(c),
 		);
@@ -192,9 +201,8 @@ class MergeResolutionService {
 		};
 
 		if (realConflicts.length === 0) {
-			const resolutions = new Map<string, ConflictResolution>();
-			await derive(resolutions);
-			return resolutions;
+			await derive(initialResolutions);
+			return initialResolutions;
 		}
 
 		return new Promise((resolve) => {
@@ -207,8 +215,12 @@ class MergeResolutionService {
 						return;
 					}
 					this.restoreMergedAnnotations(realConflicts, resolutions);
-					await derive(resolutions);
-					resolve(resolutions);
+					const combined = new Map(initialResolutions);
+					for (const [path, resolution] of resolutions) {
+						combined.set(path, resolution);
+					}
+					await derive(combined);
+					resolve(combined);
 				},
 			};
 			this.emit(request);
