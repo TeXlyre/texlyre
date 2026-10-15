@@ -1,4 +1,4 @@
-// src/components/app/AppSettingBootstrap.tsx
+// src/components/app/AppSettingBootrap.tsx
 import type React from 'react';
 
 import { useRegisterLanguageSettings } from '../../settings/registerLocaleSettings';
@@ -16,6 +16,7 @@ import { useRegisterTypstSettings } from '../../settings/registerTypstSettings';
 import { useRegisterLSPConfigSettings } from '../../settings/registerLSPConfigSettings';
 import { useRegisterSharedToolSettings } from '../../settings/registerSharedToolSettings';
 import { useRegisterTypesetterConfigSettings } from '../../settings/registerTypesetterConfigSettings';
+import { useRegisterStorageConfigSettings } from '../../settings/registerStorageConfigSettings';
 import { useRegisterOfflineSettings } from '../../settings/registerOfflineSettings';
 import { useRegisterStorageSettings } from '../../settings/registerStorageSettings';
 
@@ -32,6 +33,7 @@ const AppBootstrap: React.FC = () => {
 	useRegisterTypstSettings();
 	useRegisterLSPConfigSettings();
 	useRegisterTypesetterConfigSettings();
+	useRegisterStorageConfigSettings();
 	useRegisterSharedToolSettings();
 	useRegisterLanguageSettings();
 	useRegisterThemeSettings();
