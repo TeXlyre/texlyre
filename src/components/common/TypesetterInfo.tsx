@@ -59,7 +59,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({
 						<strong>
 							{t('{typesetter} Engine:', { typesetter: t('LaTeX') })}
 						</strong>{' '}
-						{t('BusyTeX: texlyre-busytex v1.4.0 (TeX Live 2026, 01/03/2026)')}
+						{t('BusyTeX: texlyre-busytex v1.4.1 (TeX Live 2026, 01/03/2026)')}
 						<br />
 						<strong>
 							{t('{typesetter} Compilers:', { typesetter: t('LaTeX') })}

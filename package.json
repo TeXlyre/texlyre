@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.13.2",
+	"version": "0.13.3",
 	"description": "A local-first LaTeX & Typst collaborative web editor ",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -134,7 +134,7 @@
 		"react-i18next": "^17.0.11",
 		"remark-frontmatter": "^5.0.0",
 		"remark-math": "^6.0.0",
-		"texlyre-busytex": "^1.4.0",
+		"texlyre-busytex": "^1.4.1",
 		"vscode-oniguruma": "^2.0.1",
 		"vscode-textmate": "^9.3.2",
 		"wasm-latex-tools": "^0.2.0",
@@ -177,7 +177,8 @@
 		"@humanfs/node@<0.16.8": "^0.16.8",
 		"source-map-js@>=1.0.0 <1.2.2": ">=1.2.2",
 		"@vue/server-renderer@<3.5.42": ">=3.5.42",
-		"prosemirror-view@<1.42.3": ">=1.42.3"
+		"prosemirror-view@<1.42.3": ">=1.42.3",
+		"handlebars@<=4.7.9": ">=4.7.10"
 	},
 	"pnpm": {
 		"overrides": {
@@ -212,7 +213,8 @@
 			"@humanfs/node@<0.16.8": "^0.16.8",
 			"source-map-js@>=1.0.0 <1.2.2": ">=1.2.2",
 			"@vue/server-renderer@<3.5.42": ">=3.5.42",
-			"prosemirror-view@<1.42.3": ">=1.42.3"
+			"prosemirror-view@<1.42.3": ">=1.42.3",
+			"handlebars@<=4.7.9": ">=4.7.10"
 		},
 		"peerDependencyRules": {
 			"allowedVersions": {

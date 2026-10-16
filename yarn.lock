@@ -4959,12 +4959,12 @@ guid-typescript@^1.0.9:
   resolved "https://registry.npmjs.org/guid-typescript/-/guid-typescript-1.0.9.tgz"
   integrity sha512-Y8T4vYhEfwJOTbouREvG+3XDsjr8E3kIr7uf+JZ0BYloFsttiHU0WfvANVsR7TxNUJa/WpCnw/Ino/p+DeBhBQ==
 
-handlebars@^4.7.9:
-  version "4.7.9"
-  resolved "https://registry.npmjs.org/handlebars/-/handlebars-4.7.9.tgz"
-  integrity sha512-4E71E0rpOaQuJR2A3xDZ+GM1HyWYv1clR58tC8emQNeQe3RH7MAzSbat+V0wG78LQBo6m6bzSG/L4pBuCsgnUQ==
+handlebars@>=4.7.10:
+  version "4.7.10"
+  resolved "https://registry.npmjs.org/handlebars/-/handlebars-4.7.10.tgz"
+  integrity sha512-P5VJMVM7qgBn6vjXMw8WG9uVI+ncf2pi72j4de4yz5ZULLj2RGqLYaKOYGsgyrViQ0tePOVlN1tDCCXXtFqXKg==
   dependencies:
-    minimist "^1.2.5"
+    minimist "^1.2.8"
     neo-async "^2.6.2"
     source-map "^0.6.1"
     wordwrap "^1.0.0"
@@ -6656,7 +6656,7 @@ minimatch@^10.2.2:
   dependencies:
     brace-expansion "^5.0.2"
 
-minimist@^1.2.5:
+minimist@^1.2.5, minimist@^1.2.8:
   version "1.2.8"
   resolved "https://registry.npmjs.org/minimist/-/minimist-1.2.8.tgz"
   integrity sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==
@@ -8037,10 +8037,10 @@ test-exclude@^6.0.0:
     glob "^7.1.4"
     minimatch "^3.0.4"
 
-texlyre-busytex@^1.4.0:
-  version "1.4.0"
-  resolved "https://registry.npmjs.org/texlyre-busytex/-/texlyre-busytex-1.4.0.tgz"
-  integrity sha512-Fsx6DQyKibmIK+FErpVZwZAX99syRFEq1aARm7FNHtT+MBjvS57SJQkk+PeeYcFqGOEcDZvJ/d+Na/Oq2WSbXw==
+texlyre-busytex@^1.4.1:
+  version "1.4.1"
+  resolved "https://registry.npmjs.org/texlyre-busytex/-/texlyre-busytex-1.4.1.tgz"
+  integrity sha512-7PswiiuCIYc0HGK/HyQz0At/6Pc9pMk7Qy+DkzHk+BGVInWetXaeZq2px7V06pHscJG215YOU6as/0sgRmulNA==
 
 tinyglobby@^0.2.10, tinyglobby@^0.2.15, tinyglobby@^0.2.17:
   version "0.2.17"
