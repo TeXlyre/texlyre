@@ -143,11 +143,16 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 	}
 
 	const renderCard = (config: ToolConfigBlock, enabled: boolean) => {
-		const sharedKind = getSharedToolKind(config);
-		const origin = sharing.getOrigin(sharedKind, config.id);
-		const share = describeSharedToolAvailability(config);
-		const canAdvertise = enabled && share.shareable;
-		const sharedWithAll = sharing.isSharedWithAll(sharedKind, config.id);
+		const sharedKind =
+			kind.allowGlobalShare === false ? null : getSharedToolKind(config);
+		const origin = sharedKind
+			? sharing.getOrigin(sharedKind, config.id)
+			: undefined;
+		const share = sharedKind ? describeSharedToolAvailability(config) : null;
+		const canAdvertise = Boolean(enabled && share?.shareable);
+		const sharedWithAll = sharedKind
+			? sharing.isSharedWithAll(sharedKind, config.id)
+			: false;
 
 		return (
 			<div
@@ -227,7 +232,7 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 						type='button'
 						className='button danger'
 						onClick={() => {
-							sharing.detachLocalTool(sharedKind, config.id);
+							if (sharedKind) sharing.detachLocalTool(sharedKind, config.id);
 							store.removeConfig(config.id);
 						}}
 					>
@@ -240,26 +245,32 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 					</div>
 				</div>
 
-				<label
-					className='checkbox-control'
-					title={!canAdvertise && share.message ? t(share.message) : undefined}
-				>
-					<input
-						type='checkbox'
-						checked={sharedWithAll}
-						disabled={!canAdvertise && !sharedWithAll}
-						onChange={(event) =>
-							sharing.setSharedWithAll(
-								sharedKind,
-								config.id,
-								event.target.checked,
-							)
-						}
-					/>
-					<span>{t('Share with all collaborators')}</span>
-				</label>
-				{!canAdvertise && share.message && (
-					<div className='ui-note'>{t(share.message)}</div>
+				{sharedKind && share && (
+					<>
+						<label
+							className='checkbox-control'
+							title={
+								!canAdvertise && share.message ? t(share.message) : undefined
+							}
+						>
+							<input
+								type='checkbox'
+								checked={sharedWithAll}
+								disabled={!canAdvertise && !sharedWithAll}
+								onChange={(event) =>
+									sharing.setSharedWithAll(
+										sharedKind,
+										config.id,
+										event.target.checked,
+									)
+								}
+							/>
+							<span>{t('Share with all collaborators')}</span>
+						</label>
+						{!canAdvertise && share.message && (
+							<div className='ui-note'>{t(share.message)}</div>
+						)}
+					</>
 				)}
 			</div>
 		);

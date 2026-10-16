@@ -14,11 +14,14 @@ import { useAuth } from '../hooks/useAuth';
 import { useCollab } from '../hooks/useCollab';
 import { useLSPConfig } from '../hooks/useLSPConfig';
 import { useSharedToolPreferences } from '../hooks/useSharedToolPreferences';
+import { useStorageConfig } from '../hooks/useStorageConfig';
 import { useTypesetterConfig } from '../hooks/useTypesetterConfig';
 import type { TypesetterServerConfig } from '../services/GenericTypesetterService';
+import { storageSyncService } from '../services/StorageSyncService';
 import { typesetterRegistryService } from '../services/TypesetterRegistryService';
 import type { DocumentList } from '../types/documents';
 import type { LSPConfigBlock } from '../types/lsp';
+import type { StorageConfigBlock } from '../types/storage';
 import type {
 	ObservedSharedTool,
 	SharedByMeTool,
@@ -38,6 +41,10 @@ import {
 	selectAdvertisedTools,
 	sharedToolIdentity,
 } from '../utils/sharedToolsUtils';
+import {
+	hostStorageProjectKeySharing,
+	requestStorageProjectKey,
+} from '../utils/storageKeyShareUtils';
 
 interface SharedToolsContextType {
 	offers: SharedToolOffer[];
@@ -50,6 +57,11 @@ interface SharedToolsContextType {
 	projectAdditionalTools: SharedLocalTool[];
 	projectShareEnabled: boolean;
 	setProjectShareEnabled: (enabled: boolean) => void;
+	storageShareAvailable: boolean;
+	storageShareEnabled: boolean;
+	storageShareable: boolean;
+	storageShareMessage?: string;
+	setStorageShareEnabled: (enabled: boolean) => void;
 }
 
 export const SharedToolsContext = createContext<SharedToolsContextType | null>(
@@ -91,10 +103,23 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 	const { data: doc, provider } = useCollab<DocumentList>();
 	const typesetters = useTypesetterConfig();
 	const lsps = useLSPConfig();
+	const storages = useStorageConfig();
 	const preferences = useSharedToolPreferences();
 	const [observed, setObserved] = useState<ObservedSharedTool[]>([]);
+	const [storageBindingRevision, setStorageBindingRevision] = useState(0);
 	const notifiedRef = useRef(new Set<string>());
+	const acceptingStorageRef = useRef(new Set<string>());
 	const projectKey = projectSharingKey(docUrl);
+	const currentProjectId = projectKey.startsWith('yjs:')
+		? projectKey.slice(4)
+		: projectKey;
+	const storageBinding = useMemo(
+		() =>
+			user?.id
+				? storageSyncService.getProjectBinding(user.id, currentProjectId)
+				: null,
+		[user?.id, currentProjectId, storageBindingRevision],
+	);
 
 	const tools = useMemo(() => {
 		const projectType = doc?.projectMetadata?.type ?? 'latex';
@@ -115,6 +140,8 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 			kind: SharedToolKind,
 			config: ToolConfigBlock,
 			usedByProject: boolean,
+			projectShared?: boolean,
+			storage?: SharedLocalTool['storage'],
 		): SharedLocalTool => {
 			const share = describeSharedToolAvailability(config);
 			return {
@@ -122,10 +149,21 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 				config,
 				shareable: share.shareable,
 				shareMessage: share.message,
-				sharedWithAll: preferences.isSharedWithAll(kind, config.id),
+				sharedWithAll:
+					kind !== 'storage' && preferences.isSharedWithAll(kind, config.id),
 				usedByProject,
+				...(projectShared !== undefined ? { projectShared } : {}),
+				...(storage ? { storage } : {}),
 			};
 		};
+
+		const storageConfig =
+			storageBinding?.enabled === true
+				? storages.configs.find(
+						(config) =>
+							config.id === storageBinding.providerId && config.enabled,
+					)
+				: undefined;
 
 		return uniqueTools([
 			...typesetters.configs
@@ -136,6 +174,22 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 			...lsps.configs
 				.filter((config) => config.enabled)
 				.map((config) => makeTool('lsp', config, usedLspIds.has(config.id))),
+			...(storageConfig && storageBinding
+				? [
+						makeTool(
+							'storage',
+							storageConfig,
+							true,
+							storageBinding.shareWithCollaborators === true,
+							{
+								storageProjectId: storageBinding.storageProjectId,
+								...(storageBinding.baseRevision
+									? { baseRevision: storageBinding.baseRevision }
+									: {}),
+							},
+						),
+					]
+				: []),
 		]);
 	}, [
 		doc?.documents,
@@ -144,6 +198,8 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 		typesetters.configs,
 		lsps.configs,
 		lsps.getConfigsForFile,
+		storages.configs,
+		storageBinding,
 		preferences.isSharedWithAll,
 	]);
 
@@ -162,15 +218,22 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 	}));
 
 	const localConfigs = useCallback(
-		(kind: SharedToolKind): ToolConfigBlock[] =>
-			kind === 'typesetter'
-				? [...typesetters.configs, ...typesetters.disabledConfigs]
-				: [...lsps.configs, ...lsps.disabledConfigs],
+		(kind: SharedToolKind): ToolConfigBlock[] => {
+			if (kind === 'typesetter') {
+				return [...typesetters.configs, ...typesetters.disabledConfigs];
+			}
+			if (kind === 'lsp') {
+				return [...lsps.configs, ...lsps.disabledConfigs];
+			}
+			return [...storages.configs, ...storages.disabledConfigs];
+		},
 		[
 			typesetters.configs,
 			typesetters.disabledConfigs,
 			lsps.configs,
 			lsps.disabledConfigs,
+			storages.configs,
+			storages.disabledConfigs,
 		],
 	);
 
@@ -178,19 +241,22 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 		(kind: SharedToolKind, config: ToolConfigBlock) => {
 			if (kind === 'typesetter') {
 				typesetters.addConfigs([config as TypesetterServerConfig]);
-			} else {
+			} else if (kind === 'lsp') {
 				lsps.addConfigs([config as LSPConfigBlock]);
+			} else {
+				storages.addConfigs([config as StorageConfigBlock]);
 			}
 		},
-		[typesetters.addConfigs, lsps.addConfigs],
+		[typesetters.addConfigs, lsps.addConfigs, storages.addConfigs],
 	);
 
 	const removeConfig = useCallback(
 		(kind: SharedToolKind, id: string) => {
 			if (kind === 'typesetter') typesetters.removeConfig(id);
-			else lsps.removeConfig(id);
+			else if (kind === 'lsp') lsps.removeConfig(id);
+			else storages.removeConfig(id);
 		},
-		[typesetters.removeConfig, lsps.removeConfig],
+		[typesetters.removeConfig, lsps.removeConfig, storages.removeConfig],
 	);
 
 	useEffect(() => {
@@ -204,6 +270,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 				tool.config,
 				owner,
 				preferences.getOrigin(tool.kind, tool.config.id),
+				tool.storage,
 			),
 		);
 		const current = awareness.getLocalState()?.[SHARED_TOOLS_AWARENESS_FIELD];
@@ -236,6 +303,35 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 		return () => awareness.off('change', update);
 	}, [provider?.awareness, user?.id]);
 
+	useEffect(() => {
+		if (
+			!provider ||
+			!user?.id ||
+			!currentProjectId ||
+			!storageBinding?.enabled ||
+			storageBinding.shareWithCollaborators !== true
+		) {
+			return;
+		}
+
+		return hostStorageProjectKeySharing(
+			provider,
+			storageBinding.storageProjectId,
+			() =>
+				storageSyncService.exportProjectKeyForSharing(
+					user.id,
+					currentProjectId,
+				),
+		);
+	}, [
+		provider,
+		user?.id,
+		currentProjectId,
+		storageBinding?.enabled,
+		storageBinding?.shareWithCollaborators,
+		storageBinding?.storageProjectId,
+	]);
+
 	const offers = useMemo<SharedToolOffer[]>(
 		() =>
 			observed.map((tool) => {
@@ -243,6 +339,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 					tool.kind,
 					tool.ownerId,
 					tool.toolId,
+					tool.storage?.storageProjectId,
 				);
 				const conflict = classifySharedToolConflict(
 					tool,
@@ -251,7 +348,11 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 				const decision = preferences.getDecision(identity);
 				const localId = decision?.localId ?? conflict.localId;
 
-				if (conflict.kind === 'same-id-same-config' && !decision) {
+				if (
+					tool.kind !== 'storage' &&
+					conflict.kind === 'same-id-same-config' &&
+					!decision
+				) {
 					return {
 						...tool,
 						identity,
@@ -273,32 +374,140 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 
 	const accept = useCallback(
 		(offer: SharedToolOffer) => {
-			const sameExisting = offer.conflict.kind === 'same-id-same-config';
-			if (!sameExisting) addConfig(offer.kind, offer.config);
-			preferences.recordAccepted(
-				offer.kind,
-				offer,
-				offer.toolId,
-				!sameExisting,
-			);
-			dismissToast(offer.identity);
+			if (offer.kind !== 'storage') {
+				const sameExisting = offer.conflict.kind === 'same-id-same-config';
+				if (!sameExisting) addConfig(offer.kind, offer.config);
+				preferences.recordAccepted(
+					offer.kind,
+					offer,
+					offer.toolId,
+					!sameExisting,
+				);
+				dismissToast(offer.identity);
+				return;
+			}
+
+			const attachment = offer.storage;
+			if (
+				!user?.id ||
+				!currentProjectId ||
+				!attachment ||
+				!provider ||
+				acceptingStorageRef.current.has(offer.identity)
+			) {
+				return;
+			}
+
+			acceptingStorageRef.current.add(offer.identity);
+			void (async () => {
+				let attached = false;
+				let imported = false;
+				try {
+					const projectKey = await requestStorageProjectKey(
+						provider,
+						attachment.storageProjectId,
+					);
+					storageSyncService.attachSharedProject(
+						user.id,
+						currentProjectId,
+						offer.toolId,
+						attachment.storageProjectId,
+						attachment.baseRevision,
+					);
+					attached = true;
+					await storageSyncService.storeSharedProjectKey(
+						user.id,
+						currentProjectId,
+						projectKey,
+					);
+
+					const sameExisting = offer.conflict.kind === 'same-id-same-config';
+					if (!sameExisting) {
+						addConfig(offer.kind, offer.config);
+						imported = true;
+					}
+					preferences.recordAccepted(
+						offer.kind,
+						offer,
+						offer.toolId,
+						!sameExisting,
+					);
+					setStorageBindingRevision((revision) => revision + 1);
+					dismissToast(offer.identity);
+				} catch (error) {
+					if (attached) {
+						storageSyncService.disconnectProject(user.id, currentProjectId);
+					}
+					if (imported) removeConfig('storage', offer.toolId);
+					document.dispatchEvent(
+						new CustomEvent('toast-notification', {
+							detail: {
+								type: 'error',
+								message:
+									error instanceof Error
+										? error.message
+										: 'Unable to receive shared storage key',
+							},
+						}),
+					);
+				} finally {
+					acceptingStorageRef.current.delete(offer.identity);
+				}
+			})();
 		},
-		[addConfig, preferences.recordAccepted],
+		[
+			addConfig,
+			removeConfig,
+			preferences.recordAccepted,
+			provider,
+			user?.id,
+			currentProjectId,
+		],
 	);
 
 	const ignore = useCallback(
 		(offer: SharedToolOffer) => {
 			const previous = preferences.getDecision(offer.identity);
 			if (
+				offer.kind === 'storage' &&
+				previous?.decision === 'accepted' &&
+				user?.id &&
+				currentProjectId
+			) {
+				const binding = storageSyncService.getProjectBinding(
+					user.id,
+					currentProjectId,
+				);
+				if (
+					binding &&
+					binding.providerId === previous.localId &&
+					(!offer.storage ||
+						binding.storageProjectId === offer.storage.storageProjectId)
+				) {
+					storageSyncService.disconnectProject(user.id, currentProjectId);
+					setStorageBindingRevision((revision) => revision + 1);
+				}
+			}
+			if (
 				previous?.decision === 'accepted' &&
 				previous.imported &&
 				previous.localId
 			) {
 				const origin = preferences.getOrigin(offer.kind, previous.localId);
+				const storageStillUsed =
+					offer.kind === 'storage' &&
+					user?.id &&
+					Object.values(storageSyncService.getProjectBindings(user.id)).some(
+						(binding) => binding.providerId === previous.localId,
+					);
 				if (
 					origin?.ownerId === offer.ownerId &&
-					origin.toolId === offer.toolId
+					origin.toolId === offer.toolId &&
+					!storageStillUsed
 				) {
+					if (offer.kind === 'storage') {
+						preferences.detachLocalTool('storage', previous.localId);
+					}
 					removeConfig(offer.kind, previous.localId);
 				}
 			}
@@ -308,8 +517,11 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 		[
 			preferences.getDecision,
 			preferences.getOrigin,
+			preferences.detachLocalTool,
 			preferences.recordIgnored,
 			removeConfig,
+			user?.id,
+			currentProjectId,
 		],
 	);
 
@@ -368,6 +580,25 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 		}
 	}, [offers, accept, ignore]);
 
+	const storageTool = tools.find((tool) => tool.kind === 'storage');
+	const storageShareAvailable = Boolean(storageBinding && storageTool);
+	const storageShareEnabled = storageBinding?.shareWithCollaborators === true;
+	const storageShareable = storageTool?.shareable === true;
+	const storageShareMessage = storageTool?.shareMessage;
+	const setStorageShareEnabled = useCallback(
+		(enabled: boolean) => {
+			if (!user?.id || !currentProjectId || !storageBinding) return;
+			if (enabled && !storageShareable) return;
+			storageSyncService.setShareWithCollaborators(
+				user.id,
+				currentProjectId,
+				enabled,
+			);
+			setStorageBindingRevision((revision) => revision + 1);
+		},
+		[user?.id, currentProjectId, storageBinding, storageShareable],
+	);
+
 	const value = useMemo<SharedToolsContextType>(
 		() => ({
 			offers,
@@ -381,6 +612,11 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 			projectShareEnabled,
 			setProjectShareEnabled: (enabled) =>
 				preferences.setShareProjectTools(projectKey, enabled),
+			storageShareAvailable,
+			storageShareEnabled,
+			storageShareable,
+			storageShareMessage,
+			setStorageShareEnabled,
 		}),
 		[
 			offers,
@@ -393,6 +629,11 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 			projectShareEnabled,
 			preferences.setShareProjectTools,
 			projectKey,
+			storageShareAvailable,
+			storageShareEnabled,
+			storageShareable,
+			storageShareMessage,
+			setStorageShareEnabled,
 		],
 	);
 

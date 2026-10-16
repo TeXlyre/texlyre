@@ -68,6 +68,7 @@ export const SharedToolPreferencesProvider: React.FC<
 
 	const setSharedWithAll = useCallback(
 		(kind: SharedToolKind, id: string, enabled: boolean) => {
+			if (kind === 'storage') return;
 			commit((current) => {
 				const key = localSharedToolKey(kind, id);
 				const shareWithAll = { ...current.shareWithAll };
@@ -103,6 +104,7 @@ export const SharedToolPreferencesProvider: React.FC<
 					kind,
 					advertisement.ownerId,
 					advertisement.toolId,
+					advertisement.storage?.storageProjectId,
 				);
 				const decisions = {
 					...current.decisions,
@@ -135,7 +137,7 @@ export const SharedToolPreferencesProvider: React.FC<
 				const origins = { ...current.origins };
 
 				if (previous?.imported && previous.localId) {
-					for (const kind of ['typesetter', 'lsp'] as const) {
+					for (const kind of ['typesetter', 'lsp', 'storage'] as const) {
 						const key = localSharedToolKey(kind, previous.localId);
 						const origin = origins[key];
 						if (
@@ -180,12 +182,26 @@ export const SharedToolPreferencesProvider: React.FC<
 						origin.ownerId,
 						origin.toolId,
 					);
-					const previous = decisions[identity];
-					if (previous) {
-						decisions[identity] = {
-							decision: 'ignored',
-							revision: previous.revision,
-						};
+					if (kind === 'storage') {
+						for (const [decisionKey, previous] of Object.entries(decisions)) {
+							if (
+								decisionKey.startsWith(`${identity}:`) &&
+								previous.decision === 'accepted'
+							) {
+								decisions[decisionKey] = {
+									decision: 'ignored',
+									revision: previous.revision,
+								};
+							}
+						}
+					} else {
+						const previous = decisions[identity];
+						if (previous) {
+							decisions[identity] = {
+								decision: 'ignored',
+								revision: previous.revision,
+							};
+						}
 					}
 				}
 
@@ -199,6 +215,7 @@ export const SharedToolPreferencesProvider: React.FC<
 		() => ({
 			preferences,
 			isSharedWithAll: (kind, id) =>
+				kind !== 'storage' &&
 				preferences.shareWithAll[localSharedToolKey(kind, id)] === true,
 			setSharedWithAll,
 			isShareProjectTools: (projectKey) =>
