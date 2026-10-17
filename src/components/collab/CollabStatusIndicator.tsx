@@ -245,6 +245,11 @@ const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 				sharedByMe={sharedTools.sharedByMe}
 				projectShareEnabled={sharedTools.projectShareEnabled}
 				onProjectShareChange={sharedTools.setProjectShareEnabled}
+				storageShareAvailable={sharedTools.storageShareAvailable}
+				storageShareEnabled={sharedTools.storageShareEnabled}
+				storageShareable={sharedTools.storageShareable}
+				storageShareMessage={sharedTools.storageShareMessage}
+				onStorageShareChange={sharedTools.setStorageShareEnabled}
 				onAccept={sharedTools.accept}
 				onIgnore={sharedTools.ignore}
 			/>

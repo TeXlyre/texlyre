@@ -1,6 +1,6 @@
 // src/utils/chelysWebauthn.ts
 import { WEBAUTHN_PRF_SALT, WEBAUTHN_RP_NAME, toHex } from '@chelys/protocol';
-import { toArrayBuffer } from './fileUtils';
+import { toArrayBuffer, toBase64Url } from './fileUtils';
 
 const TEMP_PRF_PREFIX = 'tempPrf:';
 
@@ -29,13 +29,6 @@ async function userHandle(username: string): Promise<ArrayBuffer> {
 		'SHA-256',
 		toArrayBuffer(new TextEncoder().encode(`chelys-user:${username}`)),
 	);
-}
-
-function toBase64Url(bytes: Uint8Array): string {
-	return btoa(String.fromCharCode(...bytes))
-		.replace(/\+/g, '-')
-		.replace(/\//g, '_')
-		.replace(/=+$/, '');
 }
 
 export async function signalUsernameChange(
