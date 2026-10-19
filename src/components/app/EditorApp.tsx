@@ -20,9 +20,14 @@ import { useTypst } from '../../hooks/useTypst';
 import { useCollab } from '../../hooks/useCollab';
 import { useGlobalKeyboard } from '../../hooks/useGlobalKeyboard';
 import { useDiskBackup } from '../../hooks/useDiskBackup';
+import { useChelys } from '../../hooks/useChelys';
 import { useOffline } from '../../hooks/useOffline';
 import { useSettings } from '../../hooks/useSettings';
-import { fileStoreService } from '../../services/FileStoreService';
+import {
+	fileStorageEventEmitter,
+	fileStoreService,
+} from '../../services/FileStoreService';
+import { storageSyncService } from '../../services/StorageSyncService';
 import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import { popoutViewerService } from '../../services/PopoutViewerService';
 import type { DocumentList } from '../../types/documents';
@@ -141,7 +146,10 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		triggerAutoCompile: triggerTypstAutoCompile,
 	} = useTypst();
 	const { isOfflineMode, hideOfflineBanner } = useOffline();
+	const { storageUnlocked } = useChelys();
 	const { getSetting } = useSettings();
+	const storageProjectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
+	const storageDocReadyRef = useRef(false);
 
 	useEffect(() => {
 		if (!provider?.awareness || !user) return;
@@ -169,6 +177,42 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			?.value as boolean) ?? false;
 
 	useGlobalKeyboard();
+
+	const queueStorageSync = useCallback(() => {
+		if (!user || isGuestUser(user) || !storageUnlocked) return;
+		storageSyncService.scheduleBoundProjectSync(user.id, storageProjectId);
+	}, [user, isGuestUser, storageUnlocked, storageProjectId]);
+
+	useEffect(() => {
+		storageDocReadyRef.current = false;
+	}, [storageProjectId]);
+
+	useEffect(() => {
+		if (!doc) return;
+		if (!storageDocReadyRef.current) {
+			storageDocReadyRef.current = true;
+			return;
+		}
+		queueStorageSync();
+	}, [doc, queueStorageSync]);
+
+	useEffect(
+		() =>
+			fileStorageEventEmitter.onChange(() => {
+				if (
+					storageDocReadyRef.current &&
+					fileStoreService.getCurrentProjectId() === storageProjectId
+				) {
+					queueStorageSync();
+				}
+			}),
+		[queueStorageSync, storageProjectId],
+	);
+
+	useEffect(() => {
+		window.addEventListener('online', queueStorageSync);
+		return () => window.removeEventListener('online', queueStorageSync);
+	}, [queueStorageSync]);
 
 	const updateContent = (docId: string, content: string) => {
 		changeDoc((d) => {

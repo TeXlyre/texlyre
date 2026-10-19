@@ -128,10 +128,15 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		Project[]
 	>([]);
 	const [showPrivacy, setShowPrivacy] = useState(false);
-	const [storageProjects, setStorageProjects] = useState<StorageDashboardProject[]>([]);
+	const [storageProjects, setStorageProjects] = useState<
+		StorageDashboardProject[]
+	>([]);
 	const [storageBusy, setStorageBusy] = useState<Set<string>>(new Set());
-	const [restoringStorageProjects, setRestoringStorageProjects] = useState<Set<string>>(new Set());
-	const [unavailableStorageProviders, setUnavailableStorageProviders] = useState<Set<string>>(new Set());
+	const [restoringStorageProjects, setRestoringStorageProjects] = useState<
+		Set<string>
+	>(new Set());
+	const [unavailableStorageProviders, setUnavailableStorageProviders] =
+		useState<Set<string>>(new Set());
 	const storageUnlockAttemptRef = useRef<string | null>(null);
 
 	const activeStorageConfigs = useMemo(
@@ -212,7 +217,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			} catch (error) {
 				moduleLog.warn('Failed to unlock storage for this session:', error);
 				setError(
-					error instanceof Error ? error.message : t('Failed to unlock storage'),
+					error instanceof Error
+						? error.message
+						: t('Failed to unlock storage'),
 				);
 			}
 		})();
@@ -250,7 +257,10 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					return await storageSyncService.reconcileProvider(user.id, config.id);
 				} catch (error) {
 					unavailable.add(config.id);
-					moduleLog.warn(`Storage provider ${config.id} is unavailable:`, error);
+					moduleLog.warn(
+						`Storage provider ${config.id} is unavailable:`,
+						error,
+					);
 					return [];
 				}
 			}),
@@ -331,13 +341,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				(!selectedType || project.type === selectedType) &&
 				(!selectedGroup || (project.group ?? project.type) === selectedGroup),
 		);
-	}, [
-		storageProjects,
-		searchQuery,
-		selectedTag,
-		selectedType,
-		selectedGroup,
-	]);
+	}, [storageProjects, searchQuery, selectedTag, selectedType, selectedGroup]);
 
 	const handleAccountDeleted = async () => {
 		setIsDeleteAccountModalOpen(false);
@@ -557,7 +561,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			await loadStorageState();
 		} catch (error) {
 			moduleLog.error('Storage sync failed:', error);
-			setError(error instanceof Error ? error.message : t('Storage sync failed'));
+			setError(
+				error instanceof Error ? error.message : t('Storage sync failed'),
+			);
 		} finally {
 			setStorageBusy((current) => {
 				const next = new Set(current);
@@ -590,7 +596,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		}
 	};
 
-	const handleRestoreStoredProject = async (stored: StorageDashboardProject) => {
+	const handleRestoreStoredProject = async (
+		stored: StorageDashboardProject,
+	) => {
 		if (!user) return;
 		setRestoringStorageProjects((current) =>
 			new Set(current).add(stored.storageProjectId),

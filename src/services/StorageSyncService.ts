@@ -1,6 +1,7 @@
 // src/services/StorageSyncService.ts
 import { nanoid } from 'nanoid';
 
+import { createNamedLogger } from '@/logging';
 import type { Project } from '../types/projects';
 import {
 	fromBase64Url,
@@ -52,6 +53,10 @@ import {
 	type FileConflict,
 } from './MergeResolutionService';
 
+const moduleLog = createNamedLogger('StorageSyncService');
+
+const AUTO_SYNC_DELAY = 2000;
+const AUTO_SYNC_RETRY_DELAY = 250;
 const CATALOGUE_PURPOSE = 'catalogue';
 const REVISION_PURPOSE = (revisionId: string): string =>
 	`revision-manifest:${revisionId}`;
@@ -84,6 +89,15 @@ interface LoadedCatalogue {
 	accountKey: CryptoKey;
 	envelope: StorageCatalogueEnvelope;
 	catalogue: StorageCatalogue;
+}
+
+interface StorageAutoSyncState {
+	userId: string;
+	projectId: string;
+	timer: ReturnType<typeof setTimeout> | null;
+	running: boolean;
+	dirty: boolean;
+	retryCount: number;
 }
 
 export interface StorageSyncServiceOptions {
@@ -191,6 +205,7 @@ export class StorageSyncService {
 	private readonly getWrappingKey: () => CryptoKey | null;
 	private readonly persistence: StringStorage;
 	private readonly projectSyncs = new Map<string, Promise<StorageSyncResult>>();
+	private readonly autoSyncs = new Map<string, StorageAutoSyncState>();
 
 	constructor(options: StorageSyncServiceOptions = {}) {
 		this.storageService = options.storageService ?? genericStorageService;
@@ -390,6 +405,80 @@ export class StorageSyncService {
 		const binding = this.getProjectBinding(userId, projectId);
 		if (!binding) throw new Error('Project is not attached to storage');
 		return this.syncProject(userId, projectId, binding.providerId);
+	}
+
+	scheduleBoundProjectSync(userId: string, projectId: string): void {
+		const binding = this.getProjectBinding(userId, projectId);
+		if (!binding?.enabled) return;
+
+		const key = `${userId}:${projectId}`;
+		let state = this.autoSyncs.get(key);
+		if (!state) {
+			state = {
+				userId,
+				projectId,
+				timer: null,
+				running: false,
+				dirty: false,
+				retryCount: 0,
+			};
+			this.autoSyncs.set(key, state);
+		}
+
+		state.dirty = true;
+		state.retryCount = 0;
+		if (state.timer) clearTimeout(state.timer);
+		state.timer = setTimeout(
+			() => void this.flushBoundProjectAutoSync(key),
+			AUTO_SYNC_DELAY,
+		);
+	}
+
+	private async flushBoundProjectAutoSync(key: string): Promise<void> {
+		const state = this.autoSyncs.get(key);
+		if (!state) return;
+		state.timer = null;
+
+		if (state.running) {
+			state.dirty = true;
+			return;
+		}
+
+		const binding = this.getProjectBinding(state.userId, state.projectId);
+		if (!binding?.enabled) {
+			this.autoSyncs.delete(key);
+			return;
+		}
+
+		state.running = true;
+		state.dirty = false;
+		let retryDelay = 0;
+		try {
+			await this.syncBoundProject(state.userId, state.projectId);
+			state.retryCount = 0;
+		} catch (error) {
+			if (
+				error instanceof StorageRemoteAheadError &&
+				error.remoteHead &&
+				state.retryCount < 1
+			) {
+				state.retryCount += 1;
+				state.dirty = true;
+				retryDelay = AUTO_SYNC_RETRY_DELAY;
+			} else {
+				moduleLog.warn('Automatic storage sync failed:', error);
+			}
+		} finally {
+			state.running = false;
+			if (state.dirty && !state.timer) {
+				state.timer = setTimeout(
+					() => void this.flushBoundProjectAutoSync(key),
+					retryDelay,
+				);
+			} else if (!state.dirty && !state.timer) {
+				this.autoSyncs.delete(key);
+			}
+		}
 	}
 
 	async reconcileProvider(
@@ -695,6 +784,9 @@ export class StorageSyncService {
 			...localSnapshot.keys(),
 			...Object.keys(remoteManifest.entries),
 		]);
+		const projectMetadataPath = this.unifiedService.getProjectMetadataPath(
+			project.id,
+		);
 
 		for (const path of [...paths].sort()) {
 			const baseHash = baseManifest?.entries[path]?.hash;
@@ -703,6 +795,7 @@ export class StorageSyncService {
 
 			if (localHash === remoteHash) continue;
 			if (localHash === baseHash) {
+				initialResolutions.set(path, { action: 'keep-remote' });
 				await this.setSnapshotFromManifest(
 					finalSnapshot,
 					path,
@@ -714,7 +807,11 @@ export class StorageSyncService {
 				);
 				continue;
 			}
-			if (remoteHash === baseHash) continue;
+			if (remoteHash === baseHash) {
+				initialResolutions.set(path, { action: 'keep-local' });
+				continue;
+			}
+			if (path === projectMetadataPath) continue;
 
 			const local = localSnapshot.get(path) ?? null;
 			const remote = await this.loadSnapshotEntry(
@@ -765,7 +862,7 @@ export class StorageSyncService {
 			const resolutions = await mergeResolutionService.resolveConflicts(
 				conflicts,
 				undefined,
-				{ initialResolutions, includeProjectMetadata: true },
+				{ initialResolutions },
 			);
 			if (!resolutions) throw new Error('Storage reconciliation cancelled');
 

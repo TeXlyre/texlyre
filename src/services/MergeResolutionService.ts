@@ -41,7 +41,6 @@ export interface ConflictResolutionRequest {
 
 export interface ResolveConflictOptions {
 	initialResolutions?: Map<string, ConflictResolution>;
-	includeProjectMetadata?: boolean;
 }
 
 type AutoMergeResult =
@@ -184,8 +183,7 @@ class MergeResolutionService {
 			(c) =>
 				!initialResolutions.has(c.path) &&
 				!c.path.endsWith(FILES_METADATA) &&
-				(options.includeProjectMetadata ||
-					!c.path.endsWith('/metadata.json')) &&
+				!c.path.endsWith('/metadata.json') &&
 				!c.path.endsWith('.yjs') &&
 				!linkedTxtConflicts.includes(c),
 		);
@@ -412,11 +410,14 @@ class MergeResolutionService {
 				const remoteArr = this.parseMetadataArray(conflict.remoteContent);
 				const remoteById = new Map(remoteArr.map((e) => [e.id ?? e.path, e]));
 
+				const findResolution = (entry: any) =>
+					relevantResolutions.find(([path]) =>
+						this.metadataEntryMatchesPath(pathPrefix, entry, path),
+					);
+
 				const merged = localArr.map((localEntry) => {
 					const key = localEntry.id ?? localEntry.path;
-					const resolution = relevantResolutions.find(
-						([p]) => p.endsWith(`/${localEntry.name}`) || p.includes(key),
-					);
+					const resolution = findResolution(localEntry);
 					if (!resolution) return localEntry;
 					return resolution[1].action === 'keep-remote'
 						? (remoteById.get(key) ?? localEntry)
@@ -426,9 +427,7 @@ class MergeResolutionService {
 				for (const [, remoteEntry] of remoteById) {
 					const key = remoteEntry.id ?? remoteEntry.path;
 					if (!merged.find((e) => (e.id ?? e.path) === key)) {
-						const resolution = relevantResolutions.find(([p]) =>
-							p.includes(key),
-						);
+						const resolution = findResolution(remoteEntry);
 						if (resolution?.[1].action !== 'keep-local') {
 							merged.push(remoteEntry);
 						}
@@ -469,6 +468,22 @@ class MergeResolutionService {
 				});
 			}
 		}
+	}
+
+	private metadataEntryMatchesPath(
+		pathPrefix: string,
+		entry: any,
+		path: string,
+	): boolean {
+		if (typeof entry.path === 'string') {
+			const relativePath = entry.path.startsWith('/')
+				? entry.path.slice(1)
+				: entry.path;
+			if (path === `${pathPrefix}${relativePath}`) return true;
+		}
+
+		const key = entry.id ?? entry.path;
+		return key !== undefined && path.includes(String(key));
 	}
 
 	private parseMetadataArray(source: string | ArrayBuffer): any[] {

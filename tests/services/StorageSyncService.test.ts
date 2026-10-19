@@ -4,7 +4,11 @@ import {
 	StorageSyncService,
 } from '../../src/services/StorageSyncService';
 import { StorageProtocolError } from '../../src/services/GenericStorageService';
-import { deriveStorageWrappingKey } from '../../src/utils/storageEncryptionUtils';
+import {
+	decryptStorageBytes,
+	deriveStorageWrappingKey,
+	importProjectStorageKey,
+} from '../../src/utils/storageEncryptionUtils';
 
 class MemoryStringStorage {
 	private readonly values = new Map<string, string>();
@@ -431,6 +435,7 @@ const makeReconciliationClient = (
 	let fileContent = copyContent(initialContent);
 	let lastModified = 100;
 	let applied = 0;
+	let localProject = { ...project };
 
 	const dataSerializer = {
 		async serializeProjectDocuments() {
@@ -481,7 +486,7 @@ const makeReconciliationClient = (
 		storageService: remote,
 		dataSerializer,
 		getProjectById: async (projectId) =>
-			projectId === project.id ? project : null,
+			projectId === project.id ? localProject : null,
 		updateProject: async () => {},
 		getWrappingKey: () => wrappingKey,
 		persistence,
@@ -493,6 +498,9 @@ const makeReconciliationClient = (
 			fileContent = copyContent(content);
 			lastModified += 1;
 		},
+		setProjectName(name: string) {
+			localProject = { ...localProject, name };
+		},
 		getContent() {
 			return copyContent(fileContent);
 		},
@@ -502,7 +510,196 @@ const makeReconciliationClient = (
 	};
 };
 
+
+const makeFileTreeClient = (
+	remote: MemoryStorageProvider,
+	wrappingKey: CryptoKey,
+) => {
+	const persistence = new MemoryStringStorage();
+	const files = new Map<string, string>([['/base.tex', 'base']]);
+	const deleted = new Map<string, { id: string; name: string; path: string }>();
+	let applied = 0;
+
+	const metadataFor = (path: string) => ({
+		id: `file-${path}`,
+		name: path.split('/').pop()!,
+		path,
+		type: 'file' as const,
+		createdAt: 50,
+		lastModified: 100,
+		size: files.get(path)?.length ?? 0,
+		isBinary: false,
+	});
+
+	const dataSerializer = {
+		async serializeProjectDocuments() {
+			return { documents: [], documentContents: new Map() };
+		},
+		async serializeProjectFiles() {
+			return {
+				files: [...files.keys()].map(metadataFor),
+				fileContents: new Map<string, ArrayBuffer | string>(files),
+				deletedFiles: [...deleted.values()].map((entry) => ({
+					...metadataFor(entry.path),
+					id: entry.id,
+					name: entry.name,
+				})),
+			};
+		},
+		async deserializeToIndexedDB(data: any) {
+			applied += 1;
+			const imported = data.projectData.get(project.id);
+			files.clear();
+			for (const file of imported.files) {
+				if (file.type !== 'file') continue;
+				const content = imported.fileContents.get(file.path);
+				if (typeof content === 'string') files.set(file.path, content);
+			}
+		},
+	};
+
+	const service = new StorageSyncService({
+		storageService: remote,
+		dataSerializer,
+		getProjectById: async (projectId) =>
+			projectId === project.id ? project : null,
+		updateProject: async () => {},
+		getWrappingKey: () => wrappingKey,
+		persistence,
+	});
+
+	return {
+		service,
+		addFile(path: string, content: string) {
+			deleted.delete(path);
+			files.set(path, content);
+		},
+		deleteFile(path: string) {
+			if (!files.has(path)) return;
+			files.delete(path);
+			deleted.set(path, {
+				id: `file-${path}`,
+				name: path.split('/').pop()!,
+				path,
+			});
+		},
+		getPaths() {
+			return [...files.keys()].sort();
+		},
+		getAppliedCount() {
+			return applied;
+		},
+	};
+};
+
+const readRemoteManifest = async (
+	remote: MemoryStorageProvider,
+	service: StorageSyncService,
+	revision: string,
+) => {
+	service.setShareWithCollaborators('user-a', project.id, true);
+	const rawKey = await service.exportProjectKeyForSharing('user-a', project.id);
+	const key = await importProjectStorageKey(rawKey);
+	const binding = service.getProjectBinding('user-a', project.id)!;
+	const encrypted = remote.revisions.get(`${binding.storageProjectId}/${revision}`)!;
+	const decrypted = await decryptStorageBytes(
+		key,
+		encrypted,
+		`revision-manifest:${revision}`,
+	);
+	return JSON.parse(new TextDecoder().decode(decrypted)) as {
+		entries: Record<string, unknown>;
+	};
+};
+
 describe('StorageSyncService reconciliation', () => {
+
+	it('merges independent file additions without opening the merge UI', async () => {
+		const remote = new MemoryStorageProvider();
+		const wrappingKey = await deriveStorageWrappingKey({
+			username: 'alice',
+			password: 'shared-account',
+			prfOutput: new Uint8Array(32).fill(13),
+		});
+		const writer = makeFileTreeClient(remote, wrappingKey);
+		const peer = makeFileTreeClient(remote, wrappingKey);
+
+		await writer.service.syncProject('user-a', project.id, 'garage');
+		await peer.service.syncProject('user-a', project.id, 'garage');
+		writer.addFile('/remote.tex', 'remote');
+		peer.addFile('/local.tex', 'local');
+		await writer.service.syncProject('user-a', project.id, 'garage');
+
+		let mergeRequests = 0;
+		const removeListener = (await import('../../src/services/MergeResolutionService'))
+			.mergeResolutionService.addListener((request) => {
+				mergeRequests += 1;
+				request.resolve(
+					new Map(
+						request.conflicts.map((conflict) => [
+							conflict.path,
+							{ action: 'keep-local' as const },
+						]),
+					),
+				);
+			});
+		try {
+			const result = await peer.service.syncProject(
+				'user-a',
+				project.id,
+				'garage',
+			);
+			expect(result.status).toBe('merged');
+		} finally {
+			removeListener();
+		}
+
+		expect(mergeRequests).toBe(0);
+		expect(peer.getPaths()).toEqual(['/base.tex', '/local.tex', '/remote.tex']);
+		expect(peer.getAppliedCount()).toBe(1);
+	});
+
+	it('commits file additions and deletions into the Garage revision manifest', async () => {
+		const remote = new MemoryStorageProvider();
+		const wrappingKey = await deriveStorageWrappingKey({
+			username: 'alice',
+			password: 'shared-account',
+			prfOutput: new Uint8Array(32).fill(14),
+		});
+		const client = makeFileTreeClient(remote, wrappingKey);
+
+		await client.service.syncProject('user-a', project.id, 'garage');
+		client.addFile('/added.tex', 'added');
+		const added = await client.service.syncProject(
+			'user-a',
+			project.id,
+			'garage',
+		);
+		const addedManifest = await readRemoteManifest(
+			remote,
+			client.service,
+			added.revision!,
+		);
+		expect(addedManifest.entries).toHaveProperty(
+			`projects/${project.id}/files/added.tex`,
+		);
+
+		client.deleteFile('/added.tex');
+		const removed = await client.service.syncProject(
+			'user-a',
+			project.id,
+			'garage',
+		);
+		const removedManifest = await readRemoteManifest(
+			remote,
+			client.service,
+			removed.revision!,
+		);
+		expect(removedManifest.entries).not.toHaveProperty(
+			`projects/${project.id}/files/added.tex`,
+		);
+	});
+
 	it('adopts a collaborator revision without downloading or reapplying edits already received locally', async () => {
 		const remote = new MemoryStorageProvider();
 		const wrappingKey = await deriveStorageWrappingKey({
@@ -579,15 +776,36 @@ describe('StorageSyncService reconciliation', () => {
 		await peer.service.syncProject('user-a', project.id, 'garage');
 		writer.setContent('ONE\nmiddle\nthree\n');
 		peer.setContent('one\nmiddle\nTHREE\n');
+		writer.setProjectName('Remote title');
+		peer.setProjectName('Local title');
 		await writer.service.syncProject('user-a', project.id, 'garage');
 		const remoteHeadBeforeMerge = remote.heads.values().next().value;
 
-		const result = await peer.service.syncProject(
-			'user-a',
-			project.id,
-			'garage',
-		);
+		let mergeRequests = 0;
+		const removeListener = (await import('../../src/services/MergeResolutionService'))
+			.mergeResolutionService.addListener((request) => {
+				mergeRequests += 1;
+				request.resolve(
+					new Map(
+						request.conflicts.map((conflict) => [
+							conflict.path,
+							{ action: 'keep-local' as const },
+						]),
+					),
+				);
+			});
+		let result;
+		try {
+			result = await peer.service.syncProject(
+				'user-a',
+				project.id,
+				'garage',
+			);
+		} finally {
+			removeListener();
+		}
 
+		expect(mergeRequests).toBe(0);
 		expect(result.status).toBe('merged');
 		expect(peer.getContent()).toBe('ONE\nmiddle\nTHREE\n');
 		expect(result.revision).not.toBe(remoteHeadBeforeMerge);
@@ -624,6 +842,9 @@ describe('StorageSyncService reconciliation', () => {
 
 		const removeListener = (await import('../../src/services/MergeResolutionService'))
 			.mergeResolutionService.addListener((request) => {
+				expect(request.conflicts.map((conflict) => conflict.path)).toEqual([
+					`projects/${project.id}/files/asset.bin`,
+				]);
 				request.resolve(
 					new Map(
 						request.conflicts.map((conflict) => [
@@ -732,6 +953,79 @@ describe('StorageSyncService dashboard lifecycle', () => {
 			enabled: true,
 		});
 		expect(remote.getObjectCount).toBeGreaterThan(0);
+	});
+});
+
+describe('StorageSyncService autosync queue', () => {
+	beforeEach(() => {
+		jest.useFakeTimers();
+	});
+
+	afterEach(() => {
+		jest.useRealTimers();
+		jest.restoreAllMocks();
+	});
+
+	it('debounces changes and preserves edits that arrive during an active sync', async () => {
+		const service = new StorageSyncService({
+			persistence: new MemoryStringStorage(),
+		});
+		service.attachProject('user-a', project.id, 'garage');
+
+		type SyncResult = {
+			status: 'synced';
+			revision: string;
+			uploadedObjects: number;
+		};
+		let finishFirst!: (result: SyncResult) => void;
+		const first = new Promise<SyncResult>(
+			(resolve) => {
+				finishFirst = resolve;
+			},
+		);
+		const sync = jest
+			.spyOn(service, 'syncBoundProject')
+			.mockImplementationOnce(() => first)
+			.mockResolvedValue({
+				status: 'synced',
+				revision: 'r2',
+				uploadedObjects: 1,
+			});
+
+		service.scheduleBoundProjectSync('user-a', project.id);
+		service.scheduleBoundProjectSync('user-a', project.id);
+		await jest.advanceTimersByTimeAsync(2000);
+		expect(sync).toHaveBeenCalledTimes(1);
+
+		service.scheduleBoundProjectSync('user-a', project.id);
+		await jest.advanceTimersByTimeAsync(2000);
+		expect(sync).toHaveBeenCalledTimes(1);
+
+		finishFirst({ status: 'synced', revision: 'r1', uploadedObjects: 1 });
+		await Promise.resolve();
+		await jest.runOnlyPendingTimersAsync();
+		expect(sync).toHaveBeenCalledTimes(2);
+	});
+
+	it('retries one CAS race so a live collaborator can adopt the new HEAD', async () => {
+		const service = new StorageSyncService({
+			persistence: new MemoryStringStorage(),
+		});
+		service.attachProject('user-a', project.id, 'garage');
+		const sync = jest
+			.spyOn(service, 'syncBoundProject')
+			.mockRejectedValueOnce(new StorageRemoteAheadError('remote-r2'))
+			.mockResolvedValue({
+				status: 'unchanged',
+				revision: 'remote-r2',
+				uploadedObjects: 0,
+			});
+
+		service.scheduleBoundProjectSync('user-a', project.id);
+		await jest.advanceTimersByTimeAsync(2000);
+		await Promise.resolve();
+		await jest.advanceTimersByTimeAsync(250);
+		expect(sync).toHaveBeenCalledTimes(2);
 	});
 });
 

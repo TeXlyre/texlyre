@@ -111,9 +111,7 @@ export const ChelysProvider: React.FC<ChelysProviderProps> = ({ children }) => {
 	// Readiness is user-scoped so a restored login cannot inherit the pre-auth
 	// `ready` state and prompt before its cached storage key has been restored.
 	const storageUnlockReady =
-		!user || isGuestUser(user)
-			? true
-			: storageUnlockReadyUserId === user.id;
+		!user || isGuestUser(user) ? true : storageUnlockReadyUserId === user.id;
 
 	useEffect(() => {
 		setAccountControlUser(

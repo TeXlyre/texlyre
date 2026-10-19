@@ -159,10 +159,7 @@ class ChelysService {
 		password: string,
 		username: string = user.username,
 	): Promise<void> {
-		if (
-			this.storageWrappingKey &&
-			this.storageWrappingKeyUserId === user.id
-		) {
+		if (this.storageWrappingKey && this.storageWrappingKeyUserId === user.id) {
 			return;
 		}
 		if (!(await authService.verifyPassword(user.id, password))) {
