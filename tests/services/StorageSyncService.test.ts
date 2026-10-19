@@ -1,3 +1,5 @@
+import { webcrypto } from 'node:crypto';
+
 import type { Project } from '../../src/types/projects';
 import {
 	StorageRemoteAheadError,
@@ -9,6 +11,21 @@ import {
 	deriveStorageWrappingKey,
 	importProjectStorageKey,
 } from '../../src/utils/storageEncryptionUtils';
+
+let originalSubtle: SubtleCrypto;
+let originalGetRandomValues: Crypto['getRandomValues'];
+
+beforeAll(() => {
+	originalSubtle = globalThis.crypto.subtle;
+	originalGetRandomValues = globalThis.crypto.getRandomValues;
+	(globalThis.crypto as { subtle: SubtleCrypto }).subtle = webcrypto.subtle;
+	globalThis.crypto.getRandomValues = webcrypto.getRandomValues.bind(webcrypto);
+});
+
+afterAll(() => {
+	(globalThis.crypto as { subtle: SubtleCrypto }).subtle = originalSubtle;
+	globalThis.crypto.getRandomValues = originalGetRandomValues;
+});
 
 class MemoryStringStorage {
 	private readonly values = new Map<string, string>();
@@ -680,9 +697,9 @@ describe('StorageSyncService reconciliation', () => {
 			client.service,
 			added.revision!,
 		);
-		expect(addedManifest.entries).toHaveProperty(
+		expect(addedManifest.entries).toHaveProperty([
 			`projects/${project.id}/files/added.tex`,
-		);
+		]);
 
 		client.deleteFile('/added.tex');
 		const removed = await client.service.syncProject(
@@ -695,9 +712,9 @@ describe('StorageSyncService reconciliation', () => {
 			client.service,
 			removed.revision!,
 		);
-		expect(removedManifest.entries).not.toHaveProperty(
+		expect(removedManifest.entries).not.toHaveProperty([
 			`projects/${project.id}/files/added.tex`,
-		);
+		]);
 	});
 
 	it('adopts a collaborator revision without downloading or reapplying edits already received locally', async () => {

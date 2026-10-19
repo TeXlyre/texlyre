@@ -106,20 +106,16 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 	const storages = useStorageConfig();
 	const preferences = useSharedToolPreferences();
 	const [observed, setObserved] = useState<ObservedSharedTool[]>([]);
-	const [storageBindingRevision, setStorageBindingRevision] = useState(0);
+	const [, setStorageBindingRevision] = useState(0);
 	const notifiedRef = useRef(new Set<string>());
 	const acceptingStorageRef = useRef(new Set<string>());
 	const projectKey = projectSharingKey(docUrl);
 	const currentProjectId = projectKey.startsWith('yjs:')
 		? projectKey.slice(4)
 		: projectKey;
-	const storageBinding = useMemo(
-		() =>
-			user?.id
-				? storageSyncService.getProjectBinding(user.id, currentProjectId)
-				: null,
-		[user?.id, currentProjectId, storageBindingRevision],
-	);
+	const storageBinding = user?.id
+		? storageSyncService.getProjectBinding(user.id, currentProjectId)
+		: null;
 
 	const tools = useMemo(() => {
 		const projectType = doc?.projectMetadata?.type ?? 'latex';

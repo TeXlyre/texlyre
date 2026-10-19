@@ -100,6 +100,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const hasDoc = !!doc;
 
 	const { user, updateProject, getProjectById, isGuestUser } = useAuth();
+	const isGuest = isGuestUser(user);
+	const userId = user?.id;
 	const {
 		status,
 		activities,
@@ -149,7 +151,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const { storageUnlocked } = useChelys();
 	const { getSetting } = useSettings();
 	const storageProjectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
-	const storageDocReadyRef = useRef(false);
+	const storageReadyProjectRef = useRef<string | null>(null);
 
 	useEffect(() => {
 		if (!provider?.awareness || !user) return;
@@ -179,28 +181,24 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	useGlobalKeyboard();
 
 	const queueStorageSync = useCallback(() => {
-		if (!user || isGuestUser(user) || !storageUnlocked) return;
-		storageSyncService.scheduleBoundProjectSync(user.id, storageProjectId);
-	}, [user, isGuestUser, storageUnlocked, storageProjectId]);
-
-	useEffect(() => {
-		storageDocReadyRef.current = false;
-	}, [storageProjectId]);
+		if (!userId || isGuest || !storageUnlocked) return;
+		storageSyncService.scheduleBoundProjectSync(userId, storageProjectId);
+	}, [userId, isGuest, storageUnlocked, storageProjectId]);
 
 	useEffect(() => {
 		if (!doc) return;
-		if (!storageDocReadyRef.current) {
-			storageDocReadyRef.current = true;
+		if (storageReadyProjectRef.current !== storageProjectId) {
+			storageReadyProjectRef.current = storageProjectId;
 			return;
 		}
 		queueStorageSync();
-	}, [doc, queueStorageSync]);
+	}, [doc, queueStorageSync, storageProjectId]);
 
 	useEffect(
 		() =>
 			fileStorageEventEmitter.onChange(() => {
 				if (
-					storageDocReadyRef.current &&
+					storageReadyProjectRef.current === storageProjectId &&
 					fileStoreService.getCurrentProjectId() === storageProjectId
 				) {
 					queueStorageSync();
@@ -713,7 +711,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			{isOfflineMode && !hideOfflineBanner && <OfflineBanner />}
 			<ServiceStatusBanner />
 			<QuotaBanner />
-			{isGuestUser(user) && (
+			{isGuest && (
 				<GuestUpgradeBanner
 					onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)}
 				/>
@@ -773,7 +771,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						onOpenShareModal={() => setShowShareModal(true)}
 					/>
 
-					{!isGuestUser(user) && (
+					{!isGuest && (
 						<BackupStatusIndicator
 							className='header-backup-indicator'
 							currentProjectId={sessionStorage.getItem('currentProjectId')}
@@ -797,7 +795,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						onOpenExport={() => setShowAccountExportModal(true)}
 						onOpenDeleteAccount={() => setIsDeleteAccountModalOpen(true)}
 						onOpenUpgrade={() => setShowGuestUpgradeModal(true)}
-						isGuest={isGuestUser(user)}
+						isGuest={isGuest}
 					/>
 				</div>
 			</header>
@@ -888,7 +886,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				shareUrl={shareUrl}
 			/>
 
-			{!isGuestUser(user) && (
+			{!isGuest && (
 				<>
 					<ProfileSettingsModal
 						isOpen={showProfileModal}
@@ -909,14 +907,14 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					/>
 				</>
 			)}
-			{isGuestUser(user) && (
+			{isGuest && (
 				<GuestUpgradeModal
 					isOpen={showGuestUpgradeModal}
 					onClose={() => setShowGuestUpgradeModal(false)}
 					onUpgradeSuccess={handleGuestUpgradeSuccess}
 				/>
 			)}
-			{!isGuestUser(user) && (
+			{!isGuest && (
 				<BackupModal
 					isOpen={showAutoBackupModal}
 					onClose={() => setShowAutoBackupModal(false)}
