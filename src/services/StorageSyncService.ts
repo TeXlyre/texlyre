@@ -481,6 +481,47 @@ export class StorageSyncService {
 		}
 	}
 
+	async reconcileProjectBinding(
+		userId: string,
+		projectId: string,
+	): Promise<StorageDashboardProject | null> {
+		const binding = this.getProjectBinding(userId, projectId);
+		const project = await this.getProjectById(projectId);
+		if (!binding || !project || project.ownerId !== userId) return null;
+
+		let status: StorageDashboardProject['status'];
+		if (!binding.enabled) {
+			status = 'unavailable';
+		} else {
+			const head = await this.storageService.getHead(
+				binding.providerId,
+				binding.storageProjectId,
+			);
+			if (!head) status = 'local-only';
+			else if (binding.baseRevision === head) status = 'synced';
+			else status = 'updates-available';
+		}
+
+		return {
+			providerId: binding.providerId,
+			storageProjectId: binding.storageProjectId,
+			localProjectId: project.id,
+			name: project.name,
+			description: project.description,
+			type: project.type,
+			group: project.group,
+			compilerId: project.compilerId,
+			createdAt: project.createdAt,
+			updatedAt: project.updatedAt,
+			tags: project.tags,
+			isFavorite: project.isFavorite,
+			docUrl: project.docUrl,
+			status,
+			lastSync: binding.lastSync,
+			remoteOnly: false,
+		};
+	}
+
 	async reconcileProvider(
 		userId: string,
 		providerId: string,
@@ -811,6 +852,9 @@ export class StorageSyncService {
 				initialResolutions.set(path, { action: 'keep-local' });
 				continue;
 			}
+
+			// Project metadata follows the same non-interactive behavior as backups.
+			// If both sides changed it, keep the local metadata and reconcile files/docs.
 			if (path === projectMetadataPath) continue;
 
 			const local = localSnapshot.get(path) ?? null;

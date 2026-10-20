@@ -2,6 +2,7 @@ import { webcrypto } from 'node:crypto';
 
 import {
 	decryptStorageBytes,
+	derivePasswordStorageWrappingKey,
 	deriveStorageWrappingKey,
 	exportStorageWrappingKey,
 	importStorageWrappingKey,
@@ -52,6 +53,38 @@ describe('storageEncryptionUtils', () => {
 		const decrypted = await decryptStorageBytes(recovered, encrypted, 'catalogue');
 
 		expect(decoder.decode(decrypted)).toBe('account catalogue');
+	});
+
+	it('derives normal-login storage wrapping without WebAuthn PRF', async () => {
+		const accountKey = await generateAccountStorageKey();
+		const passwordWrappingKey = await derivePasswordStorageWrappingKey(
+			credentials.username,
+			credentials.password,
+		);
+		const envelope = await wrapAccountStorageKey(
+			accountKey,
+			passwordWrappingKey,
+		);
+		const recovered = await unwrapAccountStorageKey(
+			envelope,
+			await derivePasswordStorageWrappingKey(
+				credentials.username,
+				credentials.password,
+			),
+		);
+		const legacyPrfWrappingKey = await deriveStorageWrappingKey(credentials);
+
+		const encrypted = await encryptStorageBytes(
+			recovered,
+			encoder.encode('normal-login storage'),
+			'catalogue',
+		);
+		expect(
+			decoder.decode(await decryptStorageBytes(accountKey, encrypted, 'catalogue')),
+		).toBe('normal-login storage');
+		await expect(
+			unwrapAccountStorageKey(envelope, legacyPrfWrappingKey),
+		).rejects.toBeDefined();
 	});
 
 	it('rejects wrong credentials and authenticated ciphertext tampering', async () => {

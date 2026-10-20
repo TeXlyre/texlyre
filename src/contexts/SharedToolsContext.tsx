@@ -10,10 +10,13 @@ import {
 	type ReactNode,
 } from 'react';
 
+import { t } from '@/i18n';
 import { useAuth } from '../hooks/useAuth';
+import { useChelys } from '../hooks/useChelys';
 import { useCollab } from '../hooks/useCollab';
 import { useLSPConfig } from '../hooks/useLSPConfig';
 import { useSharedToolPreferences } from '../hooks/useSharedToolPreferences';
+import { useSecrets } from '../hooks/useSecrets';
 import { useStorageConfig } from '../hooks/useStorageConfig';
 import { useTypesetterConfig } from '../hooks/useTypesetterConfig';
 import type { TypesetterServerConfig } from '../services/GenericTypesetterService';
@@ -100,6 +103,8 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 	docUrl,
 }) => {
 	const { user } = useAuth();
+	const { storageUnlocked, unlockStorage } = useChelys();
+	const { promptForPassword } = useSecrets();
 	const { data: doc, provider } = useCollab<DocumentList>();
 	const typesetters = useTypesetterConfig();
 	const lsps = useLSPConfig();
@@ -399,6 +404,14 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 				let attached = false;
 				let imported = false;
 				try {
+					if (!storageUnlocked) {
+						const password = await promptForPassword(
+							t('Enter your TeXlyre password to unlock encrypted storage:'),
+						);
+						if (!password) return;
+						await unlockStorage(password);
+					}
+
 					const projectKey = await requestStorageProjectKey(
 						provider,
 						attachment.storageProjectId,
@@ -458,6 +471,9 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 			provider,
 			user?.id,
 			currentProjectId,
+			storageUnlocked,
+			promptForPassword,
+			unlockStorage,
 		],
 	);
 

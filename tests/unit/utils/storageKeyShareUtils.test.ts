@@ -2,6 +2,7 @@ import type {
 	DataChannelLike,
 	PeerConnectionLike,
 	SimplePeer,
+	WebrtcConn,
 } from '../../../src/chelys/peer/TransportChannel';
 import {
 	hostStorageProjectKeySharing,
@@ -63,47 +64,100 @@ class LinkedPeerConnection implements PeerConnectionLike {
 	}
 }
 
-const providerPair = () => {
+class TestPeer implements SimplePeer {
+	connected = false;
+	readonly _pc: LinkedPeerConnection;
+	private readonly handlers = new Map<'connect' | 'close', Set<() => void>>();
+
+	constructor(connection: LinkedPeerConnection) {
+		this._pc = connection;
+	}
+
+	_needsNegotiation(): void {}
+
+	on(event: 'connect' | 'close', handler: () => void): void {
+		const handlers = this.handlers.get(event) ?? new Set();
+		handlers.add(handler);
+		this.handlers.set(event, handlers);
+	}
+
+	off(event: 'connect' | 'close', handler: () => void): void {
+		this.handlers.get(event)?.delete(handler);
+	}
+
+	emit(event: 'connect' | 'close'): void {
+		for (const handler of this.handlers.get(event) ?? []) handler();
+	}
+}
+
+class TestProvider {
+	readonly room = {
+		peerId: '',
+		webrtcConns: new Map<string, WebrtcConn>(),
+	};
+	private readonly handlers = new Map<'peers' | 'status', Set<() => void>>();
+
+	constructor(peerId: string) {
+		this.room.peerId = peerId;
+	}
+
+	on(event: 'peers' | 'status', handler: () => void): void {
+		const handlers = this.handlers.get(event) ?? new Set();
+		handlers.add(handler);
+		this.handlers.set(event, handlers);
+	}
+
+	off(event: 'peers' | 'status', handler: () => void): void {
+		this.handlers.get(event)?.delete(handler);
+	}
+
+	emit(event: 'peers' | 'status'): void {
+		for (const handler of this.handlers.get(event) ?? []) handler();
+	}
+}
+
+const providerPair = (connected = true) => {
 	const leftPc = new LinkedPeerConnection();
 	const rightPc = new LinkedPeerConnection();
 	leftPc.remote = rightPc;
 	rightPc.remote = leftPc;
 
-	const leftPeer: SimplePeer = {
-		connected: true,
-		_pc: leftPc,
-		_needsNegotiation() {},
+	const leftPeer = new TestPeer(leftPc);
+	const rightPeer = new TestPeer(rightPc);
+	const left = new TestProvider('left');
+	const right = new TestProvider('right');
+	const leftConn: WebrtcConn = {
+		peer: leftPeer,
+		connected: false,
+		remotePeerId: 'right',
 	};
-	const rightPeer: SimplePeer = {
-		connected: true,
-		_pc: rightPc,
-		_needsNegotiation() {},
+	const rightConn: WebrtcConn = {
+		peer: rightPeer,
+		connected: false,
+		remotePeerId: 'left',
 	};
 
-	return {
-		left: {
-			room: {
-				peerId: 'left',
-				webrtcConns: new Map([
-					[
-						'right',
-						{ peer: leftPeer, connected: true, remotePeerId: 'right' },
-					],
-				]),
-			},
-		},
-		right: {
-			room: {
-				peerId: 'right',
-				webrtcConns: new Map([
-					[
-						'left',
-						{ peer: rightPeer, connected: true, remotePeerId: 'left' },
-					],
-				]),
-			},
-		},
+	const attach = (): void => {
+		left.room.webrtcConns.set('right', leftConn);
+		right.room.webrtcConns.set('left', rightConn);
+		left.emit('peers');
+		right.emit('peers');
 	};
+	const connect = (): void => {
+		leftConn.connected = true;
+		rightConn.connected = true;
+		leftPeer.connected = true;
+		rightPeer.connected = true;
+		leftPeer.emit('connect');
+		rightPeer.emit('connect');
+	};
+
+	if (connected) {
+		attach();
+		connect();
+	}
+
+	return { left, right, attach, connect };
 };
 
 describe('storage project key sharing', () => {
@@ -115,6 +169,24 @@ describe('storage project key sharing', () => {
 			'opaque-project-a',
 			async () => expected,
 		);
+
+		await expect(
+			requestStorageProjectKey(left, 'opaque-project-a', 1_000),
+		).resolves.toEqual(expected);
+		stop();
+	});
+
+	it('starts hosting when y-webrtc announces a peer before simple-peer connects', async () => {
+		const { left, right, attach, connect } = providerPair(false);
+		const expected = new Uint8Array(32).fill(7);
+		const stop = hostStorageProjectKeySharing(
+			right,
+			'opaque-project-a',
+			async () => expected,
+		);
+
+		attach();
+		connect();
 
 		await expect(
 			requestStorageProjectKey(left, 'opaque-project-a', 1_000),

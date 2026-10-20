@@ -14,6 +14,7 @@ import { useStorageConfig } from '../../hooks/useStorageConfig';
 import { useSharedToolPreferences } from '../../hooks/useSharedToolPreferences';
 import { useChelys } from '../../hooks/useChelys';
 import { useSecrets } from '../../hooks/useSecrets';
+import { useSettings } from '../../hooks/useSettings';
 import type { Project, ProjectType, ProjectGroup } from '../../types/projects';
 import type { StorageDashboardProject } from '../../types/storage';
 import {
@@ -82,6 +83,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const sharedToolPreferences = useSharedToolPreferences();
 	const { storageUnlocked, storageUnlockReady, unlockStorage } = useChelys();
 	const { promptForPassword } = useSecrets();
+	const { getSetting } = useSettings();
 	const {
 		discoveredProjects,
 		showDiscoveryModal,
@@ -150,6 +152,20 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			),
 		[activeStorageConfigs, sharedToolPreferences.getOrigin],
 	);
+	const sharedStorageConfigIds = useMemo(
+		() =>
+			new Set(
+				activeStorageConfigs
+					.filter((config) =>
+						sharedToolPreferences.getOrigin('storage', config.id),
+					)
+					.map((config) => config.id),
+			),
+		[activeStorageConfigs, sharedToolPreferences.getOrigin],
+	);
+	const syncStorageBeforeOpen =
+		(getSetting('storage-sync-before-open')?.value as boolean | undefined) ??
+		true;
 
 	const loadProjects = useCallback(async () => {
 		try {
@@ -234,7 +250,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	]);
 
 	const loadStorageState = useCallback(async () => {
-		if (!user || isGuestUser(user) || accountStorageConfigs.length === 0) {
+		if (!user || isGuestUser(user) || activeStorageConfigs.length === 0) {
 			setStorageProjects([]);
 			setUnavailableStorageProviders(new Set());
 			return;
@@ -245,7 +261,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		if (!storageUnlocked) {
 			setStorageProjects([]);
 			setUnavailableStorageProviders(
-				new Set(accountStorageConfigs.map((config) => config.id)),
+				new Set(activeStorageConfigs.map((config) => config.id)),
 			);
 			return;
 		}
@@ -265,12 +281,41 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				}
 			}),
 		);
+
+		const sharedBindings = Object.entries(
+			storageSyncService.getProjectBindings(user.id),
+		).filter(([, binding]) => sharedStorageConfigIds.has(binding.providerId));
+		const shared = await Promise.all(
+			sharedBindings.map(async ([projectId, binding]) => {
+				try {
+					return await storageSyncService.reconcileProjectBinding(
+						user.id,
+						projectId,
+					);
+				} catch (error) {
+					unavailable.add(binding.providerId);
+					moduleLog.warn(
+						`Shared storage provider ${binding.providerId} is unavailable:`,
+						error,
+					);
+					return null;
+				}
+			}),
+		);
+
 		setUnavailableStorageProviders(unavailable);
-		setStorageProjects(reconciled.flat());
+		setStorageProjects([
+			...reconciled.flat(),
+			...shared.filter(
+				(entry): entry is StorageDashboardProject => entry !== null,
+			),
+		]);
 	}, [
 		user,
 		isGuestUser,
+		activeStorageConfigs,
 		accountStorageConfigs,
+		sharedStorageConfigIds,
 		storageUnlockReady,
 		storageUnlocked,
 	]);
@@ -311,7 +356,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						? 'syncing'
 						: unavailableStorageProviders.has(providerId) || !storageUnlocked
 							? 'unavailable'
-							: 'error'
+							: sharedStorageConfigIds.has(providerId)
+								? 'syncing'
+								: 'error'
 					: 'local-only',
 				lastSync: binding?.lastSync,
 				remoteOnly: false,
@@ -323,6 +370,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		projects,
 		user,
 		accountStorageConfigs,
+		sharedStorageConfigIds,
 		unavailableStorageProviders,
 		storageUnlockReady,
 		storageUnlocked,
@@ -574,7 +622,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	};
 
 	const prepareStoredProject = async (project: Project): Promise<Project> => {
-		if (!user) return project;
+		if (!user || !syncStorageBeforeOpen) return project;
 		const binding = storageSyncService.getProjectBinding(user.id, project.id);
 		if (!binding?.enabled) return project;
 

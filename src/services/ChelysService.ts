@@ -17,6 +17,7 @@ import {
 } from '../utils/chelysWebauthn';
 import { validatePassword, validateUsername } from '../utils/authUtils';
 import {
+	derivePasswordStorageWrappingKey,
 	deriveStorageWrappingKey,
 	exportStorageWrappingKey,
 	importStorageWrappingKey,
@@ -30,6 +31,12 @@ const storageUnlockedKey = (userId: string): string =>
 	`texlyre-user-${userId}-storage-wrapping-key`;
 const legacyStorageSessionKey = (userId: string): string =>
 	`texlyre-user-${userId}-storage-wrapping-key-session`;
+const storageWrappingMethodKey = (userId: string): string =>
+	`texlyre-user-${userId}-storage-wrapping-method`;
+const storageAccountKey = (userId: string): string =>
+	`texlyre-user-${userId}-storage-account-key`;
+
+type StorageWrappingMethod = 'password-v1' | 'prf-v1';
 
 class ChelysService {
 	private storageWrappingKey: CryptoKey | null = null;
@@ -146,6 +153,9 @@ class ChelysService {
 		try {
 			this.storageWrappingKey = await importStorageWrappingKey(stored);
 			this.storageWrappingKeyUserId = userId;
+			if (!localStorage.getItem(storageWrappingMethodKey(userId))) {
+				localStorage.setItem(storageWrappingMethodKey(userId), 'prf-v1');
+			}
 			return true;
 		} catch {
 			localStorage.removeItem(storageUnlockedKey(userId));
@@ -165,11 +175,16 @@ class ChelysService {
 		if (!(await authService.verifyPassword(user.id, password))) {
 			throw new Error(t('Current password is incorrect'));
 		}
-		const prfOutput = await retrievePrfOutput();
-		await this.setStorageWrappingKey(
-			user.id,
-			await deriveStorageWrappingKey({ username, password, prfOutput }),
-		);
+		const method = this.getStorageWrappingMethod(user);
+		const wrappingKey =
+			method === 'prf-v1'
+				? await deriveStorageWrappingKey({
+						username,
+						password,
+						prfOutput: await retrievePrfOutput(),
+					})
+				: await derivePasswordStorageWrappingKey(username, password);
+		await this.setStorageWrappingKey(user.id, wrappingKey, method);
 	}
 
 	async reauthenticate(
@@ -178,12 +193,13 @@ class ChelysService {
 		username: string = user.username,
 	): Promise<void> {
 		const prfOutput = await retrievePrfOutput();
-		const { identity, storageWrappingKey } = await this.deriveSessionKeys(
-			username,
-			password,
-			prfOutput,
+		const { identity, storageWrappingKey, storageWrappingMethod } =
+			await this.deriveSessionKeys(user, username, password, prfOutput);
+		await this.setStorageWrappingKey(
+			user.id,
+			storageWrappingKey,
+			storageWrappingMethod,
 		);
-		await this.setStorageWrappingKey(user.id, storageWrappingKey);
 		void this.persistRoom(user, identity, username);
 		if (!user.isChelysEnrolled) {
 			await authService.updateUser({ ...user, isChelysEnrolled: true });
@@ -220,28 +236,44 @@ class ChelysService {
 		password: string,
 		prfOutput: Uint8Array,
 	): Promise<void> {
-		const { identity, storageWrappingKey } = await this.deriveSessionKeys(
-			user.username,
-			password,
-			prfOutput,
-		);
+		const { identity, storageWrappingKey, storageWrappingMethod } =
+			await this.deriveSessionKeys(user, user.username, password, prfOutput);
 		await this.persistRoom(user, identity, user.username);
-		await this.setStorageWrappingKey(user.id, storageWrappingKey);
+		await this.setStorageWrappingKey(
+			user.id,
+			storageWrappingKey,
+			storageWrappingMethod,
+		);
 		if (!user.isChelysEnrolled) {
 			await authService.updateUser({ ...user, isChelysEnrolled: true });
 		}
 	}
 
 	private async deriveSessionKeys(
+		user: User,
 		username: string,
 		password: string,
 		prfOutput: Uint8Array,
-	): Promise<{ identity: DerivedIdentity; storageWrappingKey: CryptoKey }> {
+	): Promise<{
+		identity: DerivedIdentity;
+		storageWrappingKey: CryptoKey;
+		storageWrappingMethod: StorageWrappingMethod;
+	}> {
+		const storageWrappingMethod = this.getStorageWrappingMethod(user);
 		const [identity, storageWrappingKey] = await Promise.all([
 			deriveIdentity({ username, password, prfOutput }),
-			deriveStorageWrappingKey({ username, password, prfOutput }),
+			storageWrappingMethod === 'prf-v1'
+				? deriveStorageWrappingKey({ username, password, prfOutput })
+				: derivePasswordStorageWrappingKey(username, password),
 		]);
-		return { identity, storageWrappingKey };
+		return { identity, storageWrappingKey, storageWrappingMethod };
+	}
+
+	private getStorageWrappingMethod(user: User): StorageWrappingMethod {
+		const stored = localStorage.getItem(storageWrappingMethodKey(user.id));
+		if (stored === 'password-v1' || stored === 'prf-v1') return stored;
+		if (localStorage.getItem(storageAccountKey(user.id))) return 'prf-v1';
+		return user.isChelysEnrolled ? 'prf-v1' : 'password-v1';
 	}
 
 	private async persistRoom(
@@ -263,6 +295,7 @@ class ChelysService {
 	private async setStorageWrappingKey(
 		userId: string,
 		key: CryptoKey,
+		method: StorageWrappingMethod,
 	): Promise<void> {
 		this.storageWrappingKey = key;
 		this.storageWrappingKeyUserId = userId;
@@ -270,6 +303,7 @@ class ChelysService {
 			storageUnlockedKey(userId),
 			await exportStorageWrappingKey(key),
 		);
+		localStorage.setItem(storageWrappingMethodKey(userId), method);
 		sessionStorage.removeItem(legacyStorageSessionKey(userId));
 	}
 

@@ -10,6 +10,7 @@ import {
 } from './fileUtils';
 
 const STORAGE_WRAP_DOMAIN = 'texlyre-storage-wrap-v1';
+const STORAGE_PASSWORD_WRAP_DOMAIN = 'texlyre-storage-wrap-password-v1';
 const STORAGE_ENCRYPTION_DOMAIN = 'texlyre-storage-aes-gcm-v1';
 const STORAGE_KEY_BITS = 256;
 const IV_BYTES = 12;
@@ -84,16 +85,10 @@ export interface StorageCredentialInputs {
 	prfOutput: Uint8Array;
 }
 
-export async function deriveStorageWrappingKey({
-	username,
-	password,
-	prfOutput,
-}: StorageCredentialInputs): Promise<CryptoKey> {
-	const input = frame(
-		encoder.encode(username),
-		encoder.encode(password),
-		prfOutput,
-	);
+const deriveWrappingKey = async (
+	input: Uint8Array,
+	domain: string,
+): Promise<CryptoKey> => {
 	const material = await crypto.subtle.importKey(
 		'raw',
 		toArrayBuffer(input),
@@ -106,12 +101,35 @@ export async function deriveStorageWrappingKey({
 			name: 'HKDF',
 			hash: 'SHA-256',
 			salt: toArrayBuffer(new Uint8Array(0)),
-			info: toArrayBuffer(encoder.encode(STORAGE_WRAP_DOMAIN)),
+			info: toArrayBuffer(encoder.encode(domain)),
 		},
 		material,
 		{ name: 'AES-GCM', length: STORAGE_KEY_BITS },
 		true,
 		['wrapKey', 'unwrapKey'],
+	);
+};
+
+// Legacy storage wrapping derivation used by existing Chelys-backed storage accounts.
+export function deriveStorageWrappingKey({
+	username,
+	password,
+	prfOutput,
+}: StorageCredentialInputs): Promise<CryptoKey> {
+	return deriveWrappingKey(
+		frame(encoder.encode(username), encoder.encode(password), prfOutput),
+		STORAGE_WRAP_DOMAIN,
+	);
+}
+
+// Normal TeXlyre storage derivation. Does not require Chelys/WebAuthn enrollment.
+export function derivePasswordStorageWrappingKey(
+	username: string,
+	password: string,
+): Promise<CryptoKey> {
+	return deriveWrappingKey(
+		frame(encoder.encode(username), encoder.encode(password)),
+		STORAGE_PASSWORD_WRAP_DOMAIN,
 	);
 }
 

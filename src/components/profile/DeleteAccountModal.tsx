@@ -117,6 +117,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 		localStorage.removeItem(userStorageAccountKey);
 		localStorage.removeItem(userSharedStorageKeys);
 		localStorage.removeItem(`texlyre-user-${userId}-storage-wrapping-key`);
+		localStorage.removeItem(`texlyre-user-${userId}-storage-wrapping-method`);
 		sessionStorage.removeItem(
 			`texlyre-user-${userId}-storage-wrapping-key-session`,
 		);

@@ -886,6 +886,38 @@ describe('StorageSyncService reconciliation', () => {
 });
 
 describe('StorageSyncService dashboard lifecycle', () => {
+	it('reports shared project bindings without requiring an account catalogue', async () => {
+		const remote = new MemoryStorageProvider();
+		remote.heads.set('shared-project', 'r1');
+		const service = new StorageSyncService({
+			storageService: remote,
+			getProjectById: async (id) => (id === project.id ? project : null),
+			persistence: new MemoryStringStorage(),
+		});
+		service.attachSharedProject(
+			'user-a',
+			project.id,
+			'shared-garage',
+			'shared-project',
+			'r1',
+		);
+
+		await expect(
+			service.reconcileProjectBinding('user-a', project.id),
+		).resolves.toMatchObject({
+			providerId: 'shared-garage',
+			storageProjectId: 'shared-project',
+			localProjectId: project.id,
+			status: 'synced',
+			remoteOnly: false,
+		});
+
+		remote.heads.set('shared-project', 'r2');
+		await expect(
+			service.reconcileProjectBinding('user-a', project.id),
+		).resolves.toMatchObject({ status: 'updates-available' });
+	});
+
 	it('reconciles a remote-only catalogue without downloading project bodies', async () => {
 		const { remote, service: writer } = await makeHarness();
 		await writer.syncProject('user-a', project.id, 'garage');

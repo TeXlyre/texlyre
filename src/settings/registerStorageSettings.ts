@@ -16,6 +16,7 @@ export function useRegisterStorageSettings() {
 			'storage-warning-threshold',
 			'storage-minimum-free',
 			'storage-hide-banner',
+			'storage-sync-before-open',
 		]);
 
 		registerSetting({
@@ -45,6 +46,19 @@ export function useRegisterStorageSettings() {
 			defaultValue: (batchedSettings['storage-minimum-free'] as number) ?? 200,
 			min: 50,
 			max: 5000,
+		});
+
+		registerSetting({
+			id: 'storage-sync-before-open',
+			category: t('Storage'),
+			subcategory: t('Remote Storage'),
+			type: 'checkbox',
+			label: t('Sync stored projects before opening'),
+			description: t(
+				'Check remote storage and reconcile changes before opening a stored project',
+			),
+			defaultValue:
+				(batchedSettings['storage-sync-before-open'] as boolean) ?? true,
 		});
 
 		registerSetting({
