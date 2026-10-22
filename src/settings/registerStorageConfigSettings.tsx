@@ -108,7 +108,7 @@ export function useRegisterStorageConfigSettings() {
 		registerSetting({
 			id: STORAGE_CONFIGS_SETTING,
 			category: t('External Tools'),
-			subcategory: t('Generic Storage'),
+			subcategory: t('Remote Storage'),
 			type: 'custom',
 			label: t('Storage Recipes'),
 			defaultValue: readStoredValue(STORAGE_CONFIGS_SETTING),
@@ -119,7 +119,7 @@ export function useRegisterStorageConfigSettings() {
 		registerSetting({
 			id: STORAGE_DISABLED_CONFIGS_SETTING,
 			category: t('External Tools'),
-			subcategory: t('Generic Storage'),
+			subcategory: t('Remote Storage'),
 			type: 'custom',
 			label: t('Disabled Storage Recipes'),
 			defaultValue: readStoredValue(STORAGE_DISABLED_CONFIGS_SETTING),
