@@ -103,6 +103,13 @@
 	margin-bottom: var(--space-sm);
 }
 
+.projects-grid [data-role="project-header-actions"] {
+	flex-shrink: 0;
+	max-width: 100%;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+}
+
 .ui-card[data-role="project"] > .ui-panel-title,
 .ui-card[data-role="project"] > .ui-toolbar .ui-panel-title {
 	min-width: 0;
@@ -260,4 +267,146 @@
 	.url-import-preview {
 		position: static;
 	}
+}
+
+.project-panel {
+	display: flex;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	flex: 1 1 auto;
+	flex-direction: column;
+	background-color: var(--pico-secondary-background);
+	color: var(--text-color);
+}
+
+.project-panel-controls {
+	flex: 0 0 auto;
+	border-bottom: 1px solid var(--accent-border);
+}
+
+.project-panel-stack {
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.project-panel-stack-panel {
+	background-color: var(--pico-secondary-background);
+}
+
+.project-panel-stack-panel > .panel-content {
+	min-height: 0;
+}
+
+.project-panel-outline-section {
+	display: flex;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	flex-direction: column;
+	background-color: var(--pico-secondary-background);
+	border-top: 1px solid var(--accent-border);
+	overflow: hidden;
+}
+
+.project-panel-outline-heading {
+	position: relative;
+	color: var(--text-color);
+}
+
+.project-panel-section-body {
+	display: flex;
+	min-height: 0;
+	flex: 1 1 auto;
+	flex-direction: column;
+	overflow-y: auto;
+	font-size: var(--ui-project-font-size, var(--font-size-small));
+}
+
+.project-panel-empty-row {
+	padding: var(--space-xs) var(--space-sm);
+	font-size: var(--ui-project-meta-font-size, var(--font-size-meta));
+}
+
+.project-panel-project-row,
+.project-panel-external-row {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	align-items: center;
+	gap: var(--space-xs);
+	margin: 0;
+	padding: 0.28rem var(--space-sm);
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	box-shadow: none;
+	color: var(--text-color);
+	font-size: inherit;
+	font-weight: 400;
+	text-align: left;
+	transition: background-color var(--transition-normal);
+}
+
+.project-panel-project-row {
+	cursor: pointer;
+}
+
+.project-panel-project-row:hover,
+.project-panel-project-row:focus-visible,
+.project-panel-external-row:hover,
+.project-panel-external-row:focus-within {
+	background-color: var(--pico-primary-focus);
+}
+
+.project-panel-project-icon {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	color: var(--pico-primary);
+}
+
+.project-panel-project-icon svg {
+	width: 14px;
+	height: 14px;
+}
+
+.project-panel-project-copy {
+	display: flex;
+	min-width: 0;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: 0.04rem;
+	line-height: 1.15;
+}
+
+.project-panel-project-copy strong {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: inherit;
+	font-weight: 500;
+}
+
+.project-panel-item-meta {
+	min-width: 0;
+	overflow: hidden;
+	color: var(--pico-secondary);
+	font-size: var(--ui-project-meta-font-size, var(--font-size-meta));
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.project-panel-external-row > .ui-list-actions {
+	flex: 0 0 auto;
+}
+
+.project-panel-external-row .ui-icon-button[data-variant="subtle"] {
+	margin: 0;
+}
+
+.project-panel-external-row .ui-icon-button[data-variant="subtle"] svg {
+	width: 13px;
+	height: 13px;
 }

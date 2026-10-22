@@ -109,7 +109,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 			case 'synced':
 				return t('Synced');
 			case 'syncing':
-				return t('Syncing');
+				return t('Syncing...');
 			case 'local-only':
 				return t('Local only');
 			case 'stored':
@@ -238,8 +238,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 							title={
 								storageState.lastSync
 									? t('Last storage sync: {date}', {
-											date: formatDate(storageState.lastSync),
-										})
+										date: formatDate(storageState.lastSync),
+									})
 									: storageStatusLabel(storageState.status)
 							}
 						>

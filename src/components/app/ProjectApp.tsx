@@ -47,7 +47,6 @@ import { NewProjectIcon } from '../common/Icons';
 import FooterLinks from '../common/FooterLinks';
 import ServiceStatusBanner from '../common/ServiceStatusBanner';
 import QuotaBanner from '../common/QuotaBanner';
-import StoredProjectList from '../project/StoredProjectList';
 import { storageSyncService } from '../../services/StorageSyncService';
 
 const moduleLog = createNamedLogger('ProjectApp');
@@ -829,7 +828,10 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onFilterByType={handleFilterByType}
 						onFilterByGroup={handleFilterByGroup}
 						onOpenProject={openProject}
+						onRestoreExternalProject={handleRestoreStoredProject}
 						projects={projects}
+						externalProjects={filteredStoredProjects}
+						restoringExternalProjects={restoringStorageProjects}
 						availableTags={availableTags}
 						availableTypes={availableTypes}
 						availableGroups={availableGroups}
@@ -857,28 +859,21 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 							<p>{t('Loading projects...')}</p>
 						</div>
 					) : (
-						<div className='ui-stack' data-height='full' data-gap='sm'>
-							<StoredProjectList
-								projects={filteredStoredProjects}
-								busyIds={restoringStorageProjects}
-								onRestore={handleRestoreStoredProject}
-							/>
-							<ProjectList
-								projects={filteredProjects}
-								onOpenProject={openProject}
-								onOpenProjectDefault={handleOpenDefault}
-								onEditProject={openEditModal}
-								onDeleteProject={openDeleteModal}
-								onToggleFavorite={handleToggleFavorite}
-								onToggleViewMode={handleToggleViewMode}
-								onExportSelected={handleExportSelected}
-								onDeleteSelected={handleDeleteSelected}
-								viewMode={viewMode}
-								storageStates={storageStates}
-								storageBusy={storageBusy}
-								onStorageSync={handleStorageSync}
-							/>
-						</div>
+						<ProjectList
+							projects={filteredProjects}
+							onOpenProject={openProject}
+							onOpenProjectDefault={handleOpenDefault}
+							onEditProject={openEditModal}
+							onDeleteProject={openDeleteModal}
+							onToggleFavorite={handleToggleFavorite}
+							onToggleViewMode={handleToggleViewMode}
+							onExportSelected={handleExportSelected}
+							onDeleteSelected={handleDeleteSelected}
+							viewMode={viewMode}
+							storageStates={storageStates}
+							storageBusy={storageBusy}
+							onStorageSync={handleStorageSync}
+						/>
 					)}
 				</div>
 				<ProjectExportModal
