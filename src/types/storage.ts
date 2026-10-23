@@ -89,6 +89,7 @@ export interface StorageCatalogueEnvelope {
 export type StorageProjectStatus =
 	| 'synced'
 	| 'syncing'
+	| 'checking'
 	| 'local-only'
 	| 'stored'
 	| 'updates-available'

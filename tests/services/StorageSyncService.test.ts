@@ -885,6 +885,37 @@ describe('StorageSyncService reconciliation', () => {
 	});
 });
 
+describe('StorageSyncService incoming revision checks', () => {
+	it('checks only HEAD and never downloads or reconciles data', async () => {
+		const { service, remote } = await makeHarness();
+		await expect(service.checkBoundProjectRevision('user-a', project.id))
+			.resolves.toBeNull();
+
+		const binding = service.attachProject('user-a', project.id, 'garage');
+		await expect(service.checkBoundProjectRevision('user-a', project.id))
+			.resolves.toEqual({ status: 'local-only', revision: null });
+
+		remote.heads.set(binding.storageProjectId, 'r1');
+		await expect(service.checkBoundProjectRevision('user-a', project.id))
+			.resolves.toEqual({ status: 'updates-available', revision: 'r1' });
+
+		service.attachSharedProject(
+			'user-a', project.id, 'garage', binding.storageProjectId, 'r1',
+		);
+		await expect(service.checkBoundProjectRevision('user-a', project.id))
+			.resolves.toEqual({ status: 'synced', revision: 'r1' });
+
+		expect(remote.getObjectCount).toBe(0);
+		expect(remote.getRevisionCount).toBe(0);
+		expect(remote.getCatalogueCount).toBe(0);
+		expect(remote.commitCount).toBe(0);
+
+		service.setProjectStorageEnabled('user-a', project.id, false);
+		await expect(service.checkBoundProjectRevision('user-a', project.id))
+			.resolves.toEqual({ status: 'unavailable', revision: null });
+	});
+});
+
 describe('StorageSyncService dashboard lifecycle', () => {
 	it('reports shared project bindings without requiring an account catalogue', async () => {
 		const remote = new MemoryStorageProvider();

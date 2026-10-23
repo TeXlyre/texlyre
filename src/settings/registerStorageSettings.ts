@@ -17,6 +17,9 @@ export function useRegisterStorageSettings() {
 			'storage-minimum-free',
 			'storage-hide-banner',
 			'storage-sync-before-open',
+			'storage-check-for-updates',
+			'storage-check-interval',
+			'storage-notifications',
 		]);
 
 		registerSetting({
@@ -59,6 +62,49 @@ export function useRegisterStorageSettings() {
 			),
 			defaultValue:
 				(batchedSettings['storage-sync-before-open'] as boolean) ?? true,
+		});
+
+		registerSetting({
+			id: 'storage-check-for-updates',
+			category: t('Storage'),
+			subcategory: t('Remote Storage'),
+			type: 'checkbox',
+			label: t('Check for remote storage updates periodically'),
+			description: t(
+				'Check for incoming revisions without changing local files',
+			),
+			defaultValue:
+				(batchedSettings['storage-check-for-updates'] as boolean) ?? false,
+		});
+
+		registerSetting({
+			id: 'storage-check-interval',
+			category: t('Storage'),
+			subcategory: t('Remote Storage'),
+			type: 'number',
+			label: t('Remote update check interval (seconds)'),
+			description: t('How often to check for incoming remote storage changes'),
+			defaultValue: (batchedSettings['storage-check-interval'] as number) ?? 60,
+			min: 10,
+			max: 3600,
+			dependsOn: { id: 'storage-check-for-updates', value: true, nest: true },
+			disabledReason: t('Requires: Periodic remote storage checks'),
+		});
+
+		registerSetting({
+			id: 'storage-notifications',
+			category: t('Storage'),
+			subcategory: t('Remote Storage'),
+			type: 'select',
+			label: t('Sync notifications'),
+			description: t('Choose which remote storage notifications to show'),
+			defaultValue:
+				(batchedSettings['storage-notifications'] as string) ?? 'all',
+			options: [
+				{ label: t('All notifications'), value: 'all' },
+				{ label: t('Errors only'), value: 'errors' },
+				{ label: t('Off'), value: 'off' },
+			],
 		});
 
 		registerSetting({

@@ -2,6 +2,7 @@
 import { nanoid } from 'nanoid';
 
 import { createNamedLogger } from '@/logging';
+import { t } from '@/i18n';
 import type { Project } from '../types/projects';
 import {
 	fromBase64Url,
@@ -47,6 +48,10 @@ import {
 	StorageProtocolError,
 } from './GenericStorageService';
 import { ProjectDataService } from './ProjectDataService';
+import {
+	notificationService,
+	shouldShowNotification,
+} from './NotificationService';
 import {
 	mergeResolutionService,
 	type ConflictResolution,
@@ -206,6 +211,7 @@ export class StorageSyncService {
 	private readonly persistence: StringStorage;
 	private readonly projectSyncs = new Map<string, Promise<StorageSyncResult>>();
 	private readonly autoSyncs = new Map<string, StorageAutoSyncState>();
+	private readonly autoSyncFailures = new Set<string>();
 
 	constructor(options: StorageSyncServiceOptions = {}) {
 		this.storageService = options.storageService ?? genericStorageService;
@@ -385,6 +391,7 @@ export class StorageSyncService {
 		if (!binding) return;
 		delete bindings[projectId];
 		this.writeBindings(userId, bindings);
+		this.autoSyncFailures.delete(`${userId}:${projectId}`);
 
 		const stillUsed = Object.values(bindings).some(
 			(candidate) =>
@@ -396,6 +403,48 @@ export class StorageSyncService {
 			delete keys[this.sharedProjectKeyId(binding)];
 			this.writeSharedProjectKeys(userId, keys);
 		}
+	}
+
+	/** A read-only HEAD check: never downloads or applies project content. */
+	async checkBoundProjectRevision(
+		userId: string,
+		projectId: string,
+	): Promise<{
+		status: 'synced' | 'local-only' | 'updates-available' | 'unavailable';
+		revision: string | null;
+	} | null> {
+		const binding = this.getProjectBinding(userId, projectId);
+		if (!binding) return null;
+		if (!binding.enabled) return { status: 'unavailable', revision: null };
+
+		const head = await this.storageService.getHead(
+			binding.providerId,
+			binding.storageProjectId,
+		);
+		// A concurrent sync may have advanced the binding while the HEAD request ran.
+		const latest = this.getProjectBinding(userId, projectId);
+		if (
+			!latest ||
+			latest.providerId !== binding.providerId ||
+			latest.storageProjectId !== binding.storageProjectId
+		)
+			return null;
+		if (!latest.enabled) return { status: 'unavailable', revision: head };
+		// Ignore a HEAD read started before a concurrent local commit.
+		if (
+			latest.baseRevision !== binding.baseRevision &&
+			head !== latest.baseRevision
+		) {
+			return null;
+		}
+		return {
+			status: !head
+				? 'local-only'
+				: latest.baseRevision === head
+					? 'synced'
+					: 'updates-available',
+			revision: head,
+		};
 	}
 
 	syncBoundProject(
@@ -456,6 +505,7 @@ export class StorageSyncService {
 		try {
 			await this.syncBoundProject(state.userId, state.projectId);
 			state.retryCount = 0;
+			this.autoSyncFailures.delete(key);
 		} catch (error) {
 			if (
 				error instanceof StorageRemoteAheadError &&
@@ -467,6 +517,14 @@ export class StorageSyncService {
 				retryDelay = AUTO_SYNC_RETRY_DELAY;
 			} else {
 				moduleLog.warn('Automatic storage sync failed:', error);
+				if (!this.autoSyncFailures.has(key)) {
+					this.autoSyncFailures.add(key);
+					if (shouldShowNotification('storage-notifications', 'error')) {
+						notificationService.showError(
+							t('Automatic remote storage sync failed'),
+						);
+					}
+				}
 			}
 		} finally {
 			state.running = false;
@@ -691,9 +749,23 @@ export class StorageSyncService {
 		const active = this.projectSyncs.get(key);
 		if (active) return active;
 
-		const sync = this.performSync(userId, projectId, providerId).finally(() => {
-			if (this.projectSyncs.get(key) === sync) this.projectSyncs.delete(key);
-		});
+		const sync = this.performSync(userId, projectId, providerId)
+			.then((result) => {
+				if (
+					typeof document !== 'undefined' &&
+					typeof CustomEvent !== 'undefined'
+				) {
+					document.dispatchEvent(
+						new CustomEvent('storage-project-synced', {
+							detail: { userId, projectId },
+						}),
+					);
+				}
+				return result;
+			})
+			.finally(() => {
+				if (this.projectSyncs.get(key) === sync) this.projectSyncs.delete(key);
+			});
 		this.projectSyncs.set(key, sync);
 		return sync;
 	}
