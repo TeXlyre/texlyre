@@ -352,12 +352,10 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				docUrl: project.docUrl,
 				status: binding
 					? !storageUnlockReady
-						? 'syncing'
+						? 'checking'
 						: unavailableStorageProviders.has(providerId) || !storageUnlocked
 							? 'unavailable'
-							: sharedStorageConfigIds.has(providerId)
-								? 'syncing'
-								: 'error'
+							: 'checking'
 					: 'local-only',
 				lastSync: binding?.lastSync,
 				remoteOnly: false,

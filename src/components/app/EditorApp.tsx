@@ -6,6 +6,7 @@ import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
 import { ChatProvider } from '../../contexts/ChatContext';
 import { CollabProvider } from '../../contexts/CollabContext';
+import { SharedToolsProvider } from '../../contexts/SharedToolsContext';
 import { FileSyncProvider } from '../../contexts/PeerFileSyncContext';
 import { FileTreeProvider } from '../../contexts/FileTreeContext';
 import { LaTeXProvider } from '../../contexts/LaTeXContext';
@@ -46,6 +47,7 @@ import OfflineBanner from '../common/OfflineBanner';
 import ToastContainer from '../common/ToastContainer';
 import TypesetterInfo from '../common/TypesetterInfo';
 import WorkspaceStatusIndicator from '../workspace/WorkspaceStatusIndicator';
+import RemoteStorageStatusIndicator from '../storage/RemoteStorageStatusIndicator';
 import FileDocumentController from '../editor/FileDocumentController';
 import LaTeXCompileButton from '../output/LaTeXCompileButton';
 import LaTeXExportButton from '../output/LaTeXExportButton';
@@ -826,6 +828,10 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					</div>
 
 					<WorkspaceStatusIndicator />
+					<RemoteStorageStatusIndicator
+						key={storageProjectId}
+						projectId={storageProjectId}
+					/>
 				</div>
 
 				<FooterLinks
@@ -964,7 +970,9 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 								<ExternalTypesetterProvider>
 									<SourceMapProvider>
 										<ContentFormatterProvider>
-											<EditorAppView {...props} />
+											<SharedToolsProvider docUrl={props.docUrl}>
+												<EditorAppView {...props} />
+											</SharedToolsProvider>
 										</ContentFormatterProvider>
 									</SourceMapProvider>
 								</ExternalTypesetterProvider>

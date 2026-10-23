@@ -209,7 +209,7 @@ const ProjectPanelSections: React.FC<ProjectPanelSectionsProps> = ({
 		>
 			<section className='project-panel-outline-section external'>
 				<ProjectSectionHeader
-					title={t('External Projects')}
+					title={t('Remote Projects')}
 					count={externalProjects.length}
 					collapsed={externalCollapsed}
 					onToggle={onToggleExternal}
@@ -218,7 +218,7 @@ const ProjectPanelSections: React.FC<ProjectPanelSectionsProps> = ({
 					<div className='project-panel-section-body'>
 						{externalProjects.length === 0 ? (
 							<div className='project-panel-empty-row ui-note'>
-								{t('No external projects')}
+								{t('No remote-only projects')}
 							</div>
 						) : (
 							<StoredProjectList
