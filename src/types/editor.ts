@@ -80,6 +80,7 @@ export interface EditorSettings {
 	fontSize: FontSize;
 	fontFamily: FontFamily;
 	showLineNumbers: boolean;
+	autoIndent: boolean;
 	syntaxHighlighting: boolean;
 	languageFeatures: LanguageFeatureSettings;
 	autoSaveEnabled: boolean;

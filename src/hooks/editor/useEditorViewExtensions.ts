@@ -8,6 +8,7 @@ import {
 import {
 	defaultKeymap,
 	history,
+	insertNewline,
 	historyKeymap,
 	indentWithTab,
 } from '@codemirror/commands';
@@ -78,6 +79,9 @@ export const useEditorViewExtensions = ({
 		const detectedByContent = detectFileType(fileName) === 'unknown';
 		const completionSources: CompletionSource[] = [];
 		const extensions: Extension[] = [
+			...(editorSettings.autoIndent && (isLatex || isTypst)
+				? [createListingsExtension(fileType)]
+				: []),
 			EditorView.theme({
 				'&': {
 					fontFamily: resolveFontFamily(editorSettings.fontFamily),
@@ -90,7 +94,7 @@ export const useEditorViewExtensions = ({
 			}),
 			EditorView.lineWrapping,
 			foldGutter(),
-			indentOnInput(),
+			...(editorSettings.autoIndent ? [indentOnInput()] : []),
 			bidiIsolates(),
 			bracketMatching(),
 			closeBrackets(),
@@ -107,6 +111,9 @@ export const useEditorViewExtensions = ({
 			}),
 			searchHighlightExtension,
 			keymap.of([
+				...(!editorSettings.autoIndent
+					? [{ key: 'Enter', run: insertNewline }]
+					: []),
 				indentWithTab,
 				...closeBracketsKeymap,
 				...defaultKeymap,
@@ -160,10 +167,6 @@ export const useEditorViewExtensions = ({
 					resolvedVariant ?? currentVariant,
 				),
 			);
-		}
-
-		if (isLatex || isTypst) {
-			extensions.push(createListingsExtension(fileType));
 		}
 
 		if (isLatex || isTypst || isBib) {
