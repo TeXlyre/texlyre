@@ -185,6 +185,56 @@ export class GenericStorageService extends ExternalServiceBase<StorageConfigBloc
 		});
 	}
 
+	registerOwner(
+		configId: string,
+		projectId: string,
+		token: string,
+	): Promise<void> {
+		if (!/^[a-f0-9]{64}$/.test(token))
+			throw new Error('Invalid project deletion key');
+		return this.enqueue(configId, async (connection) => {
+			await this.request(connection, 'registerOwner', { projectId, token });
+		});
+	}
+
+	deleteProject(
+		configId: string,
+		projectId: string,
+		deleteToken: string,
+	): Promise<void> {
+		if (!/^[a-f0-9]{64}$/.test(deleteToken)) {
+			throw new Error('Invalid project deletion key');
+		}
+		return this.enqueue(configId, async (connection) => {
+			const response = await this.request(connection, 'getDeleteChallenge');
+			const nonce = response.nonce;
+			if (typeof nonce !== 'string' || !/^[a-f0-9]{64}$/.test(nonce)) {
+				throw new Error('Invalid storage deletion challenge');
+			}
+			const rawToken = new Uint8Array(
+				deleteToken.match(/../g)!.map((part) => parseInt(part, 16)),
+			);
+			const key = await crypto.subtle.importKey(
+				'raw',
+				rawToken,
+				{ name: 'HMAC', hash: 'SHA-256' },
+				false,
+				['sign'],
+			);
+			const signature = new Uint8Array(
+				await crypto.subtle.sign(
+					'HMAC',
+					key,
+					new TextEncoder().encode(`${projectId}:${nonce}`),
+				),
+			);
+			const proof = Array.from(signature, (byte) =>
+				byte.toString(16).padStart(2, '0'),
+			).join('');
+			await this.request(connection, 'deleteProject', { projectId, proof });
+		});
+	}
+
 	disconnect(configId: string): void {
 		this.connecting.delete(configId);
 		this.operationQueues.delete(configId);

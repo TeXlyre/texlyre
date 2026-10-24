@@ -44,6 +44,7 @@ class MemoryStorageProvider {
 	readonly heads = new Map<string, string>();
 	readonly revisions = new Map<string, Uint8Array>();
 	readonly objects = new Map<string, Uint8Array>();
+	readonly owners = new Map<string, string>();
 	putObjectCount = 0;
 	getObjectCount = 0;
 	getRevisionCount = 0;
@@ -122,6 +123,23 @@ class MemoryStorageProvider {
 		this.heads.set(projectId, newRevision);
 		this.commitCount += 1;
 		return { head: newRevision };
+	}
+
+	async registerOwner(_providerId: string, projectId: string, token: string): Promise<void> {
+		const previous = this.owners.get(projectId);
+		if (previous && previous !== token) throw new Error('Project has another owner');
+		if (!previous && (this.heads.has(projectId) ||
+			[...this.objects.keys()].some((key) => key.startsWith(`${projectId}/`)))) {
+			throw new Error('Legacy projects cannot be claimed');
+		}
+		this.owners.set(projectId, token);
+	}
+
+	async deleteProject(_providerId: string, projectId: string, deleteToken: string): Promise<void> {
+		if (this.owners.get(projectId) !== deleteToken) throw new Error('Invalid project deletion key');
+		this.heads.delete(projectId);
+		for (const key of this.revisions.keys()) if (key.startsWith(`${projectId}/`)) this.revisions.delete(key);
+		for (const key of this.objects.keys()) if (key.startsWith(`${projectId}/`)) this.objects.delete(key);
 	}
 
 	private copy(bytes: Uint8Array): Uint8Array {
@@ -216,6 +234,8 @@ const makeHarness = async () => {
 	return {
 		remote,
 		service,
+		persistence,
+		wrappingKey,
 		dataSerializer,
 		setFileContent(value: string) {
 			fileContent = value;
@@ -1033,6 +1053,77 @@ describe('StorageSyncService dashboard lifecycle', () => {
 			enabled: true,
 		});
 		expect(remote.getObjectCount).toBeGreaterThan(0);
+	});
+});
+
+describe('StorageSyncService remote catalogue management', () => {
+	it('keeps a disconnected local project detached across reconciliation and permits explicit reconnection', async () => {
+		const { remote, service, persistence, wrappingKey } = await makeHarness();
+		await service.syncProject('user-a', project.id, 'garage');
+		const id = service.getProjectBinding('user-a', project.id)!.storageProjectId;
+		service.disconnectProject('user-a', project.id);
+
+		const reopened = new StorageSyncService({
+			storageService: remote,
+			persistence,
+			getWrappingKey: () => wrappingKey,
+			getProjectsByUser: async () => [project],
+			getProjectById: async () => project,
+		});
+		const entries = await reopened.reconcileProvider('user-a', 'garage');
+		expect(entries).toHaveLength(1);
+		expect(entries[0]).toMatchObject({ status: 'disconnected', remoteOnly: false });
+		expect(reopened.getProjectBinding('user-a', project.id)).toBeNull();
+
+		await reopened.reconnectProject('user-a', project.id, 'garage', id);
+		expect(reopened.getProjectBinding('user-a', project.id)).toMatchObject({
+			providerId: 'garage', storageProjectId: id, enabled: true,
+		});
+		expect((await reopened.reconcileProvider('user-a', 'garage'))[0].status).not.toBe('disconnected');
+	});
+
+	it('deletes remote objects and revisions, retains local project, and removes catalogue entry', async () => {
+		const { remote, service, persistence, wrappingKey } = await makeHarness();
+		await service.syncProject('user-a', project.id, 'garage');
+		const id = service.getProjectBinding('user-a', project.id)!.storageProjectId;
+		const objectCount = remote.objects.size;
+		expect(objectCount).toBeGreaterThan(0);
+		expect(remote.owners.has(id)).toBe(true);
+		expect((await service.reconcileProvider('user-a', 'garage'))[0].canDeleteRemote).toBe(true);
+		await expect(remote.deleteProject('garage', id, 'b'.repeat(64)))
+			.rejects.toThrow('Invalid project deletion key');
+		expect(remote.objects.size).toBe(objectCount);
+		await service.deleteRemoteProjects('user-a', 'garage', [id]);
+		expect(service.getProjectBinding('user-a', project.id)).toBeNull();
+		expect(remote.objects.size).toBe(0);
+		expect(remote.revisions.size).toBe(0);
+		expect(remote.heads.has(id)).toBe(false);
+
+		const reopened = new StorageSyncService({
+			storageService: remote, persistence, getWrappingKey: () => wrappingKey,
+			getProjectsByUser: async () => [project],
+			getProjectById: async () => project,
+		});
+		expect(await reopened.reconcileProvider('user-a', 'garage')).toEqual([]);
+		expect(reopened.getProjectBinding('user-a', project.id)).toBeNull();
+		await expect(reopened.deleteRemoteProjects('user-a', 'garage', [id]))
+			.rejects.toThrow('Some remote projects are no longer in the catalogue');
+	});
+
+	it('does not grant deletion authority to a peer importing a shared project', async () => {
+		const { remote, service } = await makeHarness();
+		await service.syncProject('user-a', project.id, 'garage');
+		const id = service.getProjectBinding('user-a', project.id)!.storageProjectId;
+		const peer = new StorageSyncService({
+			storageService: remote,
+			persistence: new MemoryStringStorage(),
+			getProjectById: async () => project,
+		});
+		peer.attachSharedProject('user-a', project.id, 'peer-storage', id);
+		expect(peer.getProjectBinding('user-a', project.id)?.storageProjectId).toBe(id);
+		await expect(peer.deleteRemoteProjects('user-a', 'peer-storage', [id]))
+			.rejects.toThrow();
+		expect(remote.heads.has(id)).toBe(true);
 	});
 });
 

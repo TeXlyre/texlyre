@@ -73,6 +73,8 @@ export interface StorageCatalogueProject {
 	isFavorite?: boolean;
 	docUrl?: string;
 	wrappedProjectKey: WrappedStorageKey;
+	/** Owner-only capability; included only in the account-encrypted catalogue, never peer shares. */
+	deletionKey?: string;
 }
 
 export interface StorageCatalogue {
@@ -92,6 +94,7 @@ export type StorageProjectStatus =
 	| 'checking'
 	| 'local-only'
 	| 'stored'
+	| 'disconnected'
 	| 'updates-available'
 	| 'conflict'
 	| 'unavailable'
@@ -114,6 +117,8 @@ export interface StorageDashboardProject {
 	status: StorageProjectStatus;
 	lastSync?: number;
 	remoteOnly: boolean;
+	/** False for peer storage and projects predating owner registration. */
+	canDeleteRemote?: boolean;
 	error?: string;
 }
 

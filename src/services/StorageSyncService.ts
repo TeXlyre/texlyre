@@ -78,6 +78,8 @@ type StorageClient = Pick<
 	| 'getObject'
 	| 'putObject'
 	| 'commitHead'
+	| 'registerOwner'
+	| 'deleteProject'
 >;
 
 interface StringStorage {
@@ -210,6 +212,7 @@ export class StorageSyncService {
 	private readonly getWrappingKey: () => CryptoKey | null;
 	private readonly persistence: StringStorage;
 	private readonly projectSyncs = new Map<string, Promise<StorageSyncResult>>();
+	private readonly deletingProjects = new Set<string>();
 	private readonly autoSyncs = new Map<string, StorageAutoSyncState>();
 	private readonly autoSyncFailures = new Set<string>();
 
@@ -264,6 +267,7 @@ export class StorageSyncService {
 		};
 		bindings[projectId] = binding;
 		this.writeBindings(userId, bindings);
+		this.clearDisconnected(userId, projectId, providerId);
 		return binding;
 	}
 
@@ -295,6 +299,7 @@ export class StorageSyncService {
 		};
 		bindings[projectId] = binding;
 		this.writeBindings(userId, bindings);
+		this.clearDisconnected(userId, projectId, providerId);
 		return binding;
 	}
 
@@ -385,12 +390,39 @@ export class StorageSyncService {
 		return exportProjectStorageKey(projectKey);
 	}
 
+	async disconnectBoundProject(
+		userId: string,
+		projectId: string,
+	): Promise<void> {
+		const binding = this.getProjectBinding(userId, projectId);
+		if (!binding) return;
+		const key = `${userId}:${projectId}`;
+		const auto = this.autoSyncs.get(key);
+		if (auto?.timer) clearTimeout(auto.timer);
+		this.autoSyncs.delete(key);
+		const active = this.projectSyncs.get(
+			`${userId}:${projectId}:${binding.providerId}`,
+		);
+		if (active) await active.catch(() => undefined);
+		const latest = this.getProjectBinding(userId, projectId);
+		if (
+			latest?.providerId === binding.providerId &&
+			latest.storageProjectId === binding.storageProjectId
+		) {
+			this.disconnectProject(userId, projectId);
+		}
+	}
+
 	disconnectProject(userId: string, projectId: string): void {
 		const bindings = this.readBindings(userId);
 		const binding = bindings[projectId];
 		if (!binding) return;
 		delete bindings[projectId];
 		this.writeBindings(userId, bindings);
+		this.markDisconnected(userId, projectId, binding.providerId);
+		const auto = this.autoSyncs.get(`${userId}:${projectId}`);
+		if (auto?.timer) clearTimeout(auto.timer);
+		this.autoSyncs.delete(`${userId}:${projectId}`);
 		this.autoSyncFailures.delete(`${userId}:${projectId}`);
 
 		const stillUsed = Object.values(bindings).some(
@@ -405,7 +437,169 @@ export class StorageSyncService {
 		}
 	}
 
-	/** A read-only HEAD check: never downloads or applies project content. */
+	async reconnectProject(
+		userId: string,
+		projectId: string,
+		providerId: string,
+		storageProjectId: string,
+	): Promise<void> {
+		const project = await this.getProjectById(projectId);
+		if (!project || project.ownerId !== userId)
+			throw new Error('Local project not found');
+		if (this.getProjectBinding(userId, projectId)) {
+			throw new Error('Project is already attached to storage');
+		}
+		const wrappingKey = this.getWrappingKey();
+		if (!wrappingKey) throw new Error('Storage credentials are not unlocked');
+		const loaded = await this.loadCatalogue(userId, providerId, wrappingKey);
+		if (
+			!loaded.catalogue.projects.some(
+				(entry) =>
+					entry.localProjectId === projectId &&
+					entry.storageProjectId === storageProjectId,
+			)
+		)
+			throw new Error('Stored project not found in catalogue');
+		this.attachSharedProject(userId, projectId, providerId, storageProjectId);
+	}
+
+	async deleteRemoteProjects(
+		userId: string,
+		providerId: string,
+		storageProjectIds: string[],
+	): Promise<void> {
+		const ids = new Set(storageProjectIds);
+		if (ids.size === 0) return;
+		const bindings = this.getProjectBindings(userId);
+		const affected = Object.entries(bindings).filter(
+			([, binding]) =>
+				binding.providerId === providerId && ids.has(binding.storageProjectId),
+		);
+		const syncKeys = affected.map(
+			([projectId]) => `${userId}:${projectId}:${providerId}`,
+		);
+
+		for (const key of syncKeys) this.deletingProjects.add(key);
+		for (const [projectId] of affected) {
+			const auto = this.autoSyncs.get(`${userId}:${projectId}`);
+			if (auto?.timer) clearTimeout(auto.timer);
+			this.autoSyncs.delete(`${userId}:${projectId}`);
+		}
+		try {
+			await Promise.all(
+				syncKeys
+					.map((key) => this.projectSyncs.get(key))
+					.filter((sync): sync is Promise<StorageSyncResult> => !!sync)
+					.map((sync) => sync.catch(() => undefined)),
+			);
+			const wrappingKey = this.getWrappingKey();
+			if (!wrappingKey) throw new Error('Storage credentials are not unlocked');
+			const loaded = await this.loadCatalogue(userId, providerId, wrappingKey);
+			const present = loaded.catalogue.projects.filter((entry) =>
+				ids.has(entry.storageProjectId),
+			);
+			if (present.length !== ids.size)
+				throw new Error('Some remote projects are no longer in the catalogue');
+			if (present.some((entry) => !entry.deletionKey)) {
+				throw new Error(
+					'Cannot securely delete this older project: server-side ownership was not registered when it was created',
+				);
+			}
+			for (const id of ids) {
+				const entry = present.find(
+					(candidate) => candidate.storageProjectId === id,
+				)!;
+				await this.storageService.deleteProject(
+					providerId,
+					id,
+					entry.deletionKey!,
+				);
+				loaded.catalogue.projects = loaded.catalogue.projects.filter(
+					(entry) => entry.storageProjectId !== id,
+				);
+				await this.saveCatalogue(providerId, loaded);
+				for (const [projectId, binding] of Object.entries(
+					this.getProjectBindings(userId),
+				)) {
+					if (
+						binding.providerId === providerId &&
+						binding.storageProjectId === id
+					) {
+						this.disconnectProject(userId, projectId);
+					}
+				}
+			}
+		} finally {
+			for (const key of syncKeys) this.deletingProjects.delete(key);
+		}
+	}
+
+	private disconnectedKey(userId: string): string {
+		return `texlyre-user-${userId}-storage-disconnected`;
+	}
+
+	private readDisconnected(userId: string): Record<string, string[]> {
+		try {
+			const parsed: unknown = JSON.parse(
+				this.persistence.getItem(this.disconnectedKey(userId)) || '{}',
+			);
+			if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
+				return {};
+			const result: Record<string, string[]> = {};
+			for (const [projectId, providers] of Object.entries(parsed)) {
+				if (Array.isArray(providers))
+					result[projectId] = providers.filter(
+						(v): v is string => typeof v === 'string',
+					);
+			}
+			return result;
+		} catch {
+			return {};
+		}
+	}
+
+	private markDisconnected(
+		userId: string,
+		projectId: string,
+		providerId: string,
+	): void {
+		const disconnected = this.readDisconnected(userId);
+		disconnected[projectId] = [
+			...new Set([...(disconnected[projectId] ?? []), providerId]),
+		];
+		this.persistence.setItem(
+			this.disconnectedKey(userId),
+			JSON.stringify(disconnected),
+		);
+	}
+
+	private clearDisconnected(
+		userId: string,
+		projectId: string,
+		providerId: string,
+	): void {
+		const disconnected = this.readDisconnected(userId);
+		if (!disconnected[projectId]?.includes(providerId)) return;
+		disconnected[projectId] = disconnected[projectId].filter(
+			(id) => id !== providerId,
+		);
+		if (disconnected[projectId].length === 0) delete disconnected[projectId];
+		this.persistence.setItem(
+			this.disconnectedKey(userId),
+			JSON.stringify(disconnected),
+		);
+	}
+
+	private isDisconnected(
+		userId: string,
+		projectId: string,
+		providerId: string,
+	): boolean {
+		return (
+			this.readDisconnected(userId)[projectId]?.includes(providerId) ?? false
+		);
+	}
+
 	async checkBoundProjectRevision(
 		userId: string,
 		projectId: string,
@@ -421,7 +615,7 @@ export class StorageSyncService {
 			binding.providerId,
 			binding.storageProjectId,
 		);
-		// A concurrent sync may have advanced the binding while the HEAD request ran.
+
 		const latest = this.getProjectBinding(userId, projectId);
 		if (
 			!latest ||
@@ -430,7 +624,7 @@ export class StorageSyncService {
 		)
 			return null;
 		if (!latest.enabled) return { status: 'unavailable', revision: head };
-		// Ignore a HEAD read started before a concurrent local commit.
+
 		if (
 			latest.baseRevision !== binding.baseRevision &&
 			head !== latest.baseRevision
@@ -458,7 +652,11 @@ export class StorageSyncService {
 
 	scheduleBoundProjectSync(userId: string, projectId: string): void {
 		const binding = this.getProjectBinding(userId, projectId);
-		if (!binding?.enabled) return;
+		if (
+			!binding?.enabled ||
+			this.deletingProjects.has(`${userId}:${projectId}:${binding.providerId}`)
+		)
+			return;
 
 		const key = `${userId}:${projectId}`;
 		let state = this.autoSyncs.get(key);
@@ -601,7 +799,11 @@ export class StorageSyncService {
 		for (const entry of loaded.catalogue.projects) {
 			const local = localById.get(entry.localProjectId);
 			let binding = local ? bindings[local.id] : undefined;
-			if (local && (!binding || binding.providerId === providerId)) {
+			if (
+				local &&
+				!this.isDisconnected(userId, local.id, providerId) &&
+				(!binding || binding.providerId === providerId)
+			) {
 				if (!binding) {
 					binding = {
 						providerId,
@@ -624,6 +826,8 @@ export class StorageSyncService {
 
 			let status: StorageDashboardProject['status'];
 			if (!local) status = 'stored';
+			else if (!binding && this.isDisconnected(userId, local.id, providerId))
+				status = 'disconnected';
 			else if (!binding || binding.providerId !== providerId) status = 'error';
 			else if (!binding.enabled) status = 'unavailable';
 			else if (!head) status = 'local-only';
@@ -737,6 +941,7 @@ export class StorageSyncService {
 			enabled: true,
 			lastSync: Date.now(),
 		});
+		this.clearDisconnected(userId, project.id, providerId);
 		return (await this.getProjectById(project.id)) ?? project;
 	}
 
@@ -746,6 +951,9 @@ export class StorageSyncService {
 		providerId: string,
 	): Promise<StorageSyncResult> {
 		const key = `${userId}:${projectId}:${providerId}`;
+		if (this.deletingProjects.has(key)) {
+			throw new Error('Remote project deletion is in progress');
+		}
 		const active = this.projectSyncs.get(key);
 		if (active) return active;
 
@@ -925,8 +1133,6 @@ export class StorageSyncService {
 				continue;
 			}
 
-			// Project metadata follows the same non-interactive behavior as backups.
-			// If both sides changed it, keep the local metadata and reconcile files/docs.
 			if (path === projectMetadataPath) continue;
 
 			const local = localSnapshot.get(path) ?? null;
@@ -1519,18 +1725,35 @@ export class StorageSyncService {
 				Object.assign(entry, updated);
 				await this.saveCatalogue(providerId, loaded);
 			}
+			if (entry.deletionKey) {
+				await this.storageService.registerOwner(
+					providerId,
+					entry.storageProjectId,
+					entry.deletionKey,
+				);
+			}
 			return projectKey;
 		}
 
 		const projectKey = await generateProjectStorageKey();
-		loaded.catalogue.projects.push(
-			this.catalogueProjectFromProject(
+		const deletionKey = Array.from(
+			crypto.getRandomValues(new Uint8Array(32)),
+			(byte) => byte.toString(16).padStart(2, '0'),
+		).join('');
+		loaded.catalogue.projects.push({
+			...this.catalogueProjectFromProject(
 				project,
 				binding.storageProjectId,
 				await wrapProjectStorageKey(projectKey, loaded.accountKey),
 			),
-		);
+			deletionKey,
+		});
 		await this.saveCatalogue(providerId, loaded);
+		await this.storageService.registerOwner(
+			providerId,
+			binding.storageProjectId,
+			deletionKey,
+		);
 		return projectKey;
 	}
 
@@ -1722,6 +1945,7 @@ export class StorageSyncService {
 			status,
 			lastSync,
 			remoteOnly,
+			canDeleteRemote: !!entry.deletionKey,
 		};
 	}
 
