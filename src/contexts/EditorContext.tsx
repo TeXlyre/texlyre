@@ -75,6 +75,7 @@ export const defaultEditorSettings: EditorSettings = {
 	fontSize: 16,
 	fontFamily: 'monospace',
 	showLineNumbers: true,
+	autoIndent: true,
 	syntaxHighlighting: true,
 	languageFeatures: {
 		builtinTooltips: true,
@@ -166,6 +167,9 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 			showLineNumbers:
 				(getSetting('editor-show-line-numbers')?.value as boolean) ??
 				defaultEditorSettings.showLineNumbers,
+			autoIndent:
+				(getSetting('editor-auto-indent')?.value as boolean) ??
+				defaultEditorSettings.autoIndent,
 			syntaxHighlighting:
 				(getSetting('editor-syntax-highlighting')?.value as boolean) ??
 				defaultEditorSettings.syntaxHighlighting,
@@ -208,6 +212,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 				fontFamily: 'editor-font-family',
 				fontSize: 'editor-font-size',
 				showLineNumbers: 'editor-show-line-numbers',
+				autoIndent: 'editor-auto-indent',
 				syntaxHighlighting: 'editor-syntax-highlighting',
 				autoSaveEnabled: 'editor-auto-save-enable',
 				autoSaveDelay: 'editor-auto-save-delay',
