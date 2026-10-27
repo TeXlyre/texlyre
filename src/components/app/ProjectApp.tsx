@@ -17,6 +17,7 @@ import { useSecrets } from '../../hooks/useSecrets';
 import { useSettings } from '../../hooks/useSettings';
 import type { Project, ProjectType, ProjectGroup } from '../../types/projects';
 import type { StorageDashboardProject } from '../../types/storage';
+import { storageProjectKey } from '../project/StoredProjectList';
 import {
 	isValidYjsUrl,
 	buildUrlWithFragments,
@@ -136,6 +137,16 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [restoringStorageProjects, setRestoringStorageProjects] = useState<
 		Set<string>
 	>(new Set());
+	const [remoteActionBusy, setRemoteActionBusy] = useState<Set<string>>(
+		new Set(),
+	);
+	const [pendingRemoteRemoval, setPendingRemoteRemoval] = useState<
+		StorageDashboardProject[]
+	>([]);
+	const [remoteRemovalError, setRemoteRemovalError] = useState<string | null>(
+		null,
+	);
+	const [remoteRemoving, setRemoteRemoving] = useState(false);
 	const [unavailableStorageProviders, setUnavailableStorageProviders] =
 		useState<Set<string>>(new Set());
 	const storageUnlockAttemptRef = useRef<string | null>(null);
@@ -150,6 +161,13 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				(config) => !sharedToolPreferences.getOrigin('storage', config.id),
 			),
 		[activeStorageConfigs, sharedToolPreferences.getOrigin],
+	);
+	const storageProviderNames = useMemo(
+		() =>
+			Object.fromEntries(
+				activeStorageConfigs.map((config) => [config.id, config.name]),
+			),
+		[activeStorageConfigs],
 	);
 	const sharedStorageConfigIds = useMemo(
 		() =>
@@ -374,10 +392,45 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	]);
 
 	const filteredStoredProjects = useMemo(() => {
+		const entries = [...storageProjects];
+		if (user) {
+			const present = new Set(entries.map(storageProjectKey));
+			for (const project of projects) {
+				const binding = storageSyncService.getProjectBinding(
+					user.id,
+					project.id,
+				);
+				if (!binding) continue;
+				const key = `${binding.providerId}:${binding.storageProjectId}`;
+				if (present.has(key)) continue;
+				entries.push({
+					providerId: binding.providerId,
+					storageProjectId: binding.storageProjectId,
+					localProjectId: project.id,
+					name: project.name,
+					description: project.description,
+					type: project.type,
+					group: project.group,
+					compilerId: project.compilerId,
+					createdAt: project.createdAt,
+					updatedAt: project.updatedAt,
+					tags: project.tags,
+					isFavorite: project.isFavorite,
+					docUrl: project.docUrl,
+					status:
+						!storageUnlocked ||
+						unavailableStorageProviders.has(binding.providerId)
+							? 'unavailable'
+							: 'checking',
+					remoteOnly: false,
+					lastSync: binding.lastSync,
+				});
+				present.add(key);
+			}
+		}
 		const query = searchQuery.trim().toLowerCase();
-		return storageProjects.filter(
+		return entries.filter(
 			(project) =>
-				project.remoteOnly &&
 				(!query ||
 					project.name.toLowerCase().includes(query) ||
 					project.description.toLowerCase().includes(query) ||
@@ -386,7 +439,148 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				(!selectedType || project.type === selectedType) &&
 				(!selectedGroup || (project.group ?? project.type) === selectedGroup),
 		);
-	}, [storageProjects, searchQuery, selectedTag, selectedType, selectedGroup]);
+	}, [
+		storageProjects,
+		projects,
+		user,
+		storageUnlocked,
+		unavailableStorageProviders,
+		searchQuery,
+		selectedTag,
+		selectedType,
+		selectedGroup,
+	]);
+
+	const busyRemoteIds = useMemo(() => {
+		const ids = new Set(remoteActionBusy);
+		for (const project of filteredStoredProjects) {
+			if (restoringStorageProjects.has(project.storageProjectId))
+				ids.add(storageProjectKey(project));
+		}
+		return ids;
+	}, [remoteActionBusy, filteredStoredProjects, restoringStorageProjects]);
+
+	const handleDisconnectRemote = async (entries: StorageDashboardProject[]) => {
+		if (!user || entries.length === 0) return;
+		const keys = entries.map(storageProjectKey);
+		setRemoteActionBusy((current) => new Set([...current, ...keys]));
+		setError(null);
+		try {
+			for (const entry of entries) {
+				const binding = storageSyncService.getProjectBinding(
+					user.id,
+					entry.localProjectId,
+				);
+				if (
+					binding?.providerId === entry.providerId &&
+					binding.storageProjectId === entry.storageProjectId
+				) {
+					await storageSyncService.disconnectBoundProject(
+						user.id,
+						entry.localProjectId,
+					);
+				}
+			}
+			await loadStorageState();
+		} catch (error) {
+			setError(
+				error instanceof Error
+					? error.message
+					: t('Failed to disconnect remote storage'),
+			);
+		} finally {
+			setRemoteActionBusy((current) => {
+				const next = new Set(current);
+				keys.forEach((key) => next.delete(key));
+				return next;
+			});
+		}
+	};
+
+	const handleReconnectRemote = async (entry: StorageDashboardProject) => {
+		if (!user) return;
+		const key = storageProjectKey(entry);
+		setRemoteActionBusy((current) => new Set(current).add(key));
+		try {
+			await storageSyncService.reconnectProject(
+				user.id,
+				entry.localProjectId,
+				entry.providerId,
+				entry.storageProjectId,
+			);
+			await loadStorageState();
+		} catch (error) {
+			setError(
+				error instanceof Error
+					? error.message
+					: t('Failed to reconnect remote storage'),
+			);
+		} finally {
+			setRemoteActionBusy((current) => {
+				const next = new Set(current);
+				next.delete(key);
+				return next;
+			});
+		}
+	};
+
+	const handleDeleteRemoteProjects = async () => {
+		if (!user || remoteRemoving || pendingRemoteRemoval.length === 0) return;
+		const entries = pendingRemoteRemoval;
+		const keys = entries.map(storageProjectKey);
+		setRemoteRemoving(true);
+		setRemoteRemovalError(null);
+		setRemoteActionBusy((current) => new Set([...current, ...keys]));
+		const completed = new Set<string>();
+		try {
+			const byProvider = new Map<string, string[]>();
+			for (const entry of entries) {
+				if (
+					!accountStorageConfigs.some(
+						(config) => config.id === entry.providerId,
+					)
+				) {
+					throw new Error(
+						t('Cannot remove projects from storage shared by a peer'),
+					);
+				}
+				byProvider.set(entry.providerId, [
+					...(byProvider.get(entry.providerId) ?? []),
+					entry.storageProjectId,
+				]);
+			}
+			for (const [providerId, storageIds] of byProvider) {
+				await storageSyncService.deleteRemoteProjects(
+					user.id,
+					providerId,
+					storageIds,
+				);
+				storageIds.forEach((storageId) =>
+					completed.add(`${providerId}:${storageId}`),
+				);
+			}
+			setPendingRemoteRemoval([]);
+		} catch (error) {
+			if (completed.size > 0) {
+				setPendingRemoteRemoval(
+					entries.filter((entry) => !completed.has(storageProjectKey(entry))),
+				);
+			}
+			setRemoteRemovalError(
+				error instanceof Error
+					? error.message
+					: t('Remote storage operation failed'),
+			);
+		} finally {
+			setRemoteRemoving(false);
+			setRemoteActionBusy((current) => {
+				const next = new Set(current);
+				keys.forEach((key) => next.delete(key));
+				return next;
+			});
+			await loadStorageState();
+		}
+	};
 
 	const handleAccountDeleted = async () => {
 		setIsDeleteAccountModalOpen(false);
@@ -681,6 +875,40 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		}
 	};
 
+	const handleRestoreMultiple = async (entries: StorageDashboardProject[]) => {
+		if (!user || entries.length === 0) return;
+		const ids = entries.map((entry) => entry.storageProjectId);
+		setRestoringStorageProjects((current) => new Set([...current, ...ids]));
+		setError(null);
+		let failed = 0;
+		try {
+			for (const entry of entries) {
+				try {
+					await storageSyncService.restoreRemoteProject(
+						user.id,
+						entry.providerId,
+						entry.storageProjectId,
+					);
+				} catch (error) {
+					failed += 1;
+					moduleLog.warn('Failed to restore a selected remote project:', error);
+				}
+			}
+			await loadProjects();
+			await loadStorageState();
+			if (failed > 0)
+				setError(
+					t('Failed to restore {count} remote project(s)', { count: failed }),
+				);
+		} finally {
+			setRestoringStorageProjects((current) => {
+				const next = new Set(current);
+				ids.forEach((id) => next.delete(id));
+				return next;
+			});
+		}
+	};
+
 	const openEditModal = (project: Project) => {
 		setError(null);
 		setCurrentProject(project);
@@ -713,7 +941,6 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			return;
 		}
 
-		// This builds URL with last opened file/doc if available
 		let finalUrl = readyProject.docUrl;
 		if (readyProject.lastOpenedDocId || readyProject.lastOpenedFilePath) {
 			const currentFragment = parseUrlFragments(finalUrl);
@@ -829,7 +1056,29 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onRestoreExternalProject={handleRestoreStoredProject}
 						projects={projects}
 						externalProjects={filteredStoredProjects}
-						restoringExternalProjects={restoringStorageProjects}
+						providerNames={storageProviderNames}
+						ownedProviderIds={
+							new Set(accountStorageConfigs.map((config) => config.id))
+						}
+						busyRemoteIds={busyRemoteIds}
+						onRefreshRemote={() => void loadStorageState()}
+						onReconnectRemote={(entry) => void handleReconnectRemote(entry)}
+						onRestoreMultiple={(entries) => void handleRestoreMultiple(entries)}
+						onDisconnectRemote={handleDisconnectRemote}
+						onRemoveRemote={(entries) => {
+							if (
+								new Set(entries.map((entry) => entry.providerId)).size !== 1
+							) {
+								setError(
+									t(
+										'Select projects from one remote server to delete them together',
+									),
+								);
+								return;
+							}
+							setRemoteRemovalError(null);
+							setPendingRemoteRemoval(entries);
+						}}
 						availableTags={availableTags}
 						availableTypes={availableTypes}
 						availableGroups={availableGroups}
@@ -874,6 +1123,59 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						/>
 					)}
 				</div>
+				<Modal
+					isOpen={pendingRemoteRemoval.length > 0}
+					onClose={() => {
+						if (!remoteRemoving) setPendingRemoteRemoval([]);
+					}}
+					title={t('Delete from remote storage')}
+					size='small'
+				>
+					<div className='ui-stack' data-gap='md'>
+						<p>
+							{t('Permanently delete {count} project(s) from remote storage?', {
+								count: pendingRemoteRemoval.length,
+							})}
+						</p>
+						<div className='ui-list' data-scroll='short'>
+							{pendingRemoteRemoval.map((project) => (
+								<div className='ui-list-item' key={storageProjectKey(project)}>
+									{project.name}
+								</div>
+							))}
+						</div>
+						<div className='ui-message' data-tone='warning'>
+							{t(
+								'All remote objects and revision history will be deleted and the project ID permanently blocked on this server. Local copies are kept. Garage garbage collection and external backups may retain data temporarily.',
+							)}
+						</div>
+						{remoteRemovalError && (
+							<div className='ui-message' data-tone='error'>
+								{remoteRemovalError}
+							</div>
+						)}
+						<div className='ui-actions' data-variant='modal' data-align='end'>
+							<button
+								type='button'
+								className='button secondary'
+								disabled={remoteRemoving}
+								onClick={() => setPendingRemoteRemoval([])}
+							>
+								{t('Cancel')}
+							</button>
+							<button
+								type='button'
+								className='button danger'
+								disabled={remoteRemoving}
+								onClick={() => void handleDeleteRemoteProjects()}
+							>
+								{remoteRemoving
+									? t('Deleting...')
+									: t('Delete from remote storage')}
+							</button>
+						</div>
+					</div>
+				</Modal>
 				<ProjectExportModal
 					isOpen={showExportModal}
 					onClose={() => setShowExportModal(false)}
