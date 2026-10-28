@@ -212,8 +212,8 @@ const RemoteStorageStatusIndicator: React.FC<
 			title={
 				available
 					? t('Remote storage: {status}. Click to sync.', {
-						status: statusLabel,
-					})
+							status: statusLabel,
+						})
 					: t('Remote storage unavailable')
 			}
 			aria-label={t('Sync project with remote storage')}

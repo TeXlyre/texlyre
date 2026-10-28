@@ -116,6 +116,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 				return t('Local only');
 			case 'stored':
 				return t('Stored');
+			case 'disconnected':
+				return t('Disconnected');
 			case 'updates-available':
 				return t('Updates available');
 			case 'conflict':

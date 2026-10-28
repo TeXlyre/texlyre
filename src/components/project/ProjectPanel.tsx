@@ -26,7 +26,14 @@ interface ProjectPanelProps {
 	onRestoreExternalProject: (project: StorageDashboardProject) => void;
 	projects: Project[];
 	externalProjects: StorageDashboardProject[];
-	restoringExternalProjects?: Set<string>;
+	providerNames: Record<string, string>;
+	ownedProviderIds: Set<string>;
+	busyRemoteIds: Set<string>;
+	onRefreshRemote: () => void;
+	onReconnectRemote: (project: StorageDashboardProject) => void;
+	onRestoreMultiple: (projects: StorageDashboardProject[]) => void;
+	onDisconnectRemote: (projects: StorageDashboardProject[]) => void;
+	onRemoveRemote: (projects: StorageDashboardProject[]) => void;
 	availableTags: string[];
 	availableTypes: string[];
 	availableGroups: string[];
@@ -43,7 +50,14 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 	onRestoreExternalProject,
 	projects,
 	externalProjects,
-	restoringExternalProjects = new Set(),
+	providerNames,
+	ownedProviderIds,
+	busyRemoteIds,
+	onRefreshRemote,
+	onReconnectRemote,
+	onRestoreMultiple,
+	onDisconnectRemote,
+	onRemoveRemote,
 	availableTags,
 	availableTypes,
 	availableGroups,
@@ -258,11 +272,20 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 				favoriteProjects={favoriteProjects}
 				recentProjects={recentProjects}
 				externalProjects={externalProjects}
+				localProjects={projects}
+				providerNames={providerNames}
+				ownedProviderIds={ownedProviderIds}
+				busyRemoteIds={busyRemoteIds}
+				onRefreshRemote={onRefreshRemote}
+				onOpenLocal={(project) => onOpenProject?.(project)}
+				onReconnectRemote={onReconnectRemote}
+				onRestoreMultiple={onRestoreMultiple}
+				onDisconnectRemote={onDisconnectRemote}
+				onRemoveRemote={onRemoveRemote}
 				sectionSizes={sectionSizes}
 				favoritesCollapsed={favoritesCollapsed}
 				recentCollapsed={recentCollapsed}
 				externalCollapsed={externalCollapsed}
-				restoringExternalProjects={restoringExternalProjects}
 				onSizesChangeEnd={persistSectionSizes}
 				onToggleFavorites={toggleFavorites}
 				onToggleRecent={toggleRecent}
