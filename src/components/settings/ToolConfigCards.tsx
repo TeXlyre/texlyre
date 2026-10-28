@@ -7,6 +7,7 @@ import type { TransportStatus } from '@chelys/types/transport';
 import { useSettings } from '../../hooks/useSettings';
 import { useSharedToolPreferences } from '../../hooks/useSharedToolPreferences';
 import type { ToolConfigBlock, ToolConfigKind } from '../../types/toolConfig';
+import { sanitizeToolIcon } from '../../utils/toolConfigUtils';
 import {
 	describeSharedToolAvailability,
 	getSharedToolKind,
@@ -143,6 +144,8 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 	}
 
 	const renderCard = (config: ToolConfigBlock, enabled: boolean) => {
+		const icon = sanitizeToolIcon(config.icon);
+		const isMarkup = icon?.startsWith('<');
 		const sharedKind = getSharedToolKind(config);
 		const origin = sharing.getOrigin(sharedKind, config.id);
 		const share = describeSharedToolAvailability(config);
@@ -165,14 +168,20 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 					data-wrap='true'
 				>
 					<div className='ui-toolbar' data-gap='sm' data-wrap='true'>
-						{config.icon ? (
-							<span
-								className='ui-icon'
-								data-tone='muted'
-								aria-hidden='true'
-								/* biome-ignore lint/security/noDangerouslySetInnerHtml: Icons are trusted pre-rendered SVG strings. */
-								dangerouslySetInnerHTML={{ __html: config.icon }}
-							/>
+						{icon ? (
+							isMarkup ? (
+								<span
+									className='ui-icon'
+									data-tone='muted'
+									aria-hidden='true'
+									/* biome-ignore lint/security/noDangerouslySetInnerHtml: Icon markup is sanitized by DOMPurify. */
+									dangerouslySetInnerHTML={{ __html: icon }}
+								/>
+							) : (
+								<span className='ui-icon' data-tone='muted' aria-hidden='true'>
+									<img src={icon} alt='' referrerPolicy='no-referrer' />
+								</span>
+							)
 						) : (
 							<span className='ui-icon' data-tone='muted' aria-hidden='true'>
 								<KindIcon />
