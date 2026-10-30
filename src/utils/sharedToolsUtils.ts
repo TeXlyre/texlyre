@@ -2,6 +2,7 @@
 import type { Awareness } from 'y-protocols/awareness';
 
 import type { ToolConfigBlock } from '../types/toolConfig';
+import type { StorageConfigBlock } from '../types/storage';
 import type {
 	ObservedSharedTool,
 	SharedToolAdvertisement,
@@ -181,11 +182,25 @@ const configWithoutDisplayFields = (
 	delete rest.name;
 	delete rest.enabled;
 	delete rest.icon;
+	delete rest.transportId;
 	return rest;
 };
 
+const stableObject = (value: unknown): unknown =>
+	Array.isArray(value)
+		? value.map(stableObject)
+		: isRecord(value)
+			? Object.fromEntries(
+					Object.keys(value)
+						.sort()
+						.map((key) => [key, stableObject(value[key])]),
+				)
+			: value;
+
 export function sharedToolConfigFingerprint(config: ToolConfigBlock): string {
-	return hashString(JSON.stringify(configWithoutDisplayFields(config)));
+	return hashString(
+		JSON.stringify(stableObject(configWithoutDisplayFields(config))),
+	);
 }
 
 export function sharedToolRevision(
@@ -227,8 +242,9 @@ export function canonicalSharedConfig(
 		...config,
 		id: toolId,
 		enabled: true,
-	} as ToolConfigBlock & { icon?: string };
+	} as ToolConfigBlock & { icon?: string; transportId?: string };
 	delete shared.icon;
+	delete shared.transportId;
 	return shared;
 }
 
@@ -362,6 +378,32 @@ export function readSharedToolsFromAwareness(
 	});
 
 	return Array.from(observed.values());
+}
+
+export function findTrustedSharedStorage(
+	tool: SharedToolAdvertisement,
+	configs: StorageConfigBlock[],
+	preferences: SharedToolPreferences,
+): StorageConfigBlock | undefined {
+	const identity = sharedToolIdentity('storage', tool.ownerId, tool.toolId);
+	const acceptedIds = new Set(
+		Object.entries(preferences.decisions)
+			.filter(
+				([key, decision]) =>
+					key.startsWith(`${identity}:`) && decision.decision === 'accepted',
+			)
+			.map(([, decision]) => decision.localId),
+	);
+	const fingerprint = sharedToolConfigFingerprint(tool.config);
+	return configs.find((config) => {
+		if (!config.enabled || sharedToolConfigFingerprint(config) !== fingerprint)
+			return false;
+		const origin =
+			preferences.origins[localSharedToolKey('storage', config.id)];
+		if (origin)
+			return origin.ownerId === tool.ownerId && origin.toolId === tool.toolId;
+		return acceptedIds.has(config.id);
+	});
 }
 
 export function classifySharedToolConflict(

@@ -1,8 +1,16 @@
 // src/contexts/SharedToolPreferencesContext.tsx
 import type React from 'react';
-import { createContext, useCallback, useMemo, type ReactNode } from 'react';
+import {
+	createContext,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	type ReactNode,
+} from 'react';
 
 import { useSettings } from '../hooks/useSettings';
+import { useStorageConfig } from '../hooks/useStorageConfig';
 import type {
 	SharedToolAdvertisement,
 	SharedToolDecision,
@@ -50,20 +58,45 @@ export const SharedToolPreferencesProvider: React.FC<
 	SharedToolPreferencesProviderProps
 > = ({ children }) => {
 	const { getSetting, updateSetting } = useSettings();
+	const storages = useStorageConfig();
 	const settingValue = getSetting(SHARED_TOOL_PREFERENCES_SETTING)?.value;
 	const preferences = useMemo(
 		() => normalizeSharedToolPreferences(settingValue),
 		[settingValue],
 	);
 
+	// Repair aliases saved by the previous patch without disturbing personal recipes.
+	useEffect(() => {
+		for (const config of [...storages.configs, ...storages.disabledConfigs]) {
+			const remoteId =
+				preferences.origins[localSharedToolKey('storage', config.id)]?.toolId;
+			if (
+				remoteId &&
+				remoteId !== config.id &&
+				config.transportId !== remoteId
+			) {
+				storages.updateConfig(config.id, { transportId: remoteId });
+			}
+		}
+	}, [
+		preferences.origins,
+		storages.configs,
+		storages.disabledConfigs,
+		storages.updateConfig,
+	]);
+
+	const latestPreferences = useRef(preferences);
+	useEffect(() => {
+		latestPreferences.current = preferences;
+	}, [preferences]);
+
 	const commit = useCallback(
 		(update: (current: SharedToolPreferences) => SharedToolPreferences) => {
-			const current = normalizeSharedToolPreferences(
-				getSetting(SHARED_TOOL_PREFERENCES_SETTING)?.value,
-			);
-			updateSetting(SHARED_TOOL_PREFERENCES_SETTING, update(current));
+			const next = update(latestPreferences.current);
+			latestPreferences.current = next;
+			updateSetting(SHARED_TOOL_PREFERENCES_SETTING, next);
 		},
-		[getSetting, updateSetting],
+		[updateSetting],
 	);
 
 	const setSharedWithAll = useCallback(
@@ -186,7 +219,8 @@ export const SharedToolPreferencesProvider: React.FC<
 						for (const [decisionKey, previous] of Object.entries(decisions)) {
 							if (
 								decisionKey.startsWith(`${identity}:`) &&
-								previous.decision === 'accepted'
+								previous.decision === 'accepted' &&
+								previous.localId === id
 							) {
 								decisions[decisionKey] = {
 									decision: 'ignored',

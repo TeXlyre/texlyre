@@ -69,6 +69,12 @@ export const StorageConfigProvider: React.FC<StorageConfigProviderProps> = ({
 		() => withoutDisabled(parseStorageConfigs(settingValue), disabledConfigs),
 		[settingValue, disabledConfigs],
 	);
+	const currentConfigs = useRef(storedConfigs);
+	const currentDisabled = useRef(disabledConfigs);
+	useEffect(() => {
+		currentConfigs.current = storedConfigs;
+		currentDisabled.current = disabledConfigs;
+	}, [storedConfigs, disabledConfigs]);
 
 	useEffect(() => {
 		setConfigs(storedConfigs);
@@ -103,6 +109,8 @@ export const StorageConfigProvider: React.FC<StorageConfigProviderProps> = ({
 
 	const saveConfigs = useCallback(
 		(active: StorageConfigBlock[], disabled: StorageConfigBlock[]) => {
+			currentConfigs.current = active;
+			currentDisabled.current = disabled;
 			updateSetting(STORAGE_CONFIGS_SETTING, active);
 			updateSetting(STORAGE_DISABLED_CONFIGS_SETTING, disabled);
 		},
@@ -114,11 +122,14 @@ export const StorageConfigProvider: React.FC<StorageConfigProviderProps> = ({
 			if (incoming.length === 0) return;
 			const incomingIds = new Set(incoming.map((config) => config.id));
 			saveConfigs(
-				incoming.reduce((acc, config) => upsertConfig(acc, config), configs),
-				disabledConfigs.filter((entry) => !incomingIds.has(entry.id)),
+				incoming.reduce(
+					(acc, config) => upsertConfig(acc, config),
+					currentConfigs.current,
+				),
+				currentDisabled.current.filter((entry) => !incomingIds.has(entry.id)),
 			);
 		},
-		[configs, disabledConfigs, saveConfigs],
+		[saveConfigs],
 	);
 
 	const addConfig = useCallback(
@@ -132,26 +143,29 @@ export const StorageConfigProvider: React.FC<StorageConfigProviderProps> = ({
 				list.map((entry) =>
 					entry.id === id ? { ...entry, ...updates } : entry,
 				);
-			saveConfigs(apply(configs), apply(disabledConfigs));
+			saveConfigs(
+				apply(currentConfigs.current),
+				apply(currentDisabled.current),
+			);
 		},
-		[configs, disabledConfigs, saveConfigs],
+		[saveConfigs],
 	);
 
 	const removeConfig = useCallback(
 		(id: string) => {
 			saveConfigs(
-				configs.filter((entry) => entry.id !== id),
-				disabledConfigs.filter((entry) => entry.id !== id),
+				currentConfigs.current.filter((entry) => entry.id !== id),
+				currentDisabled.current.filter((entry) => entry.id !== id),
 			);
 			genericStorageService.unregisterConfig(id);
 		},
-		[configs, disabledConfigs, saveConfigs],
+		[saveConfigs],
 	);
 
 	const setConfigEnabled = useCallback(
 		(id: string, enabled: boolean) => {
-			const source = enabled ? disabledConfigs : configs;
-			const target = enabled ? configs : disabledConfigs;
+			const source = enabled ? currentDisabled.current : currentConfigs.current;
+			const target = enabled ? currentConfigs.current : currentDisabled.current;
 			const moved = moveConfig(source, target, id);
 
 			if (!moved) {
@@ -164,7 +178,7 @@ export const StorageConfigProvider: React.FC<StorageConfigProviderProps> = ({
 			);
 			saveConfigs(enabled ? next : moved.from, enabled ? moved.from : next);
 		},
-		[configs, disabledConfigs, saveConfigs, updateConfig],
+		[saveConfigs, updateConfig],
 	);
 
 	return (

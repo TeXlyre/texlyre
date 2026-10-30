@@ -588,6 +588,9 @@ export function normalizeStorageConfig(
 
 	return {
 		id,
+		...(typeof value.transportId === 'string' && value.transportId.trim()
+			? { transportId: value.transportId }
+			: {}),
 		name:
 			typeof value.name === 'string' && value.name.trim()
 				? value.name

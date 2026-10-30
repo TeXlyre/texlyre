@@ -81,6 +81,10 @@ const responseError = (response: WireResponse): StorageProtocolError =>
 export class GenericStorageService extends ExternalServiceBase<StorageConfigBlock> {
 	protected readonly transportLabel = 'storage';
 
+	protected getTransportId(config: StorageConfigBlock): string {
+		return config.transportId ?? config.id;
+	}
+
 	private readonly connections = new Map<string, StorageConnection>();
 	private readonly connecting = new Map<string, Promise<StorageConnection>>();
 	private readonly operationQueues = new Map<string, Promise<void>>();

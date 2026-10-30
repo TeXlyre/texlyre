@@ -7,6 +7,7 @@ export const STORAGE_PROTOCOL_VERSION = 1;
 
 export interface StorageConfigBlock {
 	id: string;
+	transportId?: string;
 	name: string;
 	enabled: boolean;
 	icon?: string;
@@ -73,7 +74,6 @@ export interface StorageCatalogueProject {
 	isFavorite?: boolean;
 	docUrl?: string;
 	wrappedProjectKey: WrappedStorageKey;
-	/** Owner-only capability; included only in the account-encrypted catalogue, never peer shares. */
 	deletionKey?: string;
 }
 
@@ -117,7 +117,6 @@ export interface StorageDashboardProject {
 	status: StorageProjectStatus;
 	lastSync?: number;
 	remoteOnly: boolean;
-	/** False for peer storage and projects predating owner registration. */
 	canDeleteRemote?: boolean;
 	error?: string;
 }

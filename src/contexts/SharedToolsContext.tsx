@@ -1,5 +1,6 @@
 // src/contexts/SharedToolsContext.tsx
 import type React from 'react';
+import { nanoid } from 'nanoid';
 import {
 	createContext,
 	useCallback,
@@ -37,6 +38,7 @@ import {
 	SHARED_TOOLS_AWARENESS_FIELD,
 	buildSharedToolAdvertisement,
 	classifySharedToolConflict,
+	findTrustedSharedStorage,
 	describeSharedToolAvailability,
 	localSharedToolKey,
 	projectSharingKey,
@@ -347,7 +349,16 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 					localConfigs(tool.kind),
 				);
 				const decision = preferences.getDecision(identity);
-				const localId = decision?.localId ?? conflict.localId;
+				const trustedStorage =
+					tool.kind === 'storage'
+						? findTrustedSharedStorage(
+								tool,
+								[...storages.configs, ...storages.disabledConfigs],
+								preferences.preferences,
+							)
+						: undefined;
+				const localId =
+					trustedStorage?.id ?? decision?.localId ?? conflict.localId;
 
 				if (
 					tool.kind !== 'storage' &&
@@ -365,12 +376,39 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 				if (decision?.decision === 'ignored') {
 					return { ...tool, identity, conflict, status: 'ignored', localId };
 				}
+				if (
+					tool.kind === 'storage' &&
+					storageBinding &&
+					(storageBinding.storageProjectId !== tool.storage?.storageProjectId ||
+						storageBinding.providerId !== localId)
+				) {
+					return { ...tool, identity, conflict, status: 'ignored', localId };
+				}
 				if (decision?.decision === 'accepted') {
-					return { ...tool, identity, conflict, status: 'accepted', localId };
+					if (tool.kind !== 'storage') {
+						return { ...tool, identity, conflict, status: 'accepted', localId };
+					}
+					const binding = storageBinding;
+					if (
+						binding &&
+						binding.providerId === decision.localId &&
+						binding.storageProjectId === tool.storage?.storageProjectId &&
+						storages.configs.some((config) => config.id === decision.localId)
+					) {
+						return { ...tool, identity, conflict, status: 'accepted', localId };
+					}
 				}
 				return { ...tool, identity, conflict, status: 'new', localId };
 			}),
-		[observed, localConfigs, preferences.getDecision],
+		[
+			observed,
+			localConfigs,
+			preferences.getDecision,
+			preferences.preferences,
+			storages.configs,
+			storages.disabledConfigs,
+			storageBinding,
+		],
 	);
 
 	const accept = useCallback(
@@ -394,7 +432,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 				!currentProjectId ||
 				!attachment ||
 				!provider ||
-				acceptingStorageRef.current.has(offer.identity)
+				acceptingStorageRef.current.size > 0
 			) {
 				return;
 			}
@@ -402,7 +440,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 			acceptingStorageRef.current.add(offer.identity);
 			void (async () => {
 				let attached = false;
-				let imported = false;
+				let importedId: string | null = null;
 				try {
 					if (!storageUnlocked) {
 						const password = await promptForPassword(
@@ -412,42 +450,90 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 						await unlockStorage(password);
 					}
 
+					const trusted = findTrustedSharedStorage(
+						offer,
+						[...storages.configs, ...storages.disabledConfigs],
+						preferences.preferences,
+					);
+					const existingOrigin = preferences.getOrigin('storage', offer.toolId);
+					const existing =
+						offer.conflict.kind === 'same-id-same-config' &&
+						storages.configs.some(
+							(config) => config.id === offer.toolId && config.enabled,
+						) &&
+						(!existingOrigin ||
+							(existingOrigin.ownerId === offer.ownerId &&
+								existingOrigin.toolId === offer.toolId));
+					const knownConfigs = [
+						...storages.configs,
+						...storages.disabledConfigs,
+					];
+					const previousBinding = storageSyncService.getProjectBinding(
+						user.id,
+						currentProjectId,
+					);
+					// Recover a dangling binding left when its shared recipe was removed.
+					const recoverId =
+						previousBinding?.storageProjectId === attachment.storageProjectId &&
+						!knownConfigs.some(
+							(config) => config.id === previousBinding.providerId,
+						)
+							? previousBinding.providerId
+							: undefined;
+					const idTaken = knownConfigs.some(
+						(config) => config.id === offer.toolId,
+					);
+					const localId =
+						trusted?.id ??
+						recoverId ??
+						(existing || !idTaken ? offer.toolId : nanoid());
+					const origin = preferences.getOrigin('storage', localId);
+					const managed =
+						(!existing && !trusted) ||
+						(origin?.ownerId === offer.ownerId &&
+							origin.toolId === offer.toolId);
+					if (
+						previousBinding &&
+						(previousBinding.providerId !== localId ||
+							previousBinding.storageProjectId !== attachment.storageProjectId)
+					) {
+						return; // Never replace an existing project's storage.
+					}
 					const projectKey = await requestStorageProjectKey(
 						provider,
 						attachment.storageProjectId,
 					);
+					if (!trusted && !existing) {
+						addConfig('storage', {
+							...offer.config,
+							id: localId,
+							...(localId !== offer.toolId
+								? { transportId: offer.toolId }
+								: {}),
+						} as StorageConfigBlock);
+						importedId = localId;
+					}
 					storageSyncService.attachSharedProject(
 						user.id,
 						currentProjectId,
-						offer.toolId,
+						localId,
 						attachment.storageProjectId,
 						attachment.baseRevision,
 					);
-					attached = true;
+					attached = !previousBinding;
 					await storageSyncService.storeSharedProjectKey(
 						user.id,
 						currentProjectId,
 						projectKey,
 					);
-
-					const sameExisting = offer.conflict.kind === 'same-id-same-config';
-					if (!sameExisting) {
-						addConfig(offer.kind, offer.config);
-						imported = true;
-					}
-					preferences.recordAccepted(
-						offer.kind,
-						offer,
-						offer.toolId,
-						!sameExisting,
-					);
+					preferences.recordAccepted('storage', offer, localId, managed);
 					setStorageBindingRevision((revision) => revision + 1);
 					dismissToast(offer.identity);
 				} catch (error) {
 					if (attached) {
 						storageSyncService.disconnectProject(user.id, currentProjectId);
 					}
-					if (imported) removeConfig('storage', offer.toolId);
+					if (importedId) removeConfig('storage', importedId);
 					document.dispatchEvent(
 						new CustomEvent('toast-notification', {
 							detail: {
@@ -468,6 +554,10 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 			addConfig,
 			removeConfig,
 			preferences.recordAccepted,
+			preferences.getOrigin,
+			preferences.preferences,
+			storages.configs,
+			storages.disabledConfigs,
 			provider,
 			user?.id,
 			currentProjectId,
@@ -476,6 +566,32 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 			unlockStorage,
 		],
 	);
+
+	useEffect(() => {
+		if (!storageUnlocked || storageBinding || acceptingStorageRef.current.size)
+			return;
+		const matching = offers.find(
+			(offer) =>
+				offer.kind === 'storage' &&
+				offer.status === 'new' &&
+				Boolean(
+					findTrustedSharedStorage(
+						offer,
+						[...storages.configs, ...storages.disabledConfigs],
+						preferences.preferences,
+					),
+				),
+		);
+		if (matching) accept(matching);
+	}, [
+		offers,
+		accept,
+		storageUnlocked,
+		storageBinding,
+		storages.configs,
+		storages.disabledConfigs,
+		preferences.preferences,
+	]);
 
 	const ignore = useCallback(
 		(offer: SharedToolOffer) => {
@@ -541,6 +657,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 		for (const offer of offers) {
 			const decision = preferences.getDecision(offer.identity);
 			if (
+				offer.kind !== 'storage' &&
 				decision?.decision === 'accepted' &&
 				decision.imported &&
 				decision.revision !== offer.revision
@@ -558,8 +675,21 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 			if (notifiedRef.current.has(notificationKey)) continue;
 			notifiedRef.current.add(notificationKey);
 
-			const sameName = offer.conflict.kind === 'same-name';
-			const sameIdConflict = offer.conflict.kind === 'same-id-different-config';
+			if (
+				storageUnlocked &&
+				offer.kind === 'storage' &&
+				findTrustedSharedStorage(
+					offer,
+					[...storages.configs, ...storages.disabledConfigs],
+					preferences.preferences,
+				)
+			)
+				continue;
+			const sameName =
+				offer.kind !== 'storage' && offer.conflict.kind === 'same-name';
+			const sameIdConflict =
+				offer.kind !== 'storage' &&
+				offer.conflict.kind === 'same-id-different-config';
 			document.dispatchEvent(
 				new CustomEvent('toast-notification', {
 					detail: {
@@ -575,7 +705,9 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 							{
 								label: sameIdConflict
 									? 'Replace mine'
-									: sameName
+									: sameName ||
+											(offer.kind === 'storage' &&
+												offer.conflict.kind !== 'none')
 										? 'Add shared'
 										: 'Use',
 								variant: 'primary',
@@ -590,7 +722,15 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 				}),
 			);
 		}
-	}, [offers, accept, ignore]);
+	}, [
+		offers,
+		accept,
+		ignore,
+		storageUnlocked,
+		storages.configs,
+		storages.disabledConfigs,
+		preferences.preferences,
+	]);
 
 	const storageTool = tools.find((tool) => tool.kind === 'storage');
 	const storageShareAvailable = Boolean(storageBinding && storageTool);
