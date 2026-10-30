@@ -68,9 +68,13 @@ export interface ACPPromptResponse {
 	stopReason: ACPStopReason;
 }
 
-export interface ACPNewSessionResponse {
-	sessionId: ACPSessionId;
+// texlyre-acp-bridge reports the working directory it gave the agent here.
+export interface ACPLoadSessionResponse {
 	_meta?: { texlyre?: { cwd?: unknown }; [key: string]: unknown } | null;
+}
+
+export interface ACPNewSessionResponse extends ACPLoadSessionResponse {
+	sessionId: ACPSessionId;
 }
 
 // session/update payloads are forwarded to the UI largely untouched; only the

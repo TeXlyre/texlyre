@@ -170,6 +170,38 @@ describe('GenericACPService', () => {
 		expect(response?.result).toEqual({ content: 'x' });
 	});
 
+	it('resumes a session with session/load at the cwd the bridge reports', async () => {
+		const loading = service.loadSession('agent', 'old-session');
+		await flush();
+		agent.reply(1, { protocolVersion: 1, agentCapabilities: { loadSession: true } });
+		await flush();
+		expect(agent.sent[1]).toMatchObject({
+			id: 2,
+			method: 'session/load',
+			params: { sessionId: 'old-session', cwd: '/texlyre', mcpServers: [] },
+		});
+		agent.reply(2, { _meta: { texlyre: { cwd: '/srv/workspace' } } });
+		await loading;
+		fileSystem.readTextFile.mockResolvedValue('x');
+
+		const response = await agentRequest(20, 'fs/read_text_file', {
+			sessionId: 'old-session',
+			path: '/srv/workspace/main.tex',
+		});
+
+		expect(fileSystem.readTextFile).toHaveBeenCalledWith('/main.tex');
+		expect(response?.result).toEqual({ content: 'x' });
+	});
+
+	it('does not ask agents without loadSession to resume', async () => {
+		const loading = service.loadSession('agent', 'old-session');
+		await flush();
+		agent.reply(1, { protocolVersion: 1 });
+
+		await expect(loading).rejects.toThrow('cannot resume');
+		expect(agent.sent.map((message) => message.method)).toEqual(['initialize']);
+	});
+
 	it('serves tunnelled MCP requests from the project tools', async () => {
 		await startSession();
 		fileSystem.editTextFile.mockResolvedValue(undefined);

@@ -18,6 +18,7 @@ interface SessionUpdateFields {
 
 export type EntryAction =
 	| { type: 'reset' }
+	| { type: 'load'; entries: AgentEntry[] }
 	| { type: 'add'; entry: AgentEntry }
 	| { type: 'update'; notification: ACPSessionNotification };
 
@@ -38,6 +39,7 @@ export const entriesReducer = (
 	action: EntryAction,
 ): AgentEntry[] => {
 	if (action.type === 'reset') return [];
+	if (action.type === 'load') return action.entries;
 	if (action.type === 'add') return [...entries, action.entry];
 
 	const update = action.notification.update as SessionUpdateFields;

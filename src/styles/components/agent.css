@@ -15,19 +15,30 @@
 
 .agent-toolbar > select {
 	flex: 1;
+	min-width: 0;
 	margin: 0;
 }
 
 .agent-toolbar > .agent-name {
-	flex: 1;
+	flex: 0 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 	font-size: var(--font-size-caption);
 	font-weight: 500;
 }
 
-.agent-toolbar > .agent-new-session {
+.agent-toolbar > .agent-new-session,
+.agent-toolbar > .button.agent-delete-chat {
+	flex-shrink: 0;
 	padding: 2px var(--space-sm);
 	margin: 0;
 	font-size: var(--font-size-caption);
+}
+
+.agent-toolbar > .ui-icon-button.agent-delete-chat {
+	flex-shrink: 0;
 }
 
 .ui-list.agent-transcript {

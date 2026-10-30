@@ -9,6 +9,7 @@ import {
 	type ACPClientCapabilities,
 	type ACPContentBlock,
 	type ACPInitializeResponse,
+	type ACPLoadSessionResponse,
 	type ACPMcpServer,
 	type ACPNewSessionResponse,
 	type ACPPermissionOutcome,
@@ -229,16 +230,36 @@ export class GenericACPService extends ExternalServiceBase<ACPServerConfig> {
 			...(sessionMeta ? { _meta: sessionMeta } : {}),
 		})) as ACPNewSessionResponse;
 
-		const bridgedCwd = response._meta?.texlyre?.cwd;
-		this.connections
-			.get(configId)
-			?.sessions.set(
-				response.sessionId,
-				typeof bridgedCwd === 'string' && bridgedCwd
-					? bridgedCwd
-					: this.cwdOf(config),
-			);
+		this.recordSession(configId, config, response.sessionId, response);
 		return response.sessionId;
+	}
+
+	canLoadSession(configId: string): boolean {
+		return Boolean(
+			this.connections.get(configId)?.initialized?.agentCapabilities
+				?.loadSession,
+		);
+	}
+
+	// Resumes an earlier session. The agent replays its history as
+	// session/update notifications before answering; callers that already hold
+	// the transcript ignore them by only listening once this resolves.
+	async loadSession(configId: string, sessionId: ACPSessionId): Promise<void> {
+		await this.connect(configId);
+		const config = this.requireConfig(configId);
+		if (!this.canLoadSession(configId)) {
+			throw new Error(`${config.name} cannot resume earlier sessions`);
+		}
+
+		const sessionMeta = this.sessionMetaOf(config);
+		const response = (await this.request(configId, 'session/load', {
+			sessionId,
+			cwd: this.cwdOf(config),
+			mcpServers: this.mcpServersOf(config),
+			...(sessionMeta ? { _meta: sessionMeta } : {}),
+		})) as ACPLoadSessionResponse | null;
+
+		this.recordSession(configId, config, sessionId, response);
 	}
 
 	async prompt(
@@ -287,6 +308,23 @@ export class GenericACPService extends ExternalServiceBase<ACPServerConfig> {
 		if (!this.connections.get(configId)?.sessions.has(sessionId)) {
 			throw new Error(`Unknown session ${sessionId} for agent ${configId}`);
 		}
+	}
+
+	private recordSession(
+		configId: string,
+		config: ACPServerConfig,
+		sessionId: ACPSessionId,
+		response: ACPLoadSessionResponse | null,
+	): void {
+		const bridgedCwd = response?._meta?.texlyre?.cwd;
+		this.connections
+			.get(configId)
+			?.sessions.set(
+				sessionId,
+				typeof bridgedCwd === 'string' && bridgedCwd
+					? bridgedCwd
+					: this.cwdOf(config),
+			);
 	}
 
 	private cwdOf(config: ACPServerConfig): string {

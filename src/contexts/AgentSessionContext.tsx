@@ -16,6 +16,9 @@ import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
 import { useACPConfig } from '../hooks/useACPConfig';
 import { useEditor } from '../hooks/useEditor';
+import { useFileTree } from '../hooks/useFileTree';
+import { agentChatStore, chatTitle } from '../services/AgentChatStore';
+import { fileStoreService } from '../services/FileStoreService';
 import { genericACPService } from '../services/GenericACPService';
 import { YjsProjectFileSystem } from '../services/ProjectFileSystem';
 import type {
@@ -24,6 +27,8 @@ import type {
 	ACPStopReason,
 } from '../types/acp';
 import type {
+	AgentChat,
+	AgentChatSummary,
 	AgentEntry,
 	AgentStatus,
 	PendingPermission,
@@ -42,6 +47,12 @@ const STOP_REASON_NOTICES: Partial<Record<ACPStopReason, string>> = {
 	refusal: 'The agent declined to continue.',
 };
 
+// Saves wait for the transcript to settle, so a streamed reply is not written
+// once per chunk.
+const SAVE_DELAY_MS = 800;
+
+type ChatInfo = Omit<AgentChat, 'title' | 'updatedAt' | 'entries'>;
+
 interface AgentSessionContextType {
 	agents: ACPServerConfig[];
 	activeAgentId: string | null;
@@ -52,6 +63,11 @@ interface AgentSessionContextType {
 	send: (text: string) => Promise<void>;
 	cancel: () => void;
 	newSession: () => void;
+	chats: AgentChatSummary[];
+	chatId: string | null;
+	refreshChats: () => void;
+	selectChat: (id: string) => Promise<void>;
+	deleteChat: (id: string) => Promise<void>;
 	respondToPermission: (optionId: string | null) => void;
 	readFile: (path: string) => Promise<string | null>;
 }
@@ -68,6 +84,8 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 }) => {
 	const { configs } = useACPConfig();
 	const { getCollabOptions } = useEditor();
+	// The project's file storage is ready once the file tree has loaded.
+	const { isLoading: isStorageLoading } = useFileTree();
 	const agents = useMemo(
 		() => configs.filter((config) => config.enabled),
 		[configs],
@@ -82,6 +100,20 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 	const [status, setStatus] = useState<AgentStatus>('disconnected');
 	const [entries, dispatch] = useReducer(entriesReducer, []);
 	const [permissions, setPermissions] = useState<PendingPermission[]>([]);
+	const [chats, setChats] = useState<AgentChatSummary[]>([]);
+	const [chat, setChatState] = useState<ChatInfo | null>(null);
+	// Read by async callbacks, which would otherwise see a stale chat.
+	const chatRef = useRef<ChatInfo | null>(null);
+	const setChat = useCallback((next: ChatInfo | null) => {
+		chatRef.current = next;
+		setChatState(next);
+	}, []);
+	// The entries a chat was opened with, so opening it does not count as a
+	// change and move it to the top of the list.
+	const loadedEntriesRef = useRef<AgentEntry[] | null>(null);
+	const pendingSaveRef = useRef<{ chat: AgentChat; projectId: string } | null>(
+		null,
+	);
 
 	const sessionRef = useRef<{ agentId: string; sessionId: string } | null>(
 		null,
@@ -189,13 +221,71 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 		setStatus('disconnected');
 	}, [cancelPermissions]);
 
-	// Switching or removing the agent ends the old session.
-	useEffect(() => {
-		if (sessionRef.current && sessionRef.current.agentId !== activeAgentId) {
-			endSession();
-			dispatch({ type: 'reset' });
+	const flushSave = useCallback(async () => {
+		const pending = pendingSaveRef.current;
+		pendingSaveRef.current = null;
+		if (!pending) return;
+		try {
+			if (!(await agentChatStore.save(pending.chat, pending.projectId))) return;
+			const { id, agentId, title, updatedAt } = pending.chat;
+			setChats((list) => [
+				{ id, agentId, title, updatedAt },
+				...list.filter((summary) => summary.id !== id),
+			]);
+		} catch (error) {
+			moduleLog.error('Could not save the agent chat:', error);
 		}
-	}, [activeAgentId, endSession]);
+	}, []);
+
+	useEffect(() => {
+		if (!chat || entries.length === 0) return;
+		if (entries === loadedEntriesRef.current) return;
+		pendingSaveRef.current = {
+			chat: {
+				...chat,
+				title: chatTitle(entries),
+				updatedAt: Date.now(),
+				entries,
+			},
+			projectId: fileStoreService.getCurrentProjectId(),
+		};
+		const timer = setTimeout(() => void flushSave(), SAVE_DELAY_MS);
+		return () => clearTimeout(timer);
+	}, [chat, entries, flushSave]);
+
+	// Leaving the project saves what is still pending.
+	useEffect(() => () => void flushSave(), [flushSave]);
+
+	const refreshChats = useCallback(() => {
+		agentChatStore
+			.list()
+			.then(setChats)
+			.catch((error) => moduleLog.warn('Could not list agent chats:', error));
+	}, []);
+
+	useEffect(() => {
+		if (!isStorageLoading) refreshChats();
+	}, [isStorageLoading, refreshChats]);
+
+	const startNewChat = useCallback(() => {
+		endSession();
+		setChat(null);
+		loadedEntriesRef.current = null;
+		dispatch({ type: 'reset' });
+	}, [endSession, setChat]);
+
+	// Choosing another agent starts a new chat. Opening a chat selects its
+	// agent too, which leaves the chat open since the agents match.
+	const previousAgentIdRef = useRef(activeAgentId);
+	useEffect(() => {
+		if (previousAgentIdRef.current === activeAgentId) return;
+		previousAgentIdRef.current = activeAgentId;
+		if (chatRef.current?.agentId === activeAgentId) return;
+		if (sessionRef.current || chatRef.current) {
+			void flushSave();
+			startNewChat();
+		}
+	}, [activeAgentId, flushSave, startNewChat]);
 
 	const ensureSession = useCallback(async (): Promise<{
 		agentId: string;
@@ -207,15 +297,50 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 		}
 		setStatus('connecting');
 		await genericACPService.connect(activeAgentId);
+
+		const current = chatRef.current;
+		if (current?.sessionId && current.agentId === activeAgentId) {
+			try {
+				await genericACPService.loadSession(activeAgentId, current.sessionId);
+				sessionRef.current = {
+					agentId: activeAgentId,
+					sessionId: current.sessionId,
+				};
+				return sessionRef.current;
+			} catch (error) {
+				moduleLog.warn('Could not resume the agent session:', error);
+				notice(
+					t(
+						'The agent could not resume this chat, so it starts without the earlier messages.',
+					),
+					'info',
+				);
+			}
+		}
+
 		const sessionId = await genericACPService.newSession(activeAgentId);
 		sessionRef.current = { agentId: activeAgentId, sessionId };
+		if (chatRef.current) {
+			setChat({ ...chatRef.current, agentId: activeAgentId, sessionId });
+		}
 		return sessionRef.current;
-	}, [activeAgentId]);
+	}, [activeAgentId, notice, setChat]);
 
 	const send = useCallback(
 		async (text: string) => {
 			const prompt = text.trim();
 			if (!prompt || status === 'prompting' || status === 'connecting') return;
+			if (!activeAgentId) return;
+
+			if (!chatRef.current) {
+				setChat({
+					version: 1,
+					id: nanoid(),
+					agentId: activeAgentId,
+					sessionId: null,
+					createdAt: Date.now(),
+				});
+			}
 
 			dispatch({
 				type: 'add',
@@ -239,7 +364,7 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 				setStatus(sessionRef.current ? 'ready' : 'error');
 			}
 		},
-		[ensureSession, notice, status],
+		[activeAgentId, ensureSession, notice, setChat, status],
 	);
 
 	const cancel = useCallback(() => {
@@ -254,9 +379,51 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 	}, [cancelPermissions]);
 
 	const newSession = useCallback(() => {
-		endSession();
-		dispatch({ type: 'reset' });
-	}, [endSession]);
+		void flushSave();
+		startNewChat();
+	}, [flushSave, startNewChat]);
+
+	const selectChat = useCallback(
+		async (id: string) => {
+			if (id === chatRef.current?.id) return;
+			await flushSave();
+			const loaded = await agentChatStore.load(id).catch((error) => {
+				moduleLog.error('Could not open the agent chat:', error);
+				return null;
+			});
+			if (!loaded) {
+				notice(t('This chat could not be opened.'), 'error');
+				refreshChats();
+				return;
+			}
+
+			endSession();
+			const { version, agentId, sessionId, createdAt, entries: saved } = loaded;
+			if (agents.some((agent) => agent.id === loaded.agentId)) {
+				setSelectedAgentId(loaded.agentId);
+			}
+			setChat({ version, id: loaded.id, agentId, sessionId, createdAt });
+			loadedEntriesRef.current = saved;
+			dispatch({ type: 'load', entries: saved });
+		},
+		[agents, endSession, flushSave, notice, refreshChats, setChat],
+	);
+
+	const deleteChat = useCallback(
+		async (id: string) => {
+			if (pendingSaveRef.current?.chat.id === id) pendingSaveRef.current = null;
+			try {
+				await agentChatStore.remove(id);
+			} catch (error) {
+				moduleLog.error('Could not delete the agent chat:', error);
+				notice(t('This chat could not be deleted.'), 'error');
+				return;
+			}
+			setChats((list) => list.filter((summary) => summary.id !== id));
+			if (chatRef.current?.id === id) startNewChat();
+		},
+		[notice, startNewChat],
+	);
 
 	const pendingPermission = permissions[0] ?? null;
 
@@ -296,6 +463,11 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 				send,
 				cancel,
 				newSession,
+				chats,
+				chatId: chat?.id ?? null,
+				refreshChats,
+				selectChat,
+				deleteChat,
 				respondToPermission,
 				readFile,
 			}}

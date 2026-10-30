@@ -5,8 +5,10 @@ import { useEffect, useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { useAgentDock } from '../../hooks/useAgentDock';
 import { useAgentSession } from '../../hooks/useAgentSession';
+import { chatTitle } from '../../services/AgentChatStore';
 import type { AgentEntry } from '../../types/agentSession';
-import { ExpandIcon, MinimizeIcon } from '../common/Icons';
+import { formatDate } from '../../utils/dateUtils';
+import { ExpandIcon, MinimizeIcon, TrashIcon } from '../common/Icons';
 import DiffView from './DiffView';
 import { toolLabel } from './toolLabel';
 
@@ -101,9 +103,15 @@ const AgentPanel: React.FC = () => {
 		send,
 		cancel,
 		newSession,
+		chats,
+		chatId,
+		refreshChats,
+		selectChat,
+		deleteChat,
 	} = useAgentSession();
 	const { canDock, docked, setDocked } = useAgentDock();
 	const [inputValue, setInputValue] = useState('');
+	const [confirmingDelete, setConfirmingDelete] = useState(false);
 	const endRef = useRef<HTMLDivElement>(null);
 	const isBusy = status === 'prompting' || status === 'connecting';
 
@@ -111,6 +119,15 @@ const AgentPanel: React.FC = () => {
 	useEffect(() => {
 		endRef.current?.scrollIntoView({ behavior: 'smooth' });
 	}, [entries]);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: chatId is an intentional trigger; another chat cancels a pending delete.
+	useEffect(() => {
+		setConfirmingDelete(false);
+	}, [chatId]);
+
+	// The open chat is listed once it is first saved; until then it is shown
+	// from the transcript.
+	const isListed = chats.some((chat) => chat.id === chatId);
 
 	const handleSend = () => {
 		if (!inputValue.trim() || isBusy) return;
@@ -150,13 +167,61 @@ const AgentPanel: React.FC = () => {
 				) : (
 					<span className='agent-name'>{agents[0]?.name}</span>
 				)}
+				<select
+					className='ui-field-control agent-chat-select'
+					value={chatId ?? ''}
+					onChange={(e) => {
+						if (e.target.value) void selectChat(e.target.value);
+						else newSession();
+					}}
+					onFocus={refreshChats}
+					disabled={isBusy}
+					aria-label={t('Chats')}
+					title={t('Chats')}
+				>
+					{!chatId && <option value=''>{t('New chat')}</option>}
+					{chatId && !isListed && (
+						<option value={chatId}>
+							{chatTitle(entries) || t('New chat')}
+						</option>
+					)}
+					{chats.map((chat) => (
+						<option key={chat.id} value={chat.id}>
+							{`${chat.title || t('Untitled chat')} · ${formatDate(chat.updatedAt)}`}
+						</option>
+					))}
+				</select>
+				{chatId && isListed && (
+					<button
+						type='button'
+						className={
+							confirmingDelete
+								? 'button danger agent-delete-chat'
+								: 'ui-icon-button agent-delete-chat'
+						}
+						data-variant={confirmingDelete ? undefined : 'ghost'}
+						data-size={confirmingDelete ? undefined : 'xs'}
+						onClick={() => {
+							if (confirmingDelete) void deleteChat(chatId);
+							else setConfirmingDelete(true);
+						}}
+						onBlur={() => setConfirmingDelete(false)}
+						disabled={isBusy}
+						title={t('Delete this chat')}
+						aria-label={
+							confirmingDelete ? t('Confirm delete') : t('Delete this chat')
+						}
+					>
+						{confirmingDelete ? t('Delete?') : <TrashIcon />}
+					</button>
+				)}
 				<button
 					type='button'
 					className='button secondary agent-new-session'
 					onClick={newSession}
 					disabled={isBusy || entries.length === 0}
 				>
-					{t('New session')}
+					{t('New chat')}
 				</button>
 				{canDock && (
 					<button

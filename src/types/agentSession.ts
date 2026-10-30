@@ -37,3 +37,22 @@ export interface PendingPermission {
 	id: string;
 	request: ACPRequestPermissionRequest;
 }
+
+// A saved agent chat, stored as JSON in the project (see AgentChatStore).
+export interface AgentChat {
+	version: 1;
+	id: string;
+	agentId: string;
+	// The agent's session id, used to resume the conversation with
+	// session/load; null until the first prompt reaches the agent.
+	sessionId: string | null;
+	title: string;
+	createdAt: number;
+	updatedAt: number;
+	entries: AgentEntry[];
+}
+
+export type AgentChatSummary = Pick<
+	AgentChat,
+	'id' | 'agentId' | 'title' | 'updatedAt'
+>;

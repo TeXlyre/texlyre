@@ -17,6 +17,7 @@ const mockService = {
 	onStatusChange: jest.fn(() => () => undefined),
 	connect: jest.fn(async () => ({ protocolVersion: 1 })),
 	newSession: jest.fn(async () => 'session-1'),
+	loadSession: jest.fn(async () => undefined),
 	prompt: jest.fn(),
 	cancel: jest.fn(),
 	disconnect: jest.fn(),
@@ -36,12 +37,42 @@ jest.mock('@src/services/ProjectFileSystem', () => {
 	};
 });
 
+jest.mock('@src/services/FileStoreService', () => ({
+	fileStoreService: { getCurrentProjectId: () => 'project-1' },
+}));
+
+const mockChats = new Map<string, any>();
+jest.mock('@src/services/AgentChatStore', () => ({
+	...jest.requireActual('@src/services/AgentChatStore'),
+	agentChatStore: {
+		list: jest.fn(async () =>
+			[...mockChats.values()].map(({ id, agentId, title, updatedAt }) => ({
+				id,
+				agentId,
+				title,
+				updatedAt,
+			})),
+		),
+		load: jest.fn(async (id: string) => mockChats.get(id) ?? null),
+		save: jest.fn(async (chat: any) => {
+			mockChats.set(chat.id, chat);
+			return true;
+		}),
+		remove: jest.fn(async (id: string) => {
+			mockChats.delete(id);
+		}),
+	},
+}));
+
 let mockAgents: ACPServerConfig[] = [];
 jest.mock('@src/hooks/useACPConfig', () => ({
 	useACPConfig: () => ({ configs: mockAgents }),
 }));
 jest.mock('@src/hooks/useEditor', () => ({
 	useEditor: () => ({ getCollabOptions: () => null }),
+}));
+jest.mock('@src/hooks/useFileTree', () => ({
+	useFileTree: () => ({ isLoading: false }),
 }));
 jest.mock('@src/hooks/useAuth', () => ({ useAuth: () => ({ user: null }) }));
 jest.mock('@src/hooks/useChat', () => ({
@@ -98,7 +129,7 @@ describe('agent session UI', () => {
 				{ type: 'text', text: 'Fix it' },
 			]),
 		);
-		expect(screen.getByText('Fix it')).toBeInTheDocument();
+		expect(screen.getByText('Fix it', { selector: '.agent-entry' })).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
 
 		act(() => {
@@ -178,6 +209,110 @@ describe('agent session UI', () => {
 
 		expect(mockService.disconnect).toHaveBeenCalledWith('claude');
 		expect(mockService.setPermissionHandler).toHaveBeenLastCalledWith(null);
+	});
+});
+
+describe('saved agent chats', () => {
+	const SAVED = {
+		version: 1,
+		id: 'chat-1',
+		agentId: 'claude',
+		sessionId: 'old-session',
+		title: 'Earlier question',
+		createdAt: 1,
+		updatedAt: 2,
+		entries: [
+			{ id: 'e1', kind: 'user', text: 'Earlier question' },
+			{ id: 'e2', kind: 'agent', text: 'Earlier answer' },
+		],
+	};
+	const chatPicker = () => screen.getByRole('combobox', { name: 'Chats' });
+
+	beforeEach(() => {
+		mockAgents = [AGENT];
+		mockChats.clear();
+		jest.clearAllMocks();
+		mockService.prompt.mockResolvedValue({ stopReason: 'end_turn' });
+		mockService.loadSession.mockResolvedValue(undefined);
+	});
+
+	it('saves a chat with its session and lists it', async () => {
+		renderAgent();
+		await userEvent.type(screen.getByPlaceholderText('Ask the agent...'), 'Fix it{Enter}');
+
+		await waitFor(() => expect(mockChats.size).toBe(1), { timeout: 3000 });
+		const [saved] = mockChats.values();
+		expect(saved).toMatchObject({
+			agentId: 'claude',
+			sessionId: 'session-1',
+			title: 'Fix it',
+		});
+		expect(saved.entries[0]).toMatchObject({ kind: 'user', text: 'Fix it' });
+		expect(chatPicker()).toHaveValue(saved.id);
+	});
+
+	it('reopens a saved chat and resumes its session', async () => {
+		mockChats.set(SAVED.id, SAVED);
+		renderAgent();
+		await waitFor(() =>
+			expect(screen.getByRole('option', { name: /Earlier question/ })).toBeInTheDocument(),
+		);
+
+		await userEvent.selectOptions(chatPicker(), 'chat-1');
+		expect(await screen.findByText('Earlier answer')).toBeInTheDocument();
+
+		await userEvent.type(screen.getByPlaceholderText('Ask the agent...'), 'More{Enter}');
+
+		await waitFor(() =>
+			expect(mockService.prompt).toHaveBeenCalledWith('claude', 'old-session', [
+				{ type: 'text', text: 'More' },
+			]),
+		);
+		expect(mockService.loadSession).toHaveBeenCalledWith('claude', 'old-session');
+		expect(mockService.newSession).not.toHaveBeenCalled();
+	});
+
+	it('starts a new agent session when the old one cannot be resumed', async () => {
+		mockChats.set(SAVED.id, SAVED);
+		mockService.loadSession.mockRejectedValue(new Error('gone'));
+		renderAgent();
+		await waitFor(() =>
+			expect(screen.getByRole('option', { name: /Earlier question/ })).toBeInTheDocument(),
+		);
+		await userEvent.selectOptions(chatPicker(), 'chat-1');
+
+		await userEvent.type(screen.getByPlaceholderText('Ask the agent...'), 'More{Enter}');
+
+		await waitFor(() =>
+			expect(mockService.prompt).toHaveBeenCalledWith('claude', 'session-1', [
+				{ type: 'text', text: 'More' },
+			]),
+		);
+		expect(
+			screen.getByText(
+				'The agent could not resume this chat, so it starts without the earlier messages.',
+			),
+		).toBeInTheDocument();
+		await waitFor(() => expect(mockChats.get('chat-1').sessionId).toBe('session-1'), {
+			timeout: 3000,
+		});
+	});
+
+	it('deletes the open chat after a second click', async () => {
+		mockChats.set(SAVED.id, SAVED);
+		renderAgent();
+		await waitFor(() =>
+			expect(screen.getByRole('option', { name: /Earlier question/ })).toBeInTheDocument(),
+		);
+		await userEvent.selectOptions(chatPicker(), 'chat-1');
+
+		await userEvent.click(screen.getByRole('button', { name: 'Delete this chat' }));
+		expect(mockChats.has('chat-1')).toBe(true);
+		await userEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
+
+		await waitFor(() => expect(mockChats.has('chat-1')).toBe(false));
+		expect(screen.queryByText('Earlier answer')).not.toBeInTheDocument();
+		expect(chatPicker()).toHaveValue('');
 	});
 });
 
