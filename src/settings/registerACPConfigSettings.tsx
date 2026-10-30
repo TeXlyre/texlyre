@@ -25,8 +25,9 @@ const acpKind: ToolConfigKind = {
 	icon: ChatIcon,
 	settingId: ACP_CONFIGS_SETTING,
 	emptyMessage: 'No agent recipes yet.',
-	// An agent acts on the user's machine and account; it is never offered to
-	// collaborators.
+	// An agent acts on the user's machine and account, so it is never shared
+	// with all collaborators from here; it is shared per project from the
+	// Share and Shared Tools modals.
 	shareable: false,
 	fields: [
 		{

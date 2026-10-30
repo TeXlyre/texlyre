@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
 import { AgentSessionProvider } from '../../contexts/AgentSessionContext';
+import { SharedToolsProvider } from '../../contexts/SharedToolsContext';
 import { ChatProvider } from '../../contexts/ChatContext';
 import { CollabProvider } from '../../contexts/CollabContext';
 import { FileSyncProvider } from '../../contexts/PeerFileSyncContext';
@@ -1004,10 +1005,12 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 								<ExternalTypesetterProvider>
 									<SourceMapProvider>
 										<ContentFormatterProvider>
-											<AgentSessionProvider>
-												<EditorAppView {...props} />
-												<AgentPermissionModal />
-											</AgentSessionProvider>
+											<SharedToolsProvider docUrl={props.docUrl}>
+												<AgentSessionProvider>
+													<EditorAppView {...props} />
+													<AgentPermissionModal />
+												</AgentSessionProvider>
+											</SharedToolsProvider>
 										</ContentFormatterProvider>
 									</SourceMapProvider>
 								</ExternalTypesetterProvider>

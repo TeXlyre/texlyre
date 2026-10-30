@@ -3,6 +3,7 @@ import type React from 'react';
 import {
 	createContext,
 	useCallback,
+	useContext,
 	useEffect,
 	useMemo,
 	useReducer,
@@ -26,15 +27,13 @@ import {
 import { fileStoreService } from '../services/FileStoreService';
 import { genericACPService } from '../services/GenericACPService';
 import { YjsProjectFileSystem } from '../services/ProjectFileSystem';
-import type {
-	ACPPermissionOutcome,
-	ACPServerConfig,
-	ACPStopReason,
-} from '../types/acp';
+import { SharedToolsContext } from './SharedToolsContext';
+import type { ACPPermissionOutcome, ACPStopReason } from '../types/acp';
 import type {
 	AgentChat,
 	AgentChatSummary,
 	AgentEntry,
+	AgentOption,
 	AgentStatus,
 	PendingPermission,
 } from '../types/agentSession';
@@ -59,7 +58,7 @@ const SAVE_DELAY_MS = 800;
 type ChatInfo = Omit<AgentChat, 'title' | 'updatedAt' | 'entries'>;
 
 interface AgentSessionContextType {
-	agents: ACPServerConfig[];
+	agents: AgentOption[];
 	activeAgentId: string | null;
 	setActiveAgentId: (id: string) => void;
 	status: AgentStatus;
@@ -94,9 +93,16 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 	const { getCollabOptions } = useEditor();
 	// The project's file storage is ready once the file tree has loaded.
 	const { isLoading: isStorageLoading } = useFileTree();
-	const agents = useMemo(
-		() => configs.filter((config) => config.enabled),
-		[configs],
+	const sharedAgents = useContext(SharedToolsContext)?.sharedAgents;
+	const agents = useMemo<AgentOption[]>(
+		() => [
+			...configs.filter((config) => config.enabled),
+			...(sharedAgents ?? []).map((agent) => ({
+				...agent.config,
+				sharedBy: agent.ownerName,
+			})),
+		],
+		[configs, sharedAgents],
 	);
 
 	const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
@@ -221,13 +227,52 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 		};
 	}, [createFileSystem, cancelPermissions]);
 
+	// Sessions ended on purpose, so their unfinished prompt doesn't report an
+	// error.
+	const endedSessionsRef = useRef(new Set<string>());
 	const endSession = useCallback(() => {
 		const current = sessionRef.current;
 		sessionRef.current = null;
 		cancelPermissions();
-		if (current) genericACPService.disconnect(current.agentId);
+		if (current) {
+			endedSessionsRef.current.add(current.sessionId);
+			genericACPService.disconnect(current.agentId);
+		}
 		setStatus('disconnected');
 	}, [cancelPermissions]);
+
+	// Shared agents are registered with the service only while they are
+	// shared; unregistering one disconnects it, which is what ends a
+	// collaborator's session when the owner stops sharing.
+	const registeredSharedRef = useRef(new Map<string, string>());
+	useEffect(() => {
+		const registered = registeredSharedRef.current;
+		const next = new Map(
+			(sharedAgents ?? []).map((agent) => [agent.config.id, agent.config]),
+		);
+		for (const [id, config] of next) {
+			const serialized = JSON.stringify(config);
+			if (registered.get(id) === serialized) continue;
+			if (registered.has(id)) genericACPService.updateConfig(id, config);
+			else genericACPService.registerConfig(config);
+			registered.set(id, serialized);
+		}
+		for (const id of registered.keys()) {
+			if (next.has(id)) continue;
+			if (sessionRef.current?.agentId === id) endSession();
+			genericACPService.unregisterConfig(id);
+			registered.delete(id);
+		}
+	}, [sharedAgents, endSession]);
+	useEffect(
+		() => () => {
+			for (const id of registeredSharedRef.current.keys()) {
+				genericACPService.unregisterConfig(id);
+			}
+			registeredSharedRef.current.clear();
+		},
+		[],
+	);
 
 	const flushSave = useCallback(async () => {
 		const pending = pendingSaveRef.current;
@@ -285,15 +330,39 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 	// Choosing another agent starts a new chat. Opening a chat selects its
 	// agent too, which leaves the chat open since the agents match.
 	const previousAgentIdRef = useRef(activeAgentId);
+	const previousAgentsRef = useRef(agents);
 	useEffect(() => {
+		const previousAgents = previousAgentsRef.current;
+		previousAgentsRef.current = agents;
 		if (previousAgentIdRef.current === activeAgentId) return;
+		const previousId = previousAgentIdRef.current;
 		previousAgentIdRef.current = activeAgentId;
+
+		// A shared agent whose owner stopped sharing it: its session has ended,
+		// but the chat stays open to read.
+		const revoked = previousAgents.find(
+			(agent) => agent.id === previousId && agent.sharedBy,
+		);
+		if (revoked && !agents.some((agent) => agent.id === previousId)) {
+			if (sessionRef.current?.agentId === previousId) endSession();
+			if (chatRef.current?.agentId === previousId) {
+				notice(
+					t('{{owner}} stopped sharing {{agent}}, so its session has ended.', {
+						owner: revoked.sharedBy,
+						agent: revoked.name,
+					}),
+					'info',
+				);
+			}
+			return;
+		}
+
 		if (chatRef.current?.agentId === activeAgentId) return;
 		if (sessionRef.current || chatRef.current) {
 			void flushSave();
 			startNewChat();
 		}
-	}, [activeAgentId, flushSave, startNewChat]);
+	}, [activeAgentId, agents, endSession, flushSave, notice, startNewChat]);
 
 	const ensureSession = useCallback(async (): Promise<{
 		agentId: string;
@@ -366,8 +435,9 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 				},
 			});
 
+			let session: { agentId: string; sessionId: string } | null = null;
 			try {
-				const session = await ensureSession();
+				session = await ensureSession();
 				setStatus('prompting');
 				const result = await genericACPService.prompt(
 					session.agentId,
@@ -383,6 +453,7 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 				if (message) notice(t(message), 'info');
 				setStatus('ready');
 			} catch (error) {
+				if (session && endedSessionsRef.current.has(session.sessionId)) return;
 				moduleLog.error('Agent prompt failed:', error);
 				notice(error instanceof Error ? error.message : String(error), 'error');
 				setStatus(sessionRef.current ? 'ready' : 'error');

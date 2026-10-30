@@ -1,5 +1,5 @@
 // src/types/agentSession.ts
-import type { ACPRequestPermissionRequest } from './acp';
+import type { ACPRequestPermissionRequest, ACPServerConfig } from './acp';
 
 export type AgentStatus =
 	| 'disconnected'
@@ -39,6 +39,10 @@ export type AgentEntry =
 			items: Array<{ content: string; status: string }>;
 	  }
 	| { id: string; kind: 'notice'; text: string; tone: 'info' | 'error' };
+
+// An agent the user can pick: one of their own, or a collaborator's shared
+// agent, which runs on that collaborator's computer with their account.
+export type AgentOption = ACPServerConfig & { sharedBy?: string };
 
 export interface PendingPermission {
 	id: string;

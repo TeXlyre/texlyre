@@ -10,7 +10,7 @@ import {
 	editorFocusLabel,
 	editorFocusService,
 } from '../../services/EditorFocusService';
-import type { AgentEntry } from '../../types/agentSession';
+import type { AgentEntry, AgentOption } from '../../types/agentSession';
 import { formatDate } from '../../utils/dateUtils';
 import {
 	ExpandIcon,
@@ -49,6 +49,14 @@ const ChangeEntry: React.FC<{
 		</div>
 	);
 };
+
+const agentLabel = (agent: AgentOption): string =>
+	agent.sharedBy
+		? t('{{agent}} (shared by {{owner}})', {
+				agent: agent.name,
+				owner: agent.sharedBy,
+			})
+		: agent.name;
 
 const Entry: React.FC<{ entry: AgentEntry }> = ({ entry }) => {
 	switch (entry.kind) {
@@ -144,6 +152,7 @@ const AgentPanel: React.FC = () => {
 	const focusLabel = editorFocusLabel(editorFocus);
 	const endRef = useRef<HTMLDivElement>(null);
 	const isBusy = status === 'prompting' || status === 'connecting';
+	const activeAgent = agents.find((agent) => agent.id === activeAgentId);
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: entries is an intentional trigger; its change is the signal to scroll. */
 	useEffect(() => {
@@ -190,12 +199,14 @@ const AgentPanel: React.FC = () => {
 					>
 						{agents.map((agent) => (
 							<option key={agent.id} value={agent.id}>
-								{agent.name}
+								{agentLabel(agent)}
 							</option>
 						))}
 					</select>
 				) : (
-					<span className='agent-name'>{agents[0]?.name}</span>
+					<span className='agent-name'>
+						{agents[0] ? agentLabel(agents[0]) : null}
+					</span>
 				)}
 				<select
 					className='ui-field-control agent-chat-select'
@@ -279,6 +290,14 @@ const AgentPanel: React.FC = () => {
 								"Your messages, the name of the open file, and the files the agent reads are sent to the agent's AI provider. Every change needs your approval.",
 							)}
 						</p>
+						{activeAgent?.sharedBy && (
+							<p className='agent-privacy'>
+								{t(
+									"{{owner}} shares this agent. It runs on {{owner}}'s computer with their account, and stops when they stop sharing it.",
+									{ owner: activeAgent.sharedBy },
+								)}
+							</p>
+						)}
 					</div>
 				) : (
 					entries.map((entry) => <Entry key={entry.id} entry={entry} />)

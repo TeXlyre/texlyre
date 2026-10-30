@@ -1,6 +1,7 @@
+import type { ACPServerConfig } from './acp';
 import type { ToolConfigBlock } from './toolConfig';
 
-export type SharedToolKind = 'typesetter' | 'lsp';
+export type SharedToolKind = 'typesetter' | 'lsp' | 'agent';
 export type SharedToolDecisionState = 'accepted' | 'ignored';
 
 export interface SharedToolOrigin {
@@ -19,6 +20,9 @@ export interface SharedToolDecision {
 export interface SharedToolPreferences {
 	shareWithAll: Record<string, true>;
 	shareProjectTools: Record<string, true>;
+	// Agents shared in a project, keyed by projectAgentKey. Agents are only
+	// shared one by one, never along with the project's other tools.
+	shareProjectAgents: Record<string, true>;
 	decisions: Record<string, SharedToolDecision>;
 	origins: Record<string, SharedToolOrigin>;
 }
@@ -60,8 +64,20 @@ export interface SharedLocalTool {
 	shareMessage?: string;
 	sharedWithAll: boolean;
 	usedByProject: boolean;
+	// For agents: chosen to be shared in this project.
+	sharedInProject?: boolean;
 }
 
 export interface SharedByMeTool extends SharedLocalTool {
 	scope: 'all' | 'project';
+}
+
+// A collaborator's agent this user accepted, usable while its owner shares
+// it. The config id is namespaced (see sharedAgentId) so it never clashes with
+// the user's own agents.
+export interface SharedAgent {
+	identity: string;
+	ownerId: string;
+	ownerName: string;
+	config: ACPServerConfig;
 }

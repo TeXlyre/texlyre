@@ -1,9 +1,10 @@
 // src/components/project/ShareProjectModal.tsx
 import QRCode from 'qrcode';
 import type React from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { t } from '@/i18n';
+import { SharedToolsContext } from '../../contexts/SharedToolsContext';
 import { useCollab } from '../../hooks/useCollab';
 import { useLSPConfig } from '../../hooks/useLSPConfig';
 import { useSharedToolPreferences } from '../../hooks/useSharedToolPreferences';
@@ -16,6 +17,7 @@ import {
 	describeSharedToolAvailability,
 	projectSharingKey,
 } from '../../utils/sharedToolsUtils';
+import { AgentShareList } from '../collab/SharedToolsModal';
 import { ShareIcon } from '../common/Icons';
 import CopyField from '../common/CopyField';
 import Modal from '../common/Modal';
@@ -40,6 +42,8 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 	const preferences = useSharedToolPreferences();
 	const projectKey = projectSharingKey(shareUrl);
 	const projectShareEnabled = preferences.isShareProjectTools(projectKey);
+	const sharedTools = useContext(SharedToolsContext);
+	const agents = sharedTools?.projectAgents ?? [];
 
 	const projectTools = useMemo(() => {
 		const projectType = doc?.projectMetadata?.type ?? 'latex';
@@ -202,6 +206,13 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 								))}
 							</ul>
 						</div>
+					)}
+
+					{agents.length > 0 && (
+						<AgentShareList
+							agents={agents}
+							onChange={sharedTools?.setAgentShared}
+						/>
 					)}
 
 					{projectShareEnabled && unavailableProjectTools.length > 0 && (

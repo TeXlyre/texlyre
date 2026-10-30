@@ -21,6 +21,9 @@ const mockService = {
 	prompt: jest.fn(),
 	cancel: jest.fn(),
 	disconnect: jest.fn(),
+	registerConfig: jest.fn(),
+	updateConfig: jest.fn(),
+	unregisterConfig: jest.fn(),
 };
 jest.mock('@src/services/GenericACPService', () => ({
 	genericACPService: mockService,
@@ -88,6 +91,7 @@ import AgentSidePanel from '@src/components/agent/AgentSidePanel';
 import ChatPanel from '@src/components/chat/ChatPanel';
 import { AgentSessionProvider } from '@src/contexts/AgentSessionContext';
 import { PropertiesProvider } from '@src/contexts/PropertiesContext';
+import { SharedToolsContext } from '@src/contexts/SharedToolsContext';
 import { editorFocusService } from '@src/services/EditorFocusService';
 
 const AGENT: ACPServerConfig = {
@@ -290,6 +294,87 @@ describe('editor context', () => {
 	it('shows no chip when nothing is open', () => {
 		renderAgent();
 		expect(document.querySelector('.agent-context-chip')).toBeNull();
+	});
+});
+
+describe('shared agents', () => {
+	const SHARED = {
+		identity: 'agent:alice:claude',
+		ownerId: 'alice',
+		ownerName: 'Alice',
+		config: {
+			id: 'shared-agent:agent:alice:claude',
+			name: 'Claude Agent',
+			enabled: true,
+			transportConfig: { type: 'webrtc' as const, roomId: 'claude-room' },
+		},
+	};
+	const withShared = (sharedAgents: (typeof SHARED)[]) => (
+		<SharedToolsContext.Provider value={{ sharedAgents } as any}>
+			<AgentSessionProvider>
+				<AgentPanel />
+			</AgentSessionProvider>
+		</SharedToolsContext.Provider>
+	);
+
+	beforeEach(() => {
+		mockAgents = [AGENT];
+		jest.clearAllMocks();
+		mockService.prompt.mockResolvedValue({ stopReason: 'end_turn' });
+	});
+
+	it("lists a collaborator's agent with its owner and ends its session when they stop sharing", async () => {
+		const { rerender } = render(withShared([SHARED]));
+		expect(mockService.registerConfig).toHaveBeenCalledWith(SHARED.config);
+
+		const picker = screen.getByRole('combobox', { name: 'Agent' });
+		expect(
+			screen.getByRole('option', { name: 'Claude Agent (shared by Alice)' }),
+		).toBeInTheDocument();
+		await userEvent.selectOptions(picker, SHARED.config.id);
+		expect(
+			screen.getByText(
+				"Alice shares this agent. It runs on Alice's computer with their account, and stops when they stop sharing it.",
+			),
+		).toBeInTheDocument();
+
+		// The prompt is still running when the owner stops sharing; the
+		// disconnect then rejects it.
+		let failPrompt: (error: Error) => void = () => undefined;
+		mockService.prompt.mockImplementation(
+			() => new Promise((_, reject) => (failPrompt = reject)),
+		);
+		mockService.disconnect.mockImplementation(() =>
+			failPrompt(new Error('Agent disconnected')),
+		);
+		await userEvent.type(screen.getByPlaceholderText('Ask the agent...'), 'Hi{Enter}');
+		await waitFor(() =>
+			expect(mockService.prompt).toHaveBeenCalledWith(
+				SHARED.config.id,
+				'session-1',
+				[{ type: 'text', text: 'Hi' }],
+			),
+		);
+
+		rerender(withShared([]));
+		await act(async () => undefined);
+
+		expect(mockService.unregisterConfig).toHaveBeenCalledWith(SHARED.config.id);
+		expect(
+			screen.getByText('Alice stopped sharing Claude Agent, so its session has ended.'),
+		).toBeInTheDocument();
+		// Ending it on purpose isn't reported as a failure.
+		expect(screen.queryByText('Agent disconnected')).not.toBeInTheDocument();
+		expect(document.querySelector('.ui-status-dot')).toHaveAttribute(
+			'title',
+			'disconnected',
+		);
+		// The chat stays open to read.
+		expect(screen.getByText('Hi', { selector: '.agent-entry' })).toBeInTheDocument();
+		expect(
+			screen.queryByRole('option', { name: 'Claude Agent (shared by Alice)' }),
+		).not.toBeInTheDocument();
+		mockService.disconnect.mockImplementation(() => undefined);
 	});
 });
 

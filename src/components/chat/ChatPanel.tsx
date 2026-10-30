@@ -1,8 +1,9 @@
 // src/components/chat/ChatPanel.tsx
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { SharedToolsContext } from '../../contexts/SharedToolsContext';
 import { useACPConfig } from '../../hooks/useACPConfig';
 import { useAgentDock } from '../../hooks/useAgentDock';
 import { useAuth } from '../../hooks/useAuth';
@@ -21,10 +22,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
 	const { messages, isConnected, sendMessage } = useChat();
 	const { isCollabOfflineMode } = useOffline();
 	const { configs: agentConfigs } = useACPConfig();
+	const sharedAgents = useContext(SharedToolsContext)?.sharedAgents ?? [];
 	const { docked: agentDocked } = useAgentDock();
 	// A docked agent lives in its side panel instead of a tab here.
 	const hasAgents =
-		!agentDocked && agentConfigs.some((config) => config.enabled);
+		!agentDocked &&
+		(agentConfigs.some((config) => config.enabled) || sharedAgents.length > 0);
 	const [activeTab, setActiveTab] = useState<'chat' | 'agent'>('chat');
 	const showAgent = hasAgents && activeTab === 'agent';
 	const [isCollapsed, setIsCollapsed] = useState(true);

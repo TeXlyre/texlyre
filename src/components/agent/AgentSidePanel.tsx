@@ -1,6 +1,8 @@
 // src/components/agent/AgentSidePanel.tsx
 import type React from 'react';
+import { useContext } from 'react';
 
+import { SharedToolsContext } from '../../contexts/SharedToolsContext';
 import { useACPConfig } from '../../hooks/useACPConfig';
 import { useAgentDock } from '../../hooks/useAgentDock';
 import ResizablePanel from '../common/ResizablePanel';
@@ -11,7 +13,9 @@ import AgentPanel from './AgentPanel';
 const AgentSidePanel: React.FC = () => {
 	const { configs } = useACPConfig();
 	const { docked, width, collapsed, setWidth, setCollapsed } = useAgentDock();
-	const hasAgents = configs.some((config) => config.enabled);
+	const sharedAgents = useContext(SharedToolsContext)?.sharedAgents ?? [];
+	const hasAgents =
+		configs.some((config) => config.enabled) || sharedAgents.length > 0;
 
 	if (!hasAgents || !docked) return null;
 
