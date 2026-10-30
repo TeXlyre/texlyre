@@ -1,14 +1,23 @@
 // src/components/agent/AgentPanel.tsx
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 import { t } from '@/i18n';
 import { useAgentDock } from '../../hooks/useAgentDock';
 import { useAgentSession } from '../../hooks/useAgentSession';
 import { chatTitle } from '../../services/AgentChatStore';
+import {
+	editorFocusLabel,
+	editorFocusService,
+} from '../../services/EditorFocusService';
 import type { AgentEntry } from '../../types/agentSession';
 import { formatDate } from '../../utils/dateUtils';
-import { ExpandIcon, MinimizeIcon, TrashIcon } from '../common/Icons';
+import {
+	ExpandIcon,
+	FileTextIcon,
+	MinimizeIcon,
+	TrashIcon,
+} from '../common/Icons';
 import DiffView from './DiffView';
 import { toolLabel } from './toolLabel';
 
@@ -44,9 +53,24 @@ const ChangeEntry: React.FC<{
 const Entry: React.FC<{ entry: AgentEntry }> = ({ entry }) => {
 	switch (entry.kind) {
 		case 'user':
+			return (
+				<div className='agent-entry' data-kind='user'>
+					{entry.text}
+					{entry.context && (
+						<span
+							className='agent-entry-context'
+							title={t('Sent with the open file: {{context}}', {
+								context: entry.context,
+							})}
+						>
+							{entry.context}
+						</span>
+					)}
+				</div>
+			);
 		case 'agent':
 			return (
-				<div className='agent-entry' data-kind={entry.kind}>
+				<div className='agent-entry' data-kind='agent'>
 					{entry.text}
 				</div>
 			);
@@ -112,6 +136,12 @@ const AgentPanel: React.FC = () => {
 	const { canDock, docked, setDocked } = useAgentDock();
 	const [inputValue, setInputValue] = useState('');
 	const [confirmingDelete, setConfirmingDelete] = useState(false);
+	const [includeEditorContext, setIncludeEditorContext] = useState(true);
+	const editorFocus = useSyncExternalStore(
+		editorFocusService.subscribe,
+		editorFocusService.getState,
+	);
+	const focusLabel = editorFocusLabel(editorFocus);
 	const endRef = useRef<HTMLDivElement>(null);
 	const isBusy = status === 'prompting' || status === 'connecting';
 
@@ -131,7 +161,7 @@ const AgentPanel: React.FC = () => {
 
 	const handleSend = () => {
 		if (!inputValue.trim() || isBusy) return;
-		void send(inputValue);
+		void send(inputValue, { includeEditorContext });
 		setInputValue('');
 	};
 
@@ -246,7 +276,7 @@ const AgentPanel: React.FC = () => {
 						<p>{t('Ask the agent to edit, fix, or compile this project.')}</p>
 						<p className='agent-privacy'>
 							{t(
-								"Your messages and the files the agent reads are sent to the agent's AI provider. Every change needs your approval.",
+								"Your messages, the name of the open file, and the files the agent reads are sent to the agent's AI provider. Every change needs your approval.",
 							)}
 						</p>
 					</div>
@@ -255,6 +285,29 @@ const AgentPanel: React.FC = () => {
 				)}
 				<div ref={endRef} />
 			</div>
+
+			{focusLabel && (
+				<div className='agent-context-bar'>
+					<button
+						type='button'
+						className='agent-context-chip'
+						aria-pressed={includeEditorContext}
+						onClick={() => setIncludeEditorContext((value) => !value)}
+						title={
+							includeEditorContext
+								? t(
+										'The agent is told which file is open and where the cursor is. Click to leave it out.',
+									)
+								: t(
+										'The agent is not told which file is open. Click to include it.',
+									)
+						}
+					>
+						<FileTextIcon />
+						<span>{focusLabel}</span>
+					</button>
+				</div>
+			)}
 
 			<div className='ui-toolbar' data-role='chat-input'>
 				<textarea

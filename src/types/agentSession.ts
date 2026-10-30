@@ -15,7 +15,14 @@ export interface AgentFileChange {
 }
 
 export type AgentEntry =
-	| { id: string; kind: 'user'; text: string }
+	| {
+			id: string;
+			kind: 'user';
+			text: string;
+			// A short label for the editor context sent with the message, e.g.
+			// "main.tex:12".
+			context?: string;
+	  }
 	| { id: string; kind: 'agent'; text: string }
 	| { id: string; kind: 'thought'; text: string }
 	| {

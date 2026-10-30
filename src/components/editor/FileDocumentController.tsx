@@ -11,6 +11,7 @@ import { useEditorOutline } from '../../hooks/editor/useEditorOutline';
 import { useEditorOutput } from '../../hooks/editor/useEditorOutput';
 import { useAuth } from '../../hooks/useAuth';
 import { usePeerDocumentTracking } from '../../hooks/usePeerDocumentTracking';
+import { editorFocusService } from '../../services/EditorFocusService';
 import type { Document } from '../../types/documents';
 import type { Project } from '../../types/projects';
 import type { YjsDocUrl } from '../../types/yjs';
@@ -140,6 +141,46 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		selectedDocId,
 		setLocalOpenDocument,
 	]);
+
+	const selectedDocName = documents?.find((d) => d.id === selectedDocId)?.name;
+
+	// Tell the agent panel what is open (see EditorFocusService).
+	useEffect(() => {
+		if (navigation.isEditingFile) {
+			editorFocusService.setFocus(
+				navigation.fileContentReady &&
+					navigation.selectedFileId &&
+					navigation.currentFilePath
+					? {
+							kind: 'file',
+							fileId: navigation.selectedFileId,
+							path: navigation.currentFilePath,
+							binary: navigation.isBinaryFile,
+						}
+					: null,
+			);
+		} else if (selectedDocId) {
+			editorFocusService.setFocus({
+				kind: 'document',
+				documentId: selectedDocId,
+				name: selectedDocName ?? '',
+				path: navigation.linkedFileInfo.filePath,
+			});
+		} else {
+			editorFocusService.setFocus(null);
+		}
+	}, [
+		navigation.isEditingFile,
+		navigation.fileContentReady,
+		navigation.selectedFileId,
+		navigation.currentFilePath,
+		navigation.isBinaryFile,
+		navigation.linkedFileInfo.filePath,
+		selectedDocId,
+		selectedDocName,
+	]);
+
+	useEffect(() => () => editorFocusService.setFocus(null), []);
 
 	const currentProjectId = sessionStorage.getItem('currentProjectId');
 	const hideOutputs =

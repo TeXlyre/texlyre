@@ -18,6 +18,11 @@ import { useACPConfig } from '../hooks/useACPConfig';
 import { useEditor } from '../hooks/useEditor';
 import { useFileTree } from '../hooks/useFileTree';
 import { agentChatStore, chatTitle } from '../services/AgentChatStore';
+import {
+	describeEditorFocus,
+	editorFocusLabel,
+	editorFocusService,
+} from '../services/EditorFocusService';
 import { fileStoreService } from '../services/FileStoreService';
 import { genericACPService } from '../services/GenericACPService';
 import { YjsProjectFileSystem } from '../services/ProjectFileSystem';
@@ -60,7 +65,10 @@ interface AgentSessionContextType {
 	status: AgentStatus;
 	entries: AgentEntry[];
 	pendingPermission: PendingPermission | null;
-	send: (text: string) => Promise<void>;
+	send: (
+		text: string,
+		options?: { includeEditorContext?: boolean },
+	) => Promise<void>;
 	cancel: () => void;
 	newSession: () => void;
 	chats: AgentChatSummary[];
@@ -327,7 +335,7 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 	}, [activeAgentId, notice, setChat]);
 
 	const send = useCallback(
-		async (text: string) => {
+		async (text: string, { includeEditorContext = true } = {}) => {
 			const prompt = text.trim();
 			if (!prompt || status === 'prompting' || status === 'connecting') return;
 			if (!activeAgentId) return;
@@ -342,9 +350,20 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 				});
 			}
 
+			// Which file is open, sent ahead of the message unless the user
+			// turned it off.
+			const focus = includeEditorContext
+				? editorFocusService.getState()
+				: { focus: null, cursor: null };
+			const context = describeEditorFocus(focus);
 			dispatch({
 				type: 'add',
-				entry: { id: nanoid(), kind: 'user', text: prompt },
+				entry: {
+					id: nanoid(),
+					kind: 'user',
+					text: prompt,
+					context: (context && editorFocusLabel(focus)) || undefined,
+				},
 			});
 
 			try {
@@ -353,7 +372,12 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 				const result = await genericACPService.prompt(
 					session.agentId,
 					session.sessionId,
-					[{ type: 'text', text: prompt }],
+					context
+						? [
+								{ type: 'text', text: context },
+								{ type: 'text', text: prompt },
+							]
+						: [{ type: 'text', text: prompt }],
 				);
 				const message = STOP_REASON_NOTICES[result.stopReason];
 				if (message) notice(t(message), 'info');

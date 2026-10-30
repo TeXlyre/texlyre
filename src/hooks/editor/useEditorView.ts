@@ -332,13 +332,20 @@ export const useEditorView = (
 				if (cursorUpdateTimeout) clearTimeout(cursorUpdateTimeout);
 				cursorUpdateTimeout = setTimeout(() => {
 					if (!update.view?.state) return;
-					const pos = update.view.state.selection.main.head;
-					const line = update.view.state.doc.lineAt(pos).number;
+					const { doc, selection } = update.view.state;
+					const pos = selection.main.head;
+					const line = doc.lineAt(pos).number;
 					document.dispatchEvent(
 						new CustomEvent('editor-cursor-update', {
 							detail: {
 								line,
 								position: pos,
+								selection: selection.main.empty
+									? undefined
+									: {
+											fromLine: doc.lineAt(selection.main.from).number,
+											toLine: doc.lineAt(selection.main.to).number,
+										},
 								fileId: currentFileId,
 								documentId,
 								isEditingFile,

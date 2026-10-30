@@ -88,6 +88,7 @@ import AgentSidePanel from '@src/components/agent/AgentSidePanel';
 import ChatPanel from '@src/components/chat/ChatPanel';
 import { AgentSessionProvider } from '@src/contexts/AgentSessionContext';
 import { PropertiesProvider } from '@src/contexts/PropertiesContext';
+import { editorFocusService } from '@src/services/EditorFocusService';
 
 const AGENT: ACPServerConfig = {
 	id: 'claude',
@@ -209,6 +210,86 @@ describe('agent session UI', () => {
 
 		expect(mockService.disconnect).toHaveBeenCalledWith('claude');
 		expect(mockService.setPermissionHandler).toHaveBeenLastCalledWith(null);
+	});
+});
+
+describe('editor context', () => {
+	const MAIN_TEX = {
+		kind: 'file' as const,
+		fileId: 'file-1',
+		path: '/chapters/intro.tex',
+		binary: false,
+	};
+	const moveCursor = (detail: Record<string, unknown>) =>
+		act(() => {
+			document.dispatchEvent(
+				new CustomEvent('editor-cursor-update', { detail }),
+			);
+		});
+
+	beforeEach(() => {
+		mockAgents = [AGENT];
+		jest.clearAllMocks();
+		mockService.prompt.mockResolvedValue({ stopReason: 'end_turn' });
+	});
+
+	afterEach(() => {
+		act(() => editorFocusService.setFocus(null));
+	});
+
+	it('tells the agent which file is open and where the cursor is', async () => {
+		act(() => editorFocusService.setFocus(MAIN_TEX));
+		renderAgent();
+		moveCursor({ line: 12, fileId: 'file-1', isEditingFile: true });
+		// Another editor (e.g. a viewer for a different file) doesn't count.
+		moveCursor({ line: 99, fileId: 'file-2', isEditingFile: true });
+
+		const chip = screen.getByRole('button', { name: 'intro.tex:12' });
+		expect(chip).toHaveAttribute('aria-pressed', 'true');
+
+		await userEvent.type(screen.getByPlaceholderText('Ask the agent...'), 'Fix this{Enter}');
+
+		await waitFor(() =>
+			expect(mockService.prompt).toHaveBeenCalledWith('claude', 'session-1', [
+				{
+					type: 'text',
+					text: '<editor_context>\nThe user has /chapters/intro.tex open in the TeXlyre editor, with the cursor on line 12.\n</editor_context>',
+				},
+				{ type: 'text', text: 'Fix this' },
+			]),
+		);
+		expect(
+			screen.getByText('intro.tex:12', { selector: '.agent-entry-context' }),
+		).toBeInTheDocument();
+	});
+
+	it('leaves the open file out when the chip is turned off', async () => {
+		act(() => editorFocusService.setFocus(MAIN_TEX));
+		renderAgent();
+		moveCursor({
+			line: 8,
+			selection: { fromLine: 3, toLine: 8 },
+			fileId: 'file-1',
+			isEditingFile: true,
+		});
+
+		const chip = screen.getByRole('button', { name: 'intro.tex:3-8' });
+		await userEvent.click(chip);
+		expect(chip).toHaveAttribute('aria-pressed', 'false');
+
+		await userEvent.type(screen.getByPlaceholderText('Ask the agent...'), 'Hi{Enter}');
+
+		await waitFor(() =>
+			expect(mockService.prompt).toHaveBeenCalledWith('claude', 'session-1', [
+				{ type: 'text', text: 'Hi' },
+			]),
+		);
+		expect(document.querySelector('.agent-entry-context')).toBeNull();
+	});
+
+	it('shows no chip when nothing is open', () => {
+		renderAgent();
+		expect(document.querySelector('.agent-context-chip')).toBeNull();
 	});
 });
 

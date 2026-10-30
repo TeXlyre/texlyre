@@ -221,3 +221,68 @@
 	max-height: 40vh;
 	resize: vertical;
 }
+
+/* The open file sent with a message: a chip above the input, and a label on
+   each user message it was sent with. */
+.agent-context-bar {
+	display: flex;
+	padding: var(--space-xs) var(--ui-chat-input-container-padding, 12px) 0;
+	border-top: 1px solid var(--ui-chat-input-border-color, var(--accent-border));
+	background: var(
+		--ui-chat-input-container-background,
+		var(--background-color)
+	);
+}
+
+.agent-context-bar + .ui-toolbar[data-role="chat-input"] {
+	border-top: none;
+}
+
+.agent-context-chip {
+	all: unset;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	max-width: 100%;
+	padding: 1px var(--space-sm);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-lg);
+	font-size: var(--font-size-caption);
+	font-family: ui-monospace, monospace;
+	color: var(--text-color);
+	cursor: pointer;
+}
+
+.agent-context-chip > svg {
+	flex-shrink: 0;
+	width: 1em;
+	height: 1em;
+}
+
+.agent-context-chip > span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.agent-context-chip[aria-pressed="false"] {
+	color: var(--text-muted);
+	border-style: dashed;
+}
+
+.agent-context-chip[aria-pressed="false"] > span {
+	text-decoration: line-through;
+}
+
+.agent-context-chip:focus-visible {
+	outline: 2px solid var(--accent-color);
+	outline-offset: 1px;
+}
+
+.agent-entry-context {
+	display: block;
+	margin-top: var(--space-xs);
+	font-size: var(--font-size-caption);
+	font-family: ui-monospace, monospace;
+	opacity: 0.8;
+}
