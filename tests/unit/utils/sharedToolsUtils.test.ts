@@ -9,9 +9,11 @@ import type { TypesetterServerConfig } from '@src/services/GenericTypesetterServ
 import type { LSPConfigBlock } from '@src/types/lsp';
 import type { StorageConfigBlock } from '@src/types/storage';
 import type { SharedLocalTool } from '@src/types/sharedTools';
+import { normalizeStorageConfig } from '@src/utils/toolConfigUtils';
 import {
 	buildSharedToolAdvertisement,
 	classifySharedToolConflict,
+	findTrustedSharedStorage,
 	describeSharedToolAvailability,
 	getSharedToolKind,
 	normalizeSharedToolPreferences,
@@ -132,6 +134,97 @@ describe('shared tools', () => {
 		expect(sharedToolIdentity('storage', 'alice', 'garage', 'project-b')).not.toBe(
 			sharedToolIdentity('storage', 'alice', 'garage', 'project-a'),
 		);
+	});
+
+	it('reuses only trusted storage from the same owner with an identical connection', () => {
+		const advertised = buildSharedToolAdvertisement(
+			'storage', storage(), { id: 'alice', name: 'Alice' }, undefined,
+			{ storageProjectId: 'project-b' },
+		);
+		const imported = normalizeStorageConfig(storage({ id: 'generated-local-id', name: 'Alice’s Garage' }))!;
+		const trusted = normalizeSharedToolPreferences({
+			origins: {
+				'storage:generated-local-id': {
+					ownerId: 'alice', ownerName: 'Alice', toolId: 'garage',
+				},
+			},
+		});
+
+		expect(findTrustedSharedStorage(advertised, [imported], trusted)?.id).toBe(
+			'generated-local-id',
+		);
+		expect(findTrustedSharedStorage(advertised, [imported], normalizeSharedToolPreferences(null)))
+			.toBeUndefined();
+		expect(findTrustedSharedStorage(advertised, [
+			storage({ ...imported, transportConfig: { type: 'webrtc', roomId: 'other' } }),
+		], trusted)).toBeUndefined();
+		expect(findTrustedSharedStorage(advertised, [
+			storage({ ...imported, enabled: false }),
+		], trusted)).toBeUndefined();
+		expect(findTrustedSharedStorage(
+			{ ...advertised, ownerId: 'mallory' }, [imported], trusted,
+		)).toBeUndefined();
+	});
+
+	it('treats normalized recipes with reordered transport fields as identical', () => {
+		const original = storage();
+		const normalized = normalizeStorageConfig(original)!;
+		expect(classifySharedToolConflict(
+			{ toolId: 'garage', name: 'Garage', config: original },
+			[normalized],
+		).kind).toBe('same-id-same-config');
+	});
+
+	it('ignores the local transport alias when matching previously accepted storage', () => {
+		const advertisement = buildSharedToolAdvertisement(
+			'storage', storage(), { id: 'alice', name: 'Alice' }, undefined,
+			{ storageProjectId: 'project-next' },
+		);
+		const received = normalizeStorageConfig(storage({ id: 'local-alias', transportId: 'garage' }))!;
+		const trusted = normalizeSharedToolPreferences({
+			origins: {
+				'storage:local-alias': {
+					ownerId: 'alice', ownerName: 'Alice', toolId: 'garage',
+				},
+			},
+		});
+		expect(findTrustedSharedStorage(advertisement, [received], trusted)?.id)
+			.toBe('local-alias');
+		expect(advertisement.config).not.toHaveProperty('transportId');
+	});
+
+	it('reuses a matching manually configured provider after accepting another project', () => {
+		const advertised = buildSharedToolAdvertisement(
+			'storage', storage(), { id: 'alice', name: 'Alice' }, undefined,
+			{ storageProjectId: 'project-b' },
+		);
+		const accepted = normalizeSharedToolPreferences({
+			decisions: {
+				[sharedToolIdentity('storage', 'alice', 'garage', 'project-a')]: {
+					decision: 'accepted', revision: 'a', localId: 'garage', imported: false,
+				},
+			},
+		});
+		expect(findTrustedSharedStorage(advertised, [storage()], accepted)?.id).toBe('garage');
+		expect(findTrustedSharedStorage(advertised, [storage()], normalizeSharedToolPreferences({
+			decisions: {
+				[sharedToolIdentity('storage', 'alice', 'garage', 'project-a')]: {
+					decision: 'ignored', revision: 'a', localId: 'garage',
+				},
+			},
+		}))).toBeUndefined();
+	});
+
+	it('keeps the owner service ID on shared advertisements after a local alias is applied', () => {
+		const config = storage({ id: 'receiver-alias', transportId: 'garage' });
+		const advertised = buildSharedToolAdvertisement(
+			'storage', config, { id: 'receiver', name: 'Receiver' },
+			{ ownerId: 'alice', ownerName: 'Alice', toolId: 'garage' },
+			{ storageProjectId: 'project-a' },
+		);
+		expect(advertised.toolId).toBe('garage');
+		expect(advertised.config.id).toBe('garage');
+		expect(advertised.config).not.toHaveProperty('transportId');
 	});
 
 	it('selects global tools plus project-used tools only when project sharing is on', () => {

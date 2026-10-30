@@ -2,9 +2,12 @@ import type {
 	ClientTransport,
 	TransportPayload,
 } from '@chelys/types/transport';
+import { openTransport } from '@chelys/peer/TransportFactory';
 import { GenericStorageService } from '../../src/services/GenericStorageService';
 import type { StorageConfigBlock } from '../../src/types/storage';
 import { normalizeStorageConfig } from '../../src/utils/toolConfigUtils';
+
+jest.mock('@chelys/peer/TransportFactory', () => ({ openTransport: jest.fn() }));
 
 interface UploadState {
 	id: string;
@@ -215,6 +218,10 @@ class TestStorageService extends GenericStorageService {
 		super();
 	}
 
+	transportIdentity(config: StorageConfigBlock): string {
+		return this.getTransportId(config);
+	}
+
 	protected async openTransport(config: StorageConfigBlock): Promise<ClientTransport> {
 		this.setConnectionStatus(config.id, 'connected');
 		return this.transport;
@@ -313,6 +320,47 @@ describe('GenericStorageService', () => {
 			code: 'stale-head',
 			head: 'revision_1',
 		});
+	});
+
+	it('connects an aliased received provider using the advertised Chelys service', async () => {
+		const received = normalizeStorageConfig({
+			...config,
+			id: 'receiver-local-id',
+			transportId: 'garage',
+		});
+		expect(received).not.toBeNull();
+		jest.mocked(openTransport).mockResolvedValueOnce(new StorageBridgeTransport());
+		const service = new GenericStorageService();
+		service.registerConfig(received!);
+		try {
+			await expect(service.hello(received!.id)).resolves.toMatchObject({
+				protocol: 'texlyre-storage',
+				version: 1,
+			});
+			expect(openTransport).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: 'webrtc',
+					roomId: 'shared-garage',
+					controlRoomId: 'shared-garage',
+				}),
+				{ label: 'storage:garage' },
+			);
+		} finally {
+			service.unregisterConfig(received!.id);
+			jest.mocked(openTransport).mockReset();
+		}
+	});
+
+	it('preserves Chelys service identity when a received storage uses a local alias', () => {
+		const received = normalizeStorageConfig({
+			...config,
+			id: 'receiver-local-id',
+			transportId: config.id,
+		});
+		expect(received?.transportId).toBe('garage');
+		const service = new TestStorageService(new StorageBridgeTransport());
+		expect(service.transportIdentity(received!)).toBe('garage');
+		expect(service.transportIdentity(config)).toBe('garage');
 	});
 
 	it('normalizes the minimal Chelys storage config and rejects worker transport', () => {
