@@ -104,7 +104,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
 									setIsCollapsed(false);
 								}}
 							>
-								{t('Project Chat')}
+								<span>{t('Project Chat')}</span>
 							</button>
 							<button
 								type='button'
@@ -114,7 +114,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
 									setIsCollapsed(false);
 								}}
 							>
-								{t('Agent')}
+								<span>{t('Agent')}</span>
 							</button>
 						</div>
 					) : (
