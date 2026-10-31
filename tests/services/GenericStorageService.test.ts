@@ -327,6 +327,11 @@ describe('GenericStorageService', () => {
 			...config,
 			id: 'receiver-local-id',
 			transportId: 'garage',
+			transportConfig: {
+				type: 'webrtc',
+				roomId: 'shared-garage',
+				signaling: ['wss://signal.example'],
+			},
 		});
 		expect(received).not.toBeNull();
 		jest.mocked(openTransport).mockResolvedValueOnce(new StorageBridgeTransport());

@@ -380,9 +380,9 @@ const ProjectPanelSections: React.FC<ProjectPanelSectionsProps> = ({
 										onClick={() =>
 											setSelectedKeys((current) => {
 												const next = new Set(current);
-												visibleProjects.forEach((project) =>
-													next.add(storageProjectKey(project)),
-												);
+												visibleProjects.forEach((project) => {
+													next.add(storageProjectKey(project));
+												});
 												return next;
 											})
 										}

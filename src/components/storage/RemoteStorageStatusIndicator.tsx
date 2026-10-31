@@ -128,7 +128,7 @@ const RemoteStorageStatusIndicator: React.FC<
 			document.removeEventListener('visibilitychange', onVisible);
 			window.removeEventListener('online', onOnline);
 		};
-	}, [checkForUpdates]);
+	}, [checkForUpdates, userId, projectId]);
 
 	useEffect(() => {
 		if (!periodicChecks || !userId || !binding?.enabled) return;

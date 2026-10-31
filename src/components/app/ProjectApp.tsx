@@ -387,7 +387,6 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		projects,
 		user,
 		accountStorageConfigs,
-		sharedStorageConfigIds,
 		unavailableStorageProviders,
 		storageUnlockReady,
 		storageUnlocked,
@@ -519,7 +518,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		} finally {
 			setRemoteActionBusy((current) => {
 				const next = new Set(current);
-				keys.forEach((key) => next.delete(key));
+				keys.forEach((key) => {
+					next.delete(key);
+				});
 				return next;
 			});
 		}
@@ -583,9 +584,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					providerId,
 					storageIds,
 				);
-				storageIds.forEach((storageId) =>
-					completed.add(`${providerId}:${storageId}`),
-				);
+				storageIds.forEach((storageId) => {
+					completed.add(`${providerId}:${storageId}`);
+				});
 			}
 			setPendingRemoteRemoval([]);
 		} catch (error) {
@@ -603,7 +604,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			setRemoteRemoving(false);
 			setRemoteActionBusy((current) => {
 				const next = new Set(current);
-				keys.forEach((key) => next.delete(key));
+				keys.forEach((key) => {
+					next.delete(key);
+				});
 				return next;
 			});
 			await loadStorageState();
@@ -931,7 +934,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		} finally {
 			setRestoringStorageProjects((current) => {
 				const next = new Set(current);
-				ids.forEach((id) => next.delete(id));
+				ids.forEach((id) => {
+					next.delete(id);
+				});
 				return next;
 			});
 		}
