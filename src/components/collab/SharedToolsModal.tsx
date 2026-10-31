@@ -36,14 +36,23 @@ const statusLabel = (offer: SharedToolOffer): string => {
 };
 
 const acceptLabel = (offer: SharedToolOffer): string => {
-	if (offer.conflict.kind === 'same-id-different-config')
+	if (
+		offer.kind !== 'storage' &&
+		offer.conflict.kind === 'same-id-different-config'
+	)
 		return t('Replace mine');
-	if (offer.conflict.kind === 'same-name') return t('Add shared');
+	if (
+		offer.conflict.kind === 'same-name' ||
+		(offer.kind === 'storage' &&
+			offer.conflict.kind === 'same-id-different-config')
+	)
+		return t('Add shared');
 	return t('Use');
 };
 
 const ignoreLabel = (offer: SharedToolOffer): string =>
-	offer.conflict.kind === 'same-id-different-config' ||
+	(offer.kind !== 'storage' &&
+		offer.conflict.kind === 'same-id-different-config') ||
 	offer.conflict.kind === 'same-name'
 		? t('Keep mine')
 		: t('Ignore');

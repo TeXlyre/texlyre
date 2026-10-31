@@ -57,22 +57,29 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 	const [statuses, setStatuses] = useState<Record<string, TransportStatus>>({});
 	const [error, setError] = useState<string | null>(null);
 
-	const activeConfigs = useMemo(
-		() => store.configs.filter((config) => config.enabled),
-		[store.configs],
+	const receivedConfigs = [...store.configs, ...store.disabledConfigs].filter(
+		(config) =>
+			kind.allowGlobalShare === false &&
+			Boolean(sharing.getOrigin('storage', config.id)),
 	);
-
-	const inactiveConfigs = useMemo(
-		() => [
-			...store.configs.filter((config) => !config.enabled),
-			...store.disabledConfigs,
-		],
-		[store.configs, store.disabledConfigs],
+	const receivedIds = new Set(receivedConfigs.map((config) => config.id));
+	const activeConfigs = store.configs.filter(
+		(config) => config.enabled && !receivedIds.has(config.id),
 	);
+	const inactiveConfigs = [
+		...store.configs.filter(
+			(config) => !config.enabled && !receivedIds.has(config.id),
+		),
+		...store.disabledConfigs.filter((config) => !receivedIds.has(config.id)),
+	];
 
 	const activeIds = useMemo(
-		() => activeConfigs.map((config) => config.id).join(','),
-		[activeConfigs],
+		() =>
+			store.configs
+				.filter((config) => config.enabled)
+				.map((config) => config.id)
+				.join(','),
+		[store.configs],
 	);
 
 	useEffect(() => {
@@ -145,9 +152,7 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 	const renderCard = (config: ToolConfigBlock, enabled: boolean) => {
 		const sharedKind =
 			kind.allowGlobalShare === false ? null : getSharedToolKind(config);
-		const origin = sharedKind
-			? sharing.getOrigin(sharedKind, config.id)
-			: undefined;
+		const origin = sharing.getOrigin(sharedKind ?? 'storage', config.id);
 		const share = sharedKind ? describeSharedToolAvailability(config) : null;
 		const canAdvertise = Boolean(enabled && share?.shareable);
 		const sharedWithAll = sharedKind
@@ -217,9 +222,9 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 					<button
 						type='button'
 						className='button'
-						disabled={Boolean(origin)}
+						disabled={Boolean(origin) && kind.allowGlobalShare !== false}
 						title={
-							origin
+							origin && kind.allowGlobalShare !== false
 								? t('Shared recipes are managed by their owner.')
 								: undefined
 						}
@@ -233,6 +238,7 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 						className='button danger'
 						onClick={() => {
 							if (sharedKind) sharing.detachLocalTool(sharedKind, config.id);
+							else if (origin) sharing.detachLocalTool('storage', config.id);
 							store.removeConfig(config.id);
 						}}
 					>
@@ -332,13 +338,32 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 				</div>
 			)}
 
-			{activeConfigs.length === 0 && inactiveConfigs.length === 0 && (
-				<p className='ui-note' data-style='empty'>
-					{t(kind.emptyMessage)}
-				</p>
-			)}
+			{activeConfigs.length === 0 &&
+				inactiveConfigs.length === 0 &&
+				receivedConfigs.length === 0 && (
+					<p className='ui-note' data-style='empty'>
+						{t(kind.emptyMessage)}
+					</p>
+				)}
 
 			{activeConfigs.map((config) => renderCard(config, true))}
+
+			{receivedConfigs.length > 0 && (
+				<details className='ui-card' data-padding='sm'>
+					<summary>
+						{t('Shared storage')} ({receivedConfigs.length})
+					</summary>
+					<div className='ui-stack' data-gap='sm'>
+						{receivedConfigs.map((config) =>
+							renderCard(
+								config,
+								config.enabled &&
+									store.configs.some((entry) => entry.id === config.id),
+							),
+						)}
+					</div>
+				</details>
+			)}
 
 			{inactiveConfigs.length > 0 && (
 				<div className='ui-stack' data-gap='sm' data-divided='true'>

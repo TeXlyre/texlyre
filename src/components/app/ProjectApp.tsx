@@ -49,6 +49,7 @@ import FooterLinks from '../common/FooterLinks';
 import ServiceStatusBanner from '../common/ServiceStatusBanner';
 import QuotaBanner from '../common/QuotaBanner';
 import { storageSyncService } from '../../services/StorageSyncService';
+import { sharedToolIdentity } from '../../utils/sharedToolsUtils';
 
 const moduleLog = createNamedLogger('ProjectApp');
 
@@ -79,7 +80,8 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		isGuestUser,
 	} = useAuth();
 	const { currentThemePlugin, currentLayout } = useTheme();
-	const { configs: storageConfigs } = useStorageConfig();
+	const { configs: storageConfigs, removeConfig: removeStorageConfig } =
+		useStorageConfig();
 	const sharedToolPreferences = useSharedToolPreferences();
 	const { storageUnlocked, storageUnlockReady, unlockStorage } = useChelys();
 	const { promptForPassword } = useSecrets();
@@ -479,6 +481,32 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						user.id,
 						entry.localProjectId,
 					);
+					const origin = sharedToolPreferences.getOrigin(
+						'storage',
+						entry.providerId,
+					);
+					if (origin) {
+						const identity = sharedToolIdentity(
+							'storage',
+							origin.ownerId,
+							origin.toolId,
+							entry.storageProjectId,
+						);
+						sharedToolPreferences.recordIgnored(
+							identity,
+							sharedToolPreferences.getDecision(identity)?.revision ?? '',
+						);
+						const stillUsed = Object.values(
+							storageSyncService.getProjectBindings(user.id),
+						).some((candidate) => candidate.providerId === entry.providerId);
+						if (!stillUsed) {
+							sharedToolPreferences.detachLocalTool(
+								'storage',
+								entry.providerId,
+							);
+							removeStorageConfig(entry.providerId);
+						}
+					}
 				}
 			}
 			await loadStorageState();
