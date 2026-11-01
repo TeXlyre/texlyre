@@ -12,6 +12,10 @@ import {
 	shouldShowNotification,
 } from '../../services/NotificationService';
 import { storageSyncService } from '../../services/StorageSyncService';
+import {
+	genericStorageService,
+	StorageProtocolError,
+} from '../../services/GenericStorageService';
 import type { StorageProjectStatus } from '../../types/storage';
 import { SyncIcon } from '../common/Icons';
 
@@ -25,14 +29,15 @@ const RemoteStorageStatusIndicator: React.FC<
 	RemoteStorageStatusIndicatorProps
 > = ({ projectId }) => {
 	const { user, isGuestUser } = useAuth();
-	const { storageUnlocked } = useChelys();
+	const { storageUnlocked, storageUnlockReady } = useChelys();
 	const { getSetting } = useSettings();
 	const [status, setStatus] = useState<StorageProjectStatus>('checking');
 	const [syncing, setSyncing] = useState(false);
 	const checkingRef = useRef(false);
 	const syncingRef = useRef(false);
 	const lastNotifiedRevisionRef = useRef<string | null>(null);
-	const hadCheckErrorRef = useRef(false);
+	const checkFailedRef = useRef(false);
+	const reportedCheckErrorRef = useRef(false);
 	const mountedRef = useRef(true);
 
 	const userId = user && !isGuestUser(user) ? user.id : null;
@@ -60,11 +65,22 @@ const RemoteStorageStatusIndicator: React.FC<
 
 	const checkForUpdates = useCallback(async () => {
 		if (!userId || checkingRef.current || syncingRef.current) return;
+		if (!storageUnlockReady) {
+			if (mountedRef.current) setStatus('checking');
+			return;
+		}
 		if (!storageUnlocked || !navigator.onLine) {
 			if (mountedRef.current) setStatus('unavailable');
 			return;
 		}
 		checkingRef.current = true;
+		if (mountedRef.current) {
+			setStatus((current) =>
+				current === 'unavailable' || current === 'error'
+					? 'checking'
+					: current,
+			);
+		}
 		try {
 			const result = await storageSyncService.checkBoundProjectRevision(
 				userId,
@@ -72,7 +88,8 @@ const RemoteStorageStatusIndicator: React.FC<
 			);
 			if (!result || syncingRef.current || !mountedRef.current) return;
 			setStatus(result.status);
-			hadCheckErrorRef.current = false;
+			checkFailedRef.current = false;
+			reportedCheckErrorRef.current = false;
 			if (
 				result.status === 'updates-available' &&
 				result.revision &&
@@ -83,20 +100,28 @@ const RemoteStorageStatusIndicator: React.FC<
 			}
 		} catch (error) {
 			moduleLog.warn('Failed to check remote storage:', error);
-			if (!syncingRef.current && mountedRef.current) setStatus('unavailable');
-			if (!hadCheckErrorRef.current && mountedRef.current) {
-				hadCheckErrorRef.current = true;
+			const protocolError =
+				error instanceof StorageProtocolError ||
+				(error instanceof Error &&
+					error.message === 'Invalid storage HEAD response');
+			if (!syncingRef.current && mountedRef.current) {
+				setStatus(protocolError ? 'error' : 'unavailable');
+			}
+			checkFailedRef.current = !protocolError;
+			if (protocolError && !reportedCheckErrorRef.current && mountedRef.current) {
+				reportedCheckErrorRef.current = true;
 				notify('error', t('Could not check remote storage for updates'));
 			}
 		} finally {
 			checkingRef.current = false;
 		}
-	}, [userId, projectId, storageUnlocked, notify]);
+	}, [userId, projectId, storageUnlockReady, storageUnlocked, notify]);
 
 	useEffect(() => {
 		mountedRef.current = true;
 		lastNotifiedRevisionRef.current = null;
-		hadCheckErrorRef.current = false;
+		checkFailedRef.current = false;
+		reportedCheckErrorRef.current = false;
 		setStatus('checking');
 		void checkForUpdates();
 
@@ -104,6 +129,17 @@ const RemoteStorageStatusIndicator: React.FC<
 			if (document.visibilityState === 'visible') void checkForUpdates();
 		};
 		const onOnline = () => void checkForUpdates();
+		const unsubscribeStatus = genericStorageService.onStatusChange(
+			(configId, connectionStatus) => {
+				if (
+					configId === binding?.providerId &&
+					connectionStatus === 'connected' &&
+					checkFailedRef.current
+				) {
+					void checkForUpdates();
+				}
+			},
+		);
 		const onStorageSynced = (event: Event) => {
 			const detail = (
 				event as CustomEvent<{
@@ -124,11 +160,12 @@ const RemoteStorageStatusIndicator: React.FC<
 		window.addEventListener('online', onOnline);
 		return () => {
 			mountedRef.current = false;
+			unsubscribeStatus();
 			document.removeEventListener('storage-project-synced', onStorageSynced);
 			document.removeEventListener('visibilitychange', onVisible);
 			window.removeEventListener('online', onOnline);
 		};
-	}, [checkForUpdates, userId, projectId]);
+	}, [checkForUpdates, userId, projectId, binding?.providerId]);
 
 	useEffect(() => {
 		if (!periodicChecks || !userId || !binding?.enabled) return;
@@ -149,9 +186,11 @@ const RemoteStorageStatusIndicator: React.FC<
 	const available = binding.enabled && storageUnlocked;
 	const currentStatus = syncing
 		? 'syncing'
-		: !available
-			? 'unavailable'
-			: status;
+		: !storageUnlockReady
+			? 'checking'
+			: !available
+				? 'unavailable'
+				: status;
 	const statusLabel = (() => {
 		switch (currentStatus) {
 			case 'checking':
@@ -212,8 +251,8 @@ const RemoteStorageStatusIndicator: React.FC<
 			title={
 				available
 					? t('Remote storage: {status}. Click to sync.', {
-							status: statusLabel,
-						})
+						status: statusLabel,
+					})
 					: t('Remote storage unavailable')
 			}
 			aria-label={t('Sync project with remote storage')}

@@ -7,6 +7,7 @@ import { createNamedLogger } from '@/logging';
 import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 import { useAuth } from '../../hooks/useAuth';
+import { useProperties } from '../../hooks/useProperties';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { useDiskBackup } from '../../hooks/useDiskBackup';
 import { useTheme } from '../../hooks/useTheme';
@@ -49,6 +50,7 @@ import FooterLinks from '../common/FooterLinks';
 import ServiceStatusBanner from '../common/ServiceStatusBanner';
 import QuotaBanner from '../common/QuotaBanner';
 import { storageSyncService } from '../../services/StorageSyncService';
+import { genericStorageService } from '../../services/GenericStorageService';
 import { sharedToolIdentity } from '../../utils/sharedToolsUtils';
 
 const moduleLog = createNamedLogger('ProjectApp');
@@ -80,6 +82,12 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		isGuestUser,
 	} = useAuth();
 	const { currentThemePlugin, currentLayout } = useTheme();
+	const {
+		isReady: propertiesReady,
+		getProperty,
+		setProperty,
+		registerProperty,
+	} = useProperties();
 	const { configs: storageConfigs, removeConfig: removeStorageConfig } =
 		useStorageConfig();
 	const sharedToolPreferences = useSharedToolPreferences();
@@ -108,6 +116,8 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [sidebarWidth, setSidebarWidth] = useState(
 		currentLayout?.defaultFileExplorerWidth || 250,
 	);
+	const [sidebarWidthLoaded, setSidebarWidthLoaded] = useState(false);
+	const sidebarWidthRegistered = useRef(false);
 
 	const headerRightRef = useWheelScroll<HTMLDivElement>();
 	const [showProfileModal, setShowProfileModal] = useState(false);
@@ -135,6 +145,8 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [storageProjects, setStorageProjects] = useState<
 		StorageDashboardProject[]
 	>([]);
+	const [storageLoading, setStorageLoading] = useState(false);
+	const storageLoadingCount = useRef(0);
 	const [storageBusy, setStorageBusy] = useState<Set<string>>(new Set());
 	const [restoringStorageProjects, setRestoringStorageProjects] = useState<
 		Set<string>
@@ -152,6 +164,26 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [unavailableStorageProviders, setUnavailableStorageProviders] =
 		useState<Set<string>>(new Set());
 	const storageUnlockAttemptRef = useRef<string | null>(null);
+
+	useEffect(() => {
+		if (sidebarWidthRegistered.current) return;
+		sidebarWidthRegistered.current = true;
+		registerProperty({
+			id: 'project-sidebar-width',
+			category: 'UI',
+			subcategory: 'Layout',
+			defaultValue: currentLayout?.defaultFileExplorerWidth || 250,
+		});
+	}, [registerProperty, currentLayout?.defaultFileExplorerWidth]);
+
+	useEffect(() => {
+		if (!propertiesReady || sidebarWidthLoaded) return;
+		const storedWidth = Number(getProperty('project-sidebar-width'));
+		if (Number.isFinite(storedWidth) && storedWidth > 0) {
+			setSidebarWidth(storedWidth);
+		}
+		setSidebarWidthLoaded(true);
+	}, [propertiesReady, sidebarWidthLoaded, getProperty]);
 
 	const activeStorageConfigs = useMemo(
 		() => storageConfigs.filter((config) => config.enabled),
@@ -285,50 +317,57 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			return;
 		}
 
-		const unavailable = new Set<string>();
-		const reconciled = await Promise.all(
-			accountStorageConfigs.map(async (config) => {
-				try {
-					return await storageSyncService.reconcileProvider(user.id, config.id);
-				} catch (error) {
-					unavailable.add(config.id);
-					moduleLog.warn(
-						`Storage provider ${config.id} is unavailable:`,
-						error,
-					);
-					return [];
-				}
-			}),
-		);
+		storageLoadingCount.current += 1;
+		setStorageLoading(true);
+		try {
+			const unavailable = new Set<string>();
+			const reconciled = await Promise.all(
+				accountStorageConfigs.map(async (config) => {
+					try {
+						return await storageSyncService.reconcileProvider(user.id, config.id);
+					} catch (error) {
+						unavailable.add(config.id);
+						moduleLog.warn(
+							`Storage provider ${config.id} is unavailable:`,
+							error,
+						);
+						return [];
+					}
+				}),
+			);
 
-		const sharedBindings = Object.entries(
-			storageSyncService.getProjectBindings(user.id),
-		).filter(([, binding]) => sharedStorageConfigIds.has(binding.providerId));
-		const shared = await Promise.all(
-			sharedBindings.map(async ([projectId, binding]) => {
-				try {
-					return await storageSyncService.reconcileProjectBinding(
-						user.id,
-						projectId,
-					);
-				} catch (error) {
-					unavailable.add(binding.providerId);
-					moduleLog.warn(
-						`Shared storage provider ${binding.providerId} is unavailable:`,
-						error,
-					);
-					return null;
-				}
-			}),
-		);
+			const sharedBindings = Object.entries(
+				storageSyncService.getProjectBindings(user.id),
+			).filter(([, binding]) => sharedStorageConfigIds.has(binding.providerId));
+			const shared = await Promise.all(
+				sharedBindings.map(async ([projectId, binding]) => {
+					try {
+						return await storageSyncService.reconcileProjectBinding(
+							user.id,
+							projectId,
+						);
+					} catch (error) {
+						unavailable.add(binding.providerId);
+						moduleLog.warn(
+							`Shared storage provider ${binding.providerId} is unavailable:`,
+							error,
+						);
+						return null;
+					}
+				}),
+			);
 
-		setUnavailableStorageProviders(unavailable);
-		setStorageProjects([
-			...reconciled.flat(),
-			...shared.filter(
-				(entry): entry is StorageDashboardProject => entry !== null,
-			),
-		]);
+			setUnavailableStorageProviders(unavailable);
+			setStorageProjects([
+				...reconciled.flat(),
+				...shared.filter(
+					(entry): entry is StorageDashboardProject => entry !== null,
+				),
+			]);
+		} finally {
+			storageLoadingCount.current -= 1;
+			if (storageLoadingCount.current === 0) setStorageLoading(false);
+		}
 	}, [
 		user,
 		isGuestUser,
@@ -342,6 +381,35 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	useEffect(() => {
 		void loadStorageState();
 	}, [loadStorageState]);
+
+	useEffect(() => {
+		const refreshUnavailable = (providerId?: string) => {
+			if (
+				storageLoadingCount.current > 0 ||
+				unavailableStorageProviders.size === 0 ||
+				(providerId && !unavailableStorageProviders.has(providerId))
+			) {
+				return;
+			}
+			void loadStorageState();
+		};
+		const unsubscribeStatus = genericStorageService.onStatusChange(
+			(configId, status) => {
+				if (status === 'connected') refreshUnavailable(configId);
+			},
+		);
+		const onVisible = () => {
+			if (document.visibilityState === 'visible') refreshUnavailable();
+		};
+		const onOnline = () => refreshUnavailable();
+		document.addEventListener('visibilitychange', onVisible);
+		window.addEventListener('online', onOnline);
+		return () => {
+			unsubscribeStatus();
+			document.removeEventListener('visibilitychange', onVisible);
+			window.removeEventListener('online', onOnline);
+		};
+	}, [loadStorageState, unavailableStorageProviders]);
 
 	const storageStates = useMemo(() => {
 		const states: Record<string, StorageDashboardProject> = {};
@@ -371,7 +439,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				isFavorite: project.isFavorite,
 				docUrl: project.docUrl,
 				status: binding
-					? !storageUnlockReady
+					? !storageUnlockReady || storageLoading
 						? 'checking'
 						: unavailableStorageProviders.has(providerId) || !storageUnlocked
 							? 'unavailable'
@@ -390,6 +458,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		unavailableStorageProviders,
 		storageUnlockReady,
 		storageUnlocked,
+		storageLoading,
 	]);
 
 	const filteredStoredProjects = useMemo(() => {
@@ -419,10 +488,12 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					isFavorite: project.isFavorite,
 					docUrl: project.docUrl,
 					status:
-						!storageUnlocked ||
-						unavailableStorageProviders.has(binding.providerId)
-							? 'unavailable'
-							: 'checking',
+						!storageUnlockReady || storageLoading
+							? 'checking'
+							: !storageUnlocked ||
+								unavailableStorageProviders.has(binding.providerId)
+								? 'unavailable'
+								: 'checking',
 					remoteOnly: false,
 					lastSync: binding.lastSync,
 				});
@@ -444,7 +515,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		storageProjects,
 		projects,
 		user,
+		storageUnlockReady,
 		storageUnlocked,
+		storageLoading,
 		unavailableStorageProviders,
 		searchQuery,
 		selectedTag,
@@ -1027,6 +1100,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
 	const handleSidebarResize = (width: number) => {
 		setSidebarWidth(width);
+		setProperty('project-sidebar-width', width);
 	};
 
 	return (
@@ -1094,6 +1168,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 							new Set(accountStorageConfigs.map((config) => config.id))
 						}
 						busyRemoteIds={busyRemoteIds}
+						storageLoading={storageLoading}
 						onRefreshRemote={() => void loadStorageState()}
 						onReconnectRemote={(entry) => void handleReconnectRemote(entry)}
 						onRestoreMultiple={(entries) => void handleRestoreMultiple(entries)}

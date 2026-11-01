@@ -715,7 +715,12 @@ export class StorageSyncService {
 				retryDelay = AUTO_SYNC_RETRY_DELAY;
 			} else {
 				moduleLog.warn('Automatic storage sync failed:', error);
-				if (!this.autoSyncFailures.has(key)) {
+
+				const connectionFailed =
+					this.storageService === genericStorageService &&
+					genericStorageService.getConnectionStatus(binding.providerId) !==
+					'connected';
+				if (!connectionFailed && !this.autoSyncFailures.has(key)) {
 					this.autoSyncFailures.add(key);
 					if (shouldShowNotification('storage-notifications', 'error')) {
 						notificationService.showError(
@@ -855,6 +860,13 @@ export class StorageSyncService {
 			) {
 				continue;
 			}
+			const missingEntry =
+				binding.enabled &&
+				(!!binding.baseRevision ||
+					!!(await this.storageService.getHead(
+						providerId,
+						binding.storageProjectId,
+					)));
 			result.push({
 				providerId,
 				storageProjectId: binding.storageProjectId,
@@ -869,10 +881,14 @@ export class StorageSyncService {
 				tags: local.tags,
 				isFavorite: local.isFavorite,
 				docUrl: local.docUrl,
-				status: binding.enabled ? 'error' : 'unavailable',
+				status: !binding.enabled
+					? 'unavailable'
+					: missingEntry
+						? 'error'
+						: 'local-only',
 				lastSync: binding.lastSync,
 				remoteOnly: false,
-				error: binding.enabled
+				error: missingEntry
 					? 'Project storage entry is missing from the remote catalogue'
 					: undefined,
 			});
@@ -1004,12 +1020,12 @@ export class StorageSyncService {
 		const projectKey = sharedProjectKey
 			? sharedProjectKey
 			: await this.ensureProjectKey(
-					providerId,
-					userId,
-					project,
-					binding,
-					await this.loadCatalogue(userId, providerId, wrappingKey),
-				);
+				providerId,
+				userId,
+				project,
+				binding,
+				await this.loadCatalogue(userId, providerId, wrappingKey),
+			);
 
 		const [remoteHead, localSnapshot] = await Promise.all([
 			this.storageService.getHead(providerId, binding.storageProjectId),
@@ -1018,11 +1034,11 @@ export class StorageSyncService {
 		const localHashes = await this.hashSnapshot(localSnapshot);
 		const baseManifest = binding.baseRevision
 			? await this.loadRevisionManifest(
-					providerId,
-					binding.storageProjectId,
-					binding.baseRevision,
-					projectKey,
-				)
+				providerId,
+				binding.storageProjectId,
+				binding.baseRevision,
+				projectKey,
+			)
 			: null;
 		const expectedHead = binding.baseRevision ?? null;
 
@@ -1146,13 +1162,13 @@ export class StorageSyncService {
 			);
 			const base = baseManifest
 				? await this.loadSnapshotEntry(
-						providerId,
-						binding.storageProjectId,
-						path,
-						baseManifest,
-						projectKey,
-						objectCache,
-					)
+					providerId,
+					binding.storageProjectId,
+					path,
+					baseManifest,
+					projectKey,
+					objectCache,
+				)
 				: null;
 			const conflict = this.createFileConflict(path, base, local, remote);
 			conflicts.push(conflict);

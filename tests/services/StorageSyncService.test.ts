@@ -937,6 +937,47 @@ describe('StorageSyncService incoming revision checks', () => {
 });
 
 describe('StorageSyncService dashboard lifecycle', () => {
+	it('does not report an unsynced project as an error before its first upload', async () => {
+		const { service, remote, wrappingKey, persistence } = await makeHarness();
+		service.attachProject('user-a', project.id, 'garage');
+		const withLocal = new StorageSyncService({
+			storageService: remote,
+			getProjectById: async (id) => (id === project.id ? project : null),
+			getProjectsByUser: async () => [project],
+			getWrappingKey: () => wrappingKey,
+			persistence,
+		});
+		await expect(
+			withLocal.reconcileProvider('user-a', 'garage'),
+		).resolves.toMatchObject([{ status: 'local-only', error: undefined }]);
+	});
+
+	it('keeps a missing previously synchronized catalogue entry as an error', async () => {
+		const { service, remote, wrappingKey, persistence } = await makeHarness();
+		service.attachSharedProject(
+			'user-a',
+			project.id,
+			'garage',
+			'stored-project',
+			'revision-1',
+		);
+		const withLocal = new StorageSyncService({
+			storageService: remote,
+			getProjectById: async (id) => (id === project.id ? project : null),
+			getProjectsByUser: async () => [project],
+			getWrappingKey: () => wrappingKey,
+			persistence,
+		});
+		await expect(
+			withLocal.reconcileProvider('user-a', 'garage'),
+		).resolves.toMatchObject([
+			{
+				status: 'error',
+				error: 'Project storage entry is missing from the remote catalogue',
+			},
+		]);
+	});
+
 	it('reports shared project bindings without requiring an account catalogue', async () => {
 		const remote = new MemoryStorageProvider();
 		remote.heads.set('shared-project', 'r1');
