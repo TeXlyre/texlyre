@@ -120,9 +120,14 @@ const StoredProjectList: React.FC<StoredProjectListProps> = ({
 									className='project-panel-item-meta'
 									title={formatDate(project.updatedAt)}
 								>
-									{busy
-										? t('Working...')
-										: formatLastModified(project.updatedAt)}{' '}
+									{busy ? (
+										<span className='project-panel-working'>
+											<span className='loading-spinner' aria-hidden='true' />
+											{t('Working...')}
+										</span>
+									) : (
+										formatLastModified(project.updatedAt)
+									)}{' '}
 									·{' '}
 									{disconnected
 										? t('Disconnected')
@@ -228,7 +233,7 @@ const StoredProjectList: React.FC<StoredProjectListProps> = ({
 									{t('Created')}: {formatDate(project.createdAt)}
 								</div>
 								<div>
-									{t('Last Modified: {lastModified}', {
+									{t('Last modified: {lastModified}', {
 										lastModified: formatDate(project.updatedAt),
 									})}
 								</div>

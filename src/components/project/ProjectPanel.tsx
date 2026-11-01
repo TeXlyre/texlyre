@@ -29,6 +29,7 @@ interface ProjectPanelProps {
 	providerNames: Record<string, string>;
 	ownedProviderIds: Set<string>;
 	busyRemoteIds: Set<string>;
+	storageLoading: boolean;
 	onRefreshRemote: () => void;
 	onReconnectRemote: (project: StorageDashboardProject) => void;
 	onRestoreMultiple: (projects: StorageDashboardProject[]) => void;
@@ -53,6 +54,7 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 	providerNames,
 	ownedProviderIds,
 	busyRemoteIds,
+	storageLoading,
 	onRefreshRemote,
 	onReconnectRemote,
 	onRestoreMultiple,
@@ -276,6 +278,7 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 				providerNames={providerNames}
 				ownedProviderIds={ownedProviderIds}
 				busyRemoteIds={busyRemoteIds}
+				storageLoading={storageLoading}
 				onRefreshRemote={onRefreshRemote}
 				onOpenLocal={(project) => onOpenProject?.(project)}
 				onReconnectRemote={onReconnectRemote}

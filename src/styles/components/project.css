@@ -441,6 +441,32 @@
 	border-bottom: 1px solid var(--accent-border);
 }
 
+.project-panel-loading-row,
+.project-panel-working {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+}
+
+.project-panel-working {
+	display: inline-flex;
+}
+
+.project-panel-loading-row {
+	padding: var(--space-xs) var(--space-sm);
+}
+
+.project-panel-loading-row .loading-spinner,
+.project-panel-working .loading-spinner,
+.project-panel-outline-heading .loading-spinner {
+	flex-shrink: 0;
+	width: 14px;
+	height: 14px;
+	border-width: 2px;
+	margin-bottom: 0;
+	--spinner-thickness: 2px;
+}
+
 .project-panel-remote-item {
 	min-width: 0;
 }

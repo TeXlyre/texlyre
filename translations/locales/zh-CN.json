@@ -1457,6 +1457,7 @@
   "Language: {language}": "语言：{{language}}",
   "Large (16px)": "大 (16px)",
   "Last Modified: {lastModified}": "最后修改：{{lastModified}}",
+  "Last modified: {lastModified}": "最后修改：{{lastModified}}",
   "Last Sync:": "上次同步：",
   "Last Sync: {date}": "上次同步：{{date}}",
   "Last Sync: {time}": "上次同步：{{time}}",

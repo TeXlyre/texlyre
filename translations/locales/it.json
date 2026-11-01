@@ -1509,6 +1509,7 @@
   "Language: {language}": "Lingua: {{language}}",
   "Large (16px)": "Grande (16px)",
   "Last Modified: {lastModified}": "Ultima Modifica: {{lastModified}}",
+  "Last modified: {lastModified}": "Ultima modifica: {{lastModified}}",
   "Last Sync:": "Ultima Sincronizzazione:",
   "Last Sync: {date}": "Ultima Sincronizzazione: {{date}}",
   "Last Sync: {time}": "Ultima Sincronizzazione: {{time}}",

@@ -1403,6 +1403,7 @@
   "Language: {language}": "Language: {{language}}",
   "Large (16px)": "Large (16px)",
   "Last Modified: {lastModified}": "Last Modified: {{lastModified}}",
+  "Last modified: {lastModified}": "Last modified: {{lastModified}}",
   "Last Sync:": "Last Sync:",
   "Last Sync: {date}": "Last Sync: {{date}}",
   "Last Sync: {time}": "Last Sync: {{time}}",

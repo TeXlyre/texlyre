@@ -1488,6 +1488,7 @@
   "Language: {language}": "اللغة: {{language}}",
   "Large (16px)": "كبير (16 بكسل)",
   "Last Modified: {lastModified}": "آخر تعديل: {{lastModified}}",
+  "Last modified: {lastModified}": "آخر تعديل: {{lastModified}}",
   "Last Sync:": "آخر مزامنة:",
   "Last Sync: {date}": "آخر مزامنة: {{date}}",
   "Last Sync: {time}": "آخر مزامنة: {{time}}",

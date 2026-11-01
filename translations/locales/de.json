@@ -1404,6 +1404,7 @@
   "Language: {language}": "Sprache: {{language}}",
   "Large (16px)": "Groß (16px)",
   "Last Modified: {lastModified}": "Zuletzt geändert: {{lastModified}}",
+  "Last modified: {lastModified}": "Zuletzt geändert: {{lastModified}}",
   "Last Sync:": "Letzter Sync:",
   "Last Sync: {date}": "Letzter Sync: {{date}}",
   "Last Sync: {time}": "Letzter Sync: {{time}}",

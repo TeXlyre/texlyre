@@ -3,6 +3,7 @@ import type React from 'react';
 import { useMemo, useState } from 'react';
 
 import { t } from '@/i18n';
+import { useWheelScroll } from '../../hooks/useWheelScroll';
 import type { Project } from '../../types/projects';
 import type { StorageDashboardProject } from '../../types/storage';
 import { formatLastModified } from '../../utils/dateUtils';
@@ -36,40 +37,46 @@ const ProjectSectionHeader: React.FC<ProjectSectionHeaderProps> = ({
 	collapsed,
 	onToggle,
 	actions,
-}) => (
-	<div className='project-panel-outline-heading ui-section-header ui-explorer-heading'>
-		<button
-			type='button'
-			className='ui-icon-button'
-			data-variant='subtle'
-			data-size='xs'
-			onClick={onToggle}
-			title={
-				collapsed
-					? t('Expand {section}', { section: title })
-					: t('Collapse {section}', { section: title })
-			}
-			aria-label={
-				collapsed
-					? t('Expand {section}', { section: title })
-					: t('Collapse {section}', { section: title })
-			}
+}) => {
+	const headerRef = useWheelScroll<HTMLDivElement>();
+	return (
+		<div
+			className='project-panel-outline-heading ui-section-header ui-explorer-heading scroll-x'
+			ref={headerRef}
 		>
-			{collapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
-		</button>
-		<span className='outline-header-title ui-panel-title ui-section-title'>
-			{title}
-		</span>
-		<span className='ui-badge' data-variant='label'>
-			{count}
-		</span>
-		{actions && (
-			<div className='ui-toolbar-actions' data-gap='xs'>
-				{actions}
-			</div>
-		)}
-	</div>
-);
+			<button
+				type='button'
+				className='ui-icon-button'
+				data-variant='subtle'
+				data-size='xs'
+				onClick={onToggle}
+				title={
+					collapsed
+						? t('Expand {section}', { section: title })
+						: t('Collapse {section}', { section: title })
+				}
+				aria-label={
+					collapsed
+						? t('Expand {section}', { section: title })
+						: t('Collapse {section}', { section: title })
+				}
+			>
+				{collapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
+			</button>
+			<span className='outline-header-title ui-panel-title ui-section-title'>
+				{title}
+			</span>
+			<span className='ui-badge' data-variant='label'>
+				{count}
+			</span>
+			{actions && (
+				<div className='ui-toolbar-actions' data-gap='xs'>
+					{actions}
+				</div>
+			)}
+		</div>
+	);
+};
 
 type SectionSizes = {
 	favorites: number;
@@ -85,6 +92,7 @@ interface ProjectPanelSectionsProps {
 	providerNames: Record<string, string>;
 	ownedProviderIds: Set<string>;
 	busyRemoteIds: Set<string>;
+	storageLoading: boolean;
 	onRefreshRemote: () => void;
 	onOpenLocal: (project: Project) => void;
 	onReconnectRemote: (project: StorageDashboardProject) => void;
@@ -111,6 +119,7 @@ const ProjectPanelSections: React.FC<ProjectPanelSectionsProps> = ({
 	providerNames,
 	ownedProviderIds,
 	busyRemoteIds,
+	storageLoading,
 	onRefreshRemote,
 	onOpenLocal,
 	onReconnectRemote,
@@ -307,9 +316,14 @@ const ProjectPanelSections: React.FC<ProjectPanelSectionsProps> = ({
 									data-size='xs'
 									title={t('Refresh remote projects')}
 									aria-label={t('Refresh remote projects')}
+									disabled={storageLoading}
 									onClick={onRefreshRemote}
 								>
-									<RefreshIcon />
+									{storageLoading ? (
+										<span className='loading-spinner' aria-hidden='true' />
+									) : (
+										<RefreshIcon />
+									)}
 								</button>
 								<button
 									type='button'
@@ -459,10 +473,18 @@ const ProjectPanelSections: React.FC<ProjectPanelSectionsProps> = ({
 									</button>
 								</div>
 							)}
-							{visibleProjects.length === 0 ? (
-								<div className='project-panel-empty-row ui-note'>
-									{t('No remote projects match')}
+							{storageLoading && (
+								<div className='project-panel-loading-row ui-note' role='status'>
+									<span className='loading-spinner' aria-hidden='true' />
+									{t('Loading projects...')}
 								</div>
+							)}
+							{visibleProjects.length === 0 ? (
+								storageLoading ? null : (
+									<div className='project-panel-empty-row ui-note'>
+										{t('No remote projects match')}
+									</div>
+								)
 							) : (
 								<StoredProjectList
 									projects={visibleProjects}
