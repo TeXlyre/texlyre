@@ -42,6 +42,12 @@ jest.mock('@isomorphic-git/lightning-fs', () => ({
 	})),
 }));
 
+jest.mock('isomorphic-git', () => ({
+	resolveRef: jest.fn(),
+	findMergeBase: jest.fn(),
+	writeRef: jest.fn(),
+}));
+
 jest.mock('@src/services/FileStoreService', () => ({
 	fileStoreService: {
 		getCurrentProjectId: jest.fn(() => 'project-1'),
@@ -102,6 +108,7 @@ describe('GitFileSystemService', () => {
 		expect(fileSystem.getSettings()).toEqual({
 			gitCleanAnnotations: false,
 			storeGitOnDisk: false,
+			backupGitToRemote: false,
 		});
 
 		fileSystem.setGitCleanAnnotations(true);
@@ -109,10 +116,83 @@ describe('GitFileSystemService', () => {
 		expect(fileSystem.getSettings()).toEqual({
 			gitCleanAnnotations: true,
 			storeGitOnDisk: true,
+			backupGitToRemote: false,
 		});
 
 		fileSystem.unlinkGitFromDisk();
 		expect(fileSystem.getSettings().storeGitOnDisk).toBe(false);
+	});
+
+	it('reuses immutable Git objects without reading their bytes again', async () => {
+		const fileSystem = gitFileSystemService.get('incremental-git') as any;
+		const objectPath = `objects/ab/${'c'.repeat(38)}`;
+		fileSystem.privateExists = jest.fn(async (path: string) => path === '/.git/HEAD');
+		const promises = fileSystem.privateFs.promises;
+		promises.readdir.mockImplementation(async (path: string) => {
+			if (path === '/.git') return ['HEAD', 'objects'];
+			if (path === '/.git/objects') return ['ab'];
+			if (path === '/.git/objects/ab') return ['c'.repeat(38)];
+			return [];
+		});
+		promises.stat.mockImplementation(async (path: string) => ({
+			isDirectory: () => path === '/.git/objects' || path === '/.git/objects/ab',
+		}));
+		promises.readFile.mockResolvedValue(new TextEncoder().encode('ref: refs/heads/main\n'));
+
+		const result = await fileSystem.exportGitBackup(new Set([objectPath]));
+		expect(result.files.has('HEAD')).toBe(true);
+		expect(result.reused.has(objectPath)).toBe(true);
+		expect(promises.readFile).toHaveBeenCalledWith('/.git/HEAD');
+		expect(promises.readFile).not.toHaveBeenCalledWith(`/.git/${objectPath}`);
+	});
+
+	it('fast-forwards existing Git history without touching the worktree or staging state', async () => {
+		const git = await import('isomorphic-git');
+		const refs = new Map([['refs/heads/main', 'a'.repeat(40)]]);
+		(git.resolveRef as jest.Mock).mockImplementation(async ({ ref }: { ref: string }) => {
+			const oid = refs.get(ref);
+			if (oid) return oid;
+			throw Object.assign(new Error('Missing ref'), { code: 'NotFoundError' });
+		});
+		(git.findMergeBase as jest.Mock).mockResolvedValue(['a'.repeat(40)]);
+		(git.writeRef as jest.Mock).mockImplementation(async ({ ref, value }: { ref: string; value: string }) => {
+			refs.set(ref, value);
+		});
+		const fileSystem = gitFileSystemService.get('fast-forward-project') as any;
+		fileSystem.privateExists = jest.fn(async (path: string) => path === '/.git/HEAD');
+		const objectPath = `objects/ab/${'c'.repeat(38)}`;
+		const files = new Map<string, Uint8Array>([
+			['HEAD', new TextEncoder().encode('ref: refs/heads/main\n')],
+			['refs/heads/main', new TextEncoder().encode(`${'b'.repeat(40)}\n`)],
+			[objectPath, new Uint8Array([1, 2, 3])],
+		]);
+
+		await expect(fileSystem.integrateGitBackup(files)).resolves.toBe(true);
+		expect(refs.get('refs/heads/main')).toBe('b'.repeat(40));
+		expect(git.writeRef).toHaveBeenCalledWith(expect.objectContaining({
+			ref: 'refs/heads/main', value: 'b'.repeat(40), force: true,
+		}));
+		expect(fileSystem.privateFs.promises.writeFile).toHaveBeenCalledWith(
+			`/.git/${objectPath}`, expect.any(Uint8Array),
+		);
+		expect(fileSystem.privateFs.promises.writeFile).not.toHaveBeenCalledWith(
+			'/.git/index', expect.anything(),
+		);
+		expect(fileSystem.privateFs.promises.flush).toHaveBeenCalledTimes(1);
+	});
+
+	it('preserves a divergent local branch rather than replacing it', async () => {
+		const git = await import('isomorphic-git');
+		(git.resolveRef as jest.Mock).mockResolvedValue('a'.repeat(40));
+		(git.findMergeBase as jest.Mock).mockResolvedValue([]);
+		const fileSystem = gitFileSystemService.get('divergent-project') as any;
+		fileSystem.privateExists = jest.fn(async (path: string) => path === '/.git/HEAD');
+		const files = new Map<string, Uint8Array>([
+			['HEAD', new TextEncoder().encode('ref: refs/heads/main\n')],
+			['refs/heads/main', new TextEncoder().encode(`${'b'.repeat(40)}\n`)],
+		]);
+		await expect(fileSystem.integrateGitBackup(files)).resolves.toBe(false);
+		expect(git.writeRef).not.toHaveBeenCalled();
 	});
 
 	it('syncs only the side that moved from the shared disk baseline', async () => {
