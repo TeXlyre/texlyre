@@ -48,6 +48,7 @@ import {
 	StorageProtocolError,
 } from './GenericStorageService';
 import { ProjectDataService } from './ProjectDataService';
+import { gitFileSystemService } from './GitFileSystemService';
 import {
 	notificationService,
 	shouldShowNotification,
@@ -90,6 +91,12 @@ interface StringStorage {
 interface SnapshotEntry {
 	bytes: Uint8Array;
 	hashBytes: Uint8Array;
+}
+
+interface PendingGitBackup {
+	marker: string;
+	files: Map<string, SnapshotEntry>;
+	hashes: Map<string, string>;
 }
 
 interface LoadedCatalogue {
@@ -188,7 +195,8 @@ const isRevisionManifest = (
 	if (!value || typeof value !== 'object') return false;
 	const candidate = value as Partial<StorageRevisionManifest>;
 	return (
-		candidate.version === 1 &&
+		(candidate.version === 1 || candidate.version === 2) &&
+		(candidate.version !== 2 || !!candidate.git) &&
 		typeof candidate.revisionId === 'string' &&
 		!!candidate.entries &&
 		typeof candidate.entries === 'object'
@@ -212,6 +220,7 @@ export class StorageSyncService {
 	private readonly getWrappingKey: () => CryptoKey | null;
 	private readonly persistence: StringStorage;
 	private readonly projectSyncs = new Map<string, Promise<StorageSyncResult>>();
+	private readonly rejectedGitBackups = new Map<string, string>();
 	private readonly deletingProjects = new Set<string>();
 	private readonly autoSyncs = new Map<string, StorageAutoSyncState>();
 	private readonly autoSyncFailures = new Set<string>();
@@ -715,7 +724,6 @@ export class StorageSyncService {
 				retryDelay = AUTO_SYNC_RETRY_DELAY;
 			} else {
 				moduleLog.warn('Automatic storage sync failed:', error);
-
 				const connectionFailed =
 					this.storageService === genericStorageService &&
 					genericStorageService.getConnectionStatus(binding.providerId) !==
@@ -950,6 +958,15 @@ export class StorageSyncService {
 		});
 
 		await this.applyProjectSnapshot(userId, project, snapshot);
+		if (manifest.git) {
+			await this.restoreGitBackup(
+				project.id,
+				providerId,
+				storageProjectId,
+				manifest,
+				projectKey,
+			);
+		}
 		this.updateBinding(userId, project.id, {
 			providerId,
 			storageProjectId,
@@ -1042,8 +1059,19 @@ export class StorageSyncService {
 			: null;
 		const expectedHead = binding.baseRevision ?? null;
 
+		if (remoteHead === expectedHead && baseManifest?.git) {
+			await this.restoreGitBackup(
+				projectId, providerId, binding.storageProjectId, baseManifest, projectKey,
+			);
+		}
+
 		if (remoteHead === expectedHead) {
-			if (this.matchesManifest(localHashes, baseManifest)) {
+			const pendingGit = await this.prepareGitBackup(projectId, baseManifest);
+			if (
+				this.matchesManifest(localHashes, baseManifest) &&
+				!this.gitBackupChanged(pendingGit, baseManifest)
+			) {
+				await this.finishGitBackup(projectId, pendingGit);
 				this.touchBinding(userId, projectId, binding);
 				return {
 					status: 'unchanged',
@@ -1062,6 +1090,7 @@ export class StorageSyncService {
 				localSnapshot,
 				localHashes,
 				'synced',
+				pendingGit,
 			);
 		}
 
@@ -1074,8 +1103,22 @@ export class StorageSyncService {
 			remoteHead,
 			projectKey,
 		);
+		if (remoteManifest.git) {
+			await this.restoreGitBackup(
+				projectId, providerId, binding.storageProjectId, remoteManifest, projectKey,
+				baseManifest,
+			);
+		}
 
 		if (this.matchesManifest(localHashes, remoteManifest)) {
+			const pendingGit = await this.prepareGitBackup(projectId, remoteManifest);
+			if (this.gitBackupChanged(pendingGit, remoteManifest)) {
+				return this.commitSnapshot(
+					userId, projectId, providerId, binding, projectKey,
+					remoteHead, remoteManifest, localSnapshot, localHashes, 'merged', pendingGit,
+				);
+			}
+			await this.finishGitBackup(projectId, pendingGit);
 			this.updateBinding(userId, projectId, {
 				...binding,
 				baseRevision: remoteHead,
@@ -1228,7 +1271,12 @@ export class StorageSyncService {
 			await this.applyProjectSnapshot(userId, project, finalSnapshot);
 		}
 
-		if (this.matchesManifest(finalHashes, remoteManifest)) {
+		const pendingGit = await this.prepareGitBackup(project.id, remoteManifest);
+		if (
+			this.matchesManifest(finalHashes, remoteManifest) &&
+			!this.gitBackupChanged(pendingGit, remoteManifest)
+		) {
+			await this.finishGitBackup(project.id, pendingGit);
 			this.updateBinding(userId, project.id, {
 				...binding,
 				baseRevision: remoteManifest.revisionId,
@@ -1252,7 +1300,160 @@ export class StorageSyncService {
 			finalSnapshot,
 			finalHashes,
 			'merged',
+			pendingGit,
 		);
+	}
+
+	private gitBackupChanged(
+		backup: PendingGitBackup | null,
+		manifest: StorageRevisionManifest | null,
+	): boolean {
+		if (!backup) return false;
+		const entries = manifest?.git ?? {};
+		if (Object.keys(entries).length !== backup.hashes.size) return true;
+		return [...backup.hashes].some(
+			([path, hash]) => entries[path]?.hash !== hash,
+		);
+	}
+
+	private gitBackupSignature(hashes: Map<string, string>): Promise<string> {
+		return sha256(
+			encodeJson([...hashes].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))),
+		);
+	}
+
+	private async finishGitBackup(
+		projectId: string,
+		backup: PendingGitBackup | null,
+	): Promise<void> {
+		if (!backup) return;
+		gitFileSystemService.get(projectId).markGitBackupSynced(
+			backup.marker,
+			await this.gitBackupSignature(backup.hashes),
+		);
+	}
+
+	private async prepareGitBackup(
+		projectId: string,
+		remoteManifest: StorageRevisionManifest | null,
+	): Promise<PendingGitBackup | null> {
+		const fs = gitFileSystemService.getForRemoteBackup(projectId);
+		if (!fs) return null;
+		const marker = fs.getGitBackupDirty();
+		if (!marker || fs.hasGitBackupConflict()) return null;
+		const remoteGit = remoteManifest?.git;
+		const knownBase = fs.getGitBackupBase();
+		if (knownBase) {
+			const remoteSignature = remoteGit
+				? await this.gitBackupSignature(
+					new Map(
+						Object.entries(remoteGit).map(([path, entry]) => [path, entry.hash]),
+					),
+				)
+				: null;
+			if (remoteSignature !== knownBase) {
+				fs.setGitBackupConflict(true);
+				moduleLog.warn(
+					'Remote Git backup changed independently; preserving remote history',
+				);
+				return null;
+			}
+		}
+		const knownObjects = knownBase && remoteGit
+			? new Set(Object.keys(remoteGit).filter((path) => path.startsWith('objects/')))
+			: undefined;
+		const exported = await fs.exportGitBackup(knownObjects);
+		if (!exported.files.size && !exported.reused.size) return null;
+		const files = new Map<string, SnapshotEntry>();
+		for (const [path, bytes] of exported.files) {
+			files.set(path, { bytes, hashBytes: bytes });
+		}
+		const hashes = await this.hashSnapshot(files);
+		for (const path of exported.reused) {
+			const previousHash = remoteGit?.[path]?.hash;
+			if (!previousHash) throw new Error('Missing Git backup object baseline');
+			hashes.set(path, previousHash);
+		}
+		if (
+			knownBase &&
+			remoteGit &&
+			Object.entries(remoteGit).some(
+				([path, entry]) =>
+					path.startsWith('objects/') && hashes.get(path) !== entry.hash,
+			)
+		) {
+			fs.setGitBackupConflict(true);
+			moduleLog.warn('Local Git no longer contains all backed-up Git objects');
+			return null;
+		}
+		if (!knownBase && remoteGit && !this.sameGitEntries(remoteGit, hashes)) {
+			fs.setGitBackupConflict(true);
+			moduleLog.warn('Existing remote Git backup differs from local Git history');
+			return null;
+		}
+		return { marker, files, hashes };
+	}
+
+	private sameGitEntries(
+		entries: NonNullable<StorageRevisionManifest['git']>,
+		hashes: Map<string, string>,
+	): boolean {
+		const keys = Object.keys(entries);
+		return (
+			keys.length === hashes.size &&
+			keys.every((path) => entries[path].hash === hashes.get(path))
+		);
+	}
+
+	private async restoreGitBackup(
+		projectId: string,
+		providerId: string,
+		storageProjectId: string,
+		manifest: StorageRevisionManifest,
+		projectKey: CryptoKey,
+		previousManifest: StorageRevisionManifest | null = null,
+	): Promise<void> {
+		const remoteGit = manifest.git;
+		if (!remoteGit) return;
+		const fs = gitFileSystemService.get(projectId);
+		const signature = await this.gitBackupSignature(new Map(
+			Object.entries(remoteGit).map(([path, entry]) => [path, entry.hash]),
+		));
+		const emptyLocalGit = await fs.canRestoreGitBackup();
+		if (fs.getGitBackupBase() === signature && !emptyLocalGit) return;
+		const attempt = `${signature}:${fs.getGitBackupDirty() ?? ''}`;
+		if (this.rejectedGitBackups.get(projectId) === attempt) return;
+		const previousGit = previousManifest?.git;
+		const knownGit = previousGit && fs.getGitBackupBase() === await this.gitBackupSignature(
+			new Map(Object.entries(previousGit).map(([path, entry]) => [path, entry.hash])),
+		) ? previousGit : null;
+		const files = new Map<string, Uint8Array>();
+		for (const [path, entry] of Object.entries(remoteGit)) {
+			if (!emptyLocalGit && path !== 'HEAD' && knownGit?.[path]?.hash === entry.hash) continue;
+			if (!emptyLocalGit && await fs.hasGitBackupObject(path)) continue;
+			const encrypted = await this.storageService.getObject(
+				providerId, storageProjectId, entry.objectId,
+			);
+			if (!encrypted) throw new Error(`Storage Git object missing: ${entry.objectId}`);
+			const bytes = await decryptStorageBytes(
+				projectKey, encrypted, OBJECT_PURPOSE(entry.objectId),
+			);
+			if ((await sha256(bytes)) !== entry.hash) {
+				throw new Error('Invalid stored Git object hash');
+			}
+			files.set(path, bytes);
+		}
+		const integrated = emptyLocalGit
+			? await fs.importGitBackup(files)
+			: await fs.integrateGitBackup(files);
+		if (integrated) {
+			this.rejectedGitBackups.delete(projectId);
+			fs.adoptGitBackup(signature);
+		} else {
+			this.rejectedGitBackups.set(projectId, attempt);
+			fs.setGitBackupConflict(true);
+			moduleLog.warn('Remote Git history diverged; preserving local Git history');
+		}
 	}
 
 	private async commitSnapshot(
@@ -1266,6 +1467,7 @@ export class StorageSyncService {
 		snapshot: Map<string, SnapshotEntry>,
 		hashes: Map<string, string>,
 		status: 'synced' | 'merged',
+		pendingGit: PendingGitBackup | null = null,
 	): Promise<StorageSyncResult> {
 		const entries: StorageRevisionManifest['entries'] = {};
 		let uploadedObjects = 0;
@@ -1294,9 +1496,33 @@ export class StorageSyncService {
 			uploadedObjects += 1;
 		}
 
+		let git = previousManifest?.git;
+		if (pendingGit) {
+			git = {};
+			for (const [path, hash] of pendingGit.hashes) {
+				const previous = previousManifest?.git?.[path];
+				if (previous?.hash === hash) {
+					git[path] = previous;
+					continue;
+				}
+				const snapshotEntry = pendingGit.files.get(path);
+				if (!snapshotEntry) throw new Error('Missing changed Git backup object');
+				const objectId = nanoid(32);
+				const encrypted = await encryptStorageBytes(
+					projectKey, snapshotEntry.bytes, OBJECT_PURPOSE(objectId),
+				);
+				await this.storageService.putObject(
+					providerId, binding.storageProjectId, objectId, encrypted,
+				);
+				git[path] = { objectId, hash, size: snapshotEntry.bytes.byteLength };
+				uploadedObjects += 1;
+			}
+		}
+
 		const revisionId = nanoid(32);
 		const manifest: StorageRevisionManifest = {
-			version: 1,
+			version: git ? 2 : 1,
+			...(git ? { git } : {}),
 			revisionId,
 			parentRevision: expectedHead,
 			createdAt: Date.now(),
@@ -1331,6 +1557,7 @@ export class StorageSyncService {
 			baseRevision: revisionId,
 			lastSync: Date.now(),
 		});
+		await this.finishGitBackup(projectId, pendingGit);
 		return { status, revision: revisionId, uploadedObjects };
 	}
 

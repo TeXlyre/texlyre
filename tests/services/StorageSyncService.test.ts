@@ -6,6 +6,7 @@ import {
 	StorageSyncService,
 } from '../../src/services/StorageSyncService';
 import { StorageProtocolError } from '../../src/services/GenericStorageService';
+import { gitFileSystemService } from '../../src/services/GitFileSystemService';
 import {
 	decryptStorageBytes,
 	deriveStorageWrappingKey,
@@ -648,6 +649,237 @@ const readRemoteManifest = async (
 		entries: Record<string, unknown>;
 	};
 };
+
+describe('StorageSyncService optional Git backup', () => {
+	afterEach(() => jest.restoreAllMocks());
+
+	it('backs up changed Git objects incrementally without revisiting them during file sync', async () => {
+		const { service, remote, setFileContent } = await makeHarness();
+		await service.syncProject('user-a', project.id, 'garage');
+		let marker: string | null = 'git-change-1';
+		let gitBase: string | null = null;
+		const head = new TextEncoder().encode('ref: refs/heads/main\n');
+		const object = new Uint8Array([1, 2, 3, 4]);
+		const exportGitBackup = jest.fn(async () => ({ files: new Map([
+			['HEAD', head],
+			[`objects/ab/${'c'.repeat(38)}`, object],
+		]), reused: new Set<string>() }));
+		const fakeGit = {
+			getGitBackupDirty: () => marker,
+			getGitBackupBase: () => gitBase,
+			hasGitBackupConflict: () => false,
+			exportGitBackup,
+			markGitBackupSynced: (value: string, signature: string) => { gitBase = signature; if (marker === value) marker = null; },
+			canRestoreGitBackup: async () => false,
+			hasGitBackupObject: async () => false,
+			setGitBackupConflict: jest.fn(),
+		};
+		jest.spyOn(gitFileSystemService, 'get').mockReturnValue(fakeGit as never);
+		jest.spyOn(gitFileSystemService, 'getForRemoteBackup').mockReturnValue(fakeGit as never);
+
+		const committed = await service.syncProject('user-a', project.id, 'garage');
+		expect(committed.uploadedObjects).toBe(2);
+		expect(exportGitBackup).toHaveBeenCalledTimes(1);
+		const before = remote.putObjectCount;
+		await expect(service.syncProject('user-a', project.id, 'garage'))
+			.resolves.toMatchObject({ status: 'unchanged', uploadedObjects: 0 });
+		expect(exportGitBackup).toHaveBeenCalledTimes(1);
+
+		const binding = service.getProjectBinding('user-a', project.id)!;
+		const loaded = await (service as any).loadCatalogue('user-a', 'garage',
+			(service as any).getWrappingKey());
+		const { unwrapProjectStorageKey } = await import('../../src/utils/storageEncryptionUtils');
+		const key = await unwrapProjectStorageKey(
+			loaded.catalogue.projects[0].wrappedProjectKey, loaded.accountKey,
+		);
+		const previous = await (service as any).loadRevisionManifest(
+			'garage', binding.storageProjectId, binding.baseRevision, key,
+		);
+		expect(previous.version).toBe(2);
+		expect(Object.keys(previous.git).sort()).toEqual([
+			'HEAD', `objects/ab/${'c'.repeat(38)}`,
+		]);
+
+		setFileContent('changed');
+		const changed = await service.syncProject('user-a', project.id, 'garage');
+		expect(changed.uploadedObjects).toBe(1);
+		expect(remote.putObjectCount - before).toBe(1);
+		expect(exportGitBackup).toHaveBeenCalledTimes(1);
+		const latest = await (service as any).loadRevisionManifest(
+			'garage', binding.storageProjectId, changed.revision, key,
+		);
+		expect(latest.git).toEqual(previous.git);
+	});
+
+	it('restores missing local Git without overwriting an existing Git repository', async () => {
+		const { service } = await makeHarness();
+		let marker: string | null = 'git-change-1';
+		let gitBase: string | null = null;
+		let canRestore = false;
+		const importGitBackup = jest.fn(async (_files: Map<string, Uint8Array>) => true);
+		const fakeGit = {
+			getGitBackupDirty: () => marker,
+			getGitBackupBase: () => gitBase,
+			hasGitBackupConflict: () => false,
+			exportGitBackup: async () => ({ files: new Map([['HEAD', new TextEncoder().encode('ref: refs/heads/main\n')]]), reused: new Set<string>() }),
+			markGitBackupSynced: (value: string, signature: string) => { gitBase = signature; if (marker === value) marker = null; },
+			canRestoreGitBackup: async () => canRestore,
+			hasGitBackupObject: async () => false,
+			importGitBackup,
+			integrateGitBackup: jest.fn(async () => true),
+			adoptGitBackup: (signature: string) => { gitBase = signature; },
+			setGitBackupConflict: jest.fn(),
+		};
+		jest.spyOn(gitFileSystemService, 'get').mockReturnValue(fakeGit as never);
+		jest.spyOn(gitFileSystemService, 'getForRemoteBackup').mockReturnValue(fakeGit as never);
+		await service.syncProject('user-a', project.id, 'garage');
+		expect(importGitBackup).not.toHaveBeenCalled();
+		canRestore = true;
+		await service.syncProject('user-a', project.id, 'garage');
+		expect(importGitBackup).toHaveBeenCalledTimes(1);
+		expect(importGitBackup.mock.calls[0][0].has('HEAD')).toBe(true);
+		canRestore = false;
+		await service.syncProject('user-a', project.id, 'garage');
+		expect(importGitBackup).toHaveBeenCalledTimes(1);
+	});
+
+	it('imports subsequent commits into an existing peer and reuses unchanged Git objects', async () => {
+		const { service, remote } = await makeHarness();
+		const head = new TextEncoder().encode('ref: refs/heads/main\n');
+		const oid1 = 'a'.repeat(40);
+		const oid2 = 'b'.repeat(40);
+		const object1 = `objects/ab/${'c'.repeat(38)}`;
+		const object2 = `objects/de/${'f'.repeat(38)}`;
+		let marker: string | null = 'initial';
+		let base: string | null = null;
+		let commit = oid1;
+		const source = {
+			getGitBackupDirty: () => marker,
+			getGitBackupBase: () => base,
+			hasGitBackupConflict: () => false,
+			canRestoreGitBackup: async () => false,
+			hasGitBackupObject: async () => false,
+			exportGitBackup: jest.fn(async (known: Set<string>) => ({
+				files: new Map<string, Uint8Array>([
+					['HEAD', head],
+					['refs/heads/main', new TextEncoder().encode(`${commit}\n`)],
+					...[ [object1, new Uint8Array([1])] as [string, Uint8Array],
+						...(commit === oid2 ? [[object2, new Uint8Array([2])] as [string, Uint8Array]] : []),
+					].filter(([path]) => !known?.has(path)),
+				]),
+				reused: new Set<string>([object1, object2].filter((path) => known?.has(path) && (path === object1 || commit === oid2))),
+			})),
+			markGitBackupSynced: (value: string, signature: string) => {
+				base = signature;
+				if (marker === value) marker = null;
+			},
+			setGitBackupConflict: jest.fn(),
+		};
+		let peerBase: string | null = null;
+		let peerInitialized = false;
+		const imported = jest.fn(async () => { peerInitialized = true; return true; });
+		const updated = jest.fn(async () => true);
+		const peer = {
+			getGitBackupBase: () => peerBase,
+			canRestoreGitBackup: async () => !peerInitialized,
+			hasGitBackupConflict: () => false,
+			hasGitBackupObject: async (path: string) => path === object1,
+			importGitBackup: imported,
+			integrateGitBackup: updated,
+			adoptGitBackup: (signature: string) => { peerBase = signature; },
+			setGitBackupConflict: jest.fn(),
+			getGitBackupDirty: () => null,
+		};
+		let active: typeof source | typeof peer = source;
+		jest.spyOn(gitFileSystemService, 'get').mockImplementation(() => active as never);
+		jest.spyOn(gitFileSystemService, 'getForRemoteBackup').mockImplementation(() =>
+			active === source ? source as never : null);
+		await service.syncProject('user-a', project.id, 'garage');
+		active = peer;
+		await service.syncProject('user-a', project.id, 'garage');
+		expect(imported).toHaveBeenCalledTimes(1);
+		active = source;
+		commit = oid2;
+		marker = 'next-commit';
+		await service.syncProject('user-a', project.id, 'garage');
+		const objectsBefore = remote.getObjectCount;
+		active = peer;
+		await service.syncProject('user-a', project.id, 'garage');
+		expect(updated).toHaveBeenCalledTimes(1);
+		expect(updated.mock.calls[0][0].get('refs/heads/main')).toEqual(new TextEncoder().encode(`${oid2}\n`));
+		expect(updated.mock.calls[0][0].has(object2)).toBe(true);
+		expect(updated.mock.calls[0][0].has(object1)).toBe(false);
+		expect(remote.getObjectCount - objectsBefore).toBe(3); // HEAD, branch ref, new object
+		await service.syncProject('user-a', project.id, 'garage');
+		expect(updated).toHaveBeenCalledTimes(1);
+	});
+
+	it('allows an opted-in shared peer to publish Git commits into the same encrypted project', async () => {
+		const { service: owner, remote, dataSerializer } = await makeHarness();
+		await owner.syncProject('user-a', project.id, 'garage');
+		const ownerBinding = owner.getProjectBinding('user-a', project.id)!;
+		owner.setShareWithCollaborators('user-a', project.id, true);
+		const sharedKey = await owner.exportProjectKeyForSharing('user-a', project.id);
+		const peerProject = { ...project, id: 'peer-project', ownerId: 'user-b' };
+		const peerKey = await deriveStorageWrappingKey({
+			username: 'bob', password: 'different credentials',
+			prfOutput: new Uint8Array(32).fill(9),
+		});
+		const peerService = new StorageSyncService({
+			storageService: remote,
+			dataSerializer,
+			getProjectById: async (id) => id === peerProject.id ? peerProject : null,
+			getWrappingKey: () => peerKey,
+			persistence: new MemoryStringStorage(),
+		});
+		peerService.attachSharedProject(
+			'user-b', peerProject.id, 'garage',
+			ownerBinding.storageProjectId, ownerBinding.baseRevision,
+		);
+		await peerService.storeSharedProjectKey('user-b', peerProject.id, sharedKey);
+		const files = new Map([['HEAD', new TextEncoder().encode('ref: refs/heads/main\n')]]);
+		const fakeGit = {
+			getGitBackupDirty: () => 'peer-commit',
+			getGitBackupBase: () => null,
+			hasGitBackupConflict: () => false,
+			exportGitBackup: jest.fn(async () => ({ files, reused: new Set<string>() })),
+			markGitBackupSynced: jest.fn(),
+			setGitBackupConflict: jest.fn(),
+		};
+		jest.spyOn(gitFileSystemService, 'getForRemoteBackup').mockReturnValue(fakeGit as never);
+		jest.spyOn(gitFileSystemService, 'get').mockReturnValue(fakeGit as never);
+		const result = await peerService.syncProject('user-b', peerProject.id, 'garage');
+		const projectKey = await importProjectStorageKey(sharedKey);
+		const manifest = await (peerService as any).loadRevisionManifest(
+			'garage', ownerBinding.storageProjectId, result.revision, projectKey,
+		);
+		expect(manifest.git).toHaveProperty('HEAD');
+		expect(fakeGit.markGitBackupSynced).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not export local Git when remote history changed independently', async () => {
+		const { service } = await makeHarness();
+		let conflicted = false;
+		const fakeGit = {
+			getGitBackupDirty: () => 'local-change',
+			getGitBackupBase: () => 'previous-git-backup',
+			hasGitBackupConflict: () => false,
+			exportGitBackup: jest.fn(),
+			setGitBackupConflict: jest.fn((value: boolean) => { conflicted = value; }),
+		};
+		jest.spyOn(gitFileSystemService, 'get').mockReturnValue(fakeGit as never);
+		jest.spyOn(gitFileSystemService, 'getForRemoteBackup').mockReturnValue(fakeGit as never);
+		const remote = { version: 2, git: { HEAD: { hash: 'b' } } };
+		await expect((service as any).prepareGitBackup(project.id, remote))
+			.resolves.toBeNull();
+		expect(fakeGit.exportGitBackup).not.toHaveBeenCalled();
+		expect(fakeGit.setGitBackupConflict).toHaveBeenCalledWith(true);
+		// Advancing the ordinary project revision must not unblock the Git conflict.
+		await expect((service as any).prepareGitBackup(project.id, remote))
+			.resolves.toBeNull();
+		expect(fakeGit.exportGitBackup).not.toHaveBeenCalled();
+	});
+});
 
 describe('StorageSyncService reconciliation', () => {
 
