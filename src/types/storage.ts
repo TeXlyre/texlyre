@@ -53,11 +53,12 @@ export interface StorageRevisionEntry {
 }
 
 export interface StorageRevisionManifest {
-	version: 1;
+	version: 1 | 2;
 	revisionId: string;
 	parentRevision: string | null;
 	createdAt: number;
 	entries: Record<string, StorageRevisionEntry>;
+	git?: Record<string, StorageRevisionEntry>;
 }
 
 export interface StorageCatalogueProject {

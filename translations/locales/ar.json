@@ -3088,5 +3088,8 @@
   "⚠️ Wordometer is experimental and may not count all Typst elements (e.g., CV templates, Touying presentation elements).": "⚠️ Wordometer وقد لا يحسب جميع عناصر Typst (مثل قوالب السيرة الذاتية، عناصر عرض Touying).",
   "💡": "💡",
   "📄": "📄",
-  "🔄": "🔄"
+  "🔄": "🔄",
+  "Back up Git history to remote storage": "نسخ سجل Git احتياطيًا إلى التخزين البعيد",
+  "Backs up Git commits and branches with your encrypted project. People with access to shared storage can also read its Git history. Existing local Git history is never replaced.": "يُنسخ سجل الالتزامات والفروع مع المشروع المشفّر. يمكن لمن يصلون إلى التخزين المشترك قراءة سجل Git أيضًا. لن تُستبدل سجلات Git المحلية الحالية.",
+  "Remote Git history changed independently. Your local history is preserved, but Git backup is paused until the histories are reconciled.": "تغيّر سجل Git البعيد بشكل مستقل. بقي السجل المحلي محفوظًا، لكن النسخ الاحتياطي لـ Git متوقف حتى تتم تسوية السجلين."
 }

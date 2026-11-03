@@ -2973,5 +2973,8 @@
   "⚠️ Wordometer is experimental and may not count all Typst elements (e.g., CV templates, Touying presentation elements).": "⚠️ Wordometer 是实验性功能，可能无法计算所有 Typst 元素（例如简历模板、Touying 演示文稿元素）。",
   "💡": "💡",
   "📄": "📄",
-  "🔄": "🔄"
+  "🔄": "🔄",
+  "Back up Git history to remote storage": "将 Git 历史备份到远程存储",
+  "Backs up Git commits and branches with your encrypted project. People with access to shared storage can also read its Git history. Existing local Git history is never replaced.": "将 Git 提交和分支随加密项目一起备份。能访问共享存储的人也能读取 Git 历史。现有的本地 Git 历史绝不会被覆盖。",
+  "Remote Git history changed independently. Your local history is preserved, but Git backup is paused until the histories are reconciled.": "远程 Git 历史已被独立更改。本地历史不受影响，但 Git 备份将暂停，直到两份历史完成协调。"
 }

@@ -2856,5 +2856,8 @@
   "⚠️ Wordometer is experimental and may not count all Typst elements (e.g., CV templates, Touying presentation elements).": "⚠️ Wordometer ist experimentell und kann nicht alle Elemente des Typst zählen (z. B. CV-Vorlagen, Touying Präsentationselemente).",
   "💡": "💡",
   "📄": "📄",
-  "🔄": "🔄"
+  "🔄": "🔄",
+  "Back up Git history to remote storage": "Git-Verlauf im Remote-Speicher sichern",
+  "Backs up Git commits and branches with your encrypted project. People with access to shared storage can also read its Git history. Existing local Git history is never replaced.": "Sichert Git-Commits und Branches mit dem verschlüsselten Projekt. Personen mit Zugriff auf den gemeinsamen Speicher können auch den Git-Verlauf lesen. Der lokale Git-Verlauf wird nie ersetzt.",
+  "Remote Git history changed independently. Your local history is preserved, but Git backup is paused until the histories are reconciled.": "Der Remote-Git-Verlauf wurde unabhängig geändert. Der lokale Verlauf bleibt erhalten; die Git-Sicherung pausiert bis zum Abgleich der Verläufe."
 }

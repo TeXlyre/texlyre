@@ -297,6 +297,16 @@ const GitHistoryPanel: React.FC<GitHistoryPanelProps> = ({
 		};
 	}, [projectId, state.initialized]);
 
+	useEffect(() => {
+		const onGitStorageChanged = (event: Event) => {
+			if ((event as CustomEvent<{ projectId: string }>).detail?.projectId === projectId) {
+				void load();
+			}
+		};
+		document.addEventListener('git-storage-changed', onGitStorageChanged);
+		return () => document.removeEventListener('git-storage-changed', onGitStorageChanged);
+	}, [projectId, load]);
+
 	const initialize = async () => {
 		if (!projectId || isWorking) return;
 		setIsWorking(true);

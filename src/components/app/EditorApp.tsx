@@ -210,6 +210,16 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	);
 
 	useEffect(() => {
+		const onGitBackupChanged = (event: Event) => {
+			if ((event as CustomEvent<{ projectId: string }>).detail?.projectId === storageProjectId) {
+				queueStorageSync();
+			}
+		};
+		document.addEventListener('git-backup-changed', onGitBackupChanged);
+		return () => document.removeEventListener('git-backup-changed', onGitBackupChanged);
+	}, [queueStorageSync, storageProjectId]);
+
+	useEffect(() => {
 		window.addEventListener('online', queueStorageSync);
 		return () => window.removeEventListener('online', queueStorageSync);
 	}, [queueStorageSync]);
