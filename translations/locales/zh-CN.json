@@ -2974,6 +2974,7 @@
   "💡": "💡",
   "📄": "📄",
   "🔄": "🔄",
+  "BusyTeX: texlyre-busytex v1.4.1 (TeX Live 2026, 01/03/2026)": "BusyTeX: texlyre-busytex v1.4.1 (TeX Live 2026, 01/03/2026)",
   "Back up Git history to remote storage": "将 Git 历史备份到远程存储",
   "Backs up Git commits and branches with your encrypted project. People with access to shared storage can also read its Git history. Existing local Git history is never replaced.": "将 Git 提交和分支随加密项目一起备份。能访问共享存储的人也能读取 Git 历史。现有的本地 Git 历史绝不会被覆盖。",
   "Remote Git history changed independently. Your local history is preserved, but Git backup is paused until the histories are reconciled.": "远程 Git 历史已被独立更改。本地历史不受影响，但 Git 备份将暂停，直到两份历史完成协调。"

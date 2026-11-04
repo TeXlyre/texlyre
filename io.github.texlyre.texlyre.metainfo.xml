@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="web-application">
+  <id>io.github.texlyre.texlyre</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-or-later</project_license>
+
+  <name>TeXlyre</name>
+  <summary>Local-first LaTeX and Typst collaborative editor</summary>
+  <developer id="io.github.texlyre">
+    <name>Fares Abawi</name>
+  </developer>
+
+  <description>
+    <p>
+      TeXlyre is a local-first real-time LaTeX and Typst collaboration platform with offline editing capabilities.
+    </p>
+    <ul>
+      <li>Edit documents together with live cursors, comments, chat and tracked changes</li>
+      <li>Compile LaTeX and Typst documents in the browser</li>
+      <li>Keep projects in the browser and synchronize them between peers</li>
+      <li>Edit diagrams with the embedded Draw.io and TikZ editors</li>
+    </ul>
+  </description>
+
+  <launchable type="url">https://texlyre.github.io/texlyre/</launchable>
+  <icon type="remote" width="192" height="192">https://texlyre.github.io/texlyre/assets/images/TeXlyre_notext_192.png</icon>
+
+  <categories>
+    <category>Office</category>
+    <category>Publishing</category>
+  </categories>
+  <keywords>
+    <keyword>LaTeX</keyword>
+    <keyword>Typst</keyword>
+    <keyword>TeX</keyword>
+    <keyword>collaboration</keyword>
+    <keyword>editor</keyword>
+  </keywords>
+
+  <url type="homepage">https://texlyre.github.io/texlyre/</url>
+  <url type="bugtracker">https://github.com/texlyre/texlyre/issues</url>
+  <url type="vcs-browser">https://github.com/texlyre/texlyre</url>
+  <url type="translate">https://crowdin.com/project/texlyre</url>
+  <url type="contribute">https://github.com/texlyre/texlyre/blob/main/CONTRIBUTING.md</url>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Editor with LaTeX code and the compiled PDF</caption>
+      <image>https://raw.githubusercontent.com/texlyre/texlyre/main/showcase/main_showcase_dark.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Users editing a document at the same time</caption>
+      <image>https://raw.githubusercontent.com/texlyre/texlyre/main/showcase/collab_cursor_zoomed.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Chat panel</caption>
+      <image>https://raw.githubusercontent.com/texlyre/texlyre/main/showcase/chat_zoomed.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Tracked changes in the review panel</caption>
+      <image>https://raw.githubusercontent.com/texlyre/texlyre/main/showcase/review_comment_panel.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>LaTeX compilation errors</caption>
+      <image>https://raw.githubusercontent.com/texlyre/texlyre/main/showcase/error_parser_zoomed_latex.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Project dashboard</caption>
+      <image>https://raw.githubusercontent.com/texlyre/texlyre/main/showcase/project_viewer_zoomed.png</image>
+    </screenshot>
+  </screenshots>
+
+  <content_rating type="oars-1.1">
+    <content_attribute id="social-chat">intense</content_attribute>
+  </content_rating>
+</component>

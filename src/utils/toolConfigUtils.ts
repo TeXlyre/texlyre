@@ -1,4 +1,6 @@
 // src/utils/toolConfigUtils.ts
+import DOMPurify from 'dompurify';
+
 import type { TransportConfig } from '@chelys/types/transport';
 import type { TypesetterServerConfig } from '../services/GenericTypesetterService';
 import type {
@@ -14,6 +16,39 @@ import type {
 } from '../types/compilation';
 import type { LSPConfigBlock } from '../types/lsp';
 import type { StorageConfigBlock } from '../types/storage';
+
+export function sanitizeToolIcon(input: unknown): string | undefined {
+	if (typeof input !== 'string' || input.length > 262_144) return;
+	const icon = input.trim();
+	if (!icon) return;
+
+	if (icon.startsWith('<')) {
+		if (!/^<(svg|img)(?:\s|\/?>)/i.test(icon) || !DOMPurify.isSupported) return;
+		const clean = DOMPurify.sanitize(icon, {
+			USE_PROFILES: /^<img/i.test(icon)
+				? { html: true }
+				: { svg: true, svgFilters: true },
+			FORBID_TAGS: ['foreignObject', 'style', 'image', 'feImage', 'use', 'a'],
+			FORBID_ATTR: ['style', 'href', 'xlink:href', 'srcset'],
+		});
+		if (!/^<(svg|img)(?:\s|\/?>)/i.test(clean)) return;
+		if (/^<img/i.test(clean) && !/\ssrc=/i.test(clean)) return;
+		return clean;
+	}
+
+	if (/[<>"'\\\p{Cc}]/u.test(icon) || icon.startsWith('//')) return;
+	try {
+		const url = new URL(icon, 'https://texlyre.invalid/');
+		if (
+			url.protocol === 'http:' ||
+			url.protocol === 'https:' ||
+			(url.protocol === 'data:' && /^data:image\//i.test(icon))
+		)
+			return icon;
+	} catch {
+		return undefined;
+	}
+}
 
 export function parseStoredList(value: unknown): unknown[] {
 	let parsed: unknown = value;
@@ -383,6 +418,7 @@ export function normalizeTypesetterConfig(
 
 	const ui = normalizeUISchema(config.ui);
 	const inputFiles = normalizeInputFiles(config.inputFiles);
+	const icon = sanitizeToolIcon(config.icon);
 
 	return {
 		id,
@@ -391,7 +427,7 @@ export function normalizeTypesetterConfig(
 				? config.name
 				: id.toUpperCase(),
 		enabled: config.enabled !== false,
-		...(typeof config.icon === 'string' ? { icon: config.icon } : {}),
+		...(icon ? { icon } : {}),
 		projectType: config.projectType,
 		projectGroup:
 			typeof config.projectGroup === 'string' && config.projectGroup.trim()
@@ -513,6 +549,7 @@ export function normalizeLspConfig(value: unknown): LSPConfigBlock | null {
 	}
 
 	const languageIdMap = normalizeLanguageIdMap(value.languageIdMap);
+	const icon = sanitizeToolIcon(value.icon);
 
 	return {
 		id,
@@ -521,7 +558,7 @@ export function normalizeLspConfig(value: unknown): LSPConfigBlock | null {
 				? value.name
 				: id.toUpperCase(),
 		enabled: value.enabled !== false,
-		...(typeof value.icon === 'string' ? { icon: value.icon } : {}),
+		...(icon ? { icon } : {}),
 		fileExtensions: normalizeStringArray(value.fileExtensions),
 		...(languageIdMap ? { languageIdMap } : {}),
 		transportConfig,

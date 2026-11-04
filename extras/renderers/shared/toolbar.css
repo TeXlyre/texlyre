@@ -1,4 +1,20 @@
 /* Shared layout values used by the PDF and Canvas renderers. */
+.renderer-toolbar-right {
+	--renderer-toolbar-control-height: var(
+		--ui-icon-button-size,
+		var(--ui-action-control-height, var(--control-height-compact))
+	);
+	--ui-field-control-height: var(--renderer-toolbar-control-height);
+	--ui-field-control-min-height: var(--renderer-toolbar-control-height);
+}
+
+.renderer-toolbar-right .ui-field-control:not(textarea):not(select[multiple]) {
+	height: var(--renderer-toolbar-control-height);
+	min-height: var(--renderer-toolbar-control-height);
+	max-height: var(--renderer-toolbar-control-height);
+	padding-block: 0;
+}
+
 .renderer-toolbar-select.ui-field-control {
 	width: auto;
 	min-width: calc(

@@ -33,7 +33,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
 		}
 	}, [isOpen]);
 
-	const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
+	const handleSubmit = async (e: React.SyntheticEvent) => {
 		e.preventDefault();
 
 		if (!password.trim()) {
@@ -83,7 +83,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
 					</div>
 				)}
 
-				<form onSubmit={handleSubmit} className='password-form'>
+				<form onSubmit={handleSubmit} className='password-form ui-stack'>
 					<div className='ui-field' data-spacing='section'>
 						<label htmlFor='password'>{t('Password')}</label>
 						<input
@@ -111,8 +111,9 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
 							{t('Cancel')}
 						</button>
 						<button
-							type='submit'
+							type='button'
 							className='button primary'
+							onClick={handleSubmit}
 							disabled={isSubmitting || !password.trim()}
 						>
 							{isSubmitting ? t('Verifying...') : t('Unlock')}
