@@ -474,7 +474,10 @@ const ProjectPanelSections: React.FC<ProjectPanelSectionsProps> = ({
 								</div>
 							)}
 							{storageLoading && (
-								<div className='project-panel-loading-row ui-note' role='status'>
+								<div
+									className='project-panel-loading-row ui-note'
+									role='status'
+								>
 									<span className='loading-spinner' aria-hidden='true' />
 									{t('Loading projects...')}
 								</div>

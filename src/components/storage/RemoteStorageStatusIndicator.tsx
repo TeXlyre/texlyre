@@ -76,9 +76,7 @@ const RemoteStorageStatusIndicator: React.FC<
 		checkingRef.current = true;
 		if (mountedRef.current) {
 			setStatus((current) =>
-				current === 'unavailable' || current === 'error'
-					? 'checking'
-					: current,
+				current === 'unavailable' || current === 'error' ? 'checking' : current,
 			);
 		}
 		try {
@@ -108,7 +106,11 @@ const RemoteStorageStatusIndicator: React.FC<
 				setStatus(protocolError ? 'error' : 'unavailable');
 			}
 			checkFailedRef.current = !protocolError;
-			if (protocolError && !reportedCheckErrorRef.current && mountedRef.current) {
+			if (
+				protocolError &&
+				!reportedCheckErrorRef.current &&
+				mountedRef.current
+			) {
 				reportedCheckErrorRef.current = true;
 				notify('error', t('Could not check remote storage for updates'));
 			}
@@ -251,8 +253,8 @@ const RemoteStorageStatusIndicator: React.FC<
 			title={
 				available
 					? t('Remote storage: {status}. Click to sync.', {
-						status: statusLabel,
-					})
+							status: statusLabel,
+						})
 					: t('Remote storage unavailable')
 			}
 			aria-label={t('Sync project with remote storage')}

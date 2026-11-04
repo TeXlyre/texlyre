@@ -299,12 +299,16 @@ const GitHistoryPanel: React.FC<GitHistoryPanelProps> = ({
 
 	useEffect(() => {
 		const onGitStorageChanged = (event: Event) => {
-			if ((event as CustomEvent<{ projectId: string }>).detail?.projectId === projectId) {
+			if (
+				(event as CustomEvent<{ projectId: string }>).detail?.projectId ===
+				projectId
+			) {
 				void load();
 			}
 		};
 		document.addEventListener('git-storage-changed', onGitStorageChanged);
-		return () => document.removeEventListener('git-storage-changed', onGitStorageChanged);
+		return () =>
+			document.removeEventListener('git-storage-changed', onGitStorageChanged);
 	}, [projectId, load]);
 
 	const initialize = async () => {

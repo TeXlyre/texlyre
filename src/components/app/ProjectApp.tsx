@@ -324,7 +324,10 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			const reconciled = await Promise.all(
 				accountStorageConfigs.map(async (config) => {
 					try {
-						return await storageSyncService.reconcileProvider(user.id, config.id);
+						return await storageSyncService.reconcileProvider(
+							user.id,
+							config.id,
+						);
 					} catch (error) {
 						unavailable.add(config.id);
 						moduleLog.warn(
@@ -491,7 +494,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						!storageUnlockReady || storageLoading
 							? 'checking'
 							: !storageUnlocked ||
-								unavailableStorageProviders.has(binding.providerId)
+									unavailableStorageProviders.has(binding.providerId)
 								? 'unavailable'
 								: 'checking',
 					remoteOnly: false,
