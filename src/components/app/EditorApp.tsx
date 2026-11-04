@@ -6,6 +6,7 @@ import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
 import { ChatProvider } from '../../contexts/ChatContext';
 import { CollabProvider } from '../../contexts/CollabContext';
+import { SharedToolsProvider } from '../../contexts/SharedToolsContext';
 import { FileSyncProvider } from '../../contexts/PeerFileSyncContext';
 import { FileTreeProvider } from '../../contexts/FileTreeContext';
 import { LaTeXProvider } from '../../contexts/LaTeXContext';
@@ -20,9 +21,14 @@ import { useTypst } from '../../hooks/useTypst';
 import { useCollab } from '../../hooks/useCollab';
 import { useGlobalKeyboard } from '../../hooks/useGlobalKeyboard';
 import { useDiskBackup } from '../../hooks/useDiskBackup';
+import { useChelys } from '../../hooks/useChelys';
 import { useOffline } from '../../hooks/useOffline';
 import { useSettings } from '../../hooks/useSettings';
-import { fileStoreService } from '../../services/FileStoreService';
+import {
+	fileStorageEventEmitter,
+	fileStoreService,
+} from '../../services/FileStoreService';
+import { storageSyncService } from '../../services/StorageSyncService';
 import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import { popoutViewerService } from '../../services/PopoutViewerService';
 import type { DocumentList } from '../../types/documents';
@@ -41,6 +47,7 @@ import OfflineBanner from '../common/OfflineBanner';
 import ToastContainer from '../common/ToastContainer';
 import TypesetterInfo from '../common/TypesetterInfo';
 import WorkspaceStatusIndicator from '../workspace/WorkspaceStatusIndicator';
+import RemoteStorageStatusIndicator from '../storage/RemoteStorageStatusIndicator';
 import FileDocumentController from '../editor/FileDocumentController';
 import LaTeXCompileButton from '../output/LaTeXCompileButton';
 import LaTeXExportButton from '../output/LaTeXExportButton';
@@ -95,6 +102,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const hasDoc = !!doc;
 
 	const { user, updateProject, getProjectById, isGuestUser } = useAuth();
+	const isGuest = isGuestUser(user);
+	const userId = user?.id;
 	const {
 		status,
 		activities,
@@ -141,7 +150,10 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		triggerAutoCompile: triggerTypstAutoCompile,
 	} = useTypst();
 	const { isOfflineMode, hideOfflineBanner } = useOffline();
+	const { storageUnlocked } = useChelys();
 	const { getSetting } = useSettings();
+	const storageProjectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
+	const storageReadyProjectRef = useRef<string | null>(null);
 
 	useEffect(() => {
 		if (!provider?.awareness || !user) return;
@@ -169,6 +181,52 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			?.value as boolean) ?? false;
 
 	useGlobalKeyboard();
+
+	const queueStorageSync = useCallback(() => {
+		if (!userId || isGuest || !storageUnlocked) return;
+		storageSyncService.scheduleBoundProjectSync(userId, storageProjectId);
+	}, [userId, isGuest, storageUnlocked, storageProjectId]);
+
+	useEffect(() => {
+		if (!doc) return;
+		if (storageReadyProjectRef.current !== storageProjectId) {
+			storageReadyProjectRef.current = storageProjectId;
+			return;
+		}
+		queueStorageSync();
+	}, [doc, queueStorageSync, storageProjectId]);
+
+	useEffect(
+		() =>
+			fileStorageEventEmitter.onChange(() => {
+				if (
+					storageReadyProjectRef.current === storageProjectId &&
+					fileStoreService.getCurrentProjectId() === storageProjectId
+				) {
+					queueStorageSync();
+				}
+			}),
+		[queueStorageSync, storageProjectId],
+	);
+
+	useEffect(() => {
+		const onGitBackupChanged = (event: Event) => {
+			if (
+				(event as CustomEvent<{ projectId: string }>).detail?.projectId ===
+				storageProjectId
+			) {
+				queueStorageSync();
+			}
+		};
+		document.addEventListener('git-backup-changed', onGitBackupChanged);
+		return () =>
+			document.removeEventListener('git-backup-changed', onGitBackupChanged);
+	}, [queueStorageSync, storageProjectId]);
+
+	useEffect(() => {
+		window.addEventListener('online', queueStorageSync);
+		return () => window.removeEventListener('online', queueStorageSync);
+	}, [queueStorageSync]);
 
 	const updateContent = (docId: string, content: string) => {
 		changeDoc((d) => {
@@ -669,7 +727,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			{isOfflineMode && !hideOfflineBanner && <OfflineBanner />}
 			<ServiceStatusBanner />
 			<QuotaBanner />
-			{isGuestUser(user) && (
+			{isGuest && (
 				<GuestUpgradeBanner
 					onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)}
 				/>
@@ -729,7 +787,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						onOpenShareModal={() => setShowShareModal(true)}
 					/>
 
-					{!isGuestUser(user) && (
+					{!isGuest && (
 						<BackupStatusIndicator
 							className='header-backup-indicator'
 							currentProjectId={sessionStorage.getItem('currentProjectId')}
@@ -753,7 +811,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						onOpenExport={() => setShowAccountExportModal(true)}
 						onOpenDeleteAccount={() => setIsDeleteAccountModalOpen(true)}
 						onOpenUpgrade={() => setShowGuestUpgradeModal(true)}
-						isGuest={isGuestUser(user)}
+						isGuest={isGuest}
 					/>
 				</div>
 			</header>
@@ -784,6 +842,10 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					</div>
 
 					<WorkspaceStatusIndicator />
+					<RemoteStorageStatusIndicator
+						key={storageProjectId}
+						projectId={storageProjectId}
+					/>
 				</div>
 
 				<FooterLinks
@@ -844,7 +906,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				shareUrl={shareUrl}
 			/>
 
-			{!isGuestUser(user) && (
+			{!isGuest && (
 				<>
 					<ProfileSettingsModal
 						isOpen={showProfileModal}
@@ -865,14 +927,14 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					/>
 				</>
 			)}
-			{isGuestUser(user) && (
+			{isGuest && (
 				<GuestUpgradeModal
 					isOpen={showGuestUpgradeModal}
 					onClose={() => setShowGuestUpgradeModal(false)}
 					onUpgradeSuccess={handleGuestUpgradeSuccess}
 				/>
 			)}
-			{!isGuestUser(user) && (
+			{!isGuest && (
 				<BackupModal
 					isOpen={showAutoBackupModal}
 					onClose={() => setShowAutoBackupModal(false)}
@@ -922,7 +984,9 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 								<ExternalTypesetterProvider>
 									<SourceMapProvider>
 										<ContentFormatterProvider>
-											<EditorAppView {...props} />
+											<SharedToolsProvider docUrl={props.docUrl}>
+												<EditorAppView {...props} />
+											</SharedToolsProvider>
 										</ContentFormatterProvider>
 									</SourceMapProvider>
 								</ExternalTypesetterProvider>

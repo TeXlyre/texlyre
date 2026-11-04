@@ -7,7 +7,7 @@ import TikzCollaborativeViewer from './TikzCollaborativeViewer';
 const TIKZ_EXTENSIONS = ['tikz', 'pgf'];
 const TIKZ_MIMETYPES = ['text/x-tikz', 'application/x-tikz'];
 
-export const PLUGIN_NAME = `${t('TikZ Collaborative Editor')} (tikz-editor 0.5.2)`;
+export const PLUGIN_NAME = `${t('TikZ Collaborative Editor')} (tikz-editor 1.1.0)`;
 export const PLUGIN_VERSION = '0.1.0';
 
 const tikzCollaborativeViewerPlugin: CollaborativeViewerPlugin = {

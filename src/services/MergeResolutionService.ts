@@ -39,6 +39,10 @@ export interface ConflictResolutionRequest {
 	resolve: (resolutions: Map<string, ConflictResolution> | null) => void;
 }
 
+export interface ResolveConflictOptions {
+	initialResolutions?: Map<string, ConflictResolution>;
+}
+
 type AutoMergeResult =
 	| { resolved: true; content: string; unchanged?: boolean }
 	| { resolved: false };
@@ -155,7 +159,9 @@ class MergeResolutionService {
 	async resolveConflicts(
 		conflicts: FileConflict[],
 		labels?: { keepLocal?: string; keepRemote?: string },
+		options: ResolveConflictOptions = {},
 	): Promise<Map<string, ConflictResolution> | null> {
+		const initialResolutions = new Map(options.initialResolutions);
 		const metadataConflicts = conflicts.filter((c) =>
 			c.path.endsWith(FILES_METADATA),
 		);
@@ -175,6 +181,7 @@ class MergeResolutionService {
 
 		const realConflicts = conflicts.filter(
 			(c) =>
+				!initialResolutions.has(c.path) &&
 				!c.path.endsWith(FILES_METADATA) &&
 				!c.path.endsWith('/metadata.json') &&
 				!c.path.endsWith('.yjs') &&
@@ -192,9 +199,8 @@ class MergeResolutionService {
 		};
 
 		if (realConflicts.length === 0) {
-			const resolutions = new Map<string, ConflictResolution>();
-			await derive(resolutions);
-			return resolutions;
+			await derive(initialResolutions);
+			return initialResolutions;
 		}
 
 		return new Promise((resolve) => {
@@ -207,8 +213,12 @@ class MergeResolutionService {
 						return;
 					}
 					this.restoreMergedAnnotations(realConflicts, resolutions);
-					await derive(resolutions);
-					resolve(resolutions);
+					const combined = new Map(initialResolutions);
+					for (const [path, resolution] of resolutions) {
+						combined.set(path, resolution);
+					}
+					await derive(combined);
+					resolve(combined);
 				},
 			};
 			this.emit(request);
@@ -400,11 +410,14 @@ class MergeResolutionService {
 				const remoteArr = this.parseMetadataArray(conflict.remoteContent);
 				const remoteById = new Map(remoteArr.map((e) => [e.id ?? e.path, e]));
 
+				const findResolution = (entry: any) =>
+					relevantResolutions.find(([path]) =>
+						this.metadataEntryMatchesPath(pathPrefix, entry, path),
+					);
+
 				const merged = localArr.map((localEntry) => {
 					const key = localEntry.id ?? localEntry.path;
-					const resolution = relevantResolutions.find(
-						([p]) => p.endsWith(`/${localEntry.name}`) || p.includes(key),
-					);
+					const resolution = findResolution(localEntry);
 					if (!resolution) return localEntry;
 					return resolution[1].action === 'keep-remote'
 						? (remoteById.get(key) ?? localEntry)
@@ -414,9 +427,7 @@ class MergeResolutionService {
 				for (const [, remoteEntry] of remoteById) {
 					const key = remoteEntry.id ?? remoteEntry.path;
 					if (!merged.find((e) => (e.id ?? e.path) === key)) {
-						const resolution = relevantResolutions.find(([p]) =>
-							p.includes(key),
-						);
+						const resolution = findResolution(remoteEntry);
 						if (resolution?.[1].action !== 'keep-local') {
 							merged.push(remoteEntry);
 						}
@@ -457,6 +468,22 @@ class MergeResolutionService {
 				});
 			}
 		}
+	}
+
+	private metadataEntryMatchesPath(
+		pathPrefix: string,
+		entry: any,
+		path: string,
+	): boolean {
+		if (typeof entry.path === 'string') {
+			const relativePath = entry.path.startsWith('/')
+				? entry.path.slice(1)
+				: entry.path;
+			if (path === `${pathPrefix}${relativePath}`) return true;
+		}
+
+		const key = entry.id ?? entry.path;
+		return key !== undefined && path.includes(String(key));
 	}
 
 	private parseMetadataArray(source: string | ArrayBuffer): any[] {

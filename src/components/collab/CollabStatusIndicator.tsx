@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
-import { SharedToolsProvider } from '../../contexts/SharedToolsContext';
 import { useCollab } from '../../hooks/useCollab';
 import { usePeerFileSync } from '../../hooks/usePeerFileSync';
 import { useOffline } from '../../hooks/useOffline';
@@ -245,6 +244,11 @@ const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 				sharedByMe={sharedTools.sharedByMe}
 				projectShareEnabled={sharedTools.projectShareEnabled}
 				onProjectShareChange={sharedTools.setProjectShareEnabled}
+				storageShareAvailable={sharedTools.storageShareAvailable}
+				storageShareEnabled={sharedTools.storageShareEnabled}
+				storageShareable={sharedTools.storageShareable}
+				storageShareMessage={sharedTools.storageShareMessage}
+				onStorageShareChange={sharedTools.setStorageShareEnabled}
 				onAccept={sharedTools.accept}
 				onIgnore={sharedTools.ignore}
 			/>
@@ -252,10 +256,6 @@ const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 	);
 };
 
-const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = (props) => (
-	<SharedToolsProvider docUrl={props.docUrl}>
-		<CollabStatusIndicatorContent {...props} />
-	</SharedToolsProvider>
-);
+const CollabStatusIndicator = CollabStatusIndicatorContent;
 
 export default CollabStatusIndicator;

@@ -38,6 +38,8 @@ export interface SimplePeer {
 	connected: boolean;
 	_pc?: PeerConnectionLike;
 	_needsNegotiation?(): void;
+	on?(event: 'connect' | 'close', handler: () => void): void;
+	off?(event: 'connect' | 'close', handler: () => void): void;
 }
 
 export interface WebrtcConn {
@@ -169,16 +171,55 @@ export function findPeerConnection(
 	return connection?.connected && connection.peer.connected ? connection : null;
 }
 
+export function listPeerConnections(provider: unknown): WebrtcConn[] {
+	const connections = (provider as PeerProvider).room?.webrtcConns;
+	if (!connections) return [];
+	return Array.from(connections.values()).filter(
+		(connection) => connection.connected && connection.peer.connected,
+	);
+}
+
 export function subscribeProviderPeers(
 	provider: unknown,
 	handler: () => void,
 ): () => void {
 	const typed = provider as PeerProvider;
-	typed.on?.('peers', handler);
-	typed.on?.('status', handler);
+	const subscribedPeers = new Set<SimplePeer>();
+
+	const refresh = (): void => {
+		const peers = new Set(
+			Array.from(typed.room?.webrtcConns.values() ?? []).map(
+				(connection) => connection.peer,
+			),
+		);
+
+		for (const peer of subscribedPeers) {
+			if (peers.has(peer)) continue;
+			peer.off?.('connect', handler);
+			peer.off?.('close', handler);
+			subscribedPeers.delete(peer);
+		}
+		for (const peer of peers) {
+			if (subscribedPeers.has(peer)) continue;
+			peer.on?.('connect', handler);
+			peer.on?.('close', handler);
+			subscribedPeers.add(peer);
+		}
+		handler();
+	};
+
+	typed.on?.('peers', refresh);
+	typed.on?.('status', refresh);
+	refresh();
+
 	return () => {
-		typed.off?.('peers', handler);
-		typed.off?.('status', handler);
+		typed.off?.('peers', refresh);
+		typed.off?.('status', refresh);
+		for (const peer of subscribedPeers) {
+			peer.off?.('connect', handler);
+			peer.off?.('close', handler);
+		}
+		subscribedPeers.clear();
 	};
 }
 

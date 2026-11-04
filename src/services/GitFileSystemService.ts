@@ -1,493 +1,224 @@
 // src/services/GitFileSystemService.ts
-import LightningFS from '@isomorphic-git/lightning-fs';
-import { nanoid } from 'nanoid';
-
-import { createNamedLogger } from '@/logging';
-import type { FileNode } from '../types/files';
-import { mergeAnnotatedSources } from '../utils/annotationMergeUtils';
-import { stripAnnotations } from '../utils/fileCommentUtils';
+import { toArrayBuffer } from '../utils/fileUtils';
+import { ensurePermission } from './DiskHandleStore';
+import { GitWorktreeOperations } from './GitWorktreeOperations';
 import {
-	getMimeType,
-	isBinaryFile,
-	isTemporaryFile,
-	toArrayBuffer,
-} from '../utils/fileUtils';
-import { collabService } from './CollabService';
-import { DiskHandleStore, ensurePermission } from './DiskHandleStore';
-import { fileStoreService } from './FileStoreService';
+	moduleLog,
+	GIT_DIR,
+	SETTINGS_PREFIX,
+	decideDiskSync,
+	shouldPruneGitEntry,
+	isPortableGitFile,
+	normalizePath,
+	isGitPath,
+	toUint8Array,
+	bytesFingerprint,
+	fsError,
+} from '../utils/gitFileSystemUtils';
+import type {
+	WritableData,
+	EncodingOptions,
+	GitDiskStatus,
+} from '../utils/gitFileSystemUtils';
 
-const moduleLog = createNamedLogger('GitFileSystemService');
+export type { GitDiskStatus } from '../utils/gitFileSystemUtils';
 
-const GIT_DIR = '/.git';
-const PROJECT_DB_PREFIX = 'texlyre-project-';
-const SETTINGS_PREFIX = 'texlyre-git-filesystem:';
-
-type EncodingOptions = string | { encoding?: string | null } | null | undefined;
-type WritableData = string | Uint8Array | ArrayBuffer;
-
-type GitFsStat = {
-	type: 'file' | 'dir';
-	mode: number;
-	size: number;
-	ino: number;
-	mtimeMs: number;
-	ctimeMs: number;
-	uid: number;
-	gid: number;
-	dev: number;
-	isFile: () => boolean;
-	isDirectory: () => boolean;
-	isSymbolicLink: () => boolean;
-};
-
-export interface GitDiskStatus {
-	attached: boolean;
-	hasGit: boolean;
-	diskHead: string | null;
-	browserHead: string | null;
-	conflict: boolean;
-}
-
-interface GitFileSystemSettings {
-	gitCleanAnnotations: boolean;
-	storeGitOnDisk: boolean;
-}
-
-type GitDiskSyncAction =
-	| 'none'
-	| 'browser-to-disk'
-	| 'disk-to-browser'
-	| 'conflict';
-
-const DEFAULT_SETTINGS: GitFileSystemSettings = {
-	gitCleanAnnotations: false,
-	storeGitOnDisk: false,
-};
-
-const MANAGED_GIT_ROOT_FILES = new Set([
-	'index',
-	'packed-refs',
-	'MERGE_HEAD',
-	'MERGE_MSG',
-	'ORIG_HEAD',
-	'CHERRY_PICK_HEAD',
-	'REVERT_HEAD',
-]);
-
-function decideDiskSync(
-	browserSignature: string,
-	diskSignature: string,
-	baselineSignature: string | null,
-): GitDiskSyncAction {
-	if (browserSignature === diskSignature) return 'none';
-	if (diskSignature === 'none') return 'browser-to-disk';
-	if (browserSignature === 'none') return 'disk-to-browser';
-	if (baselineSignature !== null) {
-		if (diskSignature === baselineSignature) return 'browser-to-disk';
-		if (browserSignature === baselineSignature) return 'disk-to-browser';
-	}
-	return 'conflict';
-}
-
-function shouldPruneGitEntry(
-	privateDirectoryPath: string,
-	entryName: string,
-): boolean {
-	const path = privateDirectoryPath.replace(/\\/g, '/').replace(/\/$/, '');
-	if (path === '/.git') return MANAGED_GIT_ROOT_FILES.has(entryName);
-	if (path === '/.git/refs')
-		return entryName === 'heads' || entryName === 'texlyre';
-	if (
-		path === '/.git/refs/heads' ||
-		path.startsWith('/.git/refs/heads/') ||
-		path === '/.git/refs/texlyre' ||
-		path.startsWith('/.git/refs/texlyre/')
-	)
-		return true;
-	if (path === '/.git/logs/refs') return entryName === 'heads';
-	return (
-		path === '/.git/logs/refs/heads' ||
-		path.startsWith('/.git/logs/refs/heads/')
-	);
-}
-
-function normalizePath(path: string): string {
-	const segments: string[] = [];
-	for (const segment of path.replace(/\\/g, '/').split('/')) {
-		if (!segment || segment === '.') continue;
-		if (segment === '..') {
-			segments.pop();
-			continue;
-		}
-		segments.push(segment);
-	}
-	return `/${segments.join('/')}`;
-}
-
-function isGitPath(path: string): boolean {
-	const normalized = normalizePath(path);
-	return normalized === GIT_DIR || normalized.startsWith(`${GIT_DIR}/`);
-}
-
-function getEncoding(options?: EncodingOptions): string | undefined {
-	if (typeof options === 'string') return options;
-	return options?.encoding ?? undefined;
-}
-
-function toUint8Array(data: WritableData): Uint8Array {
-	if (typeof data === 'string') return new TextEncoder().encode(data);
-	if (data instanceof Uint8Array) return data;
-	return new Uint8Array(data);
-}
-
-function bytesFingerprint(bytes: Uint8Array): string {
-	let hash = 0x811c9dc5;
-	for (const byte of bytes) {
-		hash ^= byte;
-		hash = Math.imul(hash, 0x01000193);
-	}
-	return `${bytes.byteLength}:${(hash >>> 0).toString(16)}`;
-}
-
-function fsError(code: string, path: string): Error & { code: string } {
-	const error = new Error(`${code}: ${path}`) as Error & { code: string };
-	error.code = code;
-	return error;
-}
-
-function pathInode(path: string): number {
-	let hash = 0;
-	for (let i = 0; i < path.length; i += 1) {
-		hash = (hash * 31 + path.charCodeAt(i)) >>> 0;
-	}
-	return hash || 1;
-}
-
-function makeStat(
-	path: string,
-	type: 'file' | 'dir',
-	size: number,
-	mtimeMs: number,
-): GitFsStat {
-	return {
-		type,
-		mode: type === 'dir' ? 0o777 : 0o666,
-		size,
-		ino: pathInode(path),
-		mtimeMs,
-		ctimeMs: mtimeMs,
-		uid: 1,
-		gid: 1,
-		dev: 1,
-		isFile: () => type === 'file',
-		isDirectory: () => type === 'dir',
-		isSymbolicLink: () => false,
-	};
-}
-
-class GitFileSystem {
-	private readonly privateFs: LightningFS;
-	private readonly workspaceHandleStore =
-		new DiskHandleStore<FileSystemDirectoryHandle>('texlyre-workspace-handles');
-	private diskRoot: FileSystemDirectoryHandle | null = null;
-	private diskBaselineSignature: string | null = null;
-	private diskConflict = false;
-	private diskSyncInProgress = false;
-
-	constructor(private readonly projectId: string) {
-		this.privateFs = new LightningFS(`${PROJECT_DB_PREFIX}${projectId}-git`);
+class GitFileSystem extends GitWorktreeOperations {
+	async hasGitBackupObject(path: string): Promise<boolean> {
+		return path.startsWith('objects/') && isPortableGitFile(path)
+			? this.privateExists(`${GIT_DIR}/${path}`)
+			: false;
 	}
 
-	getSettings(): GitFileSystemSettings {
-		if (typeof localStorage === 'undefined') return { ...DEFAULT_SETTINGS };
-		try {
-			const stored = localStorage.getItem(
-				`${SETTINGS_PREFIX}${this.projectId}`,
-			);
-			return stored
-				? { ...DEFAULT_SETTINGS, ...JSON.parse(stored) }
-				: { ...DEFAULT_SETTINGS };
-		} catch {
-			return { ...DEFAULT_SETTINGS };
-		}
-	}
-
-	setGitCleanAnnotations(clean: boolean): void {
-		this.updateSettings({ ...this.getSettings(), gitCleanAnnotations: clean });
-	}
-
-	linkGitToDisk(): void {
-		this.updateSettings({ ...this.getSettings(), storeGitOnDisk: true });
-	}
-
-	unlinkGitFromDisk(): void {
-		this.updateSettings({ ...this.getSettings(), storeGitOnDisk: false });
-	}
-
-	private updateSettings(settings: GitFileSystemSettings): void {
-		const previous = this.getSettings();
-		if (JSON.stringify(previous) === JSON.stringify(settings)) return;
-		if (typeof localStorage !== 'undefined') {
-			localStorage.setItem(
-				`${SETTINGS_PREFIX}${this.projectId}`,
-				JSON.stringify(settings),
-			);
-		}
-	}
-
-	private isVisibleWorktreeNode(file: FileNode): boolean {
-		return (
-			!file.isDeleted &&
-			!file.excludeFromSync &&
-			!isTemporaryFile(file.path) &&
-			!isGitPath(file.path)
-		);
-	}
-
-	private async ensureProject(): Promise<void> {
-		if (fileStoreService.getCurrentProjectId() !== this.projectId) {
-			await fileStoreService.initialize(`yjs:${this.projectId}`);
-		}
-	}
-
-	private async getWorktreeFile(path: string): Promise<FileNode | undefined> {
-		await this.ensureProject();
-		return fileStoreService.getFileByPath(normalizePath(path), true);
-	}
-
-	private getLiveDocumentText(file: FileNode): string | null {
-		if (!file.documentId) return null;
-		const container = collabService.getDocContainer(
-			this.projectId,
-			`yjs_${file.documentId}`,
-		);
-		return container?.doc.getText('codemirror').toString() ?? null;
-	}
-
-	private projectText(file: FileNode): string | null {
-		const liveText = this.getLiveDocumentText(file);
-		if (liveText !== null) return liveText;
-		return typeof file.content === 'string' ? file.content : null;
-	}
-
-	private projectBytes(file: FileNode): Uint8Array {
-		const text = this.projectText(file);
-		if (text !== null) {
-			const projected = this.getSettings().gitCleanAnnotations
-				? (stripAnnotations(text) as string)
-				: text;
-			return new TextEncoder().encode(projected);
-		}
-		return file.content instanceof ArrayBuffer
-			? new Uint8Array(file.content)
-			: new Uint8Array();
-	}
-
-	private async readWorktreeFile(
+	private async writeGitBackupFile(
 		path: string,
-		options?: EncodingOptions,
-	): Promise<string | Uint8Array> {
-		const normalized = normalizePath(path);
-		const file = await this.getWorktreeFile(normalized);
-		if (!file || !this.isVisibleWorktreeNode(file)) {
-			throw fsError('ENOENT', normalized);
-		}
-		if (file.type !== 'file') throw fsError('EISDIR', normalized);
-
-		const bytes = this.projectBytes(file);
-		return getEncoding(options) ? new TextDecoder().decode(bytes) : bytes;
-	}
-
-	private async ensureWorktreeDirectory(path: string): Promise<void> {
-		const normalized = normalizePath(path);
-		if (normalized === '/') return;
-
-		await this.ensureProject();
-		const segments = normalized.split('/').filter(Boolean);
-		let current = '';
-
-		for (const segment of segments) {
-			current += `/${segment}`;
-			const existing = await fileStoreService.getFileByPath(current, true);
-			if (existing && !existing.isDeleted) {
-				if (existing.type !== 'directory') throw fsError('ENOTDIR', current);
-				continue;
-			}
-
-			const directory: FileNode = existing
-				? { ...existing, isDeleted: false, lastModified: Date.now() }
-				: {
-						id: nanoid(),
-						name: segment,
-						path: current,
-						type: 'directory',
-						lastModified: Date.now(),
-					};
-
-			await fileStoreService.storeFile(directory, {
-				showConflictDialog: false,
-			});
-		}
-	}
-
-	private async writeWorktreeFile(
-		path: string,
-		data: WritableData,
+		bytes: Uint8Array,
 	): Promise<void> {
-		const normalized = normalizePath(path);
-		const fileName = normalized.split('/').pop();
-		if (!fileName) throw fsError('EISDIR', normalized);
-		if (isGitPath(normalized)) throw fsError('EINVAL', normalized);
+		const parts = path.split('/');
+		let parent = GIT_DIR;
+		if (!(await this.privateExists(parent))) {
+			await this.privateFs.promises.mkdir(parent);
+		}
+		for (const part of parts.slice(0, -1)) {
+			parent += `/${part}`;
+			if (!(await this.privateExists(parent))) {
+				await this.privateFs.promises.mkdir(parent);
+			}
+		}
+		await this.privateFs.promises.writeFile(
+			`${GIT_DIR}/${path}`,
+			bytes as never,
+		);
+	}
 
-		await this.ensureProject();
-		const parentPath = normalized.slice(0, normalized.lastIndexOf('/')) || '/';
-		await this.ensureWorktreeDirectory(parentPath);
+	async integrateGitBackup(files: Map<string, Uint8Array>): Promise<boolean> {
+		if (
+			!files.has('HEAD') ||
+			[...files.keys()].some((path) => !isPortableGitFile(path))
+		) {
+			throw new Error('Invalid remote Git backup');
+		}
+		if (!(await this.privateExists(`${GIT_DIR}/HEAD`))) return false;
 
-		const incomingBytes = toUint8Array(data);
-		const binary = isBinaryFile(normalized);
-		const existing = await fileStoreService.getFileByPath(normalized, true);
-
-		if (existing && existing.type === 'directory' && !existing.isDeleted) {
-			throw fsError('EISDIR', normalized);
+		let addedObjects = false;
+		for (const [path, bytes] of files) {
+			if (
+				path.startsWith('objects/') &&
+				!(await this.privateExists(`${GIT_DIR}/${path}`))
+			) {
+				await this.writeGitBackupFile(path, bytes);
+				addedObjects = true;
+			}
 		}
 
-		let content: string | ArrayBuffer;
-		if (binary) {
-			content = toArrayBuffer(incomingBytes);
-		} else {
-			const incoming = new TextDecoder().decode(incomingBytes);
-			const existingText = existing ? this.projectText(existing) : null;
-			content =
-				this.getSettings().gitCleanAnnotations && existingText !== null
-					? mergeAnnotatedSources([existingText, incoming], incoming).content
-					: incoming;
+		const refs = new Map<string, string>();
+		const packed = files.get('packed-refs');
+		if (packed) {
+			for (const line of new TextDecoder().decode(packed).split('\n')) {
+				const match = /^([0-9a-f]{40}) (refs\/(?:heads|tags)\/[^\s]+)$/.exec(
+					line.trim(),
+				);
+				if (match && isPortableGitFile(match[2])) refs.set(match[2], match[1]);
+			}
+		}
+		for (const [path, bytes] of files) {
+			if (!/^refs\/(heads|tags)\/.+/.test(path)) continue;
+			const oid = new TextDecoder().decode(bytes).trim();
+			if (!/^[0-9a-f]{40}$/.test(oid))
+				throw new Error('Invalid remote Git reference');
+			refs.set(path, oid);
 		}
 
-		const storedBytes =
-			typeof content === 'string'
-				? new TextEncoder().encode(content)
-				: new Uint8Array(content);
-		const file: FileNode = existing
-			? {
-					...existing,
-					name: fileName,
-					path: normalized,
-					content,
-					isDeleted: false,
-					isBinary: binary,
-					mimeType: getMimeType(fileName),
-					lastModified: Date.now(),
-					size: storedBytes.byteLength,
+		const git = await import('isomorphic-git');
+		const options = { fs: this.fs, dir: '/', gitdir: GIT_DIR };
+		const updates: Array<{
+			ref: string;
+			previous: string | null;
+			oid: string;
+		}> = [];
+		const resolve = async (ref: string): Promise<string | null> => {
+			try {
+				return await git.resolveRef({ ...options, ref });
+			} catch (error) {
+				if (
+					(error as { code?: string }).code === 'NotFoundError' ||
+					(error as { code?: string }).code === 'ResolveRefError'
+				)
+					return null;
+				throw error;
+			}
+		};
+		for (const [ref, oid] of refs) {
+			const previous = await resolve(ref);
+			if (previous === oid) continue;
+			if (previous) {
+				if (!ref.startsWith('refs/heads/')) return false;
+				const bases = await git.findMergeBase({
+					...options,
+					oids: [previous, oid],
+				});
+				if (bases.includes(oid)) continue;
+				if (!bases.includes(previous)) return false;
+			}
+			updates.push({ ref, previous, oid });
+		}
+		for (const { ref, previous } of updates) {
+			if ((await resolve(ref)) !== previous) return false;
+		}
+		for (const { ref, oid } of updates) {
+			await git.writeRef({ ...options, ref, value: oid, force: true });
+		}
+		if (updates.length || addedObjects) {
+			await this.privateFs.promises.flush();
+			if (this.getSettings().storeGitOnDisk) await this.syncGitToDisk();
+			if (updates.length) this.dispatchStorageChanged();
+		}
+		return true;
+	}
+
+	async exportGitBackup(
+		knownObjects: ReadonlySet<string> = new Set(),
+	): Promise<{
+		files: Map<string, Uint8Array>;
+		reused: Set<string>;
+	}> {
+		const files = new Map<string, Uint8Array>();
+		const reused = new Set<string>();
+		if (!(await this.privateExists(`${GIT_DIR}/HEAD`))) {
+			await this.attachStoredDisk();
+		}
+		if (!(await this.privateExists(`${GIT_DIR}/HEAD`)))
+			return { files, reused };
+		const visit = async (path: string): Promise<void> => {
+			for (const name of (await this.privateFs.promises.readdir(
+				path,
+			)) as string[]) {
+				const next = `${path}/${name}`;
+				const relative = next.slice(GIT_DIR.length + 1);
+				if (
+					!['objects', 'refs'].some(
+						(dir) => relative === dir || relative.startsWith(`${dir}/`),
+					) &&
+					!isPortableGitFile(relative)
+				)
+					continue;
+				if (
+					relative.startsWith('objects/') &&
+					knownObjects.has(relative) &&
+					isPortableGitFile(relative)
+				) {
+					reused.add(relative);
+					continue;
 				}
-			: {
-					id: nanoid(),
-					name: fileName,
-					path: normalized,
-					type: 'file',
-					content,
-					isBinary: binary,
-					mimeType: getMimeType(fileName),
-					lastModified: Date.now(),
-					size: storedBytes.byteLength,
-				};
+				const stat = await this.privateFs.promises.stat(next);
+				if (stat.isDirectory()) await visit(next);
+				else if (isPortableGitFile(relative)) {
+					const bytes = await this.privateFs.promises.readFile(next);
+					files.set(relative, toUint8Array(bytes as WritableData));
+				}
+			}
+		};
+		await visit(GIT_DIR);
+		return { files, reused };
+	}
 
-		await fileStoreService.storeFile(file, { showConflictDialog: false });
+	async canRestoreGitBackup(): Promise<boolean> {
+		if (await this.privateExists(`${GIT_DIR}/HEAD`)) return false;
+		const disk = await this.attachStoredDisk();
+		return (
+			!(await this.privateExists(`${GIT_DIR}/HEAD`)) &&
+			!disk.hasGit &&
+			!this.diskConflict
+		);
+	}
 
-		if (file.documentId && !binary) {
-			await collabService.updateDocumentContent(
-				this.projectId,
-				file.documentId,
-				() => content as string,
+	async importGitBackup(files: Map<string, Uint8Array>): Promise<boolean> {
+		if (await this.privateExists(`${GIT_DIR}/HEAD`)) return false;
+		if (
+			!files.has('HEAD') ||
+			[...files.keys()].some((path) => !isPortableGitFile(path))
+		) {
+			throw new Error('Invalid remote Git backup');
+		}
+		if (!(await this.canRestoreGitBackup())) return false;
+		try {
+			for (const [path, bytes] of files) {
+				await this.writeGitBackupFile(path, bytes);
+			}
+			await this.privateFs.promises.writeFile(
+				`${GIT_DIR}/config`,
+				'[core]\n\trepositoryformatversion = 0\n\tbare = false\n',
 			);
+			await this.privateFs.promises.flush();
+		} catch (error) {
+			await this.removePrivateTree(GIT_DIR);
+			throw error;
 		}
-	}
-
-	private async unlinkWorktree(path: string): Promise<void> {
-		const normalized = normalizePath(path);
-		const file = await this.getWorktreeFile(normalized);
-		if (!file || file.isDeleted) throw fsError('ENOENT', normalized);
-		if (file.type !== 'file') throw fsError('EISDIR', normalized);
-
-		await fileStoreService.deleteFileByPath(normalized, {
-			showDeleteDialog: false,
-			hardDelete: false,
-			allowLinkedFileDelete: true,
-		});
-	}
-
-	private async readdirWorktree(path: string): Promise<string[]> {
-		const normalized = normalizePath(path);
-		await this.ensureProject();
-
-		if (normalized !== '/') {
-			const directory = await fileStoreService.getFileByPath(normalized, true);
-			if (!directory || directory.isDeleted)
-				throw fsError('ENOENT', normalized);
-			if (directory.type !== 'directory') throw fsError('ENOTDIR', normalized);
+		if (this.getSettings().storeGitOnDisk) {
+			await this.syncGitToDisk();
 		}
-
-		return (await fileStoreService.getChildrenByPath(normalized))
-			.filter((file) => this.isVisibleWorktreeNode(file))
-			.map((file) => file.name);
-	}
-
-	private async statWorktree(path: string): Promise<GitFsStat> {
-		const normalized = normalizePath(path);
-		if (normalized === '/') return makeStat('/', 'dir', 0, Date.now());
-
-		const file = await this.getWorktreeFile(normalized);
-		if (!file || !this.isVisibleWorktreeNode(file)) {
-			throw fsError('ENOENT', normalized);
-		}
-
-		if (file.type === 'directory') {
-			return makeStat(normalized, 'dir', 0, file.lastModified || Date.now());
-		}
-
-		return makeStat(
-			normalized,
-			'file',
-			this.projectBytes(file).byteLength,
-			this.getLiveDocumentText(file) !== null
-				? Date.now()
-				: file.lastModified || Date.now(),
-		);
-	}
-
-	private async rmdirWorktree(path: string): Promise<void> {
-		const normalized = normalizePath(path);
-		if (normalized === '/') throw fsError('EBUSY', normalized);
-
-		const directory = await this.getWorktreeFile(normalized);
-		if (!directory || directory.isDeleted) throw fsError('ENOENT', normalized);
-		if (directory.type !== 'directory') throw fsError('ENOTDIR', normalized);
-
-		const children = (
-			await fileStoreService.getChildrenByPath(normalized)
-		).filter((file) => !file.isDeleted);
-		if (children.length > 0) throw fsError('ENOTEMPTY', normalized);
-
-		await fileStoreService.deleteFileByPath(normalized, {
-			showDeleteDialog: false,
-			hardDelete: false,
-			allowLinkedFileDelete: true,
-		});
-	}
-
-	private async renameWorktree(from: string, to: string): Promise<void> {
-		const sourcePath = normalizePath(from);
-		const targetPath = normalizePath(to);
-		const source = await this.getWorktreeFile(sourcePath);
-		if (!source || source.isDeleted) throw fsError('ENOENT', sourcePath);
-
-		const targetParent =
-			targetPath.slice(0, targetPath.lastIndexOf('/')) || '/';
-		await this.ensureWorktreeDirectory(targetParent);
-		const moved = await fileStoreService.batchMoveFiles(
-			[{ fileId: source.id, targetPath }],
-			{ showConflictDialog: false },
-		);
-		if (moved.length === 0) throw fsError('EIO', sourcePath);
+		this.dispatchStorageChanged();
+		return true;
 	}
 
 	private async privateExists(path: string): Promise<boolean> {
@@ -671,7 +402,7 @@ class GitFileSystem {
 			const refsDirectory = await gitDirectory.getDirectoryHandle('refs');
 			await this.collectDiskRefs(refsDirectory, 'refs', refs);
 		} catch {
-			// No loose refs is valid for a repository using packed refs only.
+			// No loose/detached refs is valid for a repository using packed refs only.
 		}
 		const head = (await this.readDiskText('HEAD', gitDirectory))?.trim() ?? '';
 		const packed =
@@ -728,6 +459,7 @@ class GitFileSystem {
 		await this.privateFs.promises.mkdir(GIT_DIR);
 		await this.copyDiskDirectoryToPrivate(gitDirectory, GIT_DIR);
 		await this.privateFs.promises.flush();
+		this.markGitBackupDirty();
 	}
 
 	private async writeDiskFile(
@@ -1058,6 +790,7 @@ class GitFileSystem {
 	async flush(): Promise<void> {
 		try {
 			await this.privateFs.promises.flush();
+			this.markGitBackupDirty();
 			if (this.getSettings().storeGitOnDisk) {
 				await this.syncGitToDisk();
 			}
@@ -1069,6 +802,20 @@ class GitFileSystem {
 
 class GitFileSystemService {
 	private readonly fileSystems = new Map<string, GitFileSystem>();
+
+	getForRemoteBackup(projectId: string): GitFileSystem | null {
+		const existing = this.fileSystems.get(projectId);
+		if (existing)
+			return existing.getSettings().backupGitToRemote ? existing : null;
+		if (typeof localStorage === 'undefined') return null;
+		try {
+			const stored = localStorage.getItem(`${SETTINGS_PREFIX}${projectId}`);
+			if (!stored || JSON.parse(stored).backupGitToRemote !== true) return null;
+		} catch {
+			return null;
+		}
+		return this.get(projectId);
+	}
 
 	get(projectId: string): GitFileSystem {
 		let fileSystem = this.fileSystems.get(projectId);

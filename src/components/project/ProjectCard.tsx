@@ -1,4 +1,4 @@
-// Updated src/components/project/ProjectCard.tsx
+// src/components/project/ProjectCard.tsx
 import type React from 'react';
 import { useRef, useState, useEffect } from 'react';
 
@@ -6,6 +6,7 @@ import { t } from '@/i18n';
 import { formatDate, formatLastModified } from '@/utils/dateUtils.ts';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import type { Project } from '../../types/projects.ts';
+import type { StorageDashboardProject } from '../../types/storage.ts';
 import ProjectBackupControls from '../backup/ProjectBackupControls';
 import {
 	EditIcon,
@@ -16,6 +17,7 @@ import {
 	ChevronDownIcon,
 	FileTextIcon,
 	FileIcon,
+	SyncIcon,
 } from '../common/Icons.tsx';
 import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import TypesetterInfo from '../common/TypesetterInfo';
@@ -30,6 +32,9 @@ interface ProjectCardProps {
 	isSelectionMode?: boolean;
 	isSelected?: boolean;
 	onSelectionChange?: (projectId: string, isSelected: boolean) => void;
+	storageState?: StorageDashboardProject;
+	storageBusy?: boolean;
+	onStorageSync?: (project: Project) => void;
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -42,6 +47,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 	isSelectionMode = false,
 	isSelected = false,
 	onSelectionChange,
+	storageState,
+	storageBusy = false,
+	onStorageSync,
 }) => {
 	const [isOpenDropdownOpen, setIsOpenDropdownOpen] = useState(false);
 	const openDropdownRef = useRef<HTMLDivElement>(null);
@@ -95,6 +103,31 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
 	}, []);
+
+	const storageStatusLabel = (status: StorageDashboardProject['status']) => {
+		switch (status) {
+			case 'synced':
+				return t('Synced');
+			case 'syncing':
+				return t('Syncing...');
+			case 'checking':
+				return t('Checking...');
+			case 'local-only':
+				return t('Local only');
+			case 'stored':
+				return t('Stored');
+			case 'disconnected':
+				return t('Disconnected');
+			case 'updates-available':
+				return t('Updates available');
+			case 'conflict':
+				return t('Conflict');
+			case 'unavailable':
+				return t('Unavailable');
+			default:
+				return t('Error');
+		}
+	};
 
 	const getViewerIcon = (fileName?: string): React.ComponentType => {
 		if (!fileName) return FileIcon;
@@ -202,6 +235,23 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 							)}
 						/>
 					</div>
+					{storageState && (
+						<span
+							className='ui-badge'
+							data-variant='label'
+							title={
+								storageState.lastSync
+									? t('Last storage sync: {date}', {
+											date: formatDate(storageState.lastSync),
+										})
+									: storageStatusLabel(storageState.status)
+							}
+						>
+							{storageBusy
+								? storageStatusLabel('syncing')
+								: storageStatusLabel(storageState.status)}
+						</span>
+					)}
 					{project.isDiskLinked && (
 						<span
 							className='ui-icon'
@@ -303,6 +353,24 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 							</div>
 						)}
 					</div>
+					{storageState && onStorageSync && (
+						<button
+							type='button'
+							className='button'
+							onClick={(e) => {
+								e.stopPropagation();
+								onStorageSync(project);
+							}}
+							disabled={storageBusy || storageState.status === 'unavailable'}
+							title={
+								storageState.status === 'local-only'
+									? t('Store project')
+									: t('Sync now')
+							}
+						>
+							<SyncIcon />
+						</button>
+					)}
 					<button
 						type='button'
 						className='button'
