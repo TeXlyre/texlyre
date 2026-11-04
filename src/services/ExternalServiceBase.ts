@@ -41,6 +41,10 @@ export abstract class ExternalServiceBase<
 
 	protected abstract readonly transportLabel: string;
 
+	protected getTransportId(config: TConfig): string {
+		return config.id;
+	}
+
 	getConfig(configId: string): TConfig | undefined {
 		return this.configs.get(configId);
 	}
@@ -161,12 +165,13 @@ export abstract class ExternalServiceBase<
 		this.setConnectionStatus(config.id, 'connecting');
 
 		try {
+			const transportId = this.getTransportId(config);
 			const resolvedConfig = await resolveTransportConfig(
-				config.id,
+				transportId,
 				config.transportConfig,
 			);
 			const transport = await openTransport(resolvedConfig, {
-				label: `${this.transportLabel}:${config.id}`,
+				label: `${this.transportLabel}:${transportId}`,
 			});
 
 			if (!transport.isOpen) {

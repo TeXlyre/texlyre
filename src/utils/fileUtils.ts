@@ -1,5 +1,5 @@
-/* biome-ignore-all lint/suspicious/noControlCharactersInRegex: Filename validator must reject control characters. */
 // src/utils/fileUtils.ts
+/* biome-ignore-all lint/suspicious/noControlCharactersInRegex: Filename validator must reject control characters. */
 import mime from 'mime';
 
 import { t } from '@/i18n';
@@ -49,11 +49,23 @@ export function toArrayBuffer(
 	throw new Error('Unsupported binary content type');
 }
 
-export function toBytes(content: string | ArrayBuffer): Uint8Array {
-	if (typeof content === 'string') {
-		return new TextEncoder().encode(content);
+export function toBytes(
+	content: string | Uint8Array | ArrayBuffer,
+): Uint8Array {
+	if (typeof content === 'string') return new TextEncoder().encode(content);
+	return content instanceof Uint8Array ? content : new Uint8Array(content);
+}
+
+export function concatBytes(...parts: Uint8Array[]): Uint8Array {
+	const result = new Uint8Array(
+		parts.reduce((length, part) => length + part.byteLength, 0),
+	);
+	let offset = 0;
+	for (const part of parts) {
+		result.set(part, offset);
+		offset += part.byteLength;
 	}
-	return new Uint8Array(content);
+	return result;
 }
 
 export function toBase64(content: string | Uint8Array | ArrayBuffer): string {
@@ -71,6 +83,21 @@ export function toBase64(content: string | Uint8Array | ArrayBuffer): string {
 	}
 
 	return btoa(binaryString);
+}
+
+export function toBase64Url(
+	content: string | Uint8Array | ArrayBuffer,
+): string {
+	return toBase64(content)
+		.replace(/\+/g, '-')
+		.replace(/\//g, '_')
+		.replace(/=+$/g, '');
+}
+
+export function fromBase64Url(value: string): Uint8Array {
+	const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+	const binary = atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '='));
+	return Uint8Array.from(binary, (char) => char.charCodeAt(0));
 }
 
 export function formatFileSize(size?: number): string {

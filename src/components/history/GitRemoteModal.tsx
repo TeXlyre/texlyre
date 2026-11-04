@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { t } from '@/i18n';
 import { useSecrets } from '@/hooks/useSecrets';
 import { useSettings } from '@/hooks/useSettings';
+import { useAuth } from '@/hooks/useAuth';
+import { storageSyncService } from '@/services/StorageSyncService';
 import { DisconnectIcon, GitRemoteIcon } from '@/components/common/Icons';
 import Modal from '@/components/common/Modal';
 import { fileHandlerService } from '@/services/FileHandlerService';
@@ -46,6 +48,7 @@ const GitRemoteModal: React.FC<GitRemoteModalProps> = ({
 }) => {
 	const { getSecret, setSecret, removeSecret } = useSecrets();
 	const { getSetting } = useSettings();
+	const { user, isGuestUser } = useAuth();
 	const fileSystem = useMemo(
 		() => gitFileSystemService.get(projectId),
 		[projectId],
@@ -55,6 +58,10 @@ const GitRemoteModal: React.FC<GitRemoteModalProps> = ({
 	const [gitSettings, setGitSettings] = useState(() =>
 		fileSystem.getSettings(),
 	);
+	const [backupConflict, setBackupConflict] = useState(() => fileSystem.hasGitBackupConflict());
+	const storageBinding = user && !isGuestUser(user)
+		? storageSyncService.getProjectBinding(user.id, projectId)
+		: null;
 	const [workspaceCleanAnnotations, setWorkspaceCleanAnnotations] = useState(
 		() => fileHandlerService.getWorkspaceCleanAnnotations(projectId),
 	);
@@ -112,6 +119,7 @@ const GitRemoteModal: React.FC<GitRemoteModalProps> = ({
 	/* biome-ignore lint/correctness/useExhaustiveDependencies(isOpen): Opening the modal intentionally refreshes settings backed by external services. */
 	useEffect(() => {
 		setGitSettings(fileSystem.getSettings());
+		setBackupConflict(fileSystem.hasGitBackupConflict());
 		setWorkspaceCleanAnnotations(
 			fileHandlerService.getWorkspaceCleanAnnotations(projectId),
 		);
@@ -134,6 +142,17 @@ const GitRemoteModal: React.FC<GitRemoteModalProps> = ({
 		setRemote(gitSyncService.getConfig(projectId));
 		return gitSyncService.addListener(projectId, (next) => setRemote(next));
 	}, [projectId]);
+
+	useEffect(() => {
+		if (!isOpen) return;
+		const onSynced = (event: Event) => {
+			if ((event as CustomEvent<{ projectId: string }>).detail?.projectId === projectId) {
+				setBackupConflict(fileSystem.hasGitBackupConflict());
+			}
+		};
+		document.addEventListener('storage-project-synced', onSynced);
+		return () => document.removeEventListener('storage-project-synced', onSynced);
+	}, [fileSystem, isOpen, projectId]);
 
 	useEffect(() => {
 		const needsAlignment =
@@ -365,6 +384,12 @@ const GitRemoteModal: React.FC<GitRemoteModalProps> = ({
 			await refreshDisk();
 		});
 
+	const toggleRemoteGitBackup = (enabled: boolean) => {
+		fileSystem.setRemoteGitBackup(enabled);
+		setGitSettings(fileSystem.getSettings());
+		setBackupConflict(fileSystem.hasGitBackupConflict());
+	};
+
 	const applyAlignment = () =>
 		run(async () => {
 			await fileSystem.attachStoredDisk();
@@ -438,6 +463,24 @@ const GitRemoteModal: React.FC<GitRemoteModalProps> = ({
 								</p>
 							) : null}
 						</>
+					) : null}
+
+					<label className='checkbox-control'>
+						<input
+							type='checkbox'
+							checked={gitSettings.backupGitToRemote}
+							disabled={isBusy || !storageBinding?.enabled}
+							onChange={(event) => toggleRemoteGitBackup(event.target.checked)}
+						/>
+						<span>{t('Back up Git history to remote storage')}</span>
+					</label>
+					<p className='ui-note'>
+						{t('Backs up Git commits and branches with your encrypted project. People with access to shared storage can also read its Git history. Existing local Git history is never replaced.')}
+					</p>
+					{backupConflict ? (
+						<p className='ui-message' data-tone='warning'>
+							{t('Remote Git history changed independently. Your local history is preserved, but Git backup is paused until the histories are reconciled.')}
+						</p>
 					) : null}
 
 					{showAlignment ? (

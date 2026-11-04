@@ -4,15 +4,15 @@ const CACHE_NAME = `texlyre-v0.13.6`;
 const BASE_PATH = '/texlyre/';
 const FONTS_CACHE_NAME = 'fonts-cache-v1';
 const AIRGAP_ALLOWED_DOMAINS = [
-	"texlyre.org",
-	"texlyre.github.io",
-	"typst.org"
+  "texlyre.org",
+  "texlyre.github.io",
+  "typst.org"
 ];
 const AIRGAP_ALLOWED_PROTOCOLS = [
-	"https:",
-	"http:",
-	"wss:",
-	"ws:"
+  "https:",
+  "http:",
+  "wss:",
+  "ws:"
 ];
 // *** End automatic generation ***
 

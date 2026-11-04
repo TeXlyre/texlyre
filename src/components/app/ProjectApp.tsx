@@ -1,16 +1,24 @@
 // src/components/app/ProjectApp.tsx
 import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
 import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 import { useAuth } from '../../hooks/useAuth';
+import { useProperties } from '../../hooks/useProperties';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { useDiskBackup } from '../../hooks/useDiskBackup';
 import { useTheme } from '../../hooks/useTheme';
+import { useStorageConfig } from '../../hooks/useStorageConfig';
+import { useSharedToolPreferences } from '../../hooks/useSharedToolPreferences';
+import { useChelys } from '../../hooks/useChelys';
+import { useSecrets } from '../../hooks/useSecrets';
+import { useSettings } from '../../hooks/useSettings';
 import type { Project, ProjectType, ProjectGroup } from '../../types/projects';
+import type { StorageDashboardProject } from '../../types/storage';
+import { storageProjectKey } from '../project/StoredProjectList';
 import {
 	isValidYjsUrl,
 	buildUrlWithFragments,
@@ -41,6 +49,9 @@ import { NewProjectIcon } from '../common/Icons';
 import FooterLinks from '../common/FooterLinks';
 import ServiceStatusBanner from '../common/ServiceStatusBanner';
 import QuotaBanner from '../common/QuotaBanner';
+import { storageSyncService } from '../../services/StorageSyncService';
+import { genericStorageService } from '../../services/GenericStorageService';
+import { sharedToolIdentity } from '../../utils/sharedToolsUtils';
 
 const moduleLog = createNamedLogger('ProjectApp');
 
@@ -66,10 +77,23 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		createProject,
 		updateProject,
 		deleteProject,
+		getProjectById,
 		toggleFavorite,
 		isGuestUser,
 	} = useAuth();
 	const { currentThemePlugin, currentLayout } = useTheme();
+	const {
+		isReady: propertiesReady,
+		getProperty,
+		setProperty,
+		registerProperty,
+	} = useProperties();
+	const { configs: storageConfigs, removeConfig: removeStorageConfig } =
+		useStorageConfig();
+	const sharedToolPreferences = useSharedToolPreferences();
+	const { storageUnlocked, storageUnlockReady, unlockStorage } = useChelys();
+	const { promptForPassword } = useSecrets();
+	const { getSetting } = useSettings();
 	const {
 		discoveredProjects,
 		showDiscoveryModal,
@@ -92,6 +116,8 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [sidebarWidth, setSidebarWidth] = useState(
 		currentLayout?.defaultFileExplorerWidth || 250,
 	);
+	const [sidebarWidthLoaded, setSidebarWidthLoaded] = useState(false);
+	const sidebarWidthRegistered = useRef(false);
 
 	const headerRightRef = useWheelScroll<HTMLDivElement>();
 	const [showProfileModal, setShowProfileModal] = useState(false);
@@ -116,6 +142,81 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		Project[]
 	>([]);
 	const [showPrivacy, setShowPrivacy] = useState(false);
+	const [storageProjects, setStorageProjects] = useState<
+		StorageDashboardProject[]
+	>([]);
+	const [storageLoading, setStorageLoading] = useState(false);
+	const storageLoadingCount = useRef(0);
+	const [storageBusy, setStorageBusy] = useState<Set<string>>(new Set());
+	const [restoringStorageProjects, setRestoringStorageProjects] = useState<
+		Set<string>
+	>(new Set());
+	const [remoteActionBusy, setRemoteActionBusy] = useState<Set<string>>(
+		new Set(),
+	);
+	const [pendingRemoteRemoval, setPendingRemoteRemoval] = useState<
+		StorageDashboardProject[]
+	>([]);
+	const [remoteRemovalError, setRemoteRemovalError] = useState<string | null>(
+		null,
+	);
+	const [remoteRemoving, setRemoteRemoving] = useState(false);
+	const [unavailableStorageProviders, setUnavailableStorageProviders] =
+		useState<Set<string>>(new Set());
+	const storageUnlockAttemptRef = useRef<string | null>(null);
+
+	useEffect(() => {
+		if (sidebarWidthRegistered.current) return;
+		sidebarWidthRegistered.current = true;
+		registerProperty({
+			id: 'project-sidebar-width',
+			category: 'UI',
+			subcategory: 'Layout',
+			defaultValue: currentLayout?.defaultFileExplorerWidth || 250,
+		});
+	}, [registerProperty, currentLayout?.defaultFileExplorerWidth]);
+
+	useEffect(() => {
+		if (!propertiesReady || sidebarWidthLoaded) return;
+		const storedWidth = Number(getProperty('project-sidebar-width'));
+		if (Number.isFinite(storedWidth) && storedWidth > 0) {
+			setSidebarWidth(storedWidth);
+		}
+		setSidebarWidthLoaded(true);
+	}, [propertiesReady, sidebarWidthLoaded, getProperty]);
+
+	const activeStorageConfigs = useMemo(
+		() => storageConfigs.filter((config) => config.enabled),
+		[storageConfigs],
+	);
+	const accountStorageConfigs = useMemo(
+		() =>
+			activeStorageConfigs.filter(
+				(config) => !sharedToolPreferences.getOrigin('storage', config.id),
+			),
+		[activeStorageConfigs, sharedToolPreferences.getOrigin],
+	);
+	const storageProviderNames = useMemo(
+		() =>
+			Object.fromEntries(
+				activeStorageConfigs.map((config) => [config.id, config.name]),
+			),
+		[activeStorageConfigs],
+	);
+	const sharedStorageConfigIds = useMemo(
+		() =>
+			new Set(
+				activeStorageConfigs
+					.filter((config) =>
+						sharedToolPreferences.getOrigin('storage', config.id),
+					)
+					.map((config) => config.id),
+			),
+		[activeStorageConfigs, sharedToolPreferences.getOrigin],
+	);
+	const syncStorageBeforeOpen =
+		(getSetting('storage-sync-before-open')?.value as boolean | undefined) ??
+		true;
 
 	const loadProjects = useCallback(async () => {
 		try {
@@ -158,6 +259,432 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	useEffect(() => {
 		loadProjects();
 	}, [loadProjects]);
+
+	useEffect(() => {
+		if (!user || isGuestUser(user) || activeStorageConfigs.length === 0) {
+			storageUnlockAttemptRef.current = null;
+			return;
+		}
+		if (!storageUnlockReady || storageUnlocked) return;
+
+		const attemptId = `${user.id}:${activeStorageConfigs
+			.map((config) => config.id)
+			.sort()
+			.join(',')}`;
+		if (storageUnlockAttemptRef.current === attemptId) return;
+		storageUnlockAttemptRef.current = attemptId;
+
+		void (async () => {
+			const password = await promptForPassword(
+				t('Enter your TeXlyre password to unlock encrypted storage:'),
+			);
+			if (storageUnlockAttemptRef.current !== attemptId || !password) return;
+			try {
+				await unlockStorage(password);
+			} catch (error) {
+				moduleLog.warn('Failed to unlock storage for this session:', error);
+				setError(
+					error instanceof Error
+						? error.message
+						: t('Failed to unlock storage'),
+				);
+			}
+		})();
+	}, [
+		user,
+		isGuestUser,
+		activeStorageConfigs,
+		storageUnlockReady,
+		storageUnlocked,
+		promptForPassword,
+		unlockStorage,
+	]);
+
+	const loadStorageState = useCallback(async () => {
+		if (!user || isGuestUser(user) || activeStorageConfigs.length === 0) {
+			setStorageProjects([]);
+			setUnavailableStorageProviders(new Set());
+			return;
+		}
+
+		if (!storageUnlockReady) return;
+
+		if (!storageUnlocked) {
+			setStorageProjects([]);
+			setUnavailableStorageProviders(
+				new Set(activeStorageConfigs.map((config) => config.id)),
+			);
+			return;
+		}
+
+		storageLoadingCount.current += 1;
+		setStorageLoading(true);
+		try {
+			const unavailable = new Set<string>();
+			const reconciled = await Promise.all(
+				accountStorageConfigs.map(async (config) => {
+					try {
+						return await storageSyncService.reconcileProvider(user.id, config.id);
+					} catch (error) {
+						unavailable.add(config.id);
+						moduleLog.warn(
+							`Storage provider ${config.id} is unavailable:`,
+							error,
+						);
+						return [];
+					}
+				}),
+			);
+
+			const sharedBindings = Object.entries(
+				storageSyncService.getProjectBindings(user.id),
+			).filter(([, binding]) => sharedStorageConfigIds.has(binding.providerId));
+			const shared = await Promise.all(
+				sharedBindings.map(async ([projectId, binding]) => {
+					try {
+						return await storageSyncService.reconcileProjectBinding(
+							user.id,
+							projectId,
+						);
+					} catch (error) {
+						unavailable.add(binding.providerId);
+						moduleLog.warn(
+							`Shared storage provider ${binding.providerId} is unavailable:`,
+							error,
+						);
+						return null;
+					}
+				}),
+			);
+
+			setUnavailableStorageProviders(unavailable);
+			setStorageProjects([
+				...reconciled.flat(),
+				...shared.filter(
+					(entry): entry is StorageDashboardProject => entry !== null,
+				),
+			]);
+		} finally {
+			storageLoadingCount.current -= 1;
+			if (storageLoadingCount.current === 0) setStorageLoading(false);
+		}
+	}, [
+		user,
+		isGuestUser,
+		activeStorageConfigs,
+		accountStorageConfigs,
+		sharedStorageConfigIds,
+		storageUnlockReady,
+		storageUnlocked,
+	]);
+
+	useEffect(() => {
+		void loadStorageState();
+	}, [loadStorageState]);
+
+	useEffect(() => {
+		const refreshUnavailable = (providerId?: string) => {
+			if (
+				storageLoadingCount.current > 0 ||
+				unavailableStorageProviders.size === 0 ||
+				(providerId && !unavailableStorageProviders.has(providerId))
+			) {
+				return;
+			}
+			void loadStorageState();
+		};
+		const unsubscribeStatus = genericStorageService.onStatusChange(
+			(configId, status) => {
+				if (status === 'connected') refreshUnavailable(configId);
+			},
+		);
+		const onVisible = () => {
+			if (document.visibilityState === 'visible') refreshUnavailable();
+		};
+		const onOnline = () => refreshUnavailable();
+		document.addEventListener('visibilitychange', onVisible);
+		window.addEventListener('online', onOnline);
+		return () => {
+			unsubscribeStatus();
+			document.removeEventListener('visibilitychange', onVisible);
+			window.removeEventListener('online', onOnline);
+		};
+	}, [loadStorageState, unavailableStorageProviders]);
+
+	const storageStates = useMemo(() => {
+		const states: Record<string, StorageDashboardProject> = {};
+		for (const stored of storageProjects) {
+			if (!stored.remoteOnly) states[stored.localProjectId] = stored;
+		}
+
+		if (!user) return states;
+		const defaultProvider = accountStorageConfigs[0];
+		for (const project of projects) {
+			if (states[project.id]) continue;
+			const binding = storageSyncService.getProjectBinding(user.id, project.id);
+			const providerId = binding?.providerId ?? defaultProvider?.id;
+			if (!providerId) continue;
+			states[project.id] = {
+				providerId,
+				storageProjectId: binding?.storageProjectId ?? '',
+				localProjectId: project.id,
+				name: project.name,
+				description: project.description,
+				type: project.type,
+				group: project.group,
+				compilerId: project.compilerId,
+				createdAt: project.createdAt,
+				updatedAt: project.updatedAt,
+				tags: project.tags,
+				isFavorite: project.isFavorite,
+				docUrl: project.docUrl,
+				status: binding
+					? !storageUnlockReady || storageLoading
+						? 'checking'
+						: unavailableStorageProviders.has(providerId) || !storageUnlocked
+							? 'unavailable'
+							: 'checking'
+					: 'local-only',
+				lastSync: binding?.lastSync,
+				remoteOnly: false,
+			};
+		}
+		return states;
+	}, [
+		storageProjects,
+		projects,
+		user,
+		accountStorageConfigs,
+		unavailableStorageProviders,
+		storageUnlockReady,
+		storageUnlocked,
+		storageLoading,
+	]);
+
+	const filteredStoredProjects = useMemo(() => {
+		const entries = [...storageProjects];
+		if (user) {
+			const present = new Set(entries.map(storageProjectKey));
+			for (const project of projects) {
+				const binding = storageSyncService.getProjectBinding(
+					user.id,
+					project.id,
+				);
+				if (!binding) continue;
+				const key = `${binding.providerId}:${binding.storageProjectId}`;
+				if (present.has(key)) continue;
+				entries.push({
+					providerId: binding.providerId,
+					storageProjectId: binding.storageProjectId,
+					localProjectId: project.id,
+					name: project.name,
+					description: project.description,
+					type: project.type,
+					group: project.group,
+					compilerId: project.compilerId,
+					createdAt: project.createdAt,
+					updatedAt: project.updatedAt,
+					tags: project.tags,
+					isFavorite: project.isFavorite,
+					docUrl: project.docUrl,
+					status:
+						!storageUnlockReady || storageLoading
+							? 'checking'
+							: !storageUnlocked ||
+								unavailableStorageProviders.has(binding.providerId)
+								? 'unavailable'
+								: 'checking',
+					remoteOnly: false,
+					lastSync: binding.lastSync,
+				});
+				present.add(key);
+			}
+		}
+		const query = searchQuery.trim().toLowerCase();
+		return entries.filter(
+			(project) =>
+				(!query ||
+					project.name.toLowerCase().includes(query) ||
+					project.description.toLowerCase().includes(query) ||
+					project.tags.some((tag) => tag.toLowerCase().includes(query))) &&
+				(!selectedTag || project.tags.includes(selectedTag)) &&
+				(!selectedType || project.type === selectedType) &&
+				(!selectedGroup || (project.group ?? project.type) === selectedGroup),
+		);
+	}, [
+		storageProjects,
+		projects,
+		user,
+		storageUnlockReady,
+		storageUnlocked,
+		storageLoading,
+		unavailableStorageProviders,
+		searchQuery,
+		selectedTag,
+		selectedType,
+		selectedGroup,
+	]);
+
+	const busyRemoteIds = useMemo(() => {
+		const ids = new Set(remoteActionBusy);
+		for (const project of filteredStoredProjects) {
+			if (restoringStorageProjects.has(project.storageProjectId))
+				ids.add(storageProjectKey(project));
+		}
+		return ids;
+	}, [remoteActionBusy, filteredStoredProjects, restoringStorageProjects]);
+
+	const handleDisconnectRemote = async (entries: StorageDashboardProject[]) => {
+		if (!user || entries.length === 0) return;
+		const keys = entries.map(storageProjectKey);
+		setRemoteActionBusy((current) => new Set([...current, ...keys]));
+		setError(null);
+		try {
+			for (const entry of entries) {
+				const binding = storageSyncService.getProjectBinding(
+					user.id,
+					entry.localProjectId,
+				);
+				if (
+					binding?.providerId === entry.providerId &&
+					binding.storageProjectId === entry.storageProjectId
+				) {
+					await storageSyncService.disconnectBoundProject(
+						user.id,
+						entry.localProjectId,
+					);
+					const origin = sharedToolPreferences.getOrigin(
+						'storage',
+						entry.providerId,
+					);
+					if (origin) {
+						const identity = sharedToolIdentity(
+							'storage',
+							origin.ownerId,
+							origin.toolId,
+							entry.storageProjectId,
+						);
+						sharedToolPreferences.recordIgnored(
+							identity,
+							sharedToolPreferences.getDecision(identity)?.revision ?? '',
+						);
+						const stillUsed = Object.values(
+							storageSyncService.getProjectBindings(user.id),
+						).some((candidate) => candidate.providerId === entry.providerId);
+						if (!stillUsed) {
+							sharedToolPreferences.detachLocalTool(
+								'storage',
+								entry.providerId,
+							);
+							removeStorageConfig(entry.providerId);
+						}
+					}
+				}
+			}
+			await loadStorageState();
+		} catch (error) {
+			setError(
+				error instanceof Error
+					? error.message
+					: t('Failed to disconnect remote storage'),
+			);
+		} finally {
+			setRemoteActionBusy((current) => {
+				const next = new Set(current);
+				keys.forEach((key) => {
+					next.delete(key);
+				});
+				return next;
+			});
+		}
+	};
+
+	const handleReconnectRemote = async (entry: StorageDashboardProject) => {
+		if (!user) return;
+		const key = storageProjectKey(entry);
+		setRemoteActionBusy((current) => new Set(current).add(key));
+		try {
+			await storageSyncService.reconnectProject(
+				user.id,
+				entry.localProjectId,
+				entry.providerId,
+				entry.storageProjectId,
+			);
+			await loadStorageState();
+		} catch (error) {
+			setError(
+				error instanceof Error
+					? error.message
+					: t('Failed to reconnect remote storage'),
+			);
+		} finally {
+			setRemoteActionBusy((current) => {
+				const next = new Set(current);
+				next.delete(key);
+				return next;
+			});
+		}
+	};
+
+	const handleDeleteRemoteProjects = async () => {
+		if (!user || remoteRemoving || pendingRemoteRemoval.length === 0) return;
+		const entries = pendingRemoteRemoval;
+		const keys = entries.map(storageProjectKey);
+		setRemoteRemoving(true);
+		setRemoteRemovalError(null);
+		setRemoteActionBusy((current) => new Set([...current, ...keys]));
+		const completed = new Set<string>();
+		try {
+			const byProvider = new Map<string, string[]>();
+			for (const entry of entries) {
+				if (
+					!accountStorageConfigs.some(
+						(config) => config.id === entry.providerId,
+					)
+				) {
+					throw new Error(
+						t('Cannot remove projects from storage shared by a peer'),
+					);
+				}
+				byProvider.set(entry.providerId, [
+					...(byProvider.get(entry.providerId) ?? []),
+					entry.storageProjectId,
+				]);
+			}
+			for (const [providerId, storageIds] of byProvider) {
+				await storageSyncService.deleteRemoteProjects(
+					user.id,
+					providerId,
+					storageIds,
+				);
+				storageIds.forEach((storageId) => {
+					completed.add(`${providerId}:${storageId}`);
+				});
+			}
+			setPendingRemoteRemoval([]);
+		} catch (error) {
+			if (completed.size > 0) {
+				setPendingRemoteRemoval(
+					entries.filter((entry) => !completed.has(storageProjectKey(entry))),
+				);
+			}
+			setRemoteRemovalError(
+				error instanceof Error
+					? error.message
+					: t('Remote storage operation failed'),
+			);
+		} finally {
+			setRemoteRemoving(false);
+			setRemoteActionBusy((current) => {
+				const next = new Set(current);
+				keys.forEach((key) => {
+					next.delete(key);
+				});
+				return next;
+			});
+			await loadStorageState();
+		}
+	};
 
 	const handleAccountDeleted = async () => {
 		setIsDeleteAccountModalOpen(false);
@@ -360,6 +887,134 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		await loadProjects();
 	};
 
+	const handleStorageSync = async (project: Project) => {
+		if (!user) return;
+		const binding = storageSyncService.getProjectBinding(user.id, project.id);
+		const providerId = binding?.providerId ?? accountStorageConfigs[0]?.id;
+		if (!providerId) {
+			setError(t('No storage provider is configured'));
+			return;
+		}
+
+		setStorageBusy((current) => new Set(current).add(project.id));
+		setError(null);
+		try {
+			await storageSyncService.syncProject(user.id, project.id, providerId);
+			await loadProjects();
+			await loadStorageState();
+		} catch (error) {
+			moduleLog.error('Storage sync failed:', error);
+			setError(
+				error instanceof Error ? error.message : t('Storage sync failed'),
+			);
+		} finally {
+			setStorageBusy((current) => {
+				const next = new Set(current);
+				next.delete(project.id);
+				return next;
+			});
+		}
+	};
+
+	const prepareStoredProject = async (project: Project): Promise<Project> => {
+		if (!user || !syncStorageBeforeOpen) return project;
+		const binding = storageSyncService.getProjectBinding(user.id, project.id);
+		if (!binding?.enabled) return project;
+
+		setStorageBusy((current) => new Set(current).add(project.id));
+		try {
+			await storageSyncService.syncBoundProject(user.id, project.id);
+			return (await getProjectById(project.id)) ?? project;
+		} catch (error) {
+			// Storage is supplemental: opening the local project must still succeed.
+			moduleLog.warn('Storage reconciliation before open failed:', error);
+			return project;
+		} finally {
+			setStorageBusy((current) => {
+				const next = new Set(current);
+				next.delete(project.id);
+				return next;
+			});
+			void loadStorageState();
+		}
+	};
+
+	const handleRestoreStoredProject = async (
+		stored: StorageDashboardProject,
+	) => {
+		if (!user) return;
+		setRestoringStorageProjects((current) =>
+			new Set(current).add(stored.storageProjectId),
+		);
+		setError(null);
+		try {
+			const project = await storageSyncService.restoreRemoteProject(
+				user.id,
+				stored.providerId,
+				stored.storageProjectId,
+			);
+			await loadProjects();
+			await loadStorageState();
+			onOpenProject(
+				project.docUrl,
+				project.name,
+				project.description,
+				project.type,
+				project.group,
+				project.id,
+			);
+		} catch (error) {
+			moduleLog.error('Failed to restore stored project:', error);
+			setError(
+				error instanceof Error
+					? error.message
+					: t('Failed to restore stored project'),
+			);
+		} finally {
+			setRestoringStorageProjects((current) => {
+				const next = new Set(current);
+				next.delete(stored.storageProjectId);
+				return next;
+			});
+		}
+	};
+
+	const handleRestoreMultiple = async (entries: StorageDashboardProject[]) => {
+		if (!user || entries.length === 0) return;
+		const ids = entries.map((entry) => entry.storageProjectId);
+		setRestoringStorageProjects((current) => new Set([...current, ...ids]));
+		setError(null);
+		let failed = 0;
+		try {
+			for (const entry of entries) {
+				try {
+					await storageSyncService.restoreRemoteProject(
+						user.id,
+						entry.providerId,
+						entry.storageProjectId,
+					);
+				} catch (error) {
+					failed += 1;
+					moduleLog.warn('Failed to restore a selected remote project:', error);
+				}
+			}
+			await loadProjects();
+			await loadStorageState();
+			if (failed > 0)
+				setError(
+					t('Failed to restore {count} remote project(s)', { count: failed }),
+				);
+		} finally {
+			setRestoringStorageProjects((current) => {
+				const next = new Set(current);
+				ids.forEach((id) => {
+					next.delete(id);
+				});
+				return next;
+			});
+		}
+	};
+
 	const openEditModal = (project: Project) => {
 		setError(null);
 		setCurrentProject(project);
@@ -372,9 +1027,10 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		setShowDeleteModal(true);
 	};
 
-	const handleOpenDefault = (project: Project) => {
-		if (!project.docUrl) {
-			moduleLog.error('Project has no document URL:', project);
+	const handleOpenDefault = async (project: Project) => {
+		const readyProject = await prepareStoredProject(project);
+		if (!readyProject.docUrl) {
+			moduleLog.error('Project has no document URL:', readyProject);
 			setError(
 				t(
 					'This project has no associated document. Please try creating a new project',
@@ -383,39 +1039,39 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			return;
 		}
 
-		if (!isValidYjsUrl(project.docUrl)) {
-			moduleLog.error('Invalid document URL format:', project.docUrl);
+		if (!isValidYjsUrl(readyProject.docUrl)) {
+			moduleLog.error('Invalid document URL format:', readyProject.docUrl);
 			setError(
-				t('Invalid document URL format: {url}', { url: project.docUrl }),
+				t('Invalid document URL format: {url}', { url: readyProject.docUrl }),
 			);
 			return;
 		}
 
-		// This builds URL with last opened file/doc if available
-		let finalUrl = project.docUrl;
-		if (project.lastOpenedDocId || project.lastOpenedFilePath) {
+		let finalUrl = readyProject.docUrl;
+		if (readyProject.lastOpenedDocId || readyProject.lastOpenedFilePath) {
 			const currentFragment = parseUrlFragments(finalUrl);
 			const newUrl = buildUrlWithFragments(
 				currentFragment.yjsUrl,
-				project.lastOpenedDocId,
-				project.lastOpenedFilePath,
+				readyProject.lastOpenedDocId,
+				readyProject.lastOpenedFilePath,
 			);
 			finalUrl = newUrl;
 		}
 
 		onOpenProject(
 			finalUrl,
-			project.name,
-			project.description,
-			project.type,
-			project.group,
-			project.id,
+			readyProject.name,
+			readyProject.description,
+			readyProject.type,
+			readyProject.group,
+			readyProject.id,
 		);
 	};
 
 	const openProject = async (project: Project) => {
-		if (!project.docUrl) {
-			moduleLog.error('Project has no document URL:', project);
+		const readyProject = await prepareStoredProject(project);
+		if (!readyProject.docUrl) {
+			moduleLog.error('Project has no document URL:', readyProject);
 			setError(
 				t(
 					'This project has no associated document. Please try creating a new project',
@@ -424,26 +1080,27 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			return;
 		}
 
-		if (!isValidYjsUrl(project.docUrl)) {
-			moduleLog.error('Invalid document URL format:', project.docUrl);
+		if (!isValidYjsUrl(readyProject.docUrl)) {
+			moduleLog.error('Invalid document URL format:', readyProject.docUrl);
 			setError(
-				t('Invalid document URL format: {url}', { url: project.docUrl }),
+				t('Invalid document URL format: {url}', { url: readyProject.docUrl }),
 			);
 			return;
 		}
 
 		onOpenProject(
-			project.docUrl,
-			project.name,
-			project.description,
-			project.type,
-			project.group,
-			project.id,
+			readyProject.docUrl,
+			readyProject.name,
+			readyProject.description,
+			readyProject.type,
+			readyProject.group,
+			readyProject.id,
 		);
 	};
 
 	const handleSidebarResize = (width: number) => {
 		setSidebarWidth(width);
+		setProperty('project-sidebar-width', width);
 	};
 
 	return (
@@ -503,7 +1160,33 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onFilterByType={handleFilterByType}
 						onFilterByGroup={handleFilterByGroup}
 						onOpenProject={openProject}
+						onRestoreExternalProject={handleRestoreStoredProject}
 						projects={projects}
+						externalProjects={filteredStoredProjects}
+						providerNames={storageProviderNames}
+						ownedProviderIds={
+							new Set(accountStorageConfigs.map((config) => config.id))
+						}
+						busyRemoteIds={busyRemoteIds}
+						storageLoading={storageLoading}
+						onRefreshRemote={() => void loadStorageState()}
+						onReconnectRemote={(entry) => void handleReconnectRemote(entry)}
+						onRestoreMultiple={(entries) => void handleRestoreMultiple(entries)}
+						onDisconnectRemote={handleDisconnectRemote}
+						onRemoveRemote={(entries) => {
+							if (
+								new Set(entries.map((entry) => entry.providerId)).size !== 1
+							) {
+								setError(
+									t(
+										'Select projects from one remote server to delete them together',
+									),
+								);
+								return;
+							}
+							setRemoteRemovalError(null);
+							setPendingRemoteRemoval(entries);
+						}}
 						availableTags={availableTags}
 						availableTypes={availableTypes}
 						availableGroups={availableGroups}
@@ -532,7 +1215,6 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						</div>
 					) : (
 						<ProjectList
-							// key={`${searchQuery}:${selectedTag}:${selectedType}:${selectedGroup}`}
 							projects={filteredProjects}
 							onOpenProject={openProject}
 							onOpenProjectDefault={handleOpenDefault}
@@ -543,9 +1225,65 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 							onExportSelected={handleExportSelected}
 							onDeleteSelected={handleDeleteSelected}
 							viewMode={viewMode}
+							storageStates={storageStates}
+							storageBusy={storageBusy}
+							onStorageSync={handleStorageSync}
 						/>
 					)}
 				</div>
+				<Modal
+					isOpen={pendingRemoteRemoval.length > 0}
+					onClose={() => {
+						if (!remoteRemoving) setPendingRemoteRemoval([]);
+					}}
+					title={t('Delete from remote storage')}
+					size='small'
+				>
+					<div className='ui-stack' data-gap='md'>
+						<p>
+							{t('Permanently delete {count} project(s) from remote storage?', {
+								count: pendingRemoteRemoval.length,
+							})}
+						</p>
+						<div className='ui-list' data-scroll='short'>
+							{pendingRemoteRemoval.map((project) => (
+								<div className='ui-list-item' key={storageProjectKey(project)}>
+									{project.name}
+								</div>
+							))}
+						</div>
+						<div className='ui-message' data-tone='warning'>
+							{t(
+								'All remote objects and revision history will be deleted and the project ID permanently blocked on this server. Local copies are kept. Garage garbage collection and external backups may retain data temporarily.',
+							)}
+						</div>
+						{remoteRemovalError && (
+							<div className='ui-message' data-tone='error'>
+								{remoteRemovalError}
+							</div>
+						)}
+						<div className='ui-actions' data-variant='modal' data-align='end'>
+							<button
+								type='button'
+								className='button secondary'
+								disabled={remoteRemoving}
+								onClick={() => setPendingRemoteRemoval([])}
+							>
+								{t('Cancel')}
+							</button>
+							<button
+								type='button'
+								className='button danger'
+								disabled={remoteRemoving}
+								onClick={() => void handleDeleteRemoteProjects()}
+							>
+								{remoteRemoving
+									? t('Deleting...')
+									: t('Delete from remote storage')}
+							</button>
+						</div>
+					</div>
+				</Modal>
 				<ProjectExportModal
 					isOpen={showExportModal}
 					onClose={() => setShowExportModal(false)}

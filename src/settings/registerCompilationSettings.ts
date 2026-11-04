@@ -36,12 +36,12 @@ export function useRegisterCompilationSettings() {
 		registerSetting({
 			id: 'external-typesetter-auto-compile-on-open',
 			category: t('Compilation'),
-			subcategory: t('Generic Typesetter'),
+			subcategory: t('Remote Typesetter'),
 			type: 'checkbox',
 			label: t('Auto-compile on project open'),
 			description: t(
 				'Automatically compile {typesetter} when opening a project',
-				{ typesetter: t('Generic Typesetter') },
+				{ typesetter: t('Remote Typesetter') },
 			),
 			defaultValue: initialExternalAutoCompile,
 		});
@@ -49,18 +49,18 @@ export function useRegisterCompilationSettings() {
 		registerSetting({
 			id: 'external-typesetter-auto-navigate-to-main',
 			category: t('Compilation'),
-			subcategory: t('Generic Typesetter'),
+			subcategory: t('Remote Typesetter'),
 			type: 'select',
 			label: t('Auto-navigate to main file on compile'),
 			description: t(
 				'Control when to automatically navigate to the main {typesetter} file during compilation',
-				{ typesetter: t('Generic Typesetter') },
+				{ typesetter: t('Remote Typesetter') },
 			),
 			defaultValue: initialExternalAutoNavigate,
 			options: [
 				{
 					label: t('Only when no {typesetter} file is open', {
-						typesetter: t('Generic Typesetter'),
+						typesetter: t('Remote Typesetter'),
 					}),
 					value: 'conditional',
 				},

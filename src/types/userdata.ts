@@ -152,6 +152,10 @@ export interface UserDataSettings {
 	tikzViewerAutoSaveEditor?: boolean;
 	tikzViewerAutoSaveFile?: boolean;
 	tikzViewerTheme?: string;
+	storageSyncBeforeOpen?: any;
+	storageCheckForUpdates?: any;
+	storageCheckInterval?: any;
+	storageNotifications?: any;
 }
 
 export interface UserDataProperties {

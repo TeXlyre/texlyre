@@ -15,6 +15,7 @@ import type {
 	TranslatableText,
 } from '../types/compilation';
 import type { LSPConfigBlock } from '../types/lsp';
+import type { StorageConfigBlock } from '../types/storage';
 
 export function sanitizeToolIcon(input: unknown): string | undefined {
 	if (typeof input !== 'string' || input.length > 262_144) return;
@@ -572,6 +573,75 @@ export function parseLspConfigs(value: unknown): LSPConfigBlock[] {
 	return parseStoredList(value)
 		.map(normalizeLspConfig)
 		.filter((config): config is LSPConfigBlock => config !== null);
+}
+
+export function normalizeStorageConfig(
+	value: unknown,
+): StorageConfigBlock | null {
+	if (!isRecord(value)) return null;
+
+	const id =
+		typeof value.id === 'string'
+			? value.id
+			: typeof value.configId === 'string'
+				? value.configId
+				: null;
+	if (!id) return null;
+
+	const block = isRecord(value.transportConfig) ? value.transportConfig : null;
+	const source: Record<string, unknown> = block ?? {
+		type: value.transportType,
+		url: value.transportUrl,
+		roomId: value.transportRoomId,
+		signaling: value.signalingServers,
+	};
+	const type =
+		source.type === 'webrtc'
+			? 'webrtc'
+			: source.type === 'websocket' || !block
+				? 'websocket'
+				: null;
+	if (!type) return null;
+
+	const transportConfig: TransportConfig =
+		type === 'webrtc'
+			? {
+					type,
+					...(Array.isArray(source.signaling)
+						? {
+								signaling: source.signaling.filter(
+									(item): item is string => typeof item === 'string',
+								),
+							}
+						: {}),
+					...(typeof source.roomId === 'string' && source.roomId.trim()
+						? { roomId: source.roomId.trim() }
+						: {}),
+				}
+			: {
+					type,
+					...(typeof source.url === 'string' ? { url: source.url } : {}),
+				};
+
+	return {
+		id,
+		...(typeof value.transportId === 'string' && value.transportId.trim()
+			? { transportId: value.transportId }
+			: {}),
+		name:
+			typeof value.name === 'string' && value.name.trim()
+				? value.name
+				: id.toUpperCase(),
+		enabled: value.enabled !== false,
+		...(typeof value.icon === 'string' ? { icon: value.icon } : {}),
+		transportConfig,
+	};
+}
+
+export function parseStorageConfigs(value: unknown): StorageConfigBlock[] {
+	return parseStoredList(value)
+		.map(normalizeStorageConfig)
+		.filter((config): config is StorageConfigBlock => config !== null);
 }
 
 export function upsertConfig<T extends { id: string }>(

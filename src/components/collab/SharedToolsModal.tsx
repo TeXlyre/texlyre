@@ -1,3 +1,4 @@
+// src/components/collab/SharedToolsModal.tsx
 import type React from 'react';
 
 import { t } from '@/i18n';
@@ -12,6 +13,11 @@ interface SharedToolsModalProps {
 	sharedByMe: SharedByMeTool[];
 	projectShareEnabled: boolean;
 	onProjectShareChange: (enabled: boolean) => void;
+	storageShareAvailable: boolean;
+	storageShareEnabled: boolean;
+	storageShareable: boolean;
+	storageShareMessage?: string;
+	onStorageShareChange: (enabled: boolean) => void;
 	onAccept: (offer: SharedToolOffer) => void;
 	onIgnore: (offer: SharedToolOffer) => void;
 }
@@ -30,17 +36,32 @@ const statusLabel = (offer: SharedToolOffer): string => {
 };
 
 const acceptLabel = (offer: SharedToolOffer): string => {
-	if (offer.conflict.kind === 'same-id-different-config')
+	if (
+		offer.kind !== 'storage' &&
+		offer.conflict.kind === 'same-id-different-config'
+	)
 		return t('Replace mine');
-	if (offer.conflict.kind === 'same-name') return t('Add shared');
+	if (
+		offer.conflict.kind === 'same-name' ||
+		(offer.kind === 'storage' &&
+			offer.conflict.kind === 'same-id-different-config')
+	)
+		return t('Add shared');
 	return t('Use');
 };
 
 const ignoreLabel = (offer: SharedToolOffer): string =>
-	offer.conflict.kind === 'same-id-different-config' ||
+	(offer.kind !== 'storage' &&
+		offer.conflict.kind === 'same-id-different-config') ||
 	offer.conflict.kind === 'same-name'
 		? t('Keep mine')
 		: t('Ignore');
+
+const kindLabel = (kind: SharedToolOffer['kind']): string => {
+	if (kind === 'typesetter') return t('Typesetter');
+	if (kind === 'lsp') return t('Language Server');
+	return t('Storage');
+};
 
 const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 	isOpen,
@@ -49,6 +70,11 @@ const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 	sharedByMe,
 	projectShareEnabled,
 	onProjectShareChange,
+	storageShareAvailable,
+	storageShareEnabled,
+	storageShareable,
+	storageShareMessage,
+	onStorageShareChange,
 	onAccept,
 	onIgnore,
 }) => (
@@ -91,9 +117,7 @@ const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 											? ` · ${t('via')} ${offer.advertiserName}`
 											: ''}
 										{' · '}
-										{offer.kind === 'typesetter'
-											? t('Typesetter')
-											: t('Language Server')}
+										{kindLabel(offer.kind)}
 									</span>
 								</div>
 								<div className='ui-actions' data-wrap='true'>
@@ -169,6 +193,23 @@ const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 					<span>{t('Share tools used in this project')}</span>
 				</label>
 
+				{storageShareAvailable && (
+					<>
+						<label className='checkbox-control'>
+							<input
+								type='checkbox'
+								checked={storageShareEnabled}
+								disabled={!storageShareable}
+								onChange={(event) => onStorageShareChange(event.target.checked)}
+							/>
+							<span>{t('Share storage with collaborators')}</span>
+						</label>
+						{!storageShareable && storageShareMessage && (
+							<p className='ui-note'>{storageShareMessage}</p>
+						)}
+					</>
+				)}
+
 				{sharedByMe.length === 0 ? (
 					<p className='ui-note'>{t('No tools are shared here.')}</p>
 				) : (
@@ -185,11 +226,7 @@ const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 							>
 								<div className='ui-stack' data-gap='xs'>
 									<strong>{tool.config.name}</strong>
-									<span className='ui-note'>
-										{tool.kind === 'typesetter'
-											? t('Typesetter')
-											: t('Language Server')}
-									</span>
+									<span className='ui-note'>{kindLabel(tool.kind)}</span>
 								</div>
 								<span className='ui-note'>
 									{tool.scope === 'all'

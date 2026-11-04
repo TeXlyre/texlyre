@@ -172,7 +172,7 @@ export function useRegisterTypesetterConfigSettings() {
 		registerSetting({
 			id: TYPESETTER_CONFIGS_SETTING,
 			category: t('External Tools'),
-			subcategory: t('Generic Typesetter'),
+			subcategory: t('Remote Typesetter'),
 			type: 'custom',
 			label: t('Typesetter Recipes'),
 			defaultValue: readStoredValue(TYPESETTER_CONFIGS_SETTING),
@@ -183,7 +183,7 @@ export function useRegisterTypesetterConfigSettings() {
 		registerSetting({
 			id: TYPESETTER_DISABLED_CONFIGS_SETTING,
 			category: t('External Tools'),
-			subcategory: t('Generic Typesetter'),
+			subcategory: t('Remote Typesetter'),
 			type: 'custom',
 			label: t('Disabled Typesetter Recipes'),
 			defaultValue: readStoredValue(TYPESETTER_DISABLED_CONFIGS_SETTING),
