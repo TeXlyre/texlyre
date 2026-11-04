@@ -1,4 +1,12 @@
+// src/utils/gitUtils.ts
 import type { GitRemoteBranch, GitRemoteProvider } from '../types/gitRemote';
+
+export const DIR = '/';
+export const GIT_DIR = '/.git';
+export const WORKTREE_BASE_REF = 'refs/texlyre/worktree-base';
+
+let gitPromise: Promise<typeof import('isomorphic-git')> | null = null;
+export const getGit = () => (gitPromise ??= import('isomorphic-git'));
 
 interface GitRemoteApiRequestOptions {
 	providerName: string;
