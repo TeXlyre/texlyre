@@ -20,7 +20,7 @@ const ASSETS = [
 	},
 	{
 		name: 'tikz-editor',
-		version: 'v0.5.2',
+		version: 'v1.1.0',
 		url: (version) =>
 			`https://github.com/TeXlyre/tikz-editor-embed-mirror/archive/refs/tags/${version}.zip`,
 		dest: path.resolve(__dirname, '../public/core/tikz-editor'),
