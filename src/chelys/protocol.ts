@@ -1,13 +1,9 @@
+import { concatBytes, toArrayBuffer, toBytes } from '../utils/binaryUtils';
+
 const PROTOCOL_VERSION = 'chelys-v1';
 const ARGON2_TIME = 3;
 const ARGON2_MEMORY = 64 * 1024;
 const ARGON2_PARALLELISM = 1;
-
-function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-	const buffer = new ArrayBuffer(bytes.byteLength);
-	new Uint8Array(buffer).set(bytes);
-	return buffer;
-}
 
 async function argon2Hash(
 	password: string,
@@ -26,21 +22,6 @@ async function argon2Hash(
 	return fromHex(hex);
 }
 
-function utf8(s: string): Uint8Array {
-	return new TextEncoder().encode(s);
-}
-
-function concat(...parts: Uint8Array[]): Uint8Array {
-	const total = parts.reduce((n, p) => n + p.length, 0);
-	const out = new Uint8Array(total);
-	let offset = 0;
-	for (const p of parts) {
-		out.set(p, offset);
-		offset += p.length;
-	}
-	return out;
-}
-
 async function hkdf(ikm: Uint8Array, info: string): Promise<Uint8Array> {
 	const key = await crypto.subtle.importKey(
 		'raw',
@@ -53,8 +34,8 @@ async function hkdf(ikm: Uint8Array, info: string): Promise<Uint8Array> {
 		{
 			name: 'HKDF',
 			hash: 'SHA-256',
-			salt: toArrayBuffer(utf8(PROTOCOL_VERSION)),
-			info: toArrayBuffer(utf8(info)),
+			salt: toArrayBuffer(toBytes(PROTOCOL_VERSION)),
+			info: toArrayBuffer(toBytes(info)),
 		},
 		key,
 		256,
@@ -94,13 +75,13 @@ export async function deriveIdentity(
 ): Promise<DerivedIdentity> {
 	const usernameSalt = await crypto.subtle.digest(
 		'SHA-256',
-		toArrayBuffer(utf8(`${PROTOCOL_VERSION}:${inputs.username}`)),
+		toArrayBuffer(toBytes(`${PROTOCOL_VERSION}:${inputs.username}`)),
 	);
 	const pwHash = await argon2Hash(
 		inputs.password,
 		new Uint8Array(usernameSalt),
 	);
-	const ikm = concat(utf8(inputs.username), pwHash, inputs.prfOutput);
+	const ikm = concatBytes(toBytes(inputs.username), pwHash, inputs.prfOutput);
 	const roomIdBytes = await hkdf(ikm, 'room-id');
 	const roomKeyBytes = await hkdf(ikm, 'room-key');
 	return {
@@ -109,5 +90,5 @@ export async function deriveIdentity(
 	};
 }
 
-export const WEBAUTHN_PRF_SALT = utf8(`${PROTOCOL_VERSION}:prf-salt`);
+export const WEBAUTHN_PRF_SALT = toBytes(`${PROTOCOL_VERSION}:prf-salt`);
 export const WEBAUTHN_RP_NAME = 'Chelys';

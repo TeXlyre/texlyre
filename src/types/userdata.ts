@@ -160,6 +160,7 @@ export interface UserDataSettings {
 
 export interface UserDataProperties {
 	global?: {
+		projectSidebarWidth?: any;
 		fileExplorerSortField?: string;
 		fileExplorerSortDirection?: string;
 		fileExplorerShowTemporary?: boolean;

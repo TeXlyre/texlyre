@@ -58,10 +58,13 @@ const GitRemoteModal: React.FC<GitRemoteModalProps> = ({
 	const [gitSettings, setGitSettings] = useState(() =>
 		fileSystem.getSettings(),
 	);
-	const [backupConflict, setBackupConflict] = useState(() => fileSystem.hasGitBackupConflict());
-	const storageBinding = user && !isGuestUser(user)
-		? storageSyncService.getProjectBinding(user.id, projectId)
-		: null;
+	const [backupConflict, setBackupConflict] = useState(() =>
+		fileSystem.hasGitBackupConflict(),
+	);
+	const storageBinding =
+		user && !isGuestUser(user)
+			? storageSyncService.getProjectBinding(user.id, projectId)
+			: null;
 	const [workspaceCleanAnnotations, setWorkspaceCleanAnnotations] = useState(
 		() => fileHandlerService.getWorkspaceCleanAnnotations(projectId),
 	);
@@ -146,12 +149,16 @@ const GitRemoteModal: React.FC<GitRemoteModalProps> = ({
 	useEffect(() => {
 		if (!isOpen) return;
 		const onSynced = (event: Event) => {
-			if ((event as CustomEvent<{ projectId: string }>).detail?.projectId === projectId) {
+			if (
+				(event as CustomEvent<{ projectId: string }>).detail?.projectId ===
+				projectId
+			) {
 				setBackupConflict(fileSystem.hasGitBackupConflict());
 			}
 		};
 		document.addEventListener('storage-project-synced', onSynced);
-		return () => document.removeEventListener('storage-project-synced', onSynced);
+		return () =>
+			document.removeEventListener('storage-project-synced', onSynced);
 	}, [fileSystem, isOpen, projectId]);
 
 	useEffect(() => {
@@ -475,11 +482,15 @@ const GitRemoteModal: React.FC<GitRemoteModalProps> = ({
 						<span>{t('Back up Git history to remote storage')}</span>
 					</label>
 					<p className='ui-note'>
-						{t('Backs up Git commits and branches with your encrypted project. People with access to shared storage can also read its Git history. Existing local Git history is never replaced.')}
+						{t(
+							'Backs up Git commits and branches with your encrypted project. People with access to shared storage can also read its Git history. Existing local Git history is never replaced.',
+						)}
 					</p>
 					{backupConflict ? (
 						<p className='ui-message' data-tone='warning'>
-							{t('Remote Git history changed independently. Your local history is preserved, but Git backup is paused until the histories are reconciled.')}
+							{t(
+								'Remote Git history changed independently. Your local history is preserved, but Git backup is paused until the histories are reconciled.',
+							)}
 						</p>
 					) : null}
 
