@@ -367,7 +367,7 @@ const ToolConfigCards: React.FC<ToolConfigCardsProps> = ({ kind }) => {
 							renderCard(
 								config,
 								config.enabled &&
-								store.configs.some((entry) => entry.id === config.id),
+									store.configs.some((entry) => entry.id === config.id),
 							),
 						)}
 					</div>

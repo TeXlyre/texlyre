@@ -1,58 +1,58 @@
 {
-      "_meta": {
-            "lastUpdated": "2026-11-04T12:06:50.438Z",
-            "totalKeys": 2796
-      },
-      "languages": [
-            {
-                  "code": "en",
-                  "name": "English",
-                  "nativeName": "English",
-                  "direction": "ltr",
-                  "coverage": 100,
-                  "totalKeys": 2796,
-                  "translatedKeys": 0,
-                  "filePath": "locales/en.json"
-            },
-            {
-                  "code": "ar",
-                  "name": "Arabic",
-                  "nativeName": "العربية",
-                  "direction": "rtl",
-                  "coverage": 95,
-                  "totalKeys": 2796,
-                  "translatedKeys": 2648,
-                  "filePath": "locales/ar.json"
-            },
-            {
-                  "code": "zh",
-                  "name": "Chinese (Simplified)",
-                  "nativeName": "简体中文",
-                  "direction": "ltr",
-                  "coverage": 94,
-                  "totalKeys": 2796,
-                  "translatedKeys": 2638,
-                  "filePath": "locales/zh-CN.json"
-            },
-            {
-                  "code": "de",
-                  "name": "German",
-                  "nativeName": "Deutsch",
-                  "direction": "ltr",
-                  "coverage": 92,
-                  "totalKeys": 2796,
-                  "translatedKeys": 2570,
-                  "filePath": "locales/de.json"
-            },
-            {
-                  "code": "it",
-                  "name": "Italian",
-                  "nativeName": "Italiano",
-                  "direction": "ltr",
-                  "coverage": 91,
-                  "totalKeys": 2796,
-                  "translatedKeys": 2539,
-                  "filePath": "locales/it.json"
-            }
-      ]
+  "_meta": {
+    "lastUpdated": "2026-11-04T17:42:23.568Z",
+    "totalKeys": 2860
+  },
+  "languages": [
+    {
+      "code": "en",
+      "name": "English",
+      "nativeName": "English",
+      "direction": "ltr",
+      "coverage": 100,
+      "totalKeys": 2860,
+      "translatedKeys": 0,
+      "filePath": "locales/en.json"
+    },
+    {
+      "code": "ar",
+      "name": "Arabic",
+      "nativeName": "العربية",
+      "direction": "rtl",
+      "coverage": 95,
+      "totalKeys": 2860,
+      "translatedKeys": 2712,
+      "filePath": "locales/ar.json"
+    },
+    {
+      "code": "zh",
+      "name": "Chinese (Simplified)",
+      "nativeName": "简体中文",
+      "direction": "ltr",
+      "coverage": 94,
+      "totalKeys": 2860,
+      "translatedKeys": 2702,
+      "filePath": "locales/zh-CN.json"
+    },
+    {
+      "code": "de",
+      "name": "German",
+      "nativeName": "Deutsch",
+      "direction": "ltr",
+      "coverage": 92,
+      "totalKeys": 2860,
+      "translatedKeys": 2631,
+      "filePath": "locales/de.json"
+    },
+    {
+      "code": "it",
+      "name": "Italian",
+      "nativeName": "Italiano",
+      "direction": "ltr",
+      "coverage": 91,
+      "totalKeys": 2860,
+      "translatedKeys": 2603,
+      "filePath": "locales/it.json"
+    }
+  ]
 }
