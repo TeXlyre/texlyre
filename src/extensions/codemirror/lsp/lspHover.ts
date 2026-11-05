@@ -2,6 +2,7 @@
 import type { Extension } from '@codemirror/state';
 import { hoverTooltip, type Tooltip } from '@codemirror/view';
 import type { LSPClient } from '@codemirror/lsp-client';
+import DOMPurify from 'dompurify';
 
 import {
 	getClientLabel,
@@ -116,7 +117,13 @@ export function renderMarkdown(content: string): HTMLElement {
 
 	const container = document.createElement('div');
 	container.className = 'cm-lsp-markdown';
-	container.innerHTML = out.join('');
+	container.innerHTML = DOMPurify.sanitize(out.join(''), {
+		USE_PROFILES: { html: true },
+	});
+	for (const link of container.querySelectorAll<HTMLAnchorElement>('a[href]')) {
+		link.target = '_blank';
+		link.rel = 'noopener noreferrer';
+	}
 	return container;
 }
 
