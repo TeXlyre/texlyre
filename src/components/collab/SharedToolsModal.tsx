@@ -2,7 +2,12 @@
 import type React from 'react';
 
 import { t } from '@/i18n';
-import type { SharedByMeTool, SharedToolOffer } from '../../types/sharedTools';
+import type {
+	SharedByMeTool,
+	SharedLocalTool,
+	SharedToolKind,
+	SharedToolOffer,
+} from '../../types/sharedTools';
 import { ShareIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 
@@ -20,7 +25,18 @@ interface SharedToolsModalProps {
 	onStorageShareChange: (enabled: boolean) => void;
 	onAccept: (offer: SharedToolOffer) => void;
 	onIgnore: (offer: SharedToolOffer) => void;
+	agents?: SharedLocalTool[];
+	onAgentShareChange?: (agentId: string, enabled: boolean) => void;
 }
+
+export const sharedToolKindLabel = (kind: SharedToolKind): string =>
+	kind === 'typesetter'
+		? t('Typesetter')
+		: kind === 'lsp'
+			? t('Language Server')
+			: kind === 'agent'
+				? t('Agent')
+				: t('Storage');
 
 const statusLabel = (offer: SharedToolOffer): string => {
 	switch (offer.status) {
@@ -57,11 +73,43 @@ const ignoreLabel = (offer: SharedToolOffer): string =>
 		? t('Keep mine')
 		: t('Ignore');
 
-const kindLabel = (kind: SharedToolOffer['kind']): string => {
-	if (kind === 'typesetter') return t('Typesetter');
-	if (kind === 'lsp') return t('Language Server');
-	return t('Storage');
-};
+// Agents are shared one by one, so one isn't shared along with the project's
+// other tools by accident. Used by the Share modal too.
+export const AgentShareList: React.FC<{
+	agents: SharedLocalTool[];
+	onChange?: (agentId: string, enabled: boolean) => void;
+}> = ({ agents, onChange }) => (
+	<div className='ui-stack' data-gap='xs'>
+		<strong>{t('Agents')}</strong>
+		{agents.map((agent) => (
+			<div className='ui-stack' data-gap='xs' key={agent.config.id}>
+				<label className='checkbox-control'>
+					<input
+						type='checkbox'
+						checked={agent.sharedInProject === true}
+						disabled={!agent.shareable && !agent.sharedInProject}
+						onChange={(event) =>
+							onChange?.(agent.config.id, event.target.checked)
+						}
+					/>
+					<span>
+						{t('Share {{agent}} in this project', {
+							agent: agent.config.name,
+						})}
+					</span>
+				</label>
+				{!agent.shareable && agent.shareMessage && (
+					<span className='ui-note'>{t(agent.shareMessage)}</span>
+				)}
+			</div>
+		))}
+		<p className='ui-note'>
+			{t(
+				'Collaborators can then prompt it while you are in this project. It runs on your computer with your account; they never see your API key.',
+			)}
+		</p>
+	</div>
+);
 
 const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 	isOpen,
@@ -77,6 +125,8 @@ const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 	onStorageShareChange,
 	onAccept,
 	onIgnore,
+	agents = [],
+	onAgentShareChange,
 }) => (
 	<Modal
 		isOpen={isOpen}
@@ -117,8 +167,16 @@ const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 											? ` · ${t('via')} ${offer.advertiserName}`
 											: ''}
 										{' · '}
-										{kindLabel(offer.kind)}
+										{sharedToolKindLabel(offer.kind)}
 									</span>
+									{offer.kind === 'agent' && (
+										<span className='ui-note'>
+											{t(
+												"Runs on {{owner}}'s computer with their account, while they share it.",
+												{ owner: offer.ownerName },
+											)}
+										</span>
+									)}
 								</div>
 								<div className='ui-actions' data-wrap='true'>
 									<span
@@ -210,6 +268,10 @@ const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 					</>
 				)}
 
+				{agents.length > 0 && (
+					<AgentShareList agents={agents} onChange={onAgentShareChange} />
+				)}
+
 				{sharedByMe.length === 0 ? (
 					<p className='ui-note'>{t('No tools are shared here.')}</p>
 				) : (
@@ -226,7 +288,9 @@ const SharedToolsModal: React.FC<SharedToolsModalProps> = ({
 							>
 								<div className='ui-stack' data-gap='xs'>
 									<strong>{tool.config.name}</strong>
-									<span className='ui-note'>{kindLabel(tool.kind)}</span>
+									<span className='ui-note'>
+										{sharedToolKindLabel(tool.kind)}
+									</span>
 								</div>
 								<span className='ui-note'>
 									{tool.scope === 'all'

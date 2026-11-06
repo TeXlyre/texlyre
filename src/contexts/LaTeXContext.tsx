@@ -26,6 +26,7 @@ import {
 	getProjectName,
 } from '../utils/urlUtils';
 import { popoutViewerService } from '../services/PopoutViewerService';
+import { compileResultService } from '../services/CompileResultService';
 
 const moduleLog = createNamedLogger('LaTeXContext');
 
@@ -108,6 +109,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		if (compileInProgressRef.current) return;
 
 		const requestId = ++requestRef.current;
+		const startedAt = Date.now();
 		compileInProgressRef.current = true;
 
 		try {
@@ -146,6 +148,12 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			if (requestId !== requestRef.current) return;
 
 			setCompileLog(result.log);
+			compileResultService.publish({
+				status: result.status,
+				log: result.log,
+				logType: 'latex',
+				startedAt,
+			});
 			if (result.status === 0 && result.pdf) {
 				switch (format) {
 					case 'pdf': {
@@ -202,6 +210,12 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			setCurrentView('log');
 			setLogIndicator('error');
 
+			compileResultService.publish({
+				status: -1,
+				log: error instanceof Error ? error.message : t('Unknown error'),
+				logType: 'latex',
+				startedAt,
+			});
 			popoutViewerService.sendCompileResult(
 				-1,
 				error instanceof Error ? error.message : t('Unknown error'),
@@ -297,6 +311,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		if (compileInProgressRef.current) return;
 
 		const requestId = ++requestRef.current;
+		const startedAt = Date.now();
 		compileInProgressRef.current = true;
 
 		try {
@@ -338,6 +353,12 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			if (requestId !== requestRef.current) return;
 
 			setCompileLog(result.log);
+			compileResultService.publish({
+				status: result.status,
+				log: result.log,
+				logType: 'latex',
+				startedAt,
+			});
 			if (result.status === 0 && result.pdf) {
 				switch (format) {
 					case 'pdf': {
@@ -394,6 +415,12 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			setCurrentView('log');
 			setLogIndicator('error');
 
+			compileResultService.publish({
+				status: -1,
+				log: error instanceof Error ? error.message : t('Unknown error'),
+				logType: 'latex',
+				startedAt,
+			});
 			popoutViewerService.sendCompileResult(
 				-1,
 				error instanceof Error ? error.message : t('Unknown error'),

@@ -120,4 +120,76 @@ describe('SharedToolsModal', () => {
 		);
 		expect(handlers.onProjectShareChange).toHaveBeenCalledWith(true);
 	});
+
+	it('shares agents one by one and says whose computer an offered agent runs on', async () => {
+		const user = userEvent.setup();
+		const onAgentShareChange = jest.fn();
+		const agentConfig = {
+			id: 'claude',
+			name: 'Claude Agent',
+			enabled: true,
+			transportConfig: { type: 'webrtc' as const, roomId: 'claude-room' },
+		};
+		render(
+			<SharedToolsModal
+				isOpen={true}
+				offers={[
+					offer({
+						identity: 'agent:alice:claude',
+						kind: 'agent',
+						toolId: 'claude',
+						name: 'Claude Agent',
+						config: agentConfig,
+					}),
+				]}
+				sharedByMe={[]}
+				projectShareEnabled={true}
+				agents={[
+					{
+						kind: 'agent',
+						config: agentConfig,
+						shareable: true,
+						sharedWithAll: false,
+						usedByProject: false,
+						sharedInProject: false,
+					},
+					{
+						kind: 'agent',
+						config: {
+							...agentConfig,
+							id: 'local',
+							name: 'Local Agent',
+							transportConfig: { type: 'websocket', url: 'ws://localhost:7060' },
+						},
+						shareable: false,
+						shareMessage: 'The server URL resolves only on this machine.',
+						sharedWithAll: false,
+						usedByProject: false,
+						sharedInProject: false,
+					},
+				]}
+				onAgentShareChange={onAgentShareChange}
+				{...handlers}
+			/>,
+		);
+
+		expect(
+			screen.getByText("Runs on Alice's computer with their account, while they share it."),
+		).toBeInTheDocument();
+
+		// Sharing the project's tools doesn't share an agent.
+		const claude = screen.getByRole('checkbox', {
+			name: 'Share Claude Agent in this project',
+		});
+		expect(claude).not.toBeChecked();
+		await user.click(claude);
+		expect(onAgentShareChange).toHaveBeenCalledWith('claude', true);
+
+		expect(
+			screen.getByRole('checkbox', { name: 'Share Local Agent in this project' }),
+		).toBeDisabled();
+		expect(
+			screen.getByText('The server URL resolves only on this machine.'),
+		).toBeInTheDocument();
+	});
 });

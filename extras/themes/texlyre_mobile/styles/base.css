@@ -149,6 +149,7 @@
 	--ui-toast-max-width: none;
 	--ui-toast-z-index: var(--mobile-z-toast);
 	--ui-tab-min-height: calc(var(--mobile-min-touch-target) - 8px);
+	--ui-chat-tab-min-height: var(--ui-tab-min-height);
 	--ui-tab-padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
 	--ui-tab-font-size: var(--mobile-font-sm);
 	--ui-switcher-tab-font-size: var(--mobile-font-sm);

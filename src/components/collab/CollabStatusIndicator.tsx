@@ -251,6 +251,8 @@ const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 				onStorageShareChange={sharedTools.setStorageShareEnabled}
 				onAccept={sharedTools.accept}
 				onIgnore={sharedTools.ignore}
+				agents={sharedTools.projectAgents}
+				onAgentShareChange={sharedTools.setAgentShared}
 			/>
 		</>
 	);

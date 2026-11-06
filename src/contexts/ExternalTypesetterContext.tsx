@@ -3,6 +3,7 @@ import type React from 'react';
 import { type ReactNode, createContext, useCallback, useState } from 'react';
 
 import { typesetterRegistryService } from '../services/TypesetterRegistryService';
+import { compileResultService } from '../services/CompileResultService';
 import { fileStoreService } from '../services/FileStoreService';
 import { filePathCacheService } from '../services/FilePathCacheService';
 import { latexSourceMapService } from '../services/LaTeXSourceMapService';
@@ -116,6 +117,12 @@ export const ExternalTypesetterProvider: React.FC<
 
 			setIsCompiling(true);
 			setCompileError(null);
+			const startedAt = Date.now();
+			// TeX-family typesetters emit TeX logs; others are matched by type.
+			const logType =
+				typesetterRegistryService.getProjectGroup(provider) === 'tex'
+					? 'latex'
+					: provider.projectType;
 
 			try {
 				const files = await loadFiles();
@@ -127,6 +134,12 @@ export const ExternalTypesetterProvider: React.FC<
 				});
 
 				setCompileLog(result.log);
+				compileResultService.publish({
+					status: result.status === 0 && !result.output ? -1 : result.status,
+					log: result.log,
+					logType,
+					startedAt,
+				});
 
 				if (result.status === 0 && result.output) {
 					document.dispatchEvent(
@@ -188,6 +201,12 @@ export const ExternalTypesetterProvider: React.FC<
 				setCompileError(message);
 				setLogIndicator('error');
 				setCurrentView('log');
+				compileResultService.publish({
+					status: -1,
+					log: message,
+					logType,
+					startedAt,
+				});
 				popoutViewerService.sendCompileResult(-1, message);
 			} finally {
 				setIsCompiling(false);
