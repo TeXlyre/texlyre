@@ -1,13 +1,19 @@
 // src/components/project/ProjectPanel.tsx
 import type React from 'react';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { useProperties } from '../../hooks/useProperties';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import type { Project } from '../../types/projects';
-import { formatLastModified } from '../../utils/dateUtils';
-import { ImportIcon, NewProjectIcon, StarIcon } from '../common/Icons';
+import type { StorageDashboardProject } from '../../types/storage';
+import { ImportIcon, NewProjectIcon } from '../common/Icons';
+import ProjectPanelSections, {
+	PROJECT_PANEL_MIN_SECTION_SIZE,
+} from './ProjectPanelSections';
+
+const DEFAULT_SECTION_SIZES = { favorites: 30, recent: 35, external: 35 };
 
 interface ProjectPanelProps {
 	onCreateProject: () => void;
@@ -17,7 +23,18 @@ interface ProjectPanelProps {
 	onFilterByType: (type: string) => void;
 	onFilterByGroup: (group: string) => void;
 	onOpenProject?: (project: Project) => void;
+	onRestoreExternalProject: (project: StorageDashboardProject) => void;
 	projects: Project[];
+	externalProjects: StorageDashboardProject[];
+	providerNames: Record<string, string>;
+	ownedProviderIds: Set<string>;
+	busyRemoteIds: Set<string>;
+	storageLoading: boolean;
+	onRefreshRemote: () => void;
+	onReconnectRemote: (project: StorageDashboardProject) => void;
+	onRestoreMultiple: (projects: StorageDashboardProject[]) => void;
+	onDisconnectRemote: (projects: StorageDashboardProject[]) => void;
+	onRemoveRemote: (projects: StorageDashboardProject[]) => void;
 	availableTags: string[];
 	availableTypes: string[];
 	availableGroups: string[];
@@ -31,16 +48,35 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 	onFilterByType,
 	onFilterByGroup,
 	onOpenProject,
+	onRestoreExternalProject,
 	projects,
+	externalProjects,
+	providerNames,
+	ownedProviderIds,
+	busyRemoteIds,
+	storageLoading,
+	onRefreshRemote,
+	onReconnectRemote,
+	onRestoreMultiple,
+	onDisconnectRemote,
+	onRemoveRemote,
 	availableTags,
 	availableTypes,
 	availableGroups,
 }) => {
+	const { getProperty, setProperty, registerProperty } = useProperties();
 	const headerActionsRef = useWheelScroll<HTMLDivElement>();
+	const propertiesRegistered = useRef(false);
+	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedTag, setSelectedTag] = useState('');
 	const [selectedType, setSelectedType] = useState('');
 	// const [selectedGroup, setSelectedGroup] = useState('');
+	const [favoritesCollapsed, setFavoritesCollapsed] = useState(false);
+	const [recentCollapsed, setRecentCollapsed] = useState(false);
+	const [externalCollapsed, setExternalCollapsed] = useState(false);
+	const [sectionSizes, setSectionSizes] = useState(DEFAULT_SECTION_SIZES);
+
 	const favoriteProjects = projects
 		.filter((project) => project.isFavorite)
 		.slice(0, 5);
@@ -48,8 +84,95 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 		.sort((a, b) => b.updatedAt - a.updatedAt)
 		.slice(0, 5);
 
+	useEffect(() => {
+		if (propertiesRegistered.current) return;
+		propertiesRegistered.current = true;
+		for (const [id, defaultValue] of [
+			['project-panel-favorites-collapsed', false],
+			['project-panel-recent-collapsed', false],
+			['project-panel-external-collapsed', false],
+			['project-panel-favorites-percent', DEFAULT_SECTION_SIZES.favorites],
+			['project-panel-recent-percent', DEFAULT_SECTION_SIZES.recent],
+			['project-panel-external-percent', DEFAULT_SECTION_SIZES.external],
+		] as const) {
+			registerProperty({
+				id: id as string,
+				category: 'UI',
+				subcategory: 'Layout',
+				defaultValue,
+			});
+		}
+	}, [registerProperty]);
+
+	useEffect(() => {
+		if (propertiesLoaded) return;
+		const storedFavoritesCollapsed = getProperty(
+			'project-panel-favorites-collapsed',
+		);
+		const storedRecentCollapsed = getProperty('project-panel-recent-collapsed');
+		const storedExternalCollapsed = getProperty(
+			'project-panel-external-collapsed',
+		);
+		if (storedFavoritesCollapsed !== undefined) {
+			setFavoritesCollapsed(Boolean(storedFavoritesCollapsed));
+		}
+		if (storedRecentCollapsed !== undefined) {
+			setRecentCollapsed(Boolean(storedRecentCollapsed));
+		}
+		if (storedExternalCollapsed !== undefined) {
+			setExternalCollapsed(Boolean(storedExternalCollapsed));
+		}
+
+		const nextSizes = { ...DEFAULT_SECTION_SIZES };
+		for (const [key, propertyId] of [
+			['favorites', 'project-panel-favorites-percent'],
+			['recent', 'project-panel-recent-percent'],
+			['external', 'project-panel-external-percent'],
+		] as const) {
+			const stored = Number(getProperty(propertyId));
+			if (Number.isFinite(stored) && stored >= PROJECT_PANEL_MIN_SECTION_SIZE) {
+				nextSizes[key] = stored;
+			}
+		}
+		setSectionSizes(nextSizes);
+		setPropertiesLoaded(true);
+	}, [getProperty, propertiesLoaded]);
+
+	const toggleFavorites = () => {
+		const next = !favoritesCollapsed;
+		setFavoritesCollapsed(next);
+		setProperty('project-panel-favorites-collapsed', next);
+	};
+
+	const toggleRecent = () => {
+		const next = !recentCollapsed;
+		setRecentCollapsed(next);
+		setProperty('project-panel-recent-collapsed', next);
+	};
+
+	const toggleExternal = () => {
+		const next = !externalCollapsed;
+		setExternalCollapsed(next);
+		setProperty('project-panel-external-collapsed', next);
+	};
+
+	const persistSectionSizes = useCallback(
+		(sizes: Record<string, number>) => {
+			if (sizes.favorites !== undefined) {
+				setProperty('project-panel-favorites-percent', sizes.favorites);
+			}
+			if (sizes.recent !== undefined) {
+				setProperty('project-panel-recent-percent', sizes.recent);
+			}
+			if (sizes.external !== undefined) {
+				setProperty('project-panel-external-percent', sizes.external);
+			}
+		},
+		[setProperty],
+	);
+
 	return (
-		<div className='file-explorer' data-role='project-panel'>
+		<div className='file-explorer project-panel' data-role='project-panel'>
 			<div className='ui-panel-header' data-role='explorer' data-position='top'>
 				<h3 className='ui-panel-title' data-size='body' data-shrink='true'>
 					{t('Projects')}
@@ -81,7 +204,7 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 				</div>
 			</div>
 			<div
-				className='ui-stack'
+				className='ui-stack project-panel-controls'
 				data-role='project-search'
 				data-gap='sm'
 				data-padding='sm'
@@ -146,59 +269,33 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 					<option value=''>{t('All groups')}</option>
 					{availableGroups.map((group) => <option key={group} value={group}>{typesetterRegistryService.getProjectGroupLabel(group)}</option>)}
 				</select> */}
-				{favoriteProjects.length > 0 && (
-					<section className='ui-stack' data-gap='xs'>
-						<h4 className='ui-meta'>{t('Favorites')}</h4>
-						<div className='ui-list' data-gap='xs' data-scroll='medium'>
-							{favoriteProjects.map((project) => (
-								<div
-									key={project.id}
-									className='ui-list-item'
-									data-interactive='true'
-									data-border='none'
-									data-surface='secondary'
-									data-align='center'
-									data-gap='xs'
-									data-padding='xs'
-									onClick={() => onOpenProject?.(project)}
-									title={project.description}
-								>
-									<span className='ui-icon' data-tone='warning'>
-										<StarIcon />
-									</span>
-									<span>{project.name}</span>
-								</div>
-							))}
-						</div>
-					</section>
-				)}
-				<section className='ui-stack' data-gap='xs'>
-					<h4 className='ui-meta'>{t('Recent')}</h4>
-					<div className='ui-list' data-gap='xs' data-scroll='medium'>
-						{recentProjects.map((project) => (
-							<div
-								key={project.id}
-								className='ui-list-item'
-								data-interactive='true'
-								data-border='none'
-								data-surface='secondary'
-								data-align='center'
-								data-justify='between'
-								data-padding='xs'
-								onClick={() => onOpenProject?.(project)}
-								title={project.description}
-							>
-								<span className='ui-list-content' data-grow='true'>
-									{project.name}
-								</span>
-								<span className='ui-meta'>
-									{formatLastModified(project.updatedAt)}
-								</span>
-							</div>
-						))}
-					</div>
-				</section>
 			</div>
+			<ProjectPanelSections
+				favoriteProjects={favoriteProjects}
+				recentProjects={recentProjects}
+				externalProjects={externalProjects}
+				localProjects={projects}
+				providerNames={providerNames}
+				ownedProviderIds={ownedProviderIds}
+				busyRemoteIds={busyRemoteIds}
+				storageLoading={storageLoading}
+				onRefreshRemote={onRefreshRemote}
+				onOpenLocal={(project) => onOpenProject?.(project)}
+				onReconnectRemote={onReconnectRemote}
+				onRestoreMultiple={onRestoreMultiple}
+				onDisconnectRemote={onDisconnectRemote}
+				onRemoveRemote={onRemoveRemote}
+				sectionSizes={sectionSizes}
+				favoritesCollapsed={favoritesCollapsed}
+				recentCollapsed={recentCollapsed}
+				externalCollapsed={externalCollapsed}
+				onSizesChangeEnd={persistSectionSizes}
+				onToggleFavorites={toggleFavorites}
+				onToggleRecent={toggleRecent}
+				onToggleExternal={toggleExternal}
+				onOpenProject={onOpenProject}
+				onRestoreExternalProject={onRestoreExternalProject}
+			/>
 		</div>
 	);
 };

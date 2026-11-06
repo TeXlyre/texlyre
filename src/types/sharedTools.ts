@@ -1,7 +1,8 @@
+// src/types/sharedTools.ts
 import type { ACPServerConfig } from './acp';
 import type { ToolConfigBlock } from './toolConfig';
 
-export type SharedToolKind = 'typesetter' | 'lsp' | 'agent';
+export type SharedToolKind = 'typesetter' | 'lsp' | 'storage' | 'agent';
 export type SharedToolDecisionState = 'accepted' | 'ignored';
 
 export interface SharedToolOrigin {
@@ -27,11 +28,17 @@ export interface SharedToolPreferences {
 	origins: Record<string, SharedToolOrigin>;
 }
 
+export interface SharedStorageAttachment {
+	storageProjectId: string;
+	baseRevision?: string;
+}
+
 export interface SharedToolAdvertisement extends SharedToolOrigin {
 	kind: SharedToolKind;
 	name: string;
 	revision: string;
 	config: ToolConfigBlock;
+	storage?: SharedStorageAttachment;
 }
 
 export interface ObservedSharedTool extends SharedToolAdvertisement {
@@ -64,6 +71,8 @@ export interface SharedLocalTool {
 	shareMessage?: string;
 	sharedWithAll: boolean;
 	usedByProject: boolean;
+	projectShared?: boolean;
+	storage?: SharedStorageAttachment;
 	// For agents: chosen to be shared in this project.
 	sharedInProject?: boolean;
 }

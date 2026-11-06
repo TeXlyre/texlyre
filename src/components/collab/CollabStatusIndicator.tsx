@@ -244,6 +244,11 @@ const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 				sharedByMe={sharedTools.sharedByMe}
 				projectShareEnabled={sharedTools.projectShareEnabled}
 				onProjectShareChange={sharedTools.setProjectShareEnabled}
+				storageShareAvailable={sharedTools.storageShareAvailable}
+				storageShareEnabled={sharedTools.storageShareEnabled}
+				storageShareable={sharedTools.storageShareable}
+				storageShareMessage={sharedTools.storageShareMessage}
+				onStorageShareChange={sharedTools.setStorageShareEnabled}
 				onAccept={sharedTools.accept}
 				onIgnore={sharedTools.ignore}
 				agents={sharedTools.projectAgents}
@@ -253,10 +258,6 @@ const CollabStatusIndicatorContent: React.FC<CollabStatusIndicatorProps> = ({
 	);
 };
 
-// SharedToolsProvider is in EditorApp, so the agent panel can use shared
-// agents too.
-const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = (props) => (
-	<CollabStatusIndicatorContent {...props} />
-);
+const CollabStatusIndicator = CollabStatusIndicatorContent;
 
 export default CollabStatusIndicator;

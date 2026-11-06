@@ -60,7 +60,7 @@ wss.on('connection', (ws) => {
 										end: { line: 0, character: 5 },
 									},
 									severity: 2, // Warning
-									message: 'This is a test warning from Generic LSP',
+									message: 'This is a test warning from Remote LSP',
 									source: 'mock-lsp',
 								},
 							],
@@ -85,7 +85,7 @@ wss.on('connection', (ws) => {
 								detail: 'Mock LSP - Blabla command',
 								insertText: '@blabla{$1}',
 								insertTextFormat: 2,
-								documentation: 'This is from the Generic LSP mock server!',
+								documentation: 'This is from the Remote LSP mock server!',
 							},
 							{
 								label: '@foobar',
@@ -93,7 +93,7 @@ wss.on('connection', (ws) => {
 								detail: 'Mock LSP - Foobar function',
 								insertText: '@foobar($1)',
 								insertTextFormat: 2,
-								documentation: 'Another test completion from Generic LSP',
+								documentation: 'Another test completion from Remote LSP',
 							},
 							{
 								label: '@testtesttest',
@@ -118,7 +118,7 @@ wss.on('connection', (ws) => {
 						contents: {
 							kind: 'markdown',
 							value:
-								'**Generic LSP Mock Server**\n\nYou are hovering over text!\n\nType `@` to see custom completions.',
+								'**Remote LSP Mock Server**\n\nYou are hovering over text!\n\nType `@` to see custom completions.',
 						},
 					},
 				}),

@@ -2,6 +2,7 @@
 import type { Awareness } from 'y-protocols/awareness';
 
 import type { ToolConfigBlock } from '../types/toolConfig';
+import type { StorageConfigBlock } from '../types/storage';
 import type {
 	ObservedSharedTool,
 	SharedToolAdvertisement,
@@ -10,12 +11,14 @@ import type {
 	SharedToolKind,
 	SharedToolOrigin,
 	SharedToolPreferences,
+	SharedStorageAttachment,
 } from '../types/sharedTools';
 import { describeConfigShare } from './toolConfigShareUtils';
 import {
 	isRecord,
 	normalizeAcpConfig,
 	normalizeLspConfig,
+	normalizeStorageConfig,
 	normalizeTypesetterConfig,
 } from './toolConfigUtils';
 
@@ -118,7 +121,8 @@ const encodeKeyPart = (value: string): string => encodeURIComponent(value);
 
 export function getSharedToolKind(config: ToolConfigBlock): SharedToolKind {
 	if ('projectType' in config) return 'typesetter';
-	return 'fileExtensions' in config ? 'lsp' : 'agent';
+	if ('fileExtensions' in config || 'clientConfig' in config) return 'lsp';
+	return 'storage';
 }
 
 export function localSharedToolKey(kind: SharedToolKind, id: string): string {
@@ -135,11 +139,16 @@ export function selectAdvertisedTools(
 ): SharedLocalTool[] {
 	const selected = new Map<string, SharedLocalTool>();
 	for (const tool of tools) {
-		const shared =
+		const sharedWithAll =
+			tool.kind !== 'storage' && tool.kind !== 'agent' && tool.sharedWithAll;
+		// Agents are only shared where their owner ticked them for the project.
+		const sharedWithProject =
 			tool.kind === 'agent'
 				? tool.sharedInProject === true
-				: tool.sharedWithAll || (shareProjectTools && tool.usedByProject);
-		if (!tool.shareable || !shared) continue;
+				: tool.usedByProject && (tool.projectShared ?? shareProjectTools);
+		if (!tool.shareable || (!sharedWithAll && !sharedWithProject)) {
+			continue;
+		}
 		selected.set(localSharedToolKey(tool.kind, tool.config.id), tool);
 	}
 	return Array.from(selected.values());
@@ -149,8 +158,12 @@ export function sharedToolIdentity(
 	kind: SharedToolKind,
 	ownerId: string,
 	toolId: string,
+	storageProjectId?: string,
 ): string {
-	return `${kind}:${encodeKeyPart(ownerId)}:${encodeKeyPart(toolId)}`;
+	const identity = `${kind}:${encodeKeyPart(ownerId)}:${encodeKeyPart(toolId)}`;
+	return kind === 'storage' && storageProjectId
+		? `${identity}:${encodeKeyPart(storageProjectId)}`
+		: identity;
 }
 
 export const SHARED_AGENT_ID_PREFIX = 'shared-agent:';
@@ -191,15 +204,36 @@ const configWithoutDisplayFields = (
 	delete rest.name;
 	delete rest.enabled;
 	delete rest.icon;
+	delete rest.transportId;
 	return rest;
 };
 
+const stableObject = (value: unknown): unknown =>
+	Array.isArray(value)
+		? value.map(stableObject)
+		: isRecord(value)
+			? Object.fromEntries(
+					Object.keys(value)
+						.sort()
+						.map((key) => [key, stableObject(value[key])]),
+				)
+			: value;
+
 export function sharedToolConfigFingerprint(config: ToolConfigBlock): string {
-	return hashString(JSON.stringify(configWithoutDisplayFields(config)));
+	return hashString(
+		JSON.stringify(stableObject(configWithoutDisplayFields(config))),
+	);
 }
 
-export function sharedToolRevision(config: ToolConfigBlock): string {
-	return hashString(JSON.stringify(config));
+export function sharedToolRevision(
+	config: ToolConfigBlock,
+	storage?: SharedStorageAttachment,
+): string {
+	return hashString(
+		JSON.stringify(
+			storage ? { config, storageProjectId: storage.storageProjectId } : config,
+		),
+	);
 }
 
 export function describeSharedToolAvailability(config: ToolConfigBlock): {
@@ -223,10 +257,13 @@ export function isToolShareable(config: ToolConfigBlock): boolean {
 }
 
 export function canonicalSharedConfig(
+	kind: SharedToolKind,
 	config: ToolConfigBlock,
 	toolId: string,
 ): ToolConfigBlock {
-	if (getSharedToolKind(config) === 'agent') {
+	// Agent and storage configs have the same shape, so the kind is passed in
+	// rather than inferred.
+	if (kind === 'agent') {
 		// Only what reaches the owner's agent. Its working directory, MCP
 		// servers and session options are the owner's business, and the agent
 		// host sets its own.
@@ -241,8 +278,9 @@ export function canonicalSharedConfig(
 		...config,
 		id: toolId,
 		enabled: true,
-	} as ToolConfigBlock & { icon?: string };
+	} as ToolConfigBlock & { icon?: string; transportId?: string };
 	delete shared.icon;
+	delete shared.transportId;
 	return shared;
 }
 
@@ -251,20 +289,26 @@ export function buildSharedToolAdvertisement(
 	config: ToolConfigBlock,
 	owner: { id: string; name: string },
 	origin?: SharedToolOrigin,
+	storage?: SharedStorageAttachment,
 ): SharedToolAdvertisement {
 	const resolvedOrigin = origin ?? {
 		ownerId: owner.id,
 		ownerName: owner.name,
 		toolId: config.id,
 	};
-	const sharedConfig = canonicalSharedConfig(config, resolvedOrigin.toolId);
+	const sharedConfig = canonicalSharedConfig(
+		kind,
+		config,
+		resolvedOrigin.toolId,
+	);
 
 	return {
 		kind,
 		...resolvedOrigin,
 		name: config.name,
-		revision: sharedToolRevision(sharedConfig),
+		revision: sharedToolRevision(sharedConfig, storage),
 		config: sharedConfig,
+		...(kind === 'storage' && storage ? { storage } : {}),
 	};
 }
 
@@ -275,6 +319,7 @@ export function normalizeSharedToolAdvertisement(
 		!isRecord(value) ||
 		(value.kind !== 'typesetter' &&
 			value.kind !== 'lsp' &&
+			value.kind !== 'storage' &&
 			value.kind !== 'agent') ||
 		typeof value.ownerId !== 'string' ||
 		typeof value.ownerName !== 'string' ||
@@ -287,15 +332,34 @@ export function normalizeSharedToolAdvertisement(
 	const normalized =
 		value.kind === 'typesetter'
 			? normalizeTypesetterConfig(value.config)
-			: value.kind === 'agent'
-				? normalizeAcpConfig(value.config)
-				: normalizeLspConfig(value.config);
+			: value.kind === 'lsp'
+				? normalizeLspConfig(value.config)
+				: value.kind === 'agent'
+					? normalizeAcpConfig(value.config)
+					: normalizeStorageConfig(value.config);
 
 	if (!normalized) {
 		return null;
 	}
 
-	const config = canonicalSharedConfig(normalized, value.toolId);
+	let storage: SharedStorageAttachment | undefined;
+	if (value.kind === 'storage') {
+		if (
+			!isRecord(value.storage) ||
+			typeof value.storage.storageProjectId !== 'string' ||
+			!value.storage.storageProjectId.trim()
+		) {
+			return null;
+		}
+		storage = {
+			storageProjectId: value.storage.storageProjectId,
+			...(typeof value.storage.baseRevision === 'string'
+				? { baseRevision: value.storage.baseRevision }
+				: {}),
+		};
+	}
+
+	const config = canonicalSharedConfig(value.kind, normalized, value.toolId);
 	if (!isToolShareable(config)) {
 		return null;
 	}
@@ -306,8 +370,9 @@ export function normalizeSharedToolAdvertisement(
 		ownerName: value.ownerName,
 		toolId: value.toolId,
 		name: value.name,
-		revision: sharedToolRevision(config),
+		revision: sharedToolRevision(config, storage),
 		config,
+		...(storage ? { storage } : {}),
 	};
 }
 
@@ -334,7 +399,12 @@ export function readSharedToolsFromAwareness(
 			const tool = normalizeSharedToolAdvertisement(raw);
 			if (!tool || tool.ownerId === currentUserId) continue;
 
-			const identity = sharedToolIdentity(tool.kind, tool.ownerId, tool.toolId);
+			const identity = sharedToolIdentity(
+				tool.kind,
+				tool.ownerId,
+				tool.toolId,
+				tool.storage?.storageProjectId,
+			);
 			const candidate: ObservedSharedTool = {
 				...tool,
 				advertiserId:
@@ -356,6 +426,32 @@ export function readSharedToolsFromAwareness(
 	});
 
 	return Array.from(observed.values());
+}
+
+export function findTrustedSharedStorage(
+	tool: SharedToolAdvertisement,
+	configs: StorageConfigBlock[],
+	preferences: SharedToolPreferences,
+): StorageConfigBlock | undefined {
+	const identity = sharedToolIdentity('storage', tool.ownerId, tool.toolId);
+	const acceptedIds = new Set(
+		Object.entries(preferences.decisions)
+			.filter(
+				([key, decision]) =>
+					key.startsWith(`${identity}:`) && decision.decision === 'accepted',
+			)
+			.map(([, decision]) => decision.localId),
+	);
+	const fingerprint = sharedToolConfigFingerprint(tool.config);
+	return configs.find((config) => {
+		if (!config.enabled || sharedToolConfigFingerprint(config) !== fingerprint)
+			return false;
+		const origin =
+			preferences.origins[localSharedToolKey('storage', config.id)];
+		if (origin)
+			return origin.ownerId === tool.ownerId && origin.toolId === tool.toolId;
+		return acceptedIds.has(config.id);
+	});
 }
 
 export function classifySharedToolConflict(

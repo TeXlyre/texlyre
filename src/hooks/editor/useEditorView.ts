@@ -9,6 +9,7 @@ import {
 import {
 	defaultKeymap,
 	history,
+	insertNewline,
 	historyKeymap,
 	historyField,
 	indentWithTab,
@@ -357,9 +358,12 @@ export const useEditorView = (
 		});
 	};
 
-	const buildBaseExtensions = (): Extension[] => {
+	const buildBaseExtensions = (info: FileTypeInfo): Extension[] => {
 		const direction = getEditorTextDirection();
 		const extensions: Extension[] = [
+			...(editorSettings.autoIndent && (info.isLatex || info.isTypst)
+				? [createListingsExtension(info.fileType as 'latex' | 'typst')]
+				: []),
 			EditorView.theme({
 				'.cm-content': {
 					fontFamily: editorSettings.fontFamily,
@@ -368,7 +372,7 @@ export const useEditorView = (
 			}),
 			EditorView.lineWrapping,
 			foldGutter(),
-			indentOnInput(),
+			...(editorSettings.autoIndent ? [indentOnInput()] : []),
 			bidiIsolates(),
 			bracketMatching(),
 			closeBrackets(),
@@ -385,6 +389,9 @@ export const useEditorView = (
 			}),
 			buildSpellCheckExtension(),
 			keymap.of([
+				...(!editorSettings.autoIndent
+					? [{ key: 'Enter', run: insertNewline }]
+					: []),
 				indentWithTab,
 				...closeBracketsKeymap,
 				...defaultKeymap,
@@ -706,13 +713,7 @@ export const useEditorView = (
 			toolbar: toolbarComp,
 		} = compartmentsRef.current;
 
-		if (info.isLatex || info.isTypst) {
-			extensions.push(
-				createListingsExtension(info.fileType as 'latex' | 'typst'),
-			);
-		}
-
-		extensions.push(base.of(buildBaseExtensions()));
+		extensions.push(base.of(buildBaseExtensions(info)));
 		extensions.push(language.of(buildLanguageExtension(info)));
 		const highlightExtension = buildHighlightExtension();
 		highlightExtensionRef.current = highlightExtension;
@@ -923,7 +924,7 @@ export const useEditorView = (
 
 		view.dispatch({
 			effects: [
-				base.reconfigure(buildBaseExtensions()),
+				base.reconfigure(buildBaseExtensions(info)),
 				language.reconfigure(buildLanguageExtension(info)),
 				highlight.reconfigure(highlightExtension),
 				languageSpecific.reconfigure(

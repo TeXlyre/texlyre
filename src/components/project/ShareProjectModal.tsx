@@ -1,12 +1,12 @@
 // src/components/project/ShareProjectModal.tsx
 import QRCode from 'qrcode';
 import type React from 'react';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { t } from '@/i18n';
-import { SharedToolsContext } from '../../contexts/SharedToolsContext';
 import { useCollab } from '../../hooks/useCollab';
 import { useLSPConfig } from '../../hooks/useLSPConfig';
+import { useSharedTools } from '../../hooks/useSharedTools';
 import { useSharedToolPreferences } from '../../hooks/useSharedToolPreferences';
 import { useTypesetterConfig } from '../../hooks/useTypesetterConfig';
 import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
@@ -40,10 +40,10 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 	const typesetters = useTypesetterConfig();
 	const lsps = useLSPConfig();
 	const preferences = useSharedToolPreferences();
+	const sharedTools = useSharedTools();
 	const projectKey = projectSharingKey(shareUrl);
 	const projectShareEnabled = preferences.isShareProjectTools(projectKey);
-	const sharedTools = useContext(SharedToolsContext);
-	const agents = sharedTools?.projectAgents ?? [];
+	const agents = sharedTools.projectAgents;
 
 	const projectTools = useMemo(() => {
 		const projectType = doc?.projectMetadata?.type ?? 'latex';
@@ -172,6 +172,26 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 						<span>{t('Share tools used in this project')}</span>
 					</label>
 
+					{sharedTools.storageShareAvailable && (
+						<>
+							<label className='checkbox-control'>
+								<input
+									type='checkbox'
+									checked={sharedTools.storageShareEnabled}
+									disabled={!sharedTools.storageShareable}
+									onChange={(event) =>
+										sharedTools.setStorageShareEnabled(event.target.checked)
+									}
+								/>
+								<span>{t('Share remote storage with collaborators')}</span>
+							</label>
+							{!sharedTools.storageShareable &&
+								sharedTools.storageShareMessage && (
+									<p className='ui-note'>{sharedTools.storageShareMessage}</p>
+								)}
+						</>
+					)}
+
 					{projectShareEnabled && shareableProjectTools.length > 0 ? (
 						<div className='ui-stack' data-gap='xs'>
 							<strong>{t('Shared with this project')}</strong>
@@ -211,7 +231,7 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 					{agents.length > 0 && (
 						<AgentShareList
 							agents={agents}
-							onChange={sharedTools?.setAgentShared}
+							onChange={sharedTools.setAgentShared}
 						/>
 					)}
 

@@ -103,6 +103,9 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 
 		const userChelysRoomKey = `texlyre-user-${userId}-chelys-room`;
 		const userChelysCredentialKey = `texlyre-user-${userId}-chelys-credential`;
+		const userStorageBindingsKey = `texlyre-user-${userId}-storage-bindings`;
+		const userStorageAccountKey = `texlyre-user-${userId}-storage-account-key`;
+		const userSharedStorageKeys = `texlyre-user-${userId}-storage-shared-project-keys`;
 
 		localStorage.removeItem(userSettingsKey);
 		localStorage.removeItem(userPropertiesKey);
@@ -110,6 +113,14 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 		localStorage.removeItem(userRecordsKey);
 		localStorage.removeItem(userChelysRoomKey);
 		localStorage.removeItem(userChelysCredentialKey);
+		localStorage.removeItem(userStorageBindingsKey);
+		localStorage.removeItem(userStorageAccountKey);
+		localStorage.removeItem(userSharedStorageKeys);
+		localStorage.removeItem(`texlyre-user-${userId}-storage-wrapping-key`);
+		localStorage.removeItem(`texlyre-user-${userId}-storage-wrapping-method`);
+		sessionStorage.removeItem(
+			`texlyre-user-${userId}-storage-wrapping-key-session`,
+		);
 		chelysAccountSyncService.clearSyncState(userId);
 		localStorage.removeItem('texlyre-current-user');
 

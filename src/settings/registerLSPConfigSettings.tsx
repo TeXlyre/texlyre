@@ -139,7 +139,7 @@ export function useRegisterLSPConfigSettings() {
 		registerSetting({
 			id: LSP_CONFIGS_SETTING,
 			category: t('External Tools'),
-			subcategory: t('Generic LSP'),
+			subcategory: t('Remote LSP'),
 			type: 'custom',
 			label: t('LSP Recipes'),
 			description: (
@@ -169,7 +169,7 @@ export function useRegisterLSPConfigSettings() {
 		registerSetting({
 			id: LSP_DISABLED_CONFIGS_SETTING,
 			category: t('External Tools'),
-			subcategory: t('Generic LSP'),
+			subcategory: t('Remote LSP'),
 			type: 'custom',
 			label: t('Disabled LSP Recipes'),
 			defaultValue: readStoredValue(LSP_DISABLED_CONFIGS_SETTING),

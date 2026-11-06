@@ -59,6 +59,7 @@ import { ACPConfigProvider } from './contexts/ACPConfigContext';
 import { LSPConfigProvider } from './contexts/LSPConfigContext';
 import { SharedToolPreferencesProvider } from './contexts/SharedToolPreferencesContext';
 import { TypesetterConfigProvider } from './contexts/TypesetterConfigContext';
+import { StorageConfigProvider } from './contexts/StorageConfigContext';
 import { typesetterRegistryService } from './services/TypesetterRegistryService';
 import { FileSystemBackupProvider } from './contexts/DiskBackupContext';
 import { OfflineProvider } from './contexts/OfflineContext';
@@ -138,13 +139,15 @@ function App() {
 												<FileSystemBackupProvider>
 													<LSPConfigProvider>
 														<TypesetterConfigProvider>
-															<ACPConfigProvider>
-																<SharedToolPreferencesProvider>
-																	<EditorProvider>
-																		<AppContent />
-																	</EditorProvider>
-																</SharedToolPreferencesProvider>
-															</ACPConfigProvider>
+															<StorageConfigProvider>
+																<ACPConfigProvider>
+																	<SharedToolPreferencesProvider>
+																		<EditorProvider>
+																			<AppContent />
+																		</EditorProvider>
+																	</SharedToolPreferencesProvider>
+																</ACPConfigProvider>
+															</StorageConfigProvider>
 														</TypesetterConfigProvider>
 													</LSPConfigProvider>
 												</FileSystemBackupProvider>

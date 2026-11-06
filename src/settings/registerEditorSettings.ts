@@ -24,6 +24,7 @@ export function useRegisterEditorSettings() {
 			'editor-font-family',
 			'editor-font-size',
 			'editor-show-line-numbers',
+			'editor-auto-indent',
 			'editor-auto-save-enable',
 			'editor-auto-save-delay',
 			'editor-keymap-mode',
@@ -42,6 +43,9 @@ export function useRegisterEditorSettings() {
 		const initialShowLineNumbers =
 			(batchedSettings['editor-show-line-numbers'] as boolean) ??
 			defaultEditorSettings.showLineNumbers;
+		const initialAutoIndent =
+			(batchedSettings['editor-auto-indent'] as boolean) ??
+			defaultEditorSettings.autoIndent;
 		const initialTextDirection =
 			(batchedSettings['editor-text-direction'] as 'auto' | 'ltr' | 'rtl') ??
 			defaultEditorSettings.textDirection;
@@ -185,6 +189,18 @@ export function useRegisterEditorSettings() {
 				{ label: t('Helix'), value: 'helix' },
 				{ label: t('Emacs'), value: 'emacs' },
 			],
+		});
+
+		registerSetting({
+			id: 'editor-auto-indent',
+			category: t('Viewers'),
+			subcategory: t('Text Editor'),
+			type: 'checkbox',
+			label: t('Auto-indent'),
+			description: t(
+				'Automatically indent new lines and continue LaTeX/Typst lists when pressing Enter',
+			),
+			defaultValue: initialAutoIndent,
 		});
 
 		registerSetting({

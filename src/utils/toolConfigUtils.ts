@@ -1,4 +1,6 @@
 // src/utils/toolConfigUtils.ts
+import DOMPurify from 'dompurify';
+
 import type { TransportConfig } from '@chelys/types/transport';
 import type { TypesetterServerConfig } from '../services/GenericTypesetterService';
 import type { ACPServerConfig } from '../types/acp';
@@ -14,6 +16,40 @@ import type {
 	TranslatableText,
 } from '../types/compilation';
 import type { LSPConfigBlock } from '../types/lsp';
+import type { StorageConfigBlock } from '../types/storage';
+
+export function sanitizeToolIcon(input: unknown): string | undefined {
+	if (typeof input !== 'string' || input.length > 262_144) return;
+	const icon = input.trim();
+	if (!icon) return;
+
+	if (icon.startsWith('<')) {
+		if (!/^<(svg|img)(?:\s|\/?>)/i.test(icon) || !DOMPurify.isSupported) return;
+		const clean = DOMPurify.sanitize(icon, {
+			USE_PROFILES: /^<img/i.test(icon)
+				? { html: true }
+				: { svg: true, svgFilters: true },
+			FORBID_TAGS: ['foreignObject', 'style', 'image', 'feImage', 'use', 'a'],
+			FORBID_ATTR: ['style', 'href', 'xlink:href', 'srcset'],
+		});
+		if (!/^<(svg|img)(?:\s|\/?>)/i.test(clean)) return;
+		if (/^<img/i.test(clean) && !/\ssrc=/i.test(clean)) return;
+		return clean;
+	}
+
+	if (/[<>"'\\\p{Cc}]/u.test(icon) || icon.startsWith('//')) return;
+	try {
+		const url = new URL(icon, 'https://texlyre.invalid/');
+		if (
+			url.protocol === 'http:' ||
+			url.protocol === 'https:' ||
+			(url.protocol === 'data:' && /^data:image\//i.test(icon))
+		)
+			return icon;
+	} catch {
+		return undefined;
+	}
+}
 
 export function parseStoredList(value: unknown): unknown[] {
 	let parsed: unknown = value;
@@ -383,6 +419,7 @@ export function normalizeTypesetterConfig(
 
 	const ui = normalizeUISchema(config.ui);
 	const inputFiles = normalizeInputFiles(config.inputFiles);
+	const icon = sanitizeToolIcon(config.icon);
 
 	return {
 		id,
@@ -391,7 +428,7 @@ export function normalizeTypesetterConfig(
 				? config.name
 				: id.toUpperCase(),
 		enabled: config.enabled !== false,
-		...(typeof config.icon === 'string' ? { icon: config.icon } : {}),
+		...(icon ? { icon } : {}),
 		projectType: config.projectType,
 		projectGroup:
 			typeof config.projectGroup === 'string' && config.projectGroup.trim()
@@ -513,6 +550,7 @@ export function normalizeLspConfig(value: unknown): LSPConfigBlock | null {
 	}
 
 	const languageIdMap = normalizeLanguageIdMap(value.languageIdMap);
+	const icon = sanitizeToolIcon(value.icon);
 
 	return {
 		id,
@@ -521,7 +559,7 @@ export function normalizeLspConfig(value: unknown): LSPConfigBlock | null {
 				? value.name
 				: id.toUpperCase(),
 		enabled: value.enabled !== false,
-		...(typeof value.icon === 'string' ? { icon: value.icon } : {}),
+		...(icon ? { icon } : {}),
 		fileExtensions: normalizeStringArray(value.fileExtensions),
 		...(languageIdMap ? { languageIdMap } : {}),
 		transportConfig,
@@ -574,6 +612,75 @@ export function parseAcpConfigs(value: unknown): ACPServerConfig[] {
 	return parseStoredList(value)
 		.map(normalizeAcpConfig)
 		.filter((config): config is ACPServerConfig => config !== null);
+}
+
+export function normalizeStorageConfig(
+	value: unknown,
+): StorageConfigBlock | null {
+	if (!isRecord(value)) return null;
+
+	const id =
+		typeof value.id === 'string'
+			? value.id
+			: typeof value.configId === 'string'
+				? value.configId
+				: null;
+	if (!id) return null;
+
+	const block = isRecord(value.transportConfig) ? value.transportConfig : null;
+	const source: Record<string, unknown> = block ?? {
+		type: value.transportType,
+		url: value.transportUrl,
+		roomId: value.transportRoomId,
+		signaling: value.signalingServers,
+	};
+	const type =
+		source.type === 'webrtc'
+			? 'webrtc'
+			: source.type === 'websocket' || !block
+				? 'websocket'
+				: null;
+	if (!type) return null;
+
+	const transportConfig: TransportConfig =
+		type === 'webrtc'
+			? {
+					type,
+					...(Array.isArray(source.signaling)
+						? {
+								signaling: source.signaling.filter(
+									(item): item is string => typeof item === 'string',
+								),
+							}
+						: {}),
+					...(typeof source.roomId === 'string' && source.roomId.trim()
+						? { roomId: source.roomId.trim() }
+						: {}),
+				}
+			: {
+					type,
+					...(typeof source.url === 'string' ? { url: source.url } : {}),
+				};
+
+	return {
+		id,
+		...(typeof value.transportId === 'string' && value.transportId.trim()
+			? { transportId: value.transportId }
+			: {}),
+		name:
+			typeof value.name === 'string' && value.name.trim()
+				? value.name
+				: id.toUpperCase(),
+		enabled: value.enabled !== false,
+		...(typeof value.icon === 'string' ? { icon: value.icon } : {}),
+		transportConfig,
+	};
+}
+
+export function parseStorageConfigs(value: unknown): StorageConfigBlock[] {
+	return parseStoredList(value)
+		.map(normalizeStorageConfig)
+		.filter((config): config is StorageConfigBlock => config !== null);
 }
 
 export function upsertConfig<T extends { id: string }>(

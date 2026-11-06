@@ -5,6 +5,7 @@ import type React from 'react';
 import { useEffect, useState, useRef } from 'react';
 
 import type { Project } from '../../types/projects';
+import type { StorageDashboardProject } from '../../types/storage';
 import { useProperties } from '../../hooks/useProperties';
 import {
 	ExportIcon,
@@ -27,6 +28,9 @@ interface ProjectListProps {
 	onToggleViewMode?: () => void;
 	viewMode?: 'grid' | 'list';
 	itemsPerPage?: number;
+	storageStates?: Record<string, StorageDashboardProject>;
+	storageBusy?: Set<string>;
+	onStorageSync?: (project: Project) => void;
 }
 
 const ProjectList: React.FC<ProjectListProps> = ({
@@ -41,6 +45,9 @@ const ProjectList: React.FC<ProjectListProps> = ({
 	onToggleViewMode,
 	viewMode: externalViewMode = 'grid',
 	itemsPerPage: maxItemsPerPage = 12,
+	storageStates = {},
+	storageBusy = new Set(),
+	onStorageSync,
 }) => {
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const propertiesRegistered = useRef(false);
@@ -362,6 +369,9 @@ const ProjectList: React.FC<ProjectListProps> = ({
 								isSelectionMode={isSelectionMode}
 								isSelected={selectedProjects.has(project.id)}
 								onSelectionChange={handleProjectSelection}
+								storageState={storageStates[project.id]}
+								storageBusy={storageBusy.has(project.id)}
+								onStorageSync={onStorageSync}
 							/>
 						))}
 					</div>

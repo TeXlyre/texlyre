@@ -44,6 +44,10 @@ describe('SharedToolsModal', () => {
 	const handlers = {
 		onClose: jest.fn(),
 		onProjectShareChange: jest.fn(),
+		storageShareAvailable: false,
+		storageShareEnabled: false,
+		storageShareable: false,
+		onStorageShareChange: jest.fn(),
 		onAccept: jest.fn(),
 		onIgnore: jest.fn(),
 	};

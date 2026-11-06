@@ -28,7 +28,7 @@ const acpKind: ToolConfigKind = {
 	// An agent acts on the user's machine and account, so it is never shared
 	// with all collaborators from here; it is shared per project from the
 	// Share and Shared Tools modals.
-	shareable: false,
+	allowGlobalShare: false,
 	fields: [
 		{
 			key: 'name',
