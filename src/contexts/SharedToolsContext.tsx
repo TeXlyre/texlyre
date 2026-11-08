@@ -12,6 +12,7 @@ import {
 } from 'react';
 
 import { t } from '@/i18n';
+import { useACPConfig } from '../hooks/useACPConfig';
 import { useAuth } from '../hooks/useAuth';
 import { useChelys } from '../hooks/useChelys';
 import { useCollab } from '../hooks/useCollab';
@@ -28,6 +29,7 @@ import type { LSPConfigBlock } from '../types/lsp';
 import type { StorageConfigBlock } from '../types/storage';
 import type {
 	ObservedSharedTool,
+	SharedAgent,
 	SharedByMeTool,
 	SharedLocalTool,
 	SharedToolKind,
@@ -44,6 +46,7 @@ import {
 	projectSharingKey,
 	readSharedToolsFromAwareness,
 	selectAdvertisedTools,
+	sharedAgentId,
 	sharedToolIdentity,
 } from '../utils/sharedToolsUtils';
 import {
@@ -62,6 +65,11 @@ interface SharedToolsContextType {
 	projectAdditionalTools: SharedLocalTool[];
 	projectShareEnabled: boolean;
 	setProjectShareEnabled: (enabled: boolean) => void;
+	// This user's agents and whether each is shared in this project.
+	projectAgents: SharedLocalTool[];
+	setAgentShared: (agentId: string, enabled: boolean) => void;
+	// Collaborators' agents this user accepted that are shared right now.
+	sharedAgents: SharedAgent[];
 	storageShareAvailable: boolean;
 	storageShareEnabled: boolean;
 	storageShareable: boolean;
@@ -111,6 +119,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 	const typesetters = useTypesetterConfig();
 	const lsps = useLSPConfig();
 	const storages = useStorageConfig();
+	const acps = useACPConfig();
 	const preferences = useSharedToolPreferences();
 	const [observed, setObserved] = useState<ObservedSharedTool[]>([]);
 	const [, setStorageBindingRevision] = useState(0);
@@ -152,11 +161,17 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 				config,
 				shareable: share.shareable,
 				shareMessage: share.message,
+				// Agents are shared one by one per project, never with everyone.
 				sharedWithAll:
-					kind !== 'storage' && preferences.isSharedWithAll(kind, config.id),
+					kind !== 'storage' &&
+					kind !== 'agent' &&
+					preferences.isSharedWithAll(kind, config.id),
 				usedByProject,
 				...(projectShared !== undefined ? { projectShared } : {}),
 				...(storage ? { storage } : {}),
+				sharedInProject:
+					kind === 'agent' &&
+					preferences.isAgentSharedInProject(projectKey, config.id),
 			};
 		};
 
@@ -193,6 +208,9 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 						),
 					]
 				: []),
+			...acps.configs
+				.filter((config) => config.enabled)
+				.map((config) => makeTool('agent', config, false)),
 		]);
 	}, [
 		doc?.documents,
@@ -203,7 +221,10 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 		lsps.getConfigsForFile,
 		storages.configs,
 		storageBinding,
+		acps.configs,
 		preferences.isSharedWithAll,
+		preferences.isAgentSharedInProject,
+		projectKey,
 	]);
 
 	const projectShareEnabled = preferences.isShareProjectTools(projectKey);
@@ -214,6 +235,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 	const projectAdditionalTools = projectUsedTools.filter(
 		(tool) => !tool.sharedWithAll,
 	);
+	const projectAgents = tools.filter((tool) => tool.kind === 'agent');
 	const advertisedTools = selectAdvertisedTools(tools, projectShareEnabled);
 	const sharedByMe: SharedByMeTool[] = advertisedTools.map((tool) => ({
 		...tool,
@@ -228,7 +250,11 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 			if (kind === 'lsp') {
 				return [...lsps.configs, ...lsps.disabledConfigs];
 			}
-			return [...storages.configs, ...storages.disabledConfigs];
+			if (kind === 'storage') {
+				return [...storages.configs, ...storages.disabledConfigs];
+			}
+			// Shared agents are never copied in, so they can't conflict.
+			return [];
 		},
 		[
 			typesetters.configs,
@@ -246,7 +272,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 				typesetters.addConfigs([config as TypesetterServerConfig]);
 			} else if (kind === 'lsp') {
 				lsps.addConfigs([config as LSPConfigBlock]);
-			} else {
+			} else if (kind === 'storage') {
 				storages.addConfigs([config as StorageConfigBlock]);
 			}
 		},
@@ -257,7 +283,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 		(kind: SharedToolKind, id: string) => {
 			if (kind === 'typesetter') typesetters.removeConfig(id);
 			else if (kind === 'lsp') lsps.removeConfig(id);
-			else storages.removeConfig(id);
+			else if (kind === 'storage') storages.removeConfig(id);
 		},
 		[typesetters.removeConfig, lsps.removeConfig, storages.removeConfig],
 	);
@@ -413,6 +439,14 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 
 	const accept = useCallback(
 		(offer: SharedToolOffer) => {
+			// An agent is used while its owner shares it, not copied into the
+			// user's own agents.
+			if (offer.kind === 'agent') {
+				preferences.recordAccepted(offer.kind, offer, offer.toolId, false);
+				dismissToast(offer.identity);
+				return;
+			}
+
 			if (offer.kind !== 'storage') {
 				const sameExisting = offer.conflict.kind === 'same-id-same-config';
 				if (!sameExisting) addConfig(offer.kind, offer.config);
@@ -694,11 +728,14 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 				new CustomEvent('toast-notification', {
 					detail: {
 						type: 'info',
-						message: sameIdConflict
-							? `${offer.ownerName} shared ${offer.name}. A different local tool already uses this ID.`
-							: sameName
-								? `${offer.ownerName} shared ${offer.name}. You already have a tool with this name.`
-								: `${offer.ownerName} is sharing ${offer.name}.`,
+						message:
+							offer.kind === 'agent'
+								? `${offer.ownerName} is sharing the agent ${offer.name}. It runs on ${offer.ownerName}'s computer with their account.`
+								: sameIdConflict
+									? `${offer.ownerName} shared ${offer.name}. A different local tool already uses this ID.`
+									: sameName
+										? `${offer.ownerName} shared ${offer.name}. You already have a tool with this name.`
+										: `${offer.ownerName} is sharing ${offer.name}.`,
 						operationId: `shared-tool:${offer.identity}`,
 						duration: 0,
 						actions: [
@@ -751,6 +788,30 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 		[user?.id, currentProjectId, storageBinding, storageShareable],
 	);
 
+	const sharedAgents = useMemo<SharedAgent[]>(
+		() =>
+			offers
+				.filter(
+					(offer) => offer.kind === 'agent' && offer.status === 'accepted',
+				)
+				.map((offer) => ({
+					identity: offer.identity,
+					ownerId: offer.ownerId,
+					ownerName: offer.ownerName,
+					config: {
+						...(offer.config as SharedAgent['config']),
+						id: sharedAgentId(offer.identity),
+					},
+				})),
+		[offers],
+	);
+
+	const setAgentShared = useCallback(
+		(agentId: string, enabled: boolean) =>
+			preferences.setAgentSharedInProject(projectKey, agentId, enabled),
+		[preferences.setAgentSharedInProject, projectKey],
+	);
+
 	const value = useMemo<SharedToolsContextType>(
 		() => ({
 			offers,
@@ -764,6 +825,9 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 			projectShareEnabled,
 			setProjectShareEnabled: (enabled) =>
 				preferences.setShareProjectTools(projectKey, enabled),
+			projectAgents,
+			setAgentShared,
+			sharedAgents,
 			storageShareAvailable,
 			storageShareEnabled,
 			storageShareable,
@@ -781,6 +845,9 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 			projectShareEnabled,
 			preferences.setShareProjectTools,
 			projectKey,
+			projectAgents,
+			setAgentShared,
+			sharedAgents,
 			storageShareAvailable,
 			storageShareEnabled,
 			storageShareable,

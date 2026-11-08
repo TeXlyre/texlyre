@@ -12,6 +12,7 @@ import { useFileTree } from '../../hooks/useFileTree';
 import { useLaTeX } from '../../hooks/useLaTeX';
 import { useSettings } from '../../hooks/useSettings';
 import { useProperties } from '../../hooks/useProperties';
+import type { CompileRequestDetail } from '../../types/compilation';
 import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
 import type { LaTeXOutputFormat, LaTeXEngine } from '../../types/latex';
@@ -51,6 +52,8 @@ interface LaTeXCompileButtonProps {
 	} | null;
 	shouldNavigateOnCompile?: boolean;
 	useSharedSettings?: boolean;
+	// Whether this instance takes `compile-request` events; only one should.
+	acceptsCompileRequests?: boolean;
 }
 
 const SWIFT_ENGINES: Array<{ label: string; value: LaTeXEngine }> = [
@@ -74,6 +77,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 	linkedFileInfo,
 	shouldNavigateOnCompile = false,
 	useSharedSettings = false,
+	acceptsCompileRequests = false,
 }) => {
 	const {
 		isCompiling,
@@ -476,41 +480,87 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		return false;
 	}, [getSetting, selectedFileId, getFile, selectedDocId, linkedFileInfo]);
 
+	const runCompile = async (mainFile: string, clean = false) => {
+		setIsInitializing(true);
+		if (onExpandLatexOutput) {
+			onExpandLatexOutput();
+		}
+
+		const shouldNavigate = await shouldNavigateToMain();
+
+		if (shouldNavigateOnCompile && shouldNavigate) {
+			if (linkedFileInfo?.filePath === mainFile && onNavigateToLinkedFile) {
+				onNavigateToLinkedFile();
+			} else {
+				document.dispatchEvent(
+					new CustomEvent('navigate-to-compiled-file', {
+						detail: {
+							filePath: mainFile,
+						},
+					}),
+				);
+			}
+		}
+
+		if (effectiveEngine !== latexService.getCurrentEngineType()) {
+			await latexService.setEngine(effectiveEngine);
+		}
+
+		if (clean) {
+			await compileWithClearCache(mainFile, effectiveFormat);
+		} else {
+			await compileDocument(mainFile, effectiveFormat);
+		}
+	};
+
 	const handleCompileOrStop = async () => {
 		if (isCompiling) {
 			stopCompilation();
 		} else if (effectiveMainFile) {
-			setIsInitializing(true);
-			if (onExpandLatexOutput) {
-				onExpandLatexOutput();
-			}
-
-			const shouldNavigate = await shouldNavigateToMain();
-
-			if (shouldNavigateOnCompile && shouldNavigate) {
-				if (
-					linkedFileInfo?.filePath === effectiveMainFile &&
-					onNavigateToLinkedFile
-				) {
-					onNavigateToLinkedFile();
-				} else {
-					document.dispatchEvent(
-						new CustomEvent('navigate-to-compiled-file', {
-							detail: {
-								filePath: effectiveMainFile,
-							},
-						}),
-					);
-				}
-			}
-
-			if (effectiveEngine !== latexService.getCurrentEngineType()) {
-				await latexService.setEngine(effectiveEngine);
-			}
-
-			await compileDocument(effectiveMainFile, effectiveFormat);
+			await runCompile(effectiveMainFile);
 		}
 	};
+
+	const handleCompileRequest = ({
+		mainFile,
+		clean,
+		respond,
+	}: CompileRequestDetail) => {
+		const target = mainFile ?? effectiveMainFile;
+		if (!target) {
+			respond(
+				'This LaTeX project has no main file. Pass main_file with the .tex file to compile.',
+			);
+			return;
+		}
+		if (!isLatexMainFile(target)) {
+			respond(
+				`${target} is not a LaTeX main file (.tex). This is a LaTeX project; if the document is Typst, ask the user to change the project type in TeXlyre (pencil icon next to the project name).`,
+			);
+			return;
+		}
+		if (isCompiling || isInitializing || isChangingEngine || isExporting) {
+			respond('Another compile or export is in progress. Try again shortly.');
+			return;
+		}
+
+		respond();
+		runCompile(target, clean).catch((error) => {
+			moduleLog.error('Requested compile failed:', error);
+		});
+	};
+	const compileRequestRef = useRef(handleCompileRequest);
+	useEffect(() => {
+		compileRequestRef.current = handleCompileRequest;
+	});
+
+	useEffect(() => {
+		if (!acceptsCompileRequests) return;
+		const handler = (event: CustomEvent<CompileRequestDetail>) =>
+			compileRequestRef.current(event.detail);
+		document.addEventListener('compile-request', handler);
+		return () => document.removeEventListener('compile-request', handler);
+	}, [acceptsCompileRequests]);
 
 	const handleClearCache = async () => {
 		try {

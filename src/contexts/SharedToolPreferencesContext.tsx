@@ -22,6 +22,7 @@ import {
 	SHARED_TOOL_PREFERENCES_SETTING,
 	localSharedToolKey,
 	normalizeSharedToolPreferences,
+	projectAgentKey,
 	sharedToolIdentity,
 } from '../utils/sharedToolsUtils';
 
@@ -35,6 +36,12 @@ interface SharedToolPreferencesContextType {
 	) => void;
 	isShareProjectTools: (projectKey: string) => boolean;
 	setShareProjectTools: (projectKey: string, enabled: boolean) => void;
+	isAgentSharedInProject: (projectKey: string, agentId: string) => boolean;
+	setAgentSharedInProject: (
+		projectKey: string,
+		agentId: string,
+		enabled: boolean,
+	) => void;
 	getOrigin: (kind: SharedToolKind, id: string) => SharedToolOrigin | undefined;
 	getDecision: (identity: string) => SharedToolDecision | undefined;
 	recordAccepted: (
@@ -120,6 +127,19 @@ export const SharedToolPreferencesProvider: React.FC<
 				if (enabled) shareProjectTools[projectKey] = true;
 				else delete shareProjectTools[projectKey];
 				return { ...current, shareProjectTools };
+			});
+		},
+		[commit],
+	);
+
+	const setAgentSharedInProject = useCallback(
+		(projectKey: string, agentId: string, enabled: boolean) => {
+			commit((current) => {
+				const key = projectAgentKey(projectKey, agentId);
+				const shareProjectAgents = { ...current.shareProjectAgents };
+				if (enabled) shareProjectAgents[key] = true;
+				else delete shareProjectAgents[key];
+				return { ...current, shareProjectAgents };
 			});
 		},
 		[commit],
@@ -255,6 +275,10 @@ export const SharedToolPreferencesProvider: React.FC<
 			isShareProjectTools: (projectKey) =>
 				preferences.shareProjectTools[projectKey] === true,
 			setShareProjectTools,
+			isAgentSharedInProject: (projectKey, agentId) =>
+				preferences.shareProjectAgents[projectAgentKey(projectKey, agentId)] ===
+				true,
+			setAgentSharedInProject,
 			getOrigin: (kind, id) =>
 				preferences.origins[localSharedToolKey(kind, id)],
 			getDecision: (identity) => preferences.decisions[identity],
@@ -266,6 +290,7 @@ export const SharedToolPreferencesProvider: React.FC<
 			preferences,
 			setSharedWithAll,
 			setShareProjectTools,
+			setAgentSharedInProject,
 			recordAccepted,
 			recordIgnored,
 			detachLocalTool,

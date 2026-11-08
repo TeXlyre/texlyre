@@ -16,6 +16,7 @@ import type {
 import { describeConfigShare } from './toolConfigShareUtils';
 import {
 	isRecord,
+	normalizeAcpConfig,
 	normalizeLspConfig,
 	normalizeStorageConfig,
 	normalizeTypesetterConfig,
@@ -27,6 +28,7 @@ export const SHARED_TOOLS_AWARENESS_FIELD = 'sharedTools';
 export const EMPTY_SHARED_TOOL_PREFERENCES: SharedToolPreferences = {
 	shareWithAll: {},
 	shareProjectTools: {},
+	shareProjectAgents: {},
 	decisions: {},
 	origins: {},
 };
@@ -48,6 +50,7 @@ export function normalizeSharedToolPreferences(
 		return {
 			shareWithAll: {},
 			shareProjectTools: {},
+			shareProjectAgents: {},
 			decisions: {},
 			origins: {},
 		};
@@ -108,6 +111,7 @@ export function normalizeSharedToolPreferences(
 	return {
 		shareWithAll: normalizeTrueMap(value.shareWithAll),
 		shareProjectTools: normalizeTrueMap(value.shareProjectTools),
+		shareProjectAgents: normalizeTrueMap(value.shareProjectAgents),
 		decisions,
 		origins,
 	};
@@ -125,15 +129,23 @@ export function localSharedToolKey(kind: SharedToolKind, id: string): string {
 	return `${kind}:${encodeKeyPart(id)}`;
 }
 
+export function projectAgentKey(projectKey: string, agentId: string): string {
+	return `${encodeKeyPart(projectKey)}:${encodeKeyPart(agentId)}`;
+}
+
 export function selectAdvertisedTools(
 	tools: SharedLocalTool[],
 	shareProjectTools: boolean,
 ): SharedLocalTool[] {
 	const selected = new Map<string, SharedLocalTool>();
 	for (const tool of tools) {
-		const sharedWithAll = tool.kind !== 'storage' && tool.sharedWithAll;
+		const sharedWithAll =
+			tool.kind !== 'storage' && tool.kind !== 'agent' && tool.sharedWithAll;
+		// Agents are only shared where their owner ticked them for the project.
 		const sharedWithProject =
-			tool.usedByProject && (tool.projectShared ?? shareProjectTools);
+			tool.kind === 'agent'
+				? tool.sharedInProject === true
+				: tool.usedByProject && (tool.projectShared ?? shareProjectTools);
 		if (!tool.shareable || (!sharedWithAll && !sharedWithProject)) {
 			continue;
 		}
@@ -152,6 +164,16 @@ export function sharedToolIdentity(
 	return kind === 'storage' && storageProjectId
 		? `${identity}:${encodeKeyPart(storageProjectId)}`
 		: identity;
+}
+
+export const SHARED_AGENT_ID_PREFIX = 'shared-agent:';
+
+export function sharedAgentId(identity: string): string {
+	return `${SHARED_AGENT_ID_PREFIX}${identity}`;
+}
+
+export function isSharedAgentId(id: string | null | undefined): boolean {
+	return !!id?.startsWith(SHARED_AGENT_ID_PREFIX);
 }
 
 export function projectSharingKey(value: string): string {
@@ -235,9 +257,23 @@ export function isToolShareable(config: ToolConfigBlock): boolean {
 }
 
 export function canonicalSharedConfig(
+	kind: SharedToolKind,
 	config: ToolConfigBlock,
 	toolId: string,
 ): ToolConfigBlock {
+	// Agent and storage configs have the same shape, so the kind is passed in
+	// rather than inferred.
+	if (kind === 'agent') {
+		// Only what reaches the owner's agent. Its working directory, MCP
+		// servers and session options are the owner's business, and the agent
+		// host sets its own.
+		return {
+			id: toolId,
+			name: config.name,
+			enabled: true,
+			transportConfig: config.transportConfig,
+		};
+	}
 	const shared = {
 		...config,
 		id: toolId,
@@ -260,7 +296,11 @@ export function buildSharedToolAdvertisement(
 		ownerName: owner.name,
 		toolId: config.id,
 	};
-	const sharedConfig = canonicalSharedConfig(config, resolvedOrigin.toolId);
+	const sharedConfig = canonicalSharedConfig(
+		kind,
+		config,
+		resolvedOrigin.toolId,
+	);
 
 	return {
 		kind,
@@ -279,7 +319,8 @@ export function normalizeSharedToolAdvertisement(
 		!isRecord(value) ||
 		(value.kind !== 'typesetter' &&
 			value.kind !== 'lsp' &&
-			value.kind !== 'storage') ||
+			value.kind !== 'storage' &&
+			value.kind !== 'agent') ||
 		typeof value.ownerId !== 'string' ||
 		typeof value.ownerName !== 'string' ||
 		typeof value.toolId !== 'string' ||
@@ -293,7 +334,9 @@ export function normalizeSharedToolAdvertisement(
 			? normalizeTypesetterConfig(value.config)
 			: value.kind === 'lsp'
 				? normalizeLspConfig(value.config)
-				: normalizeStorageConfig(value.config);
+				: value.kind === 'agent'
+					? normalizeAcpConfig(value.config)
+					: normalizeStorageConfig(value.config);
 
 	if (!normalized) {
 		return null;
@@ -316,7 +359,7 @@ export function normalizeSharedToolAdvertisement(
 		};
 	}
 
-	const config = canonicalSharedConfig(normalized, value.toolId);
+	const config = canonicalSharedConfig(value.kind, normalized, value.toolId);
 	if (!isToolShareable(config)) {
 		return null;
 	}
@@ -369,6 +412,11 @@ export function readSharedToolsFromAwareness(
 				advertiserName:
 					user.name || user.username || tool.ownerName || 'Collaborator',
 			};
+			// An agent is only offered by its owner, who is present to share it:
+			// nobody else can pass it on, and it goes when the owner leaves.
+			if (tool.kind === 'agent' && candidate.advertiserId !== tool.ownerId) {
+				continue;
+			}
 			const previous = observed.get(identity);
 
 			if (!previous || candidate.advertiserId === tool.ownerId) {

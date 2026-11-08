@@ -12,6 +12,7 @@ import { useFileTree } from '../../hooks/useFileTree';
 import { useTypst } from '../../hooks/useTypst';
 import { useSettings } from '../../hooks/useSettings';
 import { useProperties } from '../../hooks/useProperties';
+import type { CompileRequestDetail } from '../../types/compilation';
 import type { DocumentList } from '../../types/documents';
 import type { TypstPdfOptions } from '../../types/typst';
 import type { FileNode } from '../../types/files';
@@ -55,6 +56,8 @@ interface TypstCompileButtonProps {
 	} | null;
 	shouldNavigateOnCompile?: boolean;
 	useSharedSettings?: boolean;
+	// Whether this instance takes `compile-request` events; only one should.
+	acceptsCompileRequests?: boolean;
 }
 
 const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
@@ -67,6 +70,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 	linkedFileInfo,
 	shouldNavigateOnCompile = false,
 	useSharedSettings = false,
+	acceptsCompileRequests = false,
 }) => {
 	const {
 		isCompiling,
@@ -339,56 +343,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 		return false;
 	};
 
-	const handleCompileOrStop = async () => {
-		if (isCompiling) {
-			stopCompilation();
-		} else if (effectiveMainFile) {
-			if (onExpandTypstOutput) {
-				onExpandTypstOutput();
-			}
-
-			const shouldNavigate = await shouldNavigateToMain();
-
-			if (shouldNavigateOnCompile && shouldNavigate) {
-				if (
-					linkedFileInfo?.filePath === effectiveMainFile &&
-					onNavigateToLinkedFile
-				) {
-					onNavigateToLinkedFile();
-				} else {
-					document.dispatchEvent(
-						new CustomEvent('navigate-to-compiled-file', {
-							detail: {
-								filePath: effectiveMainFile,
-							},
-						}),
-					);
-				}
-			}
-
-			const shouldShareFormat = !!projectFormat;
-			const pdfOptions =
-				effectiveFormat === 'pdf' || effectiveFormat === 'canvas-pdf'
-					? shouldShareFormat
-						? doc?.projectMetadata?.typstPdfOptions
-						: localPdfOptions
-					: undefined;
-
-			await compileDocument(effectiveMainFile, effectiveFormat, pdfOptions);
-		}
-	};
-
-	const handleClearCache = async () => {
-		try {
-			clearCache();
-		} catch (error) {
-			moduleLog.error('Failed to clear cache:', error);
-		}
-	};
-
-	const handleClearCacheAndCompile = async () => {
-		if (!effectiveMainFile) return;
-
+	const runCompile = async (mainFile: string, clean = false) => {
 		if (onExpandTypstOutput) {
 			onExpandTypstOutput();
 		}
@@ -396,16 +351,13 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 		const shouldNavigate = await shouldNavigateToMain();
 
 		if (shouldNavigateOnCompile && shouldNavigate) {
-			if (
-				linkedFileInfo?.filePath === effectiveMainFile &&
-				onNavigateToLinkedFile
-			) {
+			if (linkedFileInfo?.filePath === mainFile && onNavigateToLinkedFile) {
 				onNavigateToLinkedFile();
 			} else {
 				document.dispatchEvent(
 					new CustomEvent('navigate-to-compiled-file', {
 						detail: {
-							filePath: effectiveMainFile,
+							filePath: mainFile,
 						},
 					}),
 				);
@@ -420,13 +372,76 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 					: localPdfOptions
 				: undefined;
 
+		if (clean) clearCache();
+		await compileDocument(mainFile, effectiveFormat, pdfOptions);
+	};
+
+	const handleCompileOrStop = async () => {
+		if (isCompiling) {
+			stopCompilation();
+		} else if (effectiveMainFile) {
+			await runCompile(effectiveMainFile);
+		}
+	};
+
+	const handleClearCache = async () => {
 		try {
 			clearCache();
-			await compileDocument(effectiveMainFile, effectiveFormat, pdfOptions);
+		} catch (error) {
+			moduleLog.error('Failed to clear cache:', error);
+		}
+	};
+
+	const handleClearCacheAndCompile = async () => {
+		if (!effectiveMainFile) return;
+
+		try {
+			await runCompile(effectiveMainFile, true);
 		} catch (error) {
 			moduleLog.error('Failed to compile with cache clear:', error);
 		}
 	};
+
+	const handleCompileRequest = ({
+		mainFile,
+		clean,
+		respond,
+	}: CompileRequestDetail) => {
+		const target = mainFile ?? effectiveMainFile;
+		if (!target) {
+			respond(
+				'This Typst project has no .typ main file. Pass main_file; if the project holds LaTeX, ask the user to change its type to LaTeX in TeXlyre (pencil icon next to the project name).',
+			);
+			return;
+		}
+		if (!isTypstFile(target)) {
+			respond(
+				`${target} is not a Typst file (.typ). This is a Typst project; to compile LaTeX, ask the user to change its type to LaTeX in TeXlyre (pencil icon next to the project name).`,
+			);
+			return;
+		}
+		if (isCompiling || isInitializing) {
+			respond('Another compile is in progress. Try again shortly.');
+			return;
+		}
+
+		respond();
+		runCompile(target, clean).catch((error) => {
+			moduleLog.error('Requested compile failed:', error);
+		});
+	};
+	const compileRequestRef = useRef(handleCompileRequest);
+	useEffect(() => {
+		compileRequestRef.current = handleCompileRequest;
+	});
+
+	useEffect(() => {
+		if (!acceptsCompileRequests) return;
+		const handler = (event: CustomEvent<CompileRequestDetail>) =>
+			compileRequestRef.current(event.detail);
+		document.addEventListener('compile-request', handler);
+		return () => document.removeEventListener('compile-request', handler);
+	}, [acceptsCompileRequests]);
 
 	const toggleDropdown = (e: React.MouseEvent) => {
 		e.stopPropagation();

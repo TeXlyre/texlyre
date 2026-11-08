@@ -1,0 +1,288 @@
+.agent-panel {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.ui-toolbar.agent-toolbar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-xs) var(--ui-chat-messages-padding, 12px);
+	border-bottom: 1px solid var(--accent-border);
+}
+
+.agent-toolbar > select {
+	flex: 1;
+	min-width: 0;
+	margin: 0;
+}
+
+.agent-toolbar > .agent-name {
+	flex: 0 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: var(--font-size-caption);
+	font-weight: 500;
+}
+
+.agent-toolbar > .agent-new-session,
+.agent-toolbar > .button.agent-delete-chat {
+	flex-shrink: 0;
+	padding: 2px var(--space-sm);
+	margin: 0;
+	font-size: var(--font-size-caption);
+}
+
+.agent-toolbar > .ui-icon-button.agent-delete-chat {
+	flex-shrink: 0;
+}
+
+.ui-list.agent-transcript {
+	flex: 1;
+	overflow-y: auto;
+	min-height: 0;
+	padding: var(--ui-chat-messages-padding, 12px);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	font-size: var(--ui-chat-message-font-size, var(--font-size-control));
+	line-height: var(--ui-chat-message-line-height, 1.4);
+}
+
+.agent-privacy {
+	font-size: var(--font-size-caption);
+	color: var(--text-muted);
+}
+
+.agent-entry {
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+	margin: 0;
+}
+
+.agent-entry[data-kind="user"] {
+	align-self: flex-end;
+	max-width: 85%;
+	padding: var(--space-sm) 12px;
+	border-radius: 12px 12px 4px 12px;
+	background: var(--ui-chat-own-background, var(--accent-color));
+	color: var(--ui-chat-own-color, var(--text-on-accent));
+}
+
+.agent-entry[data-kind="agent"] {
+	align-self: flex-start;
+	max-width: 85%;
+	padding: var(--space-sm) 12px;
+	border-radius: 12px 12px 12px 4px;
+	border: 1px solid var(--accent-border);
+	/* --accent-background: the chat's own fallback, --accent-bg, is undefined. */
+	background: var(--ui-chat-other-background, var(--accent-background));
+	color: var(--ui-chat-other-color, inherit);
+}
+
+.agent-entry[data-kind="thought"] {
+	color: var(--text-muted);
+	font-size: var(--font-size-caption);
+}
+
+.agent-entry[data-kind="tool"] {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--space-sm);
+	padding: var(--space-xs) var(--space-sm);
+	border-left: 2px solid var(--accent-border);
+	font-size: var(--font-size-caption);
+}
+
+.agent-entry[data-kind="tool"][data-status="failed"] {
+	border-left-color: var(--color-error);
+}
+
+.agent-entry[data-kind="tool"][data-status="completed"] {
+	border-left-color: var(--color-success);
+}
+
+.agent-tool-name {
+	font-family: ui-monospace, monospace;
+}
+
+.agent-tool-status {
+	color: var(--text-muted);
+}
+
+.agent-entry[data-kind="plan"] {
+	padding-inline-start: 1.5em;
+	font-size: var(--font-size-caption);
+}
+
+.agent-entry[data-kind="plan"] > li[data-status="completed"] {
+	text-decoration: line-through;
+	color: var(--text-muted);
+}
+
+.agent-entry[data-kind="notice"] {
+	font-size: var(--font-size-caption);
+	color: var(--text-muted);
+}
+
+.agent-entry[data-kind="notice"][data-tone="error"] {
+	color: var(--color-error);
+}
+
+.agent-change-toggle {
+	all: unset;
+	cursor: pointer;
+	font-size: var(--font-size-caption);
+	font-family: ui-monospace, monospace;
+	text-decoration: underline dotted;
+}
+
+.agent-diff {
+	margin: var(--space-xs) 0 0;
+	padding: var(--space-xs) 0;
+	max-height: 50vh;
+	overflow: auto;
+	font-family: ui-monospace, monospace;
+	font-size: var(--font-size-caption);
+	white-space: pre-wrap;
+}
+
+.agent-diff-line {
+	display: flex;
+	gap: var(--space-sm);
+	padding: 0 var(--space-sm);
+}
+
+.agent-diff-line[data-kind="added"] {
+	background: color-mix(in srgb, var(--color-success) 15%, transparent);
+}
+
+.agent-diff-line[data-kind="removed"] {
+	background: color-mix(in srgb, var(--color-error) 15%, transparent);
+}
+
+.agent-diff-line[data-kind="skipped"] {
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+.agent-diff-text {
+	flex: 1;
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.agent-diff-number {
+	flex: none;
+	min-width: 3ch;
+	text-align: end;
+	color: var(--text-muted);
+	user-select: none;
+}
+
+.agent-diff-marker {
+	user-select: none;
+}
+
+.agent-diff-empty {
+	color: var(--text-muted);
+	font-size: var(--font-size-caption);
+}
+
+.agent-permission-path {
+	font-family: ui-monospace, monospace;
+	margin-bottom: var(--space-sm);
+}
+
+.agent-permission-input {
+	max-height: 40vh;
+	overflow: auto;
+	font-size: var(--font-size-caption);
+}
+
+.agent-permission-actions {
+	justify-content: flex-end;
+	margin-top: var(--space-md);
+}
+
+.agent-side-panel {
+	contain: layout;
+	height: 100%;
+	overflow: hidden;
+	border-left: 1px solid var(--accent-border);
+	background-color: var(--pico-background);
+}
+
+.agent-side-panel .ui-field-control[data-role="chat-input"] {
+	max-height: 40vh;
+	resize: vertical;
+}
+
+/* The open file sent with a message: a chip above the input, and a label on
+   each user message it was sent with. */
+.agent-context-bar {
+	display: flex;
+	padding: var(--space-xs) var(--ui-chat-input-container-padding, 12px) 0;
+	border-top: 1px solid var(--ui-chat-input-border-color, var(--accent-border));
+	background: var(
+		--ui-chat-input-container-background,
+		var(--background-color)
+	);
+}
+
+.agent-context-bar + .ui-toolbar[data-role="chat-input"] {
+	border-top: none;
+}
+
+.agent-context-chip {
+	all: unset;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	max-width: 100%;
+	padding: 1px var(--space-sm);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-lg);
+	font-size: var(--font-size-caption);
+	font-family: ui-monospace, monospace;
+	color: var(--text-color);
+	cursor: pointer;
+}
+
+.agent-context-chip > svg {
+	flex-shrink: 0;
+	width: 1em;
+	height: 1em;
+}
+
+.agent-context-chip > span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.agent-context-chip[aria-pressed="false"] {
+	color: var(--text-muted);
+	border-style: dashed;
+}
+
+.agent-context-chip[aria-pressed="false"] > span {
+	text-decoration: line-through;
+}
+
+.agent-context-chip:focus-visible {
+	outline: 2px solid var(--accent-color);
+	outline-offset: 1px;
+}
+
+.agent-entry-context {
+	display: block;
+	margin-top: var(--space-xs);
+	font-size: var(--font-size-caption);
+	font-family: ui-monospace, monospace;
+	opacity: 0.8;
+}

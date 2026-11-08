@@ -17,6 +17,7 @@ import {
 	describeSharedToolAvailability,
 	projectSharingKey,
 } from '../../utils/sharedToolsUtils';
+import { AgentShareList } from '../collab/SharedToolsModal';
 import { ShareIcon } from '../common/Icons';
 import CopyField from '../common/CopyField';
 import Modal from '../common/Modal';
@@ -42,6 +43,7 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 	const sharedTools = useSharedTools();
 	const projectKey = projectSharingKey(shareUrl);
 	const projectShareEnabled = preferences.isShareProjectTools(projectKey);
+	const agents = sharedTools.projectAgents;
 
 	const projectTools = useMemo(() => {
 		const projectType = doc?.projectMetadata?.type ?? 'latex';
@@ -224,6 +226,13 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 								))}
 							</ul>
 						</div>
+					)}
+
+					{agents.length > 0 && (
+						<AgentShareList
+							agents={agents}
+							onChange={sharedTools.setAgentShared}
+						/>
 					)}
 
 					{projectShareEnabled && unavailableProjectTools.length > 0 && (

@@ -6,6 +6,7 @@ import {
 } from 'y-protocols/awareness';
 
 import type { TypesetterServerConfig } from '@src/services/GenericTypesetterService';
+import type { ACPServerConfig } from '@src/types/acp';
 import type { LSPConfigBlock } from '@src/types/lsp';
 import type { StorageConfigBlock } from '@src/types/storage';
 import type { SharedLocalTool } from '@src/types/sharedTools';
@@ -16,10 +17,14 @@ import {
 	findTrustedSharedStorage,
 	describeSharedToolAvailability,
 	getSharedToolKind,
+	isSharedAgentId,
+	normalizeSharedToolAdvertisement,
 	normalizeSharedToolPreferences,
+	projectAgentKey,
 	projectSharingKey,
 	readSharedToolsFromAwareness,
 	selectAdvertisedTools,
+	sharedAgentId,
 	sharedToolIdentity,
 } from '@src/utils/sharedToolsUtils';
 
@@ -104,6 +109,7 @@ describe('shared tools', () => {
 		).toEqual({
 			shareWithAll: { 'typesetter:sile': true },
 			shareProjectTools: { 'yjs:paper': true },
+			shareProjectAgents: {},
 			decisions: {
 				good: { decision: 'accepted', revision: 'r1', localId: 'sile' },
 			},
@@ -454,6 +460,117 @@ describe('shared tools', () => {
 		);
 
 		expect(readSharedToolsFromAwareness(receiver, 'alice')).toEqual([]);
+
+		sender.destroy();
+		receiver.destroy();
+		senderDoc.destroy();
+		receiverDoc.destroy();
+	});
+});
+
+describe('shared agents', () => {
+	const agent = (overrides: Partial<ACPServerConfig> = {}): ACPServerConfig => ({
+		id: 'claude',
+		name: 'Claude Agent',
+		enabled: true,
+		transportConfig: { type: 'webrtc', roomId: 'claude-room-1' },
+		cwd: '/home/owner/thesis',
+		mcpServers: '[{"name":"x","command":"sh"}]',
+		sessionMeta: '{"claudeCode":{}}',
+		...overrides,
+	});
+	const agentTool = (overrides: Partial<SharedLocalTool> = {}): SharedLocalTool => ({
+		kind: 'agent',
+		config: agent(),
+		shareable: true,
+		sharedWithAll: false,
+		usedByProject: false,
+		...overrides,
+	});
+
+	it('is told apart from storage by its kind, not its shape', () => {
+		const owner = { id: 'alice', name: 'Alice' };
+		const config = { ...storage(), cwd: '/home/owner/thesis' };
+
+		expect(buildSharedToolAdvertisement('agent', config, owner).config).not.toHaveProperty('cwd');
+		expect(buildSharedToolAdvertisement('storage', config, owner).config).toHaveProperty(
+			'cwd',
+		);
+	});
+
+	it('is advertised only when chosen for the project, never with the other tools', () => {
+		expect(selectAdvertisedTools([agentTool()], true)).toEqual([]);
+		expect(
+			selectAdvertisedTools([agentTool({ sharedWithAll: true, usedByProject: true })], true),
+		).toEqual([]);
+		expect(
+			selectAdvertisedTools([agentTool({ sharedInProject: true })], false).map(
+				(tool) => tool.config.id,
+			),
+		).toEqual(['claude']);
+		// A loopback agent can't be reached by collaborators.
+		expect(
+			selectAdvertisedTools(
+				[agentTool({ sharedInProject: true, shareable: false })],
+				false,
+			),
+		).toEqual([]);
+		expect(
+			describeSharedToolAvailability(
+				agent({ transportConfig: { type: 'websocket', url: 'ws://localhost:7060' } }),
+			).shareable,
+		).toBe(false);
+	});
+
+	it("sends only the transport, not the owner's directory, MCP servers or session options", () => {
+		const advertisement = buildSharedToolAdvertisement('agent', agent(), {
+			id: 'alice',
+			name: 'Alice',
+		});
+		expect(advertisement.config).toEqual({
+			id: 'claude',
+			name: 'Claude Agent',
+			enabled: true,
+			transportConfig: { type: 'webrtc', roomId: 'claude-room-1' },
+		});
+		// A received advertisement is cut down the same way.
+		const received = normalizeSharedToolAdvertisement({
+			...advertisement,
+			config: agent(),
+		});
+		expect(received?.config).toEqual({
+			...advertisement.config,
+			transportConfig: { type: 'webrtc', roomId: 'claude-room-1', contentLength: false },
+		});
+	});
+
+	it('keeps per-project agent choices in the preferences', () => {
+		const key = projectAgentKey('yjs:paper-1', 'claude');
+		expect(
+			normalizeSharedToolPreferences({ shareProjectAgents: { [key]: true, other: 'yes' } })
+				.shareProjectAgents,
+		).toEqual({ [key]: true });
+		expect(sharedAgentId('agent:alice:claude')).toBe('shared-agent:agent:alice:claude');
+		expect(isSharedAgentId('shared-agent:agent:alice:claude')).toBe(true);
+		expect(isSharedAgentId('claude')).toBe(false);
+	});
+
+	it('only takes an agent from its owner, not relayed by someone else', () => {
+		const { senderDoc, receiverDoc, sender, receiver } = awarenessPair();
+		const advertisement = buildSharedToolAdvertisement('agent', agent(), {
+			id: 'alice',
+			name: 'Alice',
+		});
+		sender.setLocalStateField('user', { id: 'mallory', name: 'Mallory' });
+		sender.setLocalStateField('sharedTools', [advertisement]);
+		applyAwarenessUpdate(receiver, encodeAwarenessUpdate(sender, [sender.clientID]), 'test');
+		expect(readSharedToolsFromAwareness(receiver, 'bob')).toEqual([]);
+
+		sender.setLocalStateField('user', { id: 'alice', name: 'Alice' });
+		applyAwarenessUpdate(receiver, encodeAwarenessUpdate(sender, [sender.clientID]), 'test');
+		expect(readSharedToolsFromAwareness(receiver, 'bob')).toMatchObject([
+			{ kind: 'agent', ownerId: 'alice', toolId: 'claude' },
+		]);
 
 		sender.destroy();
 		receiver.destroy();

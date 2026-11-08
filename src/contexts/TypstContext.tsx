@@ -16,6 +16,7 @@ import { createTypstPagedPreviewSource } from '../extensions/typst.ts/TypstPaged
 import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';
 import { popoutViewerService } from '../services/PopoutViewerService';
+import { compileResultService } from '../services/CompileResultService';
 import { typstService } from '../services/TypstService';
 import type {
 	TypstContextType,
@@ -103,6 +104,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 		pdfOptions?: TypstPdfOptions,
 	): Promise<void> => {
 		const requestId = ++requestRef.current;
+		const startedAt = Date.now();
 		setCompileGeneration(requestId);
 		setCompileError(null);
 
@@ -124,6 +126,12 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 				setCompileError(message);
 				setCurrentView('log');
 				setLogIndicator('error');
+				compileResultService.publish({
+					status: -1,
+					log: message,
+					logType: 'typst',
+					startedAt,
+				});
 				popoutViewerService.sendCompileResult(-1, message);
 				return;
 			} finally {
@@ -145,6 +153,12 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
 			if (requestId !== requestRef.current) return;
 			setCompileLog(result.log);
+			compileResultService.publish({
+				status: result.status,
+				log: result.log,
+				logType: 'typst',
+				startedAt,
+			});
 
 			if (result.status !== 0) {
 				setCompileError(
@@ -237,6 +251,12 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 			setCompileError(message);
 			setCurrentView('log');
 			setLogIndicator('error');
+			compileResultService.publish({
+				status: -1,
+				log: message,
+				logType: 'typst',
+				startedAt,
+			});
 			popoutViewerService.sendCompileResult(-1, message);
 		} finally {
 			if (requestId === requestRef.current) setIsCompiling(false);
