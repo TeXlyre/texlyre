@@ -334,7 +334,7 @@ describe('shared agents', () => {
 		await userEvent.selectOptions(picker, SHARED.config.id);
 		expect(
 			screen.getByText(
-				"Alice shares this agent. It runs on Alice's computer with their account, and stops when they stop sharing it.",
+				"Alice shares this agent. It runs on their Chelys host and remains available while that host is online.",
 			),
 		).toBeInTheDocument();
 
