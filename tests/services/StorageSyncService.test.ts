@@ -403,6 +403,25 @@ describe('StorageSyncService', () => {
 		expect(remote.commitCount).toBe(1);
 	});
 
+	it('does not rewrite a catalogue or project ownership when a previously stored HEAD disappears', async () => {
+		const { remote, service } = await makeHarness();
+		const first = await service.syncProject('user-a', project.id, 'garage');
+		const binding = service.getProjectBinding('user-a', project.id)!;
+		remote.heads.delete(binding.storageProjectId);
+		remote.catalogue = null; // Simulate a fresh/incorrect Garage volume.
+		const ownersBefore = new Map(remote.owners);
+		const uploadsBefore = remote.putObjectCount;
+
+		await expect(service.syncProject('user-a', project.id, 'garage'))
+			.rejects.toThrow('Remote storage revision is missing');
+		expect(remote.catalogue).toBeNull();
+		expect(remote.owners).toEqual(ownersBefore);
+		expect(remote.putObjectCount).toBe(uploadsBefore);
+		expect(remote.commitCount).toBe(1);
+		expect(service.getProjectBinding('user-a', project.id)?.baseRevision)
+			.toBe(first.revision);
+	});
+
 	it('uploads only the logical object that actually changed', async () => {
 		const { remote, service, setFileContent } = await makeHarness();
 		await service.syncProject('user-a', project.id, 'garage');
@@ -1157,6 +1176,10 @@ describe('StorageSyncService incoming revision checks', () => {
 		await expect(service.checkBoundProjectRevision('user-a', project.id))
 			.resolves.toEqual({ status: 'synced', revision: 'r1' });
 
+		remote.heads.delete(binding.storageProjectId);
+		await expect(service.checkBoundProjectRevision('user-a', project.id))
+			.resolves.toEqual({ status: 'error', revision: null });
+
 		expect(remote.getObjectCount).toBe(0);
 		expect(remote.getRevisionCount).toBe(0);
 		expect(remote.getCatalogueCount).toBe(0);
@@ -1210,6 +1233,23 @@ describe('StorageSyncService dashboard lifecycle', () => {
 		]);
 	});
 
+	it('flags a missing HEAD for a previously synchronized catalogue project', async () => {
+		const { service, remote, wrappingKey, persistence } = await makeHarness();
+		await service.syncProject('user-a', project.id, 'garage');
+		const binding = service.getProjectBinding('user-a', project.id)!;
+		remote.heads.delete(binding.storageProjectId);
+		const dashboard = new StorageSyncService({
+			storageService: remote,
+			getProjectById: async (id) => (id === project.id ? project : null),
+			getProjectsByUser: async () => [project],
+			getWrappingKey: () => wrappingKey,
+			persistence,
+		});
+
+		await expect(dashboard.reconcileProvider('user-a', 'garage'))
+			.resolves.toMatchObject([{ status: 'error' }]);
+	});
+
 	it('reports shared project bindings without requiring an account catalogue', async () => {
 		const remote = new MemoryStorageProvider();
 		remote.heads.set('shared-project', 'r1');
@@ -1240,6 +1280,11 @@ describe('StorageSyncService dashboard lifecycle', () => {
 		await expect(
 			service.reconcileProjectBinding('user-a', project.id),
 		).resolves.toMatchObject({ status: 'updates-available' });
+
+		remote.heads.delete('shared-project');
+		await expect(
+			service.reconcileProjectBinding('user-a', project.id),
+		).resolves.toMatchObject({ status: 'error' });
 	});
 
 	it('reconciles a remote-only catalogue without downloading project bodies', async () => {

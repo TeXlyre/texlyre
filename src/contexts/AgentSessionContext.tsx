@@ -241,9 +241,6 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 		setStatus('disconnected');
 	}, [cancelPermissions]);
 
-	// Shared agents are registered with the service only while they are
-	// shared; unregistering one disconnects it, which is what ends a
-	// collaborator's session when the owner stops sharing.
 	const registeredSharedRef = useRef(new Map<string, string>());
 	useEffect(() => {
 		const registered = registeredSharedRef.current;
@@ -338,8 +335,8 @@ export const AgentSessionProvider: React.FC<AgentSessionProviderProps> = ({
 		const previousId = previousAgentIdRef.current;
 		previousAgentIdRef.current = activeAgentId;
 
-		// A shared agent whose owner stopped sharing it: its session has ended,
-		// but the chat stays open to read.
+		// A shared agent whose owner explicitly revoked its project link:
+		// its chat stays open to read.
 		const revoked = previousAgents.find(
 			(agent) => agent.id === previousId && agent.sharedBy,
 		);

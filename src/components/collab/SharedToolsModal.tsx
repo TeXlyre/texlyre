@@ -104,9 +104,7 @@ export const AgentShareList: React.FC<{
 			</div>
 		))}
 		<p className='ui-note'>
-			{t(
-				'Collaborators can then prompt it while you are in this project. It runs on your computer with your account; they never see your API key.',
-			)}
+			{t('Collaborators connect directly to the agent through Chelys.')}
 		</p>
 	</div>
 );

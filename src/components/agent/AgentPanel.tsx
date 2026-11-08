@@ -13,9 +13,10 @@ import {
 import type { AgentEntry, AgentOption } from '../../types/agentSession';
 import { formatDate } from '../../utils/dateUtils';
 import {
-	ExpandIcon,
+	PlusIcon,
+	DockIcon,
+	UndockIcon,
 	FileTextIcon,
-	MinimizeIcon,
 	TrashIcon,
 } from '../common/Icons';
 import DiffView from './DiffView';
@@ -204,7 +205,10 @@ const AgentPanel: React.FC = () => {
 						))}
 					</select>
 				) : (
-					<span className='agent-name'>
+					<span
+						className='agent-name'
+						title={activeAgent ? agentLabel(activeAgent) : undefined}
+					>
 						{agents[0] ? agentLabel(agents[0]) : null}
 					</span>
 				)}
@@ -258,25 +262,26 @@ const AgentPanel: React.FC = () => {
 				)}
 				<button
 					type='button'
-					className='button secondary agent-new-session'
+					className='button secondary ui-icon-button agent-new-session'
 					onClick={newSession}
 					disabled={isBusy || entries.length === 0}
+					title={t('Start a new chat')}
+					aria-label={t('Start a new chat')}
 				>
-					{t('New chat')}
+					<PlusIcon />
 				</button>
 				{canDock && (
 					<button
 						type='button'
 						className='ui-icon-button'
 						data-variant='ghost'
-						data-size='xs'
 						onClick={() => setDocked(!docked)}
 						title={docked ? t('Move to chat panel') : t('Open in side panel')}
 						aria-label={
 							docked ? t('Move to chat panel') : t('Open in side panel')
 						}
 					>
-						{docked ? <MinimizeIcon /> : <ExpandIcon />}
+						{docked ? <UndockIcon /> : <DockIcon />}
 					</button>
 				)}
 			</div>
@@ -293,7 +298,7 @@ const AgentPanel: React.FC = () => {
 						{activeAgent?.sharedBy && (
 							<p className='agent-privacy'>
 								{t(
-									"{{owner}} shares this agent. It runs on {{owner}}'s computer with their account, and stops when they stop sharing it.",
+									'{{owner}} shares this agent. It runs on their Chelys host and remains available while that host is online.',
 									{ owner: activeAgent.sharedBy },
 								)}
 							</p>

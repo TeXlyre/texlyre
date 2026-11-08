@@ -122,6 +122,10 @@ describe('GenericACPService', () => {
 	it('initializes with fs capabilities and opens a session at the default cwd', async () => {
 		await expect(startSession()).resolves.toBe('session-1');
 
+		expect(mockOpenTransport).toHaveBeenCalledWith(
+			CONFIG.transportConfig,
+			{ label: 'acp:agent' },
+		);
 		expect(agent.sent[0]).toMatchObject({
 			id: 1,
 			method: 'initialize',
@@ -139,6 +143,26 @@ describe('GenericACPService', () => {
 			params: { cwd: '/texlyre', mcpServers: [] },
 		});
 		expect(service.getAgentInfo('agent')?.agentInfo?.name).toBe('fake');
+	});
+
+	it('opens a shared agent using its original Chelys service ID, not its local alias', async () => {
+		const sharedId = 'shared-agent:agent:alice:claude-agent';
+		service.registerConfig({
+			...CONFIG,
+			id: sharedId,
+			transportId: 'claude-agent',
+			transportConfig: { type: 'webrtc', roomId: 'shared-room' },
+		});
+
+		const connecting = service.connect(sharedId);
+		await flush();
+		expect(mockOpenTransport).toHaveBeenCalledWith(
+			{ type: 'webrtc', roomId: 'shared-room' },
+			{ label: 'acp:claude-agent' },
+		);
+		agent.reply(1, { protocolVersion: 1 });
+		await connecting;
+		expect(service.getAgentInfo(sharedId)).toMatchObject({ protocolVersion: 1 });
 	});
 
 	it('passes recipe sessionMeta through as _meta on session/new', async () => {

@@ -22,10 +22,12 @@ import {
 	normalizeSharedToolPreferences,
 	projectAgentKey,
 	projectSharingKey,
+	readProjectSharedAgents,
 	readSharedToolsFromAwareness,
 	selectAdvertisedTools,
 	sharedAgentId,
 	sharedToolIdentity,
+	syncProjectSharedAgents,
 } from '@src/utils/sharedToolsUtils';
 
 const typesetter = (
@@ -508,6 +510,12 @@ describe('shared agents', () => {
 				(tool) => tool.config.id,
 			),
 		).toEqual(['claude']);
+		// Account-derived rooms are private; only dedicated rooms are shareable.
+		expect(
+			describeSharedToolAvailability(
+				agent({ transportConfig: { type: 'webrtc' } }),
+			).shareable,
+		).toBe(false);
 		// A loopback agent can't be reached by collaborators.
 		expect(
 			selectAdvertisedTools(
@@ -555,23 +563,66 @@ describe('shared agents', () => {
 		expect(isSharedAgentId('claude')).toBe(false);
 	});
 
-	it('only takes an agent from its owner, not relayed by someone else', () => {
-		const { senderDoc, receiverDoc, sender, receiver } = awarenessPair();
-		const advertisement = buildSharedToolAdvertisement('agent', agent(), {
-			id: 'alice',
-			name: 'Alice',
+	// Agent links are durable project data, not transient WebRTC presence.
+	it('persists a direct agent link after the owner closes their browser and removes it on unshare', () => {
+		const ownerDoc = new Y.Doc();
+		const collaboratorDoc = new Y.Doc();
+		const ownerMap = ownerDoc.getMap<unknown>('sharedProjectAgents');
+		const collaboratorMap = collaboratorDoc.getMap<unknown>('sharedProjectAgents');
+		const link = buildSharedToolAdvertisement('agent', agent(), {
+			id: 'alice', name: 'Alice',
 		});
-		sender.setLocalStateField('user', { id: 'mallory', name: 'Mallory' });
-		sender.setLocalStateField('sharedTools', [advertisement]);
+
+		syncProjectSharedAgents(ownerMap, 'alice', [link]);
+		Y.applyUpdate(collaboratorDoc, Y.encodeStateAsUpdate(ownerDoc));
+		expect(readProjectSharedAgents(collaboratorMap, 'bob')).toMatchObject([
+			{ kind: 'agent', ownerId: 'alice', name: 'Claude Agent',
+			  config: { transportConfig: { type: 'webrtc', roomId: 'claude-room-1' } } },
+		]);
+		// The endpoint carries no owner-local directory or MCP settings.
+		expect(JSON.stringify(ownerMap.toJSON())).not.toContain('/home/owner');
+		expect(JSON.stringify(ownerMap.toJSON())).not.toContain('mcpServers');
+		// Agent survives owner awareness going offline: no presence is involved.
+		expect(readProjectSharedAgents(collaboratorMap, 'bob')).toHaveLength(1);
+		expect(readProjectSharedAgents(collaboratorMap, 'alice')).toEqual([]);
+
+		syncProjectSharedAgents(ownerMap, 'alice', []);
+		Y.applyUpdate(collaboratorDoc, Y.encodeStateAsUpdate(ownerDoc, Y.encodeStateVector(collaboratorDoc)));
+		expect(readProjectSharedAgents(collaboratorMap, 'bob')).toEqual([]);
+		ownerDoc.destroy();
+		collaboratorDoc.destroy();
+	});
+
+	it('does not overwrite another owner and ignores unrelated project entries', () => {
+		const doc = new Y.Doc();
+		const map = doc.getMap<unknown>('sharedProjectAgents');
+		const other = buildSharedToolAdvertisement('agent', agent(), {
+			id: 'carol', name: 'Carol',
+		});
+		map.set(sharedToolIdentity('agent', 'carol', 'claude'), other);
+		map.set('unrelated', { type: 'something-else' });
+		map.set('forged', buildSharedToolAdvertisement('agent', agent(), {
+			id: 'mallory', name: 'Mallory',
+		}));
+		syncProjectSharedAgents(map, 'alice', [buildSharedToolAdvertisement('agent', agent(), {
+			id: 'alice', name: 'Alice',
+		})]);
+		expect(readProjectSharedAgents(map, 'bob').map((item) => item.ownerId).sort())
+			.toEqual(['alice', 'carol']);
+		syncProjectSharedAgents(map, 'alice', []);
+		expect(readProjectSharedAgents(map, 'bob').map((item) => item.ownerId)).toEqual(['carol']);
+		expect(map.has('unrelated')).toBe(true);
+		doc.destroy();
+	});
+
+	it('ignores presence-based agent advertising', () => {
+		const { senderDoc, receiverDoc, sender, receiver } = awarenessPair();
+		sender.setLocalStateField('user', { id: 'alice', name: 'Alice' });
+		sender.setLocalStateField('sharedTools', [buildSharedToolAdvertisement('agent', agent(), {
+			id: 'alice', name: 'Alice',
+		})]);
 		applyAwarenessUpdate(receiver, encodeAwarenessUpdate(sender, [sender.clientID]), 'test');
 		expect(readSharedToolsFromAwareness(receiver, 'bob')).toEqual([]);
-
-		sender.setLocalStateField('user', { id: 'alice', name: 'Alice' });
-		applyAwarenessUpdate(receiver, encodeAwarenessUpdate(sender, [sender.clientID]), 'test');
-		expect(readSharedToolsFromAwareness(receiver, 'bob')).toMatchObject([
-			{ kind: 'agent', ownerId: 'alice', toolId: 'claude' },
-		]);
-
 		sender.destroy();
 		receiver.destroy();
 		senderDoc.destroy();

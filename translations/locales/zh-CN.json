@@ -3004,5 +3004,6 @@
   "Zoom Level": "缩放级别",
   "Zoom Out": "缩小",
   "Zotero": "Zotero",
-  "Zotero Integration:": "Zotero 集成："
+  "Zotero Integration:": "Zotero 集成：",
+  "{{owner}} shares this agent. It runs on their Chelys host and remains available while that host is online.": "{{owner}} 分享了这个智能体。它在对方的 Chelys 主机上运行，只要该主机在线就可以使用。"
 }

@@ -1,5 +1,6 @@
 // src/utils/sharedToolsUtils.ts
 import type { Awareness } from 'y-protocols/awareness';
+import type * as Y from 'yjs';
 
 import type { ToolConfigBlock } from '../types/toolConfig';
 import type { StorageConfigBlock } from '../types/storage';
@@ -24,6 +25,7 @@ import {
 
 export const SHARED_TOOL_PREFERENCES_SETTING = 'shared-tool-preferences';
 export const SHARED_TOOLS_AWARENESS_FIELD = 'sharedTools';
+export const SHARED_PROJECT_AGENTS_MAP = 'sharedProjectAgents';
 
 export const EMPTY_SHARED_TOOL_PREFERENCES: SharedToolPreferences = {
 	shareWithAll: {},
@@ -397,7 +399,8 @@ export function readSharedToolsFromAwareness(
 
 		for (const raw of advertised) {
 			const tool = normalizeSharedToolAdvertisement(raw);
-			if (!tool || tool.ownerId === currentUserId) continue;
+			if (!tool || tool.kind === 'agent' || tool.ownerId === currentUserId)
+				continue;
 
 			const identity = sharedToolIdentity(
 				tool.kind,
@@ -412,11 +415,6 @@ export function readSharedToolsFromAwareness(
 				advertiserName:
 					user.name || user.username || tool.ownerName || 'Collaborator',
 			};
-			// An agent is only offered by its owner, who is present to share it:
-			// nobody else can pass it on, and it goes when the owner leaves.
-			if (tool.kind === 'agent' && candidate.advertiserId !== tool.ownerId) {
-				continue;
-			}
 			const previous = observed.get(identity);
 
 			if (!previous || candidate.advertiserId === tool.ownerId) {
@@ -426,6 +424,61 @@ export function readSharedToolsFromAwareness(
 	});
 
 	return Array.from(observed.values());
+}
+
+// Agent links are project data, not presence: collaborators can use their
+// own direct connection to Chelys even after the sharer closes TeXlyre.
+export function readProjectSharedAgents(
+	map: Y.Map<unknown>,
+	currentUserId?: string,
+): ObservedSharedTool[] {
+	const agents: ObservedSharedTool[] = [];
+	map.forEach((raw, key) => {
+		const agent = normalizeSharedToolAdvertisement(raw);
+		if (
+			!agent ||
+			agent.kind !== 'agent' ||
+			agent.ownerId === currentUserId ||
+			key !== sharedToolIdentity('agent', agent.ownerId, agent.toolId)
+		) {
+			return;
+		}
+		agents.push({
+			...agent,
+			advertiserId: agent.ownerId,
+			advertiserName: agent.ownerName,
+		});
+	});
+	return agents;
+}
+
+export function syncProjectSharedAgents(
+	map: Y.Map<unknown>,
+	ownerId: string,
+	advertisements: SharedToolAdvertisement[],
+): void {
+	const selected = new Map(
+		advertisements
+			.filter((tool) => tool.kind === 'agent' && tool.ownerId === ownerId)
+			.map((tool) => [sharedToolIdentity('agent', ownerId, tool.toolId), tool]),
+	);
+	map.doc?.transact(() => {
+		map.forEach((value, key) => {
+			const existing = normalizeSharedToolAdvertisement(value);
+			if (
+				existing?.kind === 'agent' &&
+				existing.ownerId === ownerId &&
+				!selected.has(key)
+			) {
+				map.delete(key);
+			}
+		});
+		selected.forEach((tool, key) => {
+			if (JSON.stringify(map.get(key)) !== JSON.stringify(tool)) {
+				map.set(key, tool);
+			}
+		});
+	});
 }
 
 export function findTrustedSharedStorage(

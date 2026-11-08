@@ -141,6 +141,10 @@ export const sliceLines = (
 export class GenericACPService extends ExternalServiceBase<ACPServerConfig> {
 	protected readonly transportLabel = 'acp';
 
+	protected getTransportId(config: ACPServerConfig): string {
+		return config.transportId ?? config.id;
+	}
+
 	private readonly connections = new Map<string, AgentConnection>();
 	private readonly sessionUpdateListeners = new Set<SessionUpdateListener>();
 	private permissionHandler: PermissionHandler = denyAllPermissions;

@@ -38,16 +38,19 @@ import type {
 import type { ToolConfigBlock } from '../types/toolConfig';
 import {
 	SHARED_TOOLS_AWARENESS_FIELD,
+	SHARED_PROJECT_AGENTS_MAP,
 	buildSharedToolAdvertisement,
 	classifySharedToolConflict,
 	findTrustedSharedStorage,
 	describeSharedToolAvailability,
 	localSharedToolKey,
 	projectSharingKey,
+	readProjectSharedAgents,
 	readSharedToolsFromAwareness,
 	selectAdvertisedTools,
 	sharedAgentId,
 	sharedToolIdentity,
+	syncProjectSharedAgents,
 } from '../utils/sharedToolsUtils';
 import {
 	hostStorageProjectKeySharing,
@@ -68,7 +71,7 @@ interface SharedToolsContextType {
 	// This user's agents and whether each is shared in this project.
 	projectAgents: SharedLocalTool[];
 	setAgentShared: (agentId: string, enabled: boolean) => void;
-	// Collaborators' agents this user accepted that are shared right now.
+	// Collaborators' accepted agent links persisted in this project.
 	sharedAgents: SharedAgent[];
 	storageShareAvailable: boolean;
 	storageShareEnabled: boolean;
@@ -115,13 +118,22 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 	const { user } = useAuth();
 	const { storageUnlocked, unlockStorage } = useChelys();
 	const { promptForPassword } = useSecrets();
-	const { data: doc, provider } = useCollab<DocumentList>();
+	const { data: doc, doc: ydoc, provider } = useCollab<DocumentList>();
 	const typesetters = useTypesetterConfig();
 	const lsps = useLSPConfig();
 	const storages = useStorageConfig();
 	const acps = useACPConfig();
 	const preferences = useSharedToolPreferences();
-	const [observed, setObserved] = useState<ObservedSharedTool[]>([]);
+	const [awarenessTools, setAwarenessTools] = useState<ObservedSharedTool[]>(
+		[],
+	);
+	const [projectSharedAgents, setProjectSharedAgents] = useState<
+		ObservedSharedTool[]
+	>([]);
+	const observed = useMemo(
+		() => [...awarenessTools, ...projectSharedAgents],
+		[awarenessTools, projectSharedAgents],
+	);
 	const [, setStorageBindingRevision] = useState(0);
 	const notifiedRef = useRef(new Set<string>());
 	const acceptingStorageRef = useRef(new Set<string>());
@@ -293,15 +305,17 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 		if (!awareness || !user?.id) return;
 
 		const owner = { id: user.id, name: user.name || user.username };
-		const advertisements = advertisedTools.map((tool) =>
-			buildSharedToolAdvertisement(
-				tool.kind,
-				tool.config,
-				owner,
-				preferences.getOrigin(tool.kind, tool.config.id),
-				tool.storage,
-			),
-		);
+		const advertisements = advertisedTools
+			.filter((tool) => tool.kind !== 'agent')
+			.map((tool) =>
+				buildSharedToolAdvertisement(
+					tool.kind,
+					tool.config,
+					owner,
+					preferences.getOrigin(tool.kind, tool.config.id),
+					tool.storage,
+				),
+			);
 		const current = awareness.getLocalState()?.[SHARED_TOOLS_AWARENESS_FIELD];
 		if (JSON.stringify(current) !== JSON.stringify(advertisements)) {
 			awareness.setLocalStateField(
@@ -321,16 +335,49 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 	useEffect(() => {
 		const awareness = provider?.awareness;
 		if (!awareness) {
-			setObserved([]);
+			setAwarenessTools([]);
 			return;
 		}
 
 		const update = () =>
-			setObserved(readSharedToolsFromAwareness(awareness, user?.id));
+			setAwarenessTools(readSharedToolsFromAwareness(awareness, user?.id));
 		awareness.on('change', update);
 		update();
 		return () => awareness.off('change', update);
 	}, [provider?.awareness, user?.id]);
+
+	// Unlike presence-based tool offers, agent links remain in the project CRDT
+	// after the owner's browser leaves. Each client manages its own links; the collaborator opens the
+	// advertised endpoint directly.
+	useEffect(() => {
+		if (!ydoc || !user?.id) return;
+		const map = ydoc.getMap<unknown>(SHARED_PROJECT_AGENTS_MAP);
+		const advertisements = advertisedTools
+			.filter((tool) => tool.kind === 'agent')
+			.map((tool) =>
+				buildSharedToolAdvertisement('agent', tool.config, {
+					id: user.id,
+					name: user.name || user.username,
+				}),
+			);
+		const publish = () => syncProjectSharedAgents(map, user.id, advertisements);
+		map.observe(publish);
+		publish();
+		return () => map.unobserve(publish);
+	}, [ydoc, user?.id, user?.name, user?.username, advertisedTools]);
+
+	useEffect(() => {
+		if (!ydoc) {
+			setProjectSharedAgents([]);
+			return;
+		}
+		const map = ydoc.getMap<unknown>(SHARED_PROJECT_AGENTS_MAP);
+		const read = () =>
+			setProjectSharedAgents(readProjectSharedAgents(map, user?.id));
+		map.observe(read);
+		read();
+		return () => map.unobserve(read);
+	}, [ydoc, user?.id]);
 
 	useEffect(() => {
 		if (
@@ -730,7 +777,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 						type: 'info',
 						message:
 							offer.kind === 'agent'
-								? `${offer.ownerName} is sharing the agent ${offer.name}. It runs on ${offer.ownerName}'s computer with their account.`
+								? `${offer.ownerName} is sharing the agent ${offer.name}. It connects directly to their Chelys host.`
 								: sameIdConflict
 									? `${offer.ownerName} shared ${offer.name}. A different local tool already uses this ID.`
 									: sameName
@@ -801,6 +848,7 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 					config: {
 						...(offer.config as SharedAgent['config']),
 						id: sharedAgentId(offer.identity),
+						transportId: offer.toolId,
 					},
 				})),
 		[offers],

@@ -3134,5 +3134,6 @@
   "Zoom Level": "مستوى التكبير",
   "Zoom Out": "تصغير",
   "Zotero": "Zotero",
-  "Zotero Integration:": "تكامل Zotero:"
+  "Zotero Integration:": "تكامل Zotero:",
+  "{{owner}} shares this agent. It runs on their Chelys host and remains available while that host is online.": "يشارك {{owner}} هذا الوكيل. يعمل على مضيف Chelys الخاص به ويظل متاحًا ما دام المضيف متصلًا."
 }

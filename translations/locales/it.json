@@ -3109,5 +3109,6 @@
   "Zoom Level": "Livello di zoom",
   "Zoom Out": "Rimpicciolisci",
   "Zotero": "Zotero",
-  "Zotero Integration:": "Integrazione Zotero:"
+  "Zotero Integration:": "Integrazione Zotero:",
+  "{{owner}} shares this agent. It runs on their Chelys host and remains available while that host is online.": "{{owner}} condivide questo agente. L'agente viene eseguito sul suo host Chelys e resta disponibile finché l'host è online."
 }

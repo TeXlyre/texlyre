@@ -6,6 +6,7 @@ import type { ExternalServiceConfig } from '../services/ExternalServiceBase';
 export const ACP_PROTOCOL_VERSION = 1;
 
 export interface ACPServerConfig extends ExternalServiceConfig {
+	transportId?: string;
 	cwd?: string;
 	mcpServers?: string;
 	// JSON object sent as _meta on session/new, for agent-specific options.
