@@ -36,7 +36,10 @@ export interface LaTeXContextType {
 	compiledPdf: Uint8Array | null;
 	compiledCanvas: Uint8Array | null;
 	clearCache: () => Promise<void>;
-	compileWithClearCache: (mainFileName: string) => Promise<void>;
+	compileWithClearCache: (
+		mainFileName: string,
+		format?: LaTeXOutputFormat,
+	) => Promise<void>;
 	compileLog: string;
 	compileDocument: (
 		mainFileName: string,

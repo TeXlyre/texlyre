@@ -1,6 +1,7 @@
 // extras/loggers/typst_visualizer/TypstVisualizerPlugin.ts
 import type { LoggerPlugin } from '@/plugins/PluginInterface';
 import TypstVisualizer from './TypstVisualizer';
+import { parseTypstLog } from './parser';
 
 export const PLUGIN_NAME = 'Typst Log Parser';
 export const PLUGIN_VERSION = '0.2.0';
@@ -16,6 +17,7 @@ const typstVisualizerPlugin: LoggerPlugin = {
 	},
 
 	renderVisualizer: TypstVisualizer,
+	parseLog: parseTypstLog,
 };
 
 export default typstVisualizerPlugin;

@@ -1,6 +1,7 @@
 // extras/loggers/latex_visualizer/LaTeXVisualizerPlugin.ts
 import type { LoggerPlugin } from '@/plugins/PluginInterface';
 import LaTeXVisualizer from './LaTeXVisualizer';
+import { parseLatexLog } from './parser';
 
 export const PLUGIN_NAME = 'LaTeX Log Parser';
 export const PLUGIN_VERSION = '0.1.0';
@@ -16,6 +17,7 @@ const latexVisualizerPlugin: LoggerPlugin = {
 	},
 
 	renderVisualizer: LaTeXVisualizer,
+	parseLog: parseLatexLog,
 };
 
 export default latexVisualizerPlugin;

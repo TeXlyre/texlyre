@@ -106,11 +106,18 @@ TeXlyre offers limited LSP support over WebSocket. The CodeMirror editor acts as
        alt="TeXlyre LSP client receiving grammar and spell-checking actions over WebSocket from the Harper LS server">
 </p>
 
-### External LSP and Typesetters
+### External LSP, Typesetters, Storage, and AI Agents
 
 TeXlyre can connect to external language servers and typesetters running outside the browser. These tools can be deployed alongside a self-hosted instance using [Chelys recipes](https://github.com/TeXlyre/texlyre-infrastructure#chelys-recipes), or managed locally through [Chelys](https://github.com/TeXlyre/chelys#local-tooling), the TeXlyre desktop companion.
 
-The infrastructure recipes support language servers such as **[LTeX LS Plus](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/ltex-ls-plus)**, **[Harper LS](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/harper-ls)**, **[TexLab](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/texlab)**, **[Tinymist](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/tinymist-lsp)**, and **[JabRef LSP](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/jabref-ls)**, as well as external typesetters including **[SILE](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/sile)**, **[ConTeXt LMTX](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/context)**, **[PreTeXt](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/pretext)**, **[TeX Live](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/texlive)**, **[Tinymist](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/tinymist)**, **[Asciidoctor](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/asciidoctor)**, **[Quarto](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/quarto)**, **[LilyPond](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/lilypond)**, **[Slidev](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/slidev)**, and **[Sphinx](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/sphinx)**. Chelys provides local language-server and typesetter setup through its recipe UI.
+The infrastructure recipes supportL
+
+- **language servers** such as **[LTeX LS Plus](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/ltex-ls-plus)**, **[Harper LS](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/harper-ls)**, **[TexLab](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/texlab)**, **[Tinymist](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/tinymist-lsp)**, and **[JabRef LSP](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/lsp/jabref-ls)**,
+- **typesetters** including **[SILE](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/sile)**, **[ConTeXt LMTX](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/context)**, **[PreTeXt](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/pretext)**, **[TeX Live](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/texlive)**, **[Tinymist](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/tinymist)**, **[Asciidoctor](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/asciidoctor)**, **[Quarto](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/quarto)**, **[LilyPond](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/lilypond)**, **[Slidev](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/slidev)**, and **[Sphinx](https://github.com/TeXlyre/chelys-recipes/tree/main/recipes/typesetter/sphinx)**,
+- **storage** compatible with S3 like **Garage**, and
+- **AI agents** such as **CLAUDE** over MCP.
+
+[Chelys](https://github.com/TeXlyre/chelys) provides local language-server, typesetter, storage, and AI agent setup through its recipe UI.
 
 
 ## Quick Start

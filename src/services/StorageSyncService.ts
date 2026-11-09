@@ -400,7 +400,12 @@ export class StorageSyncService extends StorageSnapshotReconciliation {
 		userId: string,
 		projectId: string,
 	): Promise<{
-		status: 'synced' | 'local-only' | 'updates-available' | 'unavailable';
+		status:
+			| 'synced'
+			| 'local-only'
+			| 'updates-available'
+			| 'unavailable'
+			| 'error';
 		revision: string | null;
 	} | null> {
 		const binding = this.getProjectBinding(userId, projectId);
@@ -429,7 +434,9 @@ export class StorageSyncService extends StorageSnapshotReconciliation {
 		}
 		return {
 			status: !head
-				? 'local-only'
+				? latest.baseRevision
+					? 'error'
+					: 'local-only'
 				: latest.baseRevision === head
 					? 'synced'
 					: 'updates-available',
@@ -553,7 +560,7 @@ export class StorageSyncService extends StorageSnapshotReconciliation {
 				binding.providerId,
 				binding.storageProjectId,
 			);
-			if (!head) status = 'local-only';
+			if (!head) status = binding.baseRevision ? 'error' : 'local-only';
 			else if (binding.baseRevision === head) status = 'synced';
 			else status = 'updates-available';
 		}
@@ -630,7 +637,7 @@ export class StorageSyncService extends StorageSnapshotReconciliation {
 				status = 'disconnected';
 			else if (!binding || binding.providerId !== providerId) status = 'error';
 			else if (!binding.enabled) status = 'unavailable';
-			else if (!head) status = 'local-only';
+			else if (!head) status = binding.baseRevision ? 'error' : 'local-only';
 			else if (binding.baseRevision === head) status = 'synced';
 			else status = 'updates-available';
 
@@ -814,6 +821,18 @@ export class StorageSyncService extends StorageSnapshotReconciliation {
 		const wrappingKey = this.getWrappingKey();
 		if (!wrappingKey) {
 			throw new Error('Storage credentials are not unlocked');
+		}
+
+		if (
+			binding.baseRevision &&
+			(await this.storageService.getHead(
+				providerId,
+				binding.storageProjectId,
+			)) === null
+		) {
+			throw new Error(
+				'Remote storage revision is missing. Check the original Garage data volume and storage.env before syncing again.',
+			);
 		}
 
 		const sharedProjectKey = await this.loadSharedProjectKey(

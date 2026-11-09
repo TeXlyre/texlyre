@@ -1,6 +1,19 @@
 .ui-panel[data-role="project-list"] {
 	flex: 1 1 auto;
 	min-height: 0;
+	container-type: inline-size;
+}
+
+@container (max-width: 920px) {
+	.ui-panel-header[data-role="project-list"]:has(> .ui-actions > .ui-actions)
+		> .ui-toolbar
+		> :not(:last-child) {
+		display: none;
+	}
+
+	.ui-panel-header[data-role="project-list"] > .ui-actions > .ui-actions {
+		flex-wrap: wrap;
+	}
 }
 
 :where([data-role="project-panel"], [data-role="project-list"]) {
