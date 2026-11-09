@@ -143,7 +143,11 @@
 	--ui-tooltip-font-size: var(--mobile-font-xs);
 	--ui-tooltip-line-height: 1.4;
 	--ui-tooltip-title-font-size: var(--mobile-font-sm);
-	--ui-toast-top: var(--mobile-spacing-md);
+	--ui-toast-top: calc(
+		var(--mobile-min-touch-target) *
+		2 +
+		var(--mobile-spacing-md)
+	);
 	--ui-toast-right: var(--mobile-spacing-md);
 	--ui-toast-left: var(--mobile-spacing-md);
 	--ui-toast-max-width: none;
