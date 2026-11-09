@@ -32,7 +32,7 @@ const DiffView: React.FC<DiffViewProps> = ({ before, after, context = 3 }) => {
 							className='agent-diff-line'
 							data-kind='skipped'
 						>
-							{t('⋯ {{lines}} unchanged lines', { lines: line.count })}
+							{t('⋯ {count} unchanged lines', { count: line.count })}
 						</div>
 					);
 				}
