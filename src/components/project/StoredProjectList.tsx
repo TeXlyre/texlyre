@@ -63,8 +63,7 @@ const StoredProjectList: React.FC<StoredProjectListProps> = ({
 				const busy = busyIds.has(key);
 				const expanded = expandedKeys.has(key);
 				const disconnected = project.status === 'disconnected';
-				const canDisconnect =
-					!!local && !disconnected && project.status !== 'error';
+				const canDisconnect = !!local && !disconnected;
 				const canRemove =
 					ownedProviderIds.has(project.providerId) &&
 					project.canDeleteRemote === true &&

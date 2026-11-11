@@ -7,6 +7,8 @@ import { createNamedLogger } from '@/logging';
 import { useAuth } from '../../hooks/useAuth';
 import { useChelys } from '../../hooks/useChelys';
 import { useSettings } from '../../hooks/useSettings';
+import { useSharedToolPreferences } from '../../hooks/useSharedToolPreferences';
+import { useStorageConfig } from '../../hooks/useStorageConfig';
 import {
 	notificationService,
 	shouldShowNotification,
@@ -17,7 +19,9 @@ import {
 	StorageProtocolError,
 } from '../../services/GenericStorageService';
 import type { StorageProjectStatus } from '../../types/storage';
-import { SyncIcon } from '../common/Icons';
+import { sharedToolIdentity } from '../../utils/sharedToolsUtils';
+import { SyncIcon, StorageIcon } from '../common/Icons';
+import RemoteStorageModal from './RemoteStorageModal';
 
 const moduleLog = createNamedLogger('RemoteStorageStatusIndicator');
 
@@ -31,8 +35,13 @@ const RemoteStorageStatusIndicator: React.FC<
 	const { user, isGuestUser } = useAuth();
 	const { storageUnlocked, storageUnlockReady } = useChelys();
 	const { getSetting } = useSettings();
+	const { configs, removeConfig } = useStorageConfig();
+	const sharedPreferences = useSharedToolPreferences();
 	const [status, setStatus] = useState<StorageProjectStatus>('checking');
 	const [syncing, setSyncing] = useState(false);
+	const [showModal, setShowModal] = useState(false);
+	const [canDeleteRemote, setCanDeleteRemote] = useState(false);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const checkingRef = useRef(false);
 	const syncingRef = useRef(false);
 	const lastNotifiedRevisionRef = useRef<string | null>(null);
@@ -44,6 +53,8 @@ const RemoteStorageStatusIndicator: React.FC<
 	const binding = userId
 		? storageSyncService.getProjectBinding(userId, projectId)
 		: null;
+	const providerId = binding?.providerId;
+	const storageProjectId = binding?.storageProjectId;
 	const periodicChecks =
 		(getSetting('storage-check-for-updates')?.value as boolean) ?? false;
 	const savedInterval = Number(
@@ -86,6 +97,13 @@ const RemoteStorageStatusIndicator: React.FC<
 			);
 			if (!result || syncingRef.current || !mountedRef.current) return;
 			setStatus(result.status);
+			setErrorMessage(
+				result.status === 'error' && !result.revision
+					? t(
+							'Remote revision is missing. Restore the original Garage volume and storage.env, or disconnect this project.',
+						)
+					: null,
+			);
 			checkFailedRef.current = false;
 			reportedCheckErrorRef.current = false;
 			if (
@@ -98,6 +116,9 @@ const RemoteStorageStatusIndicator: React.FC<
 			}
 		} catch (error) {
 			moduleLog.warn('Failed to check remote storage:', error);
+			if (mountedRef.current) {
+				setErrorMessage(error instanceof Error ? error.message : String(error));
+			}
 			const protocolError =
 				error instanceof StorageProtocolError ||
 				(error instanceof Error &&
@@ -183,9 +204,55 @@ const RemoteStorageStatusIndicator: React.FC<
 		checkForUpdates,
 	]);
 
+	const available = !!binding?.enabled && storageUnlocked;
+	const canManageRemote =
+		!!binding?.enabled &&
+		!sharedPreferences.getOrigin('storage', binding.providerId) &&
+		configs.some(
+			(config) => config.id === binding.providerId && config.enabled,
+		);
+
+	useEffect(() => {
+		setCanDeleteRemote(false);
+		if (
+			!showModal ||
+			!userId ||
+			!providerId ||
+			!storageProjectId ||
+			!canManageRemote ||
+			!available ||
+			!navigator.onLine ||
+			status === 'error' ||
+			status === 'checking' ||
+			status === 'unavailable' ||
+			status === 'local-only'
+		) {
+			return;
+		}
+		let cancelled = false;
+		void storageSyncService
+			.canDeleteRemoteProject(userId, providerId, storageProjectId)
+			.then((allowed) => {
+				if (!cancelled) setCanDeleteRemote(allowed);
+			})
+			.catch(() => {
+				if (!cancelled) setCanDeleteRemote(false);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [
+		showModal,
+		userId,
+		providerId,
+		storageProjectId,
+		canManageRemote,
+		available,
+		status,
+	]);
+
 	if (!binding || !userId) return null;
 
-	const available = binding.enabled && storageUnlocked;
 	const currentStatus = syncing
 		? 'syncing'
 		: !storageUnlockReady
@@ -212,6 +279,17 @@ const RemoteStorageStatusIndicator: React.FC<
 		}
 	})();
 
+	const statusTone =
+		currentStatus === 'synced'
+			? 'success'
+			: currentStatus === 'error'
+				? 'danger'
+				: currentStatus === 'updates-available' ||
+						currentStatus === 'syncing' ||
+						currentStatus === 'checking'
+					? 'warning'
+					: 'muted';
+
 	const handleSync = async () => {
 		if (syncingRef.current || !available || !navigator.onLine) return;
 		syncingRef.current = true;
@@ -219,10 +297,12 @@ const RemoteStorageStatusIndicator: React.FC<
 		try {
 			await storageSyncService.syncBoundProject(userId, projectId);
 			setStatus('synced');
+			setErrorMessage(null);
 			notify('success', t('Remote storage synchronized'));
 		} catch (error) {
 			moduleLog.warn('Manual remote storage sync failed:', error);
 			setStatus('error');
+			setErrorMessage(error instanceof Error ? error.message : String(error));
 			notify(
 				'error',
 				t('Remote storage sync failed: {message}', {
@@ -236,33 +316,106 @@ const RemoteStorageStatusIndicator: React.FC<
 		}
 	};
 
+	const handleDeleteRemote = async () => {
+		if (!userId || !binding || !canDeleteRemote || !canManageRemote) return;
+		await storageSyncService.deleteRemoteProjects(userId, binding.providerId, [
+			binding.storageProjectId,
+		]);
+		document.dispatchEvent(
+			new CustomEvent('storage-binding-changed', {
+				detail: { userId, projectId },
+			}),
+		);
+		setCanDeleteRemote(false);
+		setShowModal(false);
+	};
+
+	const handleDetach = async () => {
+		if (!userId) return;
+		const current = storageSyncService.getProjectBinding(userId, projectId);
+		await storageSyncService.disconnectBoundProject(userId, projectId);
+		if (current) {
+			const origin = sharedPreferences.getOrigin('storage', current.providerId);
+			if (origin) {
+				const identity = sharedToolIdentity(
+					'storage',
+					origin.ownerId,
+					origin.toolId,
+					current.storageProjectId,
+				);
+				sharedPreferences.recordIgnored(
+					identity,
+					sharedPreferences.getDecision(identity)?.revision ?? '',
+				);
+				const stillUsed = Object.values(
+					storageSyncService.getProjectBindings(userId),
+				).some((entry) => entry.providerId === current.providerId);
+				if (!stillUsed) {
+					sharedPreferences.detachLocalTool('storage', current.providerId);
+					removeConfig(current.providerId);
+				}
+			}
+		}
+		document.dispatchEvent(
+			new CustomEvent('storage-binding-changed', {
+				detail: { userId, projectId },
+			}),
+		);
+		setShowModal(false);
+		setStatus('local-only');
+		setErrorMessage(null);
+	};
+
 	return (
-		<button
-			type='button'
-			className='ui-badge'
-			data-variant='label'
-			data-tone={
-				currentStatus === 'error'
-					? 'danger'
-					: currentStatus === 'updates-available'
-						? 'warning'
-						: undefined
-			}
-			onClick={() => void handleSync()}
-			disabled={!available || !navigator.onLine || syncing}
-			title={
-				available
-					? t('Remote storage: {status}. Click to sync.', {
-							status: statusLabel,
-						})
-					: t('Remote storage unavailable')
-			}
-			aria-label={t('Sync project with remote storage')}
-		>
-			<SyncIcon />
-			<span>{t('Storage')}</span>
-			<span>{statusLabel}</span>
-		</button>
+		<>
+			<div
+				className='ui-button-group ui-split-button storage-status'
+				data-role='status'
+				data-variant='joined'
+				data-size='control'
+				data-tone={statusTone}
+			>
+				<button
+					type='button'
+					className='ui-split-main'
+					onClick={() => void handleSync()}
+					disabled={!available || !navigator.onLine || syncing}
+					title={t('Sync project with remote storage')}
+					aria-label={t('Sync project with remote storage')}
+				>
+					<SyncIcon />
+					<span className='ui-status-label'>{t('Storage')}</span>
+					<span className='ui-status-label'>{statusLabel}</span>
+				</button>
+				<button
+					type='button'
+					className='ui-split-toggle'
+					onClick={() => setShowModal(true)}
+					title={t('Remote Storage')}
+					aria-label={t('Remote Storage')}
+				>
+					<StorageIcon />
+				</button>
+			</div>
+			<RemoteStorageModal
+				isOpen={showModal}
+				onClose={() => setShowModal(false)}
+				binding={binding}
+				providerName={
+					configs.find((config) => config.id === binding.providerId)?.name ??
+					binding.providerId
+				}
+				status={currentStatus}
+				statusLabel={statusLabel}
+				error={errorMessage}
+				canSync={available && navigator.onLine}
+				canDeleteRemote={canDeleteRemote}
+				onSync={handleSync}
+				onRefresh={checkForUpdates}
+				onDetach={handleDetach}
+				onDeleteRemote={handleDeleteRemote}
+			/>
+		</>
 	);
 };
 

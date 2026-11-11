@@ -77,7 +77,9 @@ const IconButton: React.FC<IconButtonProps> = ({
 				side='start'
 				style={{ pointerEvents: 'none' }}
 			>
-				<strong className='ui-tooltip-title'>{label}</strong>
+				<strong className='ui-tooltip-title' style={{ display: 'block' }}>
+					{label}
+				</strong>
 				{tooltip && <span>{tooltip}</span>}
 			</Popover>
 
@@ -87,7 +89,12 @@ const IconButton: React.FC<IconButtonProps> = ({
 				className='ui-menu'
 				side='start'
 				clampHeight
-				style={{ width: 280, maxWidth: 'calc(100vw - 32px)' }}
+				style={{
+					width: 280,
+					maxWidth: 'calc(100vw - 32px)',
+					padding: 'var(--space-sm)',
+					zIndex: 'var(--z-above-all)',
+				}}
 				onClose={() => setConfirming(false)}
 			>
 				<div className='ui-stack' data-gap='sm'>

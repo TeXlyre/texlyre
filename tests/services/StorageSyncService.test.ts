@@ -403,8 +403,26 @@ describe('StorageSyncService', () => {
 		expect(remote.commitCount).toBe(1);
 	});
 
-	it('does not rewrite a catalogue or project ownership when a previously stored HEAD disappears', async () => {
+	it('allows remote deletion only when the catalogue contains the deletion key', async () => {
 		const { remote, service } = await makeHarness();
+		await service.syncProject('user-a', project.id, 'garage');
+		const binding = service.getProjectBinding('user-a', project.id)!;
+
+		expect(await service.canDeleteRemoteProject(
+			'user-a', 'garage', binding.storageProjectId,
+		)).toBe(true);
+		expect(await service.canDeleteRemoteProject(
+			'user-a', 'garage', 'missing-project',
+		)).toBe(false);
+
+		remote.catalogue = null;
+		expect(await service.canDeleteRemoteProject(
+			'user-a', 'garage', binding.storageProjectId,
+		)).toBe(false);
+	});
+
+	it('does not rewrite a catalogue or project ownership when a previously stored HEAD disappears', async () => {
+		const { remote, service, persistence, wrappingKey, dataSerializer } = await makeHarness();
 		const first = await service.syncProject('user-a', project.id, 'garage');
 		const binding = service.getProjectBinding('user-a', project.id)!;
 		remote.heads.delete(binding.storageProjectId);
@@ -1375,6 +1393,46 @@ describe('StorageSyncService dashboard lifecycle', () => {
 });
 
 describe('StorageSyncService remote catalogue management', () => {
+	it('disconnects a missing or unreachable remote without deleting local data or rewriting storage', async () => {
+		const { remote, service } = await makeHarness();
+		const first = await service.syncProject('user-a', project.id, 'garage');
+		const previous = service.getProjectBinding('user-a', project.id)!;
+		remote.heads.delete(previous.storageProjectId);
+		const catalogue = remote.catalogue;
+		const objects = new Map(remote.objects);
+		const revisions = new Map(remote.revisions);
+		const writesBefore = remote.putObjectCount;
+		const getHead = jest.spyOn(remote, 'getHead').mockRejectedValue(new Error('Storage unavailable'));
+
+		await expect(service.disconnectBoundProject('user-a', project.id)).resolves.toBeUndefined();
+		expect(getHead).not.toHaveBeenCalled();
+		expect(service.getProjectBinding('user-a', project.id)).toBeNull();
+		expect(remote.catalogue).toBe(catalogue);
+		expect(remote.objects).toEqual(objects);
+		expect(remote.revisions).toEqual(revisions);
+		expect(remote.putObjectCount).toBe(writesBefore);
+
+		getHead.mockRestore();
+		const replacementRemote = new MemoryStorageProvider();
+		const replacementService = new StorageSyncService({
+			storageService: replacementRemote,
+			dataSerializer,
+			getProjectById: async () => project,
+			updateProject: async () => {},
+			getWrappingKey: () => wrappingKey,
+			persistence,
+		});
+		const replacement = replacementService.attachProject('user-a', project.id, 'replacement');
+		expect(replacement.storageProjectId).not.toBe(previous.storageProjectId);
+		expect(replacement.baseRevision).toBeUndefined();
+		const synced = await replacementService.syncProject('user-a', project.id, 'replacement');
+		expect(synced.status).toBe('synced');
+		expect(synced.revision).not.toBe(first.revision);
+		expect(replacementService.getProjectBinding('user-a', project.id)?.storageProjectId)
+			.toBe(replacement.storageProjectId);
+		expect(remote.objects).toEqual(objects);
+	});
+
 	it('keeps a disconnected local project detached across reconciliation and permits explicit reconnection', async () => {
 		const { remote, service, persistence, wrappingKey } = await makeHarness();
 		await service.syncProject('user-a', project.id, 'garage');
