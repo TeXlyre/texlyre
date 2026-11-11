@@ -1394,7 +1394,7 @@ describe('StorageSyncService dashboard lifecycle', () => {
 
 describe('StorageSyncService remote catalogue management', () => {
 	it('disconnects a missing or unreachable remote without deleting local data or rewriting storage', async () => {
-		const { remote, service } = await makeHarness();
+		const { remote, service, dataSerializer, wrappingKey, persistence } = await makeHarness();
 		const first = await service.syncProject('user-a', project.id, 'garage');
 		const previous = service.getProjectBinding('user-a', project.id)!;
 		remote.heads.delete(previous.storageProjectId);
