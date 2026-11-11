@@ -205,6 +205,34 @@
 	margin-top: 0;
 }
 
+@container (max-width: 1120px) {
+	.projects-list .ui-card[data-role="project"] {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-areas:
+			"title backup"
+			"description description"
+			"meta meta"
+			"tags tags"
+			"header-actions actions";
+	}
+
+	.projects-list [data-role="project-header-actions"],
+	.projects-list [data-role="project-actions"] {
+		flex-wrap: wrap;
+		max-width: 100%;
+	}
+
+	.projects-list [data-role="project-header-actions"] {
+		justify-self: start;
+		justify-content: flex-start;
+	}
+
+	.projects-list [data-role="project-actions"] {
+		justify-self: end;
+		justify-content: flex-end;
+	}
+}
+
 .selection-checkbox {
 	position: absolute;
 	top: var(--space-sm);

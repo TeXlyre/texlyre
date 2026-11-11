@@ -259,6 +259,20 @@ export class StorageSyncService extends StorageSnapshotReconciliation {
 		this.attachSharedProject(userId, projectId, providerId, storageProjectId);
 	}
 
+	async canDeleteRemoteProject(
+		userId: string,
+		providerId: string,
+		storageProjectId: string,
+	): Promise<boolean> {
+		const wrappingKey = this.getWrappingKey();
+		if (!wrappingKey) return false;
+		const loaded = await this.loadCatalogue(userId, providerId, wrappingKey);
+		return loaded.catalogue.projects.some(
+			(entry) =>
+				entry.storageProjectId === storageProjectId && !!entry.deletionKey,
+		);
+	}
+
 	async deleteRemoteProjects(
 		userId: string,
 		providerId: string,

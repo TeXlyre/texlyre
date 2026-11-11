@@ -1685,6 +1685,44 @@ textarea:focus,
 	line-height: inherit;
 }
 
+.ui-button-group.storage-status[data-tone="muted"] {
+	--ui-status-color: var(--pico-secondary);
+}
+
+/* .ui-button-group.storage-status[data-tone="success"] {
+	--ui-status-color: var(--color-success);
+} */
+
+.ui-button-group.storage-status[data-tone="warning"] {
+	--ui-status-color: color-mix(
+		in srgb,
+		var(--color-warning) 75%,
+		var(--text-color)
+	);
+}
+
+.ui-button-group.storage-status[data-tone="danger"] {
+	--ui-status-color: var(--color-error);
+}
+
+.ui-button-group.storage-status[data-tone="warning"] > button {
+	background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
+}
+
+.ui-button-group.storage-status[data-tone="danger"] > button {
+	background-color: color-mix(in srgb, var(--color-error) 12%, transparent);
+}
+
+.ui-button-group.storage-status[data-tone="warning"]
+	> button:hover:not(:disabled) {
+	background-color: color-mix(in srgb, var(--color-warning) 23%, transparent);
+}
+
+.ui-button-group.storage-status[data-tone="danger"]
+	> button:hover:not(:disabled) {
+	background-color: color-mix(in srgb, var(--color-error) 20%, transparent);
+}
+
 .ui-button-group[data-role="status"] > .ui-split-main {
 	min-width: 0;
 	gap: var(--ui-status-icon-gap, var(--space-xs));

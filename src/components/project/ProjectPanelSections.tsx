@@ -169,8 +169,7 @@ const ProjectPanelSections: React.FC<ProjectPanelSectionsProps> = ({
 	const disconnectable = selected.filter(
 		(project) =>
 			localProjects.some((local) => local.id === project.localProjectId) &&
-			project.status !== 'disconnected' &&
-			project.status !== 'error',
+			project.status !== 'disconnected',
 	);
 	const restorable = selected.filter((project) => project.remoteOnly);
 	const removable = selected.filter(

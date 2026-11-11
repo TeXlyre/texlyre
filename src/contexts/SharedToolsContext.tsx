@@ -141,6 +141,27 @@ export const SharedToolsProvider: React.FC<SharedToolsProviderProps> = ({
 	const currentProjectId = projectKey.startsWith('yjs:')
 		? projectKey.slice(4)
 		: projectKey;
+
+	useEffect(() => {
+		const handleBindingChange = (event: Event) => {
+			const detail = (
+				event as CustomEvent<{ userId: string; projectId: string }>
+			).detail;
+			if (
+				detail?.projectId === currentProjectId &&
+				detail.userId === user?.id
+			) {
+				setStorageBindingRevision((revision) => revision + 1);
+			}
+		};
+		document.addEventListener('storage-binding-changed', handleBindingChange);
+		return () =>
+			document.removeEventListener(
+				'storage-binding-changed',
+				handleBindingChange,
+			);
+	}, [currentProjectId, user?.id]);
+
 	const storageBinding = user?.id
 		? storageSyncService.getProjectBinding(user.id, currentProjectId)
 		: null;
