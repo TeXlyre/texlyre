@@ -16,6 +16,7 @@ import {
 
 import {
 	getPatternsForFileType,
+	latexCommandBracketRanges,
 	type BidiPattern,
 	type FileType,
 } from './bidi/patterns';
@@ -25,6 +26,7 @@ type TextRange = { from: number; to: number };
 const BIDI_CONTEXT_CHARS = 8192;
 
 export const setMathEditRegion = StateEffect.define<TextRange | null>();
+const refreshBidiDecorations = StateEffect.define<void>();
 
 const mathEditRegionField = StateField.define<TextRange | null>({
 	create() {
@@ -51,18 +53,47 @@ function rangesOverlap(r1: TextRange, r2: TextRange): boolean {
 
 class LatexTypstBidiIsolatesValue {
 	decorations: DecorationSet;
+	private refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
 	constructor(
 		readonly view: EditorView,
 		readonly patterns: BidiPattern[],
+		readonly fileType: FileType,
 	) {
 		this.decorations = this.build(view);
 	}
 
 	update(update: ViewUpdate) {
-		if (update.docChanged || update.viewportChanged) {
-			this.decorations = this.build(update.view);
+		if (update.docChanged) {
+			this.decorations = this.decorations.map(update.changes);
+			this.scheduleRefresh(update.view);
+		} else if (
+			update.viewportChanged ||
+			update.transactions.some((tr) =>
+				tr.effects.some((effect) => effect.is(setMathEditRegion)),
+			)
+		) {
+			this.refresh(update.view);
 		}
+	}
+
+	private scheduleRefresh(view: EditorView) {
+		if (this.refreshTimer !== null) clearTimeout(this.refreshTimer);
+		this.refreshTimer = setTimeout(() => {
+			this.refreshTimer = null;
+			this.decorations = this.build(view);
+			view.dispatch({ effects: refreshBidiDecorations.of(undefined) });
+		}, 120);
+	}
+
+	private refresh(view: EditorView) {
+		if (this.refreshTimer !== null) clearTimeout(this.refreshTimer);
+		this.refreshTimer = null;
+		this.decorations = this.build(view);
+	}
+
+	destroy() {
+		if (this.refreshTimer !== null) clearTimeout(this.refreshTimer);
 	}
 
 	private build(view: EditorView): DecorationSet {
@@ -90,6 +121,18 @@ class LatexTypstBidiIsolatesValue {
 						from: Math.max(from, vpFrom),
 						to: Math.min(to, vpTo),
 					});
+				}
+			}
+			if (this.fileType === 'latex') {
+				for (const range of latexCommandBracketRanges(text)) {
+					const from = start + range.from;
+					const to = start + range.to;
+					if (to > vpFrom && from < vpTo) {
+						allRanges.push({
+							from: Math.max(from, vpFrom),
+							to: Math.min(to, vpTo),
+						});
+					}
 				}
 			}
 		}
@@ -125,7 +168,7 @@ export function latexTypstBidiIsolates(fileType: FileType): Extension {
 	const plugin = ViewPlugin.fromClass(
 		class extends LatexTypstBidiIsolatesValue {
 			constructor(view: EditorView) {
-				super(view, patterns);
+				super(view, patterns, fileType);
 			}
 		},
 		{

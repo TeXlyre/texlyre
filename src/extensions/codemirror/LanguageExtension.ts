@@ -11,9 +11,11 @@ import { lua } from '@codemirror/legacy-modes/mode/lua';
 import { toml } from '@codemirror/legacy-modes/mode/toml';
 import type { Extension } from '@codemirror/state';
 import { bibtex } from 'codemirror-lang-bib';
-import { latex } from 'codemirror-lang-latex';
 
 import { withAnnotationMasking } from './annotations/annotationMasking';
+import { asyncLatexLint } from './languages/AsyncLatexLint';
+import { asyncLatexLanguage } from './languages/AsyncLatexLanguage';
+import { asyncTypstLanguage } from './languages/AsyncTypstLanguage';
 import { safeTypst as typst } from './languages/safeTypstPatch';
 import { rst } from './languages/rstMode';
 import { createTextMateLanguageForFile } from './languages/textmateMode';
@@ -26,6 +28,7 @@ export interface LanguageExtensionOptions {
 	detectedByContent?: boolean;
 	enableLinting?: boolean;
 	enableTooltips?: boolean;
+	documentLength?: number;
 }
 
 export const luaLanguage = StreamLanguage.define(lua);
@@ -45,24 +48,32 @@ export const createLanguageExtension = (
 	const enableTooltips = options.enableTooltips ?? true;
 
 	switch (fileType) {
-		case 'latex':
+		case 'latex': {
+			const lintOptions = {
+				fileName: options.fileName,
+				...(options.detectedByContent
+					? { checkMissingDocumentEnv: false }
+					: {}),
+			};
 			return [
 				withAnnotationMasking(
-					latex({
-						autoCloseBrackets: false,
-						enableAutocomplete: false,
-						enableLinting,
-						enableTooltips,
+					asyncLatexLanguage({
 						fileName: options.fileName,
+						enableTooltips,
 						nestedEnvironments: latexNestedEnvironments,
-						linter: options.detectedByContent
-							? { checkMissingDocumentEnv: false }
-							: undefined,
 					}),
 				),
+				...(enableLinting ? [asyncLatexLint(lintOptions)] : []),
 			];
+		}
 		case 'typst':
-			return [withAnnotationMasking(typst({ enableLinting }))];
+			return [
+				withAnnotationMasking(
+					typeof Worker !== 'undefined'
+						? asyncTypstLanguage(enableLinting)
+						: typst({ enableLinting }),
+				),
+			];
 		case 'bib':
 			return [
 				withAnnotationMasking(

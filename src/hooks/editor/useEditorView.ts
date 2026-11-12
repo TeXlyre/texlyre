@@ -34,7 +34,6 @@ import { vim } from '@replit/codemirror-vim';
 import { emacs } from '@replit/codemirror-emacs';
 import { helix } from 'codemirror-helix';
 import { bibtexCompletionSource } from 'codemirror-lang-bib';
-import { latexCompletionSource } from 'codemirror-lang-latex';
 import { typstCompletionSource } from 'codemirror-lang-typst/lezer';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as Y from 'yjs';
@@ -42,6 +41,7 @@ import { UndoManager } from 'yjs';
 
 import { createNamedLogger } from '@/logging';
 import { createLanguageExtension } from '../../extensions/codemirror/LanguageExtension';
+import { responsiveLatexCompletion } from '../../extensions/codemirror/languages/responsiveLatexCompletion';
 import { resolveHighlightTheme } from '../../extensions/codemirror/HighlightThemeExtension';
 import { annotationSystemExtension } from '../../extensions/codemirror/AnnotationExtension';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
@@ -431,7 +431,10 @@ export const useEditorView = (
 		return extensions;
 	};
 
-	const buildLanguageExtension = (info: FileTypeInfo): Extension[] => {
+	const buildLanguageExtension = (
+		info: FileTypeInfo,
+		length: number,
+	): Extension[] => {
 		if (!getSyntaxHighlightingEnabled()) return [];
 
 		const { builtinDiagnostics, builtinTooltips } =
@@ -439,6 +442,7 @@ export const useEditorView = (
 
 		return createLanguageExtension(info.fileType, {
 			fileName,
+			documentLength: length,
 			detectedByContent: info.detectedByContent,
 			enableLinting: builtinDiagnostics,
 			enableTooltips: builtinTooltips,
@@ -498,7 +502,7 @@ export const useEditorView = (
 				completionSources.push(enhancedCompletionSource);
 
 				if (info.isLatex) {
-					completionSources.push(latexCompletionSource(true));
+					completionSources.push(responsiveLatexCompletion(true));
 				} else if (info.isTypst) {
 					completionSources.push(typstCompletionSource);
 				}
@@ -712,7 +716,9 @@ export const useEditorView = (
 		} = compartmentsRef.current;
 
 		extensions.push(base.of(buildBaseExtensions(info)));
-		extensions.push(language.of(buildLanguageExtension(info)));
+		extensions.push(
+			language.of(buildLanguageExtension(info, contentToUse.length)),
+		);
 		const highlightExtension = buildHighlightExtension();
 		extensions.push(highlight.of(highlightExtension));
 
@@ -944,7 +950,9 @@ export const useEditorView = (
 		view.dispatch({
 			effects: [
 				base.reconfigure(buildBaseExtensions(info)),
-				language.reconfigure(buildLanguageExtension(info)),
+				language.reconfigure(
+					buildLanguageExtension(info, view.state.doc.length),
+				),
 				highlight.reconfigure(highlightExtension),
 				languageSpecific.reconfigure(
 					buildLanguageSpecificExtensions(

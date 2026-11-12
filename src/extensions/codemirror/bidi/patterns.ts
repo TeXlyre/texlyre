@@ -23,8 +23,6 @@ export const latexBidiPatterns: BidiPattern[] = [
 	},
 	// Standalone commands consuming trailing structural punctuation
 	{ pattern: /\\[A-Za-z@]+\*?(?!\s*[[{])[{}[\]);,]*/g, fileType: 'latex' },
-	// Structural punctuation only when preceded by a command match (opening braces/brackets)
-	{ pattern: /(?<=\\[A-Za-z@]+[^{}[\]]*)[{}[\]]+/g, fileType: 'latex' },
 ];
 
 export const typstBidiPatterns: BidiPattern[] = [
@@ -67,3 +65,22 @@ export const allBidiPatterns: BidiPattern[] = [
 	...typstBidiPatterns,
 	...bibBidiPatterns,
 ];
+
+export function latexCommandBracketRanges(
+	text: string,
+): Array<{ from: number; to: number }> {
+	const ranges: Array<{ from: number; to: number }> = [];
+	const tokens = /\\[A-Za-z@]+|[{}[\]]+/g;
+	let seenCommand = false;
+	let match: RegExpExecArray | null;
+	while ((match = tokens.exec(text)) !== null) {
+		if (match[0][0] === '\\') {
+			seenCommand = true;
+		} else {
+			if (seenCommand)
+				ranges.push({ from: match.index, to: match.index + match[0].length });
+			seenCommand = false;
+		}
+	}
+	return ranges;
+}
