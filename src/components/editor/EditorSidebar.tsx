@@ -51,7 +51,7 @@ interface EditorSidebarProps {
 	initialExpandedPaths?: string[];
 	currentProjectId: string | null;
 	onExportCurrentProject: (projectId: string) => void | Promise<void>;
-	projectType: ProjectType;
+	projectType?: ProjectType;
 	children?: React.ReactNode;
 }
 

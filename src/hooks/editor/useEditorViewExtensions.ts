@@ -29,7 +29,6 @@ import { EditorView, keymap, lineNumbers } from '@codemirror/view';
 import { emacs } from '@replit/codemirror-emacs';
 import { vim } from '@replit/codemirror-vim';
 import { bibtexCompletionSource } from 'codemirror-lang-bib';
-import { latexCompletionSource } from 'codemirror-lang-latex';
 import { typstCompletionSource } from 'codemirror-lang-typst/lezer';
 import { helix } from 'codemirror-helix';
 import { useMemo } from 'react';
@@ -41,6 +40,7 @@ import {
 import { latexTypstBidiIsolates } from '../../extensions/codemirror/BidiExtension';
 import { resolveHighlightTheme } from '../../extensions/codemirror/HighlightThemeExtension';
 import { createLanguageExtension } from '../../extensions/codemirror/LanguageExtension';
+import { responsiveLatexCompletion } from '../../extensions/codemirror/languages/responsiveLatexCompletion';
 import { createListingsExtension } from '../../extensions/codemirror/ListingsExtension';
 import { createMathLiveExtension } from '../../extensions/codemirror/MathLiveExtension';
 import { searchHighlightExtension } from '../../extensions/codemirror/SearchHighlightExtension';
@@ -150,6 +150,7 @@ export const useEditorViewExtensions = ({
 			extensions.push(
 				...createLanguageExtension(fileType, {
 					fileName,
+					documentLength: content.length,
 					detectedByContent,
 					enableLinting: editorSettings.languageFeatures.builtinDiagnostics,
 					enableTooltips: editorSettings.languageFeatures.builtinTooltips,
@@ -169,8 +170,8 @@ export const useEditorViewExtensions = ({
 			);
 		}
 
-		if (isLatex || isTypst || isBib) {
-			extensions.push(latexTypstBidiIsolates());
+		if (fileType === 'latex' || fileType === 'typst' || fileType === 'bib') {
+			extensions.push(latexTypstBidiIsolates(fileType));
 		}
 
 		if (isLatex || isTypst) {
@@ -186,7 +187,7 @@ export const useEditorViewExtensions = ({
 		}
 
 		if (editorSettings.languageFeatures.builtinCompletion) {
-			if (isLatex) completionSources.push(latexCompletionSource(true));
+			if (isLatex) completionSources.push(responsiveLatexCompletion(true));
 			else if (isTypst) completionSources.push(typstCompletionSource);
 			else if (isBib) completionSources.push(bibtexCompletionSource);
 		}

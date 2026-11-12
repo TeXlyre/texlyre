@@ -34,7 +34,6 @@ import { vim } from '@replit/codemirror-vim';
 import { emacs } from '@replit/codemirror-emacs';
 import { helix } from 'codemirror-helix';
 import { bibtexCompletionSource } from 'codemirror-lang-bib';
-import { latexCompletionSource } from 'codemirror-lang-latex';
 import { typstCompletionSource } from 'codemirror-lang-typst/lezer';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as Y from 'yjs';
@@ -42,6 +41,7 @@ import { UndoManager } from 'yjs';
 
 import { createNamedLogger } from '@/logging';
 import { createLanguageExtension } from '../../extensions/codemirror/LanguageExtension';
+import { responsiveLatexCompletion } from '../../extensions/codemirror/languages/responsiveLatexCompletion';
 import { resolveHighlightTheme } from '../../extensions/codemirror/HighlightThemeExtension';
 import { annotationSystemExtension } from '../../extensions/codemirror/AnnotationExtension';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
@@ -69,7 +69,6 @@ import {
 import { createMathLiveExtension } from '../../extensions/codemirror/MathLiveExtension';
 import { createPasteExtension } from '../../extensions/codemirror/PasteExtension';
 import { createListingsExtension } from '../../extensions/codemirror/ListingsExtension';
-import { createBurstDeferredLanguage } from '../../extensions/codemirror/BurstDeferLanguage';
 import {
 	createLinkNavigationExtension,
 	updateLinkNavigationFilePath,
@@ -194,7 +193,6 @@ export const useEditorView = (
 	const [provider, setProvider] = useState<CollabProvider | null>(null);
 	const hasEmittedReadyRef = useRef<boolean>(false);
 	const undoManagerRef = useRef<UndoManager | null>(null);
-	const highlightExtensionRef = useRef<Extension>([]);
 	const toolbarControllerRef = useRef<ToolbarController | null>(null);
 	const [toolbarController, setToolbarController] =
 		useState<ToolbarController | null>(null);
@@ -309,10 +307,10 @@ export const useEditorView = (
 				update(update: ViewUpdate) {
 					if (!update.docChanged) return;
 					if (this.updateTimeout) clearTimeout(this.updateTimeout);
-					const content = update.state.doc.toString();
+					const doc = update.state.doc;
 					this.updateTimeout = setTimeout(() => {
 						this.updateTimeout = null;
-						updateComments(content);
+						updateComments(doc.toString());
 					}, 150);
 				}
 
@@ -433,7 +431,10 @@ export const useEditorView = (
 		return extensions;
 	};
 
-	const buildLanguageExtension = (info: FileTypeInfo): Extension[] => {
+	const buildLanguageExtension = (
+		info: FileTypeInfo,
+		length: number,
+	): Extension[] => {
 		if (!getSyntaxHighlightingEnabled()) return [];
 
 		const { builtinDiagnostics, builtinTooltips } =
@@ -441,6 +442,7 @@ export const useEditorView = (
 
 		return createLanguageExtension(info.fileType, {
 			fileName,
+			documentLength: length,
 			detectedByContent: info.detectedByContent,
 			enableLinting: builtinDiagnostics,
 			enableTooltips: builtinTooltips,
@@ -500,7 +502,7 @@ export const useEditorView = (
 				completionSources.push(enhancedCompletionSource);
 
 				if (info.isLatex) {
-					completionSources.push(latexCompletionSource(true));
+					completionSources.push(responsiveLatexCompletion(true));
 				} else if (info.isTypst) {
 					completionSources.push(typstCompletionSource);
 				}
@@ -714,19 +716,11 @@ export const useEditorView = (
 		} = compartmentsRef.current;
 
 		extensions.push(base.of(buildBaseExtensions(info)));
-		extensions.push(language.of(buildLanguageExtension(info)));
-		const highlightExtension = buildHighlightExtension();
-		highlightExtensionRef.current = highlightExtension;
-		extensions.push(highlight.of(highlightExtension));
 		extensions.push(
-			createBurstDeferredLanguage(
-				() => [language.reconfigure([]), highlight.reconfigure([])],
-				() => [
-					language.reconfigure(buildLanguageExtension(info)),
-					highlight.reconfigure(highlightExtensionRef.current),
-				],
-			),
+			language.of(buildLanguageExtension(info, contentToUse.length)),
 		);
+		const highlightExtension = buildHighlightExtension();
+		extensions.push(highlight.of(highlightExtension));
 
 		if (fileName) {
 			extensions.push(
@@ -743,8 +737,12 @@ export const useEditorView = (
 			);
 		}
 
-		if (info.isLatex || info.isTypst || info.isBib) {
-			extensions.push(latexTypstBidiIsolates());
+		if (
+			info.fileType === 'latex' ||
+			info.fileType === 'typst' ||
+			info.fileType === 'bib'
+		) {
+			extensions.push(latexTypstBidiIsolates(info.fileType));
 		}
 
 		extensions.push(
@@ -890,8 +888,36 @@ export const useEditorView = (
 		documentId,
 		enableComments,
 		enableReviews,
-		textContent,
 	]);
+
+	useEffect(() => {
+		const view = viewRef.current;
+		if (!isEditingFile || !view) return;
+
+		const current = view.state.doc.toString();
+		if (current === textContent) return;
+
+		let from = 0;
+		const minLength = Math.min(current.length, textContent.length);
+		while (from < minLength && current[from] === textContent[from]) {
+			from++;
+		}
+
+		let to = current.length;
+		let end = textContent.length;
+		while (
+			to > from &&
+			end > from &&
+			current[to - 1] === textContent[end - 1]
+		) {
+			to--;
+			end--;
+		}
+
+		view.dispatch({
+			changes: { from, to, insert: textContent.slice(from, end) },
+		});
+	}, [isEditingFile, textContent]);
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: Build helpers are called for live compartment reconfiguration; editorSettingsVersion is the intentional trigger for settings-driven rebuilds. */
 	useEffect(() => {
@@ -920,12 +946,13 @@ export const useEditorView = (
 				: [];
 
 		const highlightExtension = buildHighlightExtension();
-		highlightExtensionRef.current = highlightExtension;
 
 		view.dispatch({
 			effects: [
 				base.reconfigure(buildBaseExtensions(info)),
-				language.reconfigure(buildLanguageExtension(info)),
+				language.reconfigure(
+					buildLanguageExtension(info, view.state.doc.length),
+				),
 				highlight.reconfigure(highlightExtension),
 				languageSpecific.reconfigure(
 					buildLanguageSpecificExtensions(
@@ -949,7 +976,6 @@ export const useEditorView = (
 		if (!view) return;
 
 		const highlightExtension = buildHighlightExtension();
-		highlightExtensionRef.current = highlightExtension;
 		view.dispatch({
 			effects:
 				compartmentsRef.current.highlight.reconfigure(highlightExtension),

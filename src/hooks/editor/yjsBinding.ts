@@ -111,18 +111,14 @@ export const registerYjsBinding = (yText: Y.Text, opts: YjsBindingOptions) => {
 		isEditingFile,
 	} = opts;
 
-	let rafHandle: number | null = null;
-	let pendingContent: string | null = null;
-	let lastFlushedContent: string | null = null;
+	let updateTimer: ReturnType<typeof setTimeout> | null = null;
+	let dirty = false;
 
-	const flush = () => {
-		rafHandle = null;
-		if (pendingContent === null) return;
-		const content = pendingContent;
-		pendingContent = null;
-
-		const changed = content !== lastFlushedContent;
-		lastFlushedContent = content;
+	const flush = (initialContent?: string) => {
+		updateTimer = null;
+		if (!dirty) return;
+		dirty = false;
+		const content = initialContent ?? yText.toString();
 
 		isUpdatingRef.current = true;
 		try {
@@ -145,33 +141,28 @@ export const registerYjsBinding = (yText: Y.Text, opts: YjsBindingOptions) => {
 		} finally {
 			isUpdatingRef.current = false;
 		}
-
-		if (changed && autoSaveRef.current) autoSaveRef.current();
 	};
 
 	const observer = () => {
 		if (isUpdatingRef.current) return;
-		pendingContent = yText.toString() || '';
-		if (rafHandle === null) {
-			rafHandle = requestAnimationFrame(flush);
-		}
+		dirty = true;
+		if (autoSaveRef.current) autoSaveRef.current();
+		if (updateTimer !== null) clearTimeout(updateTimer);
+		updateTimer = setTimeout(flush, 180);
 	};
 
 	yText.observe(observer);
 
-	const initial = yText.toString() || '';
+	const initial = yText.toString();
 	if (initial) {
-		lastFlushedContent = initial;
-		pendingContent = initial;
-		flush();
+		dirty = true;
+		flush(initial);
 	}
 
 	return () => {
 		yText.unobserve(observer);
-		if (rafHandle !== null) {
-			cancelAnimationFrame(rafHandle);
-			rafHandle = null;
-		}
+		if (updateTimer !== null) clearTimeout(updateTimer);
+		updateTimer = null;
 		isUpdatingRef.current = false;
 	};
 };

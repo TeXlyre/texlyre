@@ -49,6 +49,7 @@ export function detectTableScope(
 }
 
 function detectTypstTable(doc: string, pos: number): TableInfo | null {
+	if (!doc.includes('#table')) return null;
 	const tables = findTypstTableBoundaries(doc);
 
 	let deepestTable: TableBoundary | null = null;
@@ -94,7 +95,7 @@ function findTypstTableBoundaries(doc: string): TableBoundary[] {
 
 	let i = 0;
 	while (i < doc.length) {
-		if (doc.substring(i).startsWith('#table')) {
+		if (doc.startsWith('#table', i)) {
 			const start = i;
 			i += 6;
 
@@ -119,9 +120,7 @@ function findTypstTableBoundaries(doc: string): TableBoundary[] {
 			if (stack.length > 0) {
 				const tableStart = stack.pop()!;
 
-				const isTableStart = doc
-					.substring(tableStart.start)
-					.startsWith('#table');
+				const isTableStart = doc.startsWith('#table', tableStart.start);
 				if (isTableStart) {
 					tables.push({
 						start: tableStart.start,

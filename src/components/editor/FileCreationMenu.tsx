@@ -15,7 +15,7 @@ interface FileCreationMenuProps {
 	onClose: () => void;
 	onCreate: (fileName: string, extension: string) => void;
 	triggerElement: HTMLElement | null;
-	projectType: ProjectType;
+	projectType?: ProjectType;
 	parentPath?: string;
 	mode?: 'dropdown' | 'submenu';
 }
@@ -42,8 +42,9 @@ const FileCreationMenu: React.FC<FileCreationMenuProps> = ({
 		(targetRef as React.RefObject<HTMLElement | null>).current = triggerElement;
 	}
 
-	const projectInputFiles =
-		typesetterRegistryService.getInputFilesForProjectType(projectType);
+	const projectInputFiles = projectType
+		? typesetterRegistryService.getInputFilesForProjectType(projectType)
+		: [];
 
 	const fileTemplates: FileTemplate[] = [
 		...projectInputFiles.map((input) => ({
