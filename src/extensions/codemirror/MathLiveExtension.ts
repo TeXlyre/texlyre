@@ -102,45 +102,39 @@ class MathLiveProcessor {
 		this.detector = new MathDetector();
 		this.updateFileType();
 		this.setupEventListeners();
-		this.startChecking();
+		this.scheduleCheck(0);
 	}
 
-	private startChecking(): void {
-		const check = () => {
+	private scheduleCheck(delay: number): void {
+		if (this.checkTimer !== null) clearTimeout(this.checkTimer);
+		this.checkTimer = window.setTimeout(() => {
+			this.checkTimer = null;
 			if (this.isDestroyed) return;
 
 			const previewMode =
 				this.view.state.field(previewModeField, false) ?? 'never';
-			const editingRegion = this.view.state.field(editingRegionField, false);
+			if (
+				previewMode === 'never' ||
+				this.view.state.field(editingRegionField, false)
+			)
+				return;
 
-			if (previewMode !== 'never' && !editingRegion) {
-				this.view.requestMeasure({
-					read: () => {
-						if (this.isDestroyed) return null;
-						return this.checkForMath(previewMode);
-					},
-					write: (result) => {
-						if (this.isDestroyed || !result) return;
-
-						const { region, x, y } = result;
-
-						const isSameRegion =
-							this.hoveredRegion &&
-							region.replaceFrom === this.hoveredRegion.replaceFrom &&
-							region.replaceTo === this.hoveredRegion.replaceTo;
-
-						if (!isSameRegion) {
-							this.hoveredRegion = region;
-							this.renderPreview(region, x, y);
-						}
-					},
-				});
-			}
-
-			this.checkTimer = window.setTimeout(check, 200);
-		};
-
-		check();
+			this.view.requestMeasure({
+				read: () => (this.isDestroyed ? null : this.checkForMath(previewMode)),
+				write: (result) => {
+					if (this.isDestroyed || !result) return;
+					const { region, x, y } = result;
+					if (
+						!this.hoveredRegion ||
+						region.replaceFrom !== this.hoveredRegion.replaceFrom ||
+						region.replaceTo !== this.hoveredRegion.replaceTo
+					) {
+						this.hoveredRegion = region;
+						this.renderPreview(region, x, y);
+					}
+				},
+			});
+		}, delay);
 	}
 
 	private checkForMath(
@@ -242,6 +236,12 @@ class MathLiveProcessor {
 			this.detector.setFileType(fileType);
 		}
 
+		if (update.docChanged) {
+			this.scheduleCheck(220);
+		} else if (update.selectionSet || update.viewportChanged) {
+			this.scheduleCheck(80);
+		}
+
 		const newEditingRegion = update.state.field(editingRegionField, false);
 
 		if (newEditingRegion && newEditingRegion !== this.editingRegion) {
@@ -261,23 +261,22 @@ class MathLiveProcessor {
 	}
 
 	private setupEventListeners(): void {
-		this.view.dom.addEventListener(
-			'mousemove',
-			this.handleMouseMove.bind(this),
-		);
-		this.view.dom.addEventListener(
-			'mouseleave',
-			this.handleMouseLeave.bind(this),
-		);
+		this.view.dom.addEventListener('mousemove', this.handleMouseMove);
+		this.view.dom.addEventListener('mouseleave', this.handleMouseLeave);
 	}
 
-	private handleMouseMove(event: MouseEvent): void {
+	private handleMouseMove = (event: MouseEvent): void => {
 		(window as MathLiveWindow).lastMouseEvent = event;
-	}
+		const mode = this.view.state.field(previewModeField, false);
+		if (mode === 'hover' || mode === 'hover-cursor') {
+			this.scheduleCheck(100);
+		}
+	};
 
-	private handleMouseLeave(): void {
+	private handleMouseLeave = (): void => {
 		(window as MathLiveWindow).lastMouseEvent = null;
-	}
+		this.scheduleCheck(100);
+	};
 
 	private startEdit(region: MathRegion): void {
 		if (isInsideAnnotationTag(this.view.state, region.from, region.to)) return;
@@ -519,8 +518,10 @@ class MathLiveProcessor {
 
 	destroy(): void {
 		this.isDestroyed = true;
+		this.view.dom.removeEventListener('mousemove', this.handleMouseMove);
+		this.view.dom.removeEventListener('mouseleave', this.handleMouseLeave);
 
-		if (this.checkTimer) {
+		if (this.checkTimer !== null) {
 			clearTimeout(this.checkTimer);
 			this.checkTimer = null;
 		}

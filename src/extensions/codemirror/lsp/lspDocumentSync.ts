@@ -4,7 +4,11 @@ import { ViewPlugin, type EditorView, type ViewUpdate } from '@codemirror/view';
 import type { LSPClient } from '@codemirror/lsp-client';
 
 import { genericLSPService } from '../../../services/GenericLSPService';
-import { maskAnnotationText } from '../annotations/annotationMasking';
+import {
+	getAnnotationMaskRanges,
+	maskAnnotationTags,
+	maskAnnotationText,
+} from '../annotations/annotationMasking';
 import {
 	getClientsForFile,
 	getServerCapabilities,
@@ -40,11 +44,7 @@ function getSyncKind(client: LSPClient): number | undefined {
 	return typeof sync === 'number' ? sync : sync?.change;
 }
 
-function isMaskedInPlace(state: EditorState, masked: string): boolean {
-	return masked.length === state.doc.length;
-}
-
-function createIncrementalChanges(update: ViewUpdate, maskedText: string) {
+function createIncrementalChanges(update: ViewUpdate) {
 	let firstFromA: number | null = null;
 	let firstFromB: number | null = null;
 	let lastToA = 0;
@@ -61,14 +61,24 @@ function createIncrementalChanges(update: ViewUpdate, maskedText: string) {
 
 	if (firstFromA === null || firstFromB === null) return [];
 
+	const changedFromB = firstFromB;
 	const startDoc: Text = update.startState.doc;
+	const masks = getAnnotationMaskRanges(update.state)
+		.filter((range) => range.from < lastToB && range.to > changedFromB)
+		.map((range) => ({
+			from: Math.max(0, range.from - changedFromB),
+			to: Math.min(lastToB - changedFromB, range.to - changedFromB),
+		}));
 	return [
 		{
 			range: {
 				start: offsetToPosition(startDoc, firstFromA),
 				end: offsetToPosition(startDoc, lastToA),
 			},
-			text: maskedText.slice(firstFromB, lastToB),
+			text: maskAnnotationTags(
+				update.state.doc.sliceString(firstFromB, lastToB),
+				masks,
+			),
 		},
 	];
 }
@@ -92,29 +102,28 @@ export function createLSPDocumentSyncExtension(fileName: string): Extension {
 
 			update(update: ViewUpdate) {
 				this.syncOpenState(update.state);
-				if (!update.docChanged) return;
+				if (!update.docChanged || this.openedFor.size === 0) return;
 
 				version++;
-				const text = maskAnnotationText(update.state);
-				const incrementalChanges =
-					isMaskedInPlace(update.state, text) &&
-					isMaskedInPlace(
-						update.startState,
-						maskAnnotationText(update.startState),
-					)
-						? createIncrementalChanges(update, text)
-						: [];
-
+				let incrementalChanges: ReturnType<
+					typeof createIncrementalChanges
+				> | null = null;
+				let fullText: string | null = null;
 				this.openedFor.forEach((client) => {
 					const syncKind = getSyncKind(client);
 					if (syncKind === 0) return;
+					if (syncKind === 2) {
+						incrementalChanges ??= createIncrementalChanges(update);
+					} else {
+						fullText ??= maskAnnotationText(update.state);
+					}
 
 					notify(client, 'textDocument/didChange', {
 						textDocument: { uri: fileUri, version },
 						contentChanges:
-							syncKind === 2 && incrementalChanges.length > 0
+							syncKind === 2 && incrementalChanges?.length
 								? incrementalChanges
-								: [{ text }],
+								: [{ text: (fullText ??= maskAnnotationText(update.state)) }],
 					});
 				});
 			}

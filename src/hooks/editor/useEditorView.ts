@@ -69,7 +69,6 @@ import {
 import { createMathLiveExtension } from '../../extensions/codemirror/MathLiveExtension';
 import { createPasteExtension } from '../../extensions/codemirror/PasteExtension';
 import { createListingsExtension } from '../../extensions/codemirror/ListingsExtension';
-import { createBurstDeferredLanguage } from '../../extensions/codemirror/BurstDeferLanguage';
 import {
 	createLinkNavigationExtension,
 	updateLinkNavigationFilePath,
@@ -194,7 +193,6 @@ export const useEditorView = (
 	const [provider, setProvider] = useState<CollabProvider | null>(null);
 	const hasEmittedReadyRef = useRef<boolean>(false);
 	const undoManagerRef = useRef<UndoManager | null>(null);
-	const highlightExtensionRef = useRef<Extension>([]);
 	const toolbarControllerRef = useRef<ToolbarController | null>(null);
 	const [toolbarController, setToolbarController] =
 		useState<ToolbarController | null>(null);
@@ -309,10 +307,10 @@ export const useEditorView = (
 				update(update: ViewUpdate) {
 					if (!update.docChanged) return;
 					if (this.updateTimeout) clearTimeout(this.updateTimeout);
-					const content = update.state.doc.toString();
+					const doc = update.state.doc;
 					this.updateTimeout = setTimeout(() => {
 						this.updateTimeout = null;
-						updateComments(content);
+						updateComments(doc.toString());
 					}, 150);
 				}
 
@@ -716,17 +714,7 @@ export const useEditorView = (
 		extensions.push(base.of(buildBaseExtensions(info)));
 		extensions.push(language.of(buildLanguageExtension(info)));
 		const highlightExtension = buildHighlightExtension();
-		highlightExtensionRef.current = highlightExtension;
 		extensions.push(highlight.of(highlightExtension));
-		extensions.push(
-			createBurstDeferredLanguage(
-				() => [language.reconfigure([]), highlight.reconfigure([])],
-				() => [
-					language.reconfigure(buildLanguageExtension(info)),
-					highlight.reconfigure(highlightExtensionRef.current),
-				],
-			),
-		);
 
 		if (fileName) {
 			extensions.push(
@@ -743,8 +731,12 @@ export const useEditorView = (
 			);
 		}
 
-		if (info.isLatex || info.isTypst || info.isBib) {
-			extensions.push(latexTypstBidiIsolates());
+		if (
+			info.fileType === 'latex' ||
+			info.fileType === 'typst' ||
+			info.fileType === 'bib'
+		) {
+			extensions.push(latexTypstBidiIsolates(info.fileType));
 		}
 
 		extensions.push(
@@ -890,8 +882,36 @@ export const useEditorView = (
 		documentId,
 		enableComments,
 		enableReviews,
-		textContent,
 	]);
+
+	useEffect(() => {
+		const view = viewRef.current;
+		if (!isEditingFile || !view) return;
+
+		const current = view.state.doc.toString();
+		if (current === textContent) return;
+
+		let from = 0;
+		const minLength = Math.min(current.length, textContent.length);
+		while (from < minLength && current[from] === textContent[from]) {
+			from++;
+		}
+
+		let to = current.length;
+		let end = textContent.length;
+		while (
+			to > from &&
+			end > from &&
+			current[to - 1] === textContent[end - 1]
+		) {
+			to--;
+			end--;
+		}
+
+		view.dispatch({
+			changes: { from, to, insert: textContent.slice(from, end) },
+		});
+	}, [isEditingFile, textContent]);
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: Build helpers are called for live compartment reconfiguration; editorSettingsVersion is the intentional trigger for settings-driven rebuilds. */
 	useEffect(() => {
@@ -920,7 +940,6 @@ export const useEditorView = (
 				: [];
 
 		const highlightExtension = buildHighlightExtension();
-		highlightExtensionRef.current = highlightExtension;
 
 		view.dispatch({
 			effects: [
@@ -949,7 +968,6 @@ export const useEditorView = (
 		if (!view) return;
 
 		const highlightExtension = buildHighlightExtension();
-		highlightExtensionRef.current = highlightExtension;
 		view.dispatch({
 			effects:
 				compartmentsRef.current.highlight.reconfigure(highlightExtension),

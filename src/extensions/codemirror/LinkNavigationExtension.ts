@@ -9,6 +9,7 @@ import {
 } from '@codemirror/view';
 import type { Extension } from '@codemirror/state';
 
+import { detectFileType } from '../../utils/fileUtils';
 import { LinkDetector, type DetectedLink } from './linkNavigation/LinkDetector';
 import { LinkNavigator } from './linkNavigation/LinkNavigator';
 
@@ -113,7 +114,14 @@ class LinkNavigationPlugin {
 
 	private updateDetectorFileType(): void {
 		const fileName = this.view.state.field(fileNameField, false);
-		const content = this.view.state.doc.toString();
+		const fileType = detectFileType(fileName);
+		const content =
+			fileType === 'latex' ||
+			fileType === 'typst' ||
+			fileType === 'bib' ||
+			fileType === 'markdown'
+				? undefined
+				: this.view.state.doc.toString();
 
 		this.detector.setFileType(fileName, content);
 	}

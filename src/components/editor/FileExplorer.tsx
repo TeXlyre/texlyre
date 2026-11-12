@@ -107,7 +107,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	initialExpandedPaths,
 	currentProjectId,
 	onExportCurrentProject,
-	projectType = 'latex',
+	projectType,
 	collabProjectId,
 	docsWithPeers,
 }) => {

@@ -14,9 +14,15 @@ import {
 	type DecorationSet,
 } from '@codemirror/view';
 
-import { allBidiPatterns } from './bidi/patterns';
+import {
+	getPatternsForFileType,
+	type BidiPattern,
+	type FileType,
+} from './bidi/patterns';
 
 type TextRange = { from: number; to: number };
+
+const BIDI_CONTEXT_CHARS = 8192;
 
 export const setMathEditRegion = StateEffect.define<TextRange | null>();
 
@@ -46,7 +52,10 @@ function rangesOverlap(r1: TextRange, r2: TextRange): boolean {
 class LatexTypstBidiIsolatesValue {
 	decorations: DecorationSet;
 
-	constructor(readonly view: EditorView) {
+	constructor(
+		readonly view: EditorView,
+		readonly patterns: BidiPattern[],
+	) {
 		this.decorations = this.build(view);
 	}
 
@@ -59,19 +68,28 @@ class LatexTypstBidiIsolatesValue {
 	private build(view: EditorView): DecorationSet {
 		const b = new RangeSetBuilder<Decoration>();
 		const skipRegion = view.state.field(mathEditRegionField, false);
-		const doc = view.state.doc.toString();
+		const doc = view.state.doc;
 		const allRanges: TextRange[] = [];
 
 		for (const { from: vpFrom, to: vpTo } of view.visibleRanges) {
-			for (const { pattern } of allBidiPatterns) {
+			const start = doc.lineAt(Math.max(0, vpFrom - BIDI_CONTEXT_CHARS)).from;
+			const text = doc.sliceString(
+				start,
+				Math.min(doc.length, vpTo + BIDI_CONTEXT_CHARS),
+			);
+
+			for (const { pattern } of this.patterns) {
 				pattern.lastIndex = 0;
 				let match: RegExpExecArray | null;
-				while ((match = pattern.exec(doc)) !== null) {
-					const from = match.index;
+				while ((match = pattern.exec(text)) !== null) {
+					const from = start + match.index;
 					const to = from + match[0].length;
-					if (to < vpFrom) continue;
-					if (from > vpTo) break;
-					allRanges.push({ from, to });
+					if (to <= vpFrom) continue;
+					if (from >= vpTo) break;
+					allRanges.push({
+						from: Math.max(from, vpFrom),
+						to: Math.min(to, vpTo),
+					});
 				}
 			}
 		}
@@ -102,10 +120,18 @@ class LatexTypstBidiIsolatesValue {
 	}
 }
 
-export function latexTypstBidiIsolates(): Extension {
-	const plugin = ViewPlugin.fromClass(LatexTypstBidiIsolatesValue, {
-		decorations: (v) => v.decorations,
-	});
+export function latexTypstBidiIsolates(fileType: FileType): Extension {
+	const patterns = getPatternsForFileType(fileType);
+	const plugin = ViewPlugin.fromClass(
+		class extends LatexTypstBidiIsolatesValue {
+			constructor(view: EditorView) {
+				super(view, patterns);
+			}
+		},
+		{
+			decorations: (v) => v.decorations,
+		},
+	);
 
 	return [
 		mathEditRegionField,

@@ -169,8 +169,8 @@ export const useEditorViewExtensions = ({
 			);
 		}
 
-		if (isLatex || isTypst || isBib) {
-			extensions.push(latexTypstBidiIsolates());
+		if (fileType === 'latex' || fileType === 'typst' || fileType === 'bib') {
+			extensions.push(latexTypstBidiIsolates(fileType));
 		}
 
 		if (isLatex || isTypst) {

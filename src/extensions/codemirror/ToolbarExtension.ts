@@ -1,6 +1,6 @@
 // src/extensions/codemirror/ToolbarExtension.ts
 import type { Extension } from '@codemirror/state';
-import { type EditorView, ViewPlugin } from '@codemirror/view';
+import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import type { UndoManager } from 'yjs';
 
 import type { ToolbarEntry } from '@/components/common/PluginToolbar';
@@ -110,6 +110,7 @@ export const createToolbarController = (
 	const extension = ViewPlugin.fromClass(
 		class {
 			private boundFullScreen: () => void;
+			private scopeTimer: ReturnType<typeof setTimeout> | null = null;
 
 			constructor(v: EditorView) {
 				view = v;
@@ -127,11 +128,12 @@ export const createToolbarController = (
 				);
 			}
 
-			update() {
+			private refreshScopes() {
 				if (!view) return;
-				if (fileType !== 'latex' && fileType !== 'typst') return;
-				const inTable = detectTableScope(view, fileType) !== null;
-				const inColor = detectColorScope(view, fileType) !== null;
+				const inTable =
+					detectTableScope(view, fileType as 'latex' | 'typst') !== null;
+				const inColor =
+					detectColorScope(view, fileType as 'latex' | 'typst') !== null;
 				if (inTable !== scopeState.inTable || inColor !== scopeState.inColor) {
 					scopeState.inTable = inTable;
 					scopeState.inColor = inColor;
@@ -139,7 +141,23 @@ export const createToolbarController = (
 				}
 			}
 
+			update(update: ViewUpdate) {
+				if (fileType !== 'latex' && fileType !== 'typst') return;
+				if (!update.docChanged && !update.selectionSet) return;
+				if (this.scopeTimer) clearTimeout(this.scopeTimer);
+				this.scopeTimer = null;
+				if (update.docChanged) {
+					this.scopeTimer = setTimeout(() => {
+						this.scopeTimer = null;
+						this.refreshScopes();
+					}, 180);
+				} else {
+					this.refreshScopes();
+				}
+			}
+
 			destroy() {
+				if (this.scopeTimer) clearTimeout(this.scopeTimer);
 				view?.dom.ownerDocument.removeEventListener(
 					'fullscreenchange',
 					this.boundFullScreen,

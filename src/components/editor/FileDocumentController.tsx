@@ -236,7 +236,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 				initialExpandedPaths={navigation.initialExpandedPaths}
 				currentProjectId={currentProjectId}
 				onExportCurrentProject={handleExportCurrentProject}
-				projectType={output.projectType}
+				projectType={output.projectTypeKnown ? output.projectType : undefined}
 			>
 				{navigation.activeView !== 'history' &&
 					outline.showOutline &&

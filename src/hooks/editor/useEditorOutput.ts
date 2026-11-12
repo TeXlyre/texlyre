@@ -2,6 +2,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useAuth } from '../useAuth';
+import { useCollab } from '../useCollab';
+import type { DocumentList } from '../../types/documents';
 import { useSettings } from '../useSettings';
 import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import type { TypesetterProvider } from '../../types/compilation';
@@ -9,9 +11,19 @@ import type { ProjectType } from '../../types/projects';
 
 export const useEditorOutput = () => {
 	const { getProjectById } = useAuth();
+	const { data: doc } = useCollab<DocumentList>();
 	const { getSetting } = useSettings();
-	const [projectType, setProjectType] = useState<ProjectType>('latex');
-	const [compilerId, setCompilerId] = useState<string | undefined>();
+	const [storedProject, setStoredProject] = useState<{
+		type: ProjectType;
+		compilerId?: string;
+	} | null>(null);
+	const projectType =
+		doc?.projectMetadata?.type ?? storedProject?.type ?? 'latex';
+	const projectTypeKnown =
+		doc?.projectMetadata?.type !== undefined ||
+		(doc !== undefined && storedProject !== null);
+	const compilerId =
+		doc?.projectMetadata?.compilerId ?? storedProject?.compilerId;
 	const [showLatexOutput, setShowLatexOutput] = useState(false);
 	const [showTypstOutput, setShowTypstOutput] = useState(false);
 	const [activeExternalProvider, setActiveExternalProvider] =
@@ -82,8 +94,10 @@ export const useEditorOutput = () => {
 
 			const project = await getProjectById(projectId);
 			if (project) {
-				setProjectType(project.type || 'latex');
-				setCompilerId(project.compilerId);
+				setStoredProject({
+					type: project.type || 'latex',
+					compilerId: project.compilerId,
+				});
 			}
 		};
 
@@ -123,6 +137,7 @@ export const useEditorOutput = () => {
 
 	return {
 		projectType,
+		projectTypeKnown,
 		showLatexOutput,
 		showTypstOutput,
 		activeExternalProvider,
