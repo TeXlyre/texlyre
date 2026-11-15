@@ -4041,10 +4041,10 @@ codemirror-lang-bib@^0.2.4:
   resolved "https://registry.npmjs.org/codemirror-lang-bib/-/codemirror-lang-bib-0.2.4.tgz"
   integrity sha512-EEwyUIEjsvN48O2XoOli6oCx+U9TQBEANaHfsYeXRdO0mQtTc3R+XLlnUPJhwlCWuMLL3ciDiqlRPGAyjFp82w==
 
-codemirror-lang-latex@^0.6.1:
-  version "0.6.1"
-  resolved "https://registry.npmjs.org/codemirror-lang-latex/-/codemirror-lang-latex-0.6.1.tgz"
-  integrity sha512-JdCVh2xs2W06zP4gEWolWt59BITnKNDu52DK+4HsZjOFK4Ax/kGM5zk2/N67LKR1yu7PVLJd8wRwws/u7MR5pw==
+codemirror-lang-latex@^0.6.2:
+  version "0.6.2"
+  resolved "https://registry.npmjs.org/codemirror-lang-latex/-/codemirror-lang-latex-0.6.2.tgz"
+  integrity sha512-QhxVU5CfQaFtyLPePw5E11IyjLF3PxB9II9VnMyXOlmbD6EyBclHPzqdRKdF1a5+K5bwimTpPB1Y7WDEflPEOw==
 
 codemirror-lang-typst@^0.6.0:
   version "0.6.0"
