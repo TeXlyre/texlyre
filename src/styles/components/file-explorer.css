@@ -393,3 +393,35 @@
 .file-node[draggable="true"]:active {
 	cursor: grabbing;
 }
+
+[data-sidebar-overflow="true"] {
+	position: relative;
+	overflow: hidden;
+}
+
+.ui-toolbar-actions[data-sidebar-overflow="true"] {
+	flex: 1 1 0;
+	justify-content: flex-end;
+}
+
+.ui-panel-header:has(> [data-sidebar-overflow="true"]) > .ui-panel-title {
+	flex-shrink: 1;
+}
+
+[data-sidebar-overflow="true"] > [data-overflow-hidden="true"] {
+	position: absolute;
+	inset-inline-start: 0;
+	visibility: hidden;
+	pointer-events: none;
+}
+
+[data-sidebar-overflow="true"][data-measuring="true"] > * {
+	position: static;
+	flex: 0 0 auto;
+}
+
+.ui-toolbar-actions[data-active-style="filled"]
+	> [data-sidebar-action="sync"].active {
+	background-color: var(--accent-color);
+	color: var(--text-color);
+}

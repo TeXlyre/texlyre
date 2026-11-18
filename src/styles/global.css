@@ -144,6 +144,17 @@ header {
 	gap: var(--space-md);
 }
 
+header[data-role="projects"] .header-left,
+header[data-role="projects"] .header-right {
+	min-width: 0;
+}
+
+header[data-role="projects"] .header-left h1 {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 footer {
 	margin-top: var(--space-us);
 }

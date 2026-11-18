@@ -4,33 +4,20 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useProperties } from '../../hooks/useProperties';
-import { useFileTree } from '../../hooks/useFileTree';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
 import { TypstOutlineParser } from '../../utils/typstOutlineParser';
 import TypstOutlineItem from './TypstOutlineItem';
 import OutlinePreviewToggle, {
 	OutlineStateToggle,
 } from './OutlinePreviewToggle';
-import StatisticsModal from './StatisticsModal';
-import { typstStatisticsService } from '../../services/TypstStatisticsService';
-import type {
-	DocumentStatistics,
-	StatisticsOptions,
-} from '../../types/statistics';
-import { RefreshIcon, WordCountIcon } from '../common/Icons';
+import { RefreshIcon } from '../common/Icons';
 
 interface TypstOutlineProps {
 	content: string;
 	currentLine?: number;
 	onSectionClick: (line: number) => void;
 	onRefresh?: () => Promise<void>;
-	linkedFileInfo?: {
-		fileName?: string;
-		filePath?: string;
-		fileId?: string;
-	} | null;
-	currentFilePath?: string;
-	isEditingFile?: boolean;
+	statisticsAction?: React.ReactNode;
 	previewEnabled?: boolean;
 	onPreviewToggle?: () => void;
 	maximized?: boolean;
@@ -43,9 +30,7 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 	currentLine = 1,
 	onSectionClick,
 	onRefresh,
-	linkedFileInfo,
-	currentFilePath,
-	isEditingFile = false,
+	statisticsAction,
 	previewEnabled = false,
 	onPreviewToggle,
 	maximized = false,
@@ -53,29 +38,11 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 	onCollapsedChange,
 }) => {
 	const { getProperty, setProperty, registerProperty } = useProperties();
-	const { fileTree } = useFileTree();
 	const propertiesRegistered = useRef(false);
 	const headerRef = useWheelScroll<HTMLDivElement>();
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [isCollapsed, setIsCollapsed] = useState(true);
 	const [refreshKey, setRefreshKey] = useState(0);
-	const [showStatistics, setShowStatistics] = useState(false);
-	const [statistics, setStatistics] = useState<DocumentStatistics | null>(null);
-	const [statsLoading, setStatsLoading] = useState(false);
-	const [statsError, setStatsError] = useState<string | null>(null);
-	const [statsOptions, setStatsOptions] = useState<StatisticsOptions>({
-		includeFiles: true,
-		merge: false,
-		brief: false,
-		total: false,
-		sum: true,
-		verbose: 0,
-	});
-
-	const targetFilePath = isEditingFile
-		? currentFilePath
-		: linkedFileInfo?.filePath;
-	const hasValidFilePath = !!targetFilePath;
 
 	useEffect(() => {
 		if (propertiesRegistered.current) return;
@@ -138,31 +105,6 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 		onCollapsedChange?.(true);
 	};
 
-	const handleShowStatistics = async () => {
-		if (!targetFilePath) return;
-
-		setShowStatistics(true);
-		setStatsLoading(true);
-		setStatsError(null);
-
-		try {
-			const stats = await typstStatisticsService.getStatistics(
-				targetFilePath,
-				fileTree,
-				statsOptions,
-			);
-			setStatistics(stats);
-		} catch (error) {
-			setStatsError(
-				error instanceof Error
-					? error.message
-					: 'Failed to calculate statistics',
-			);
-		} finally {
-			setStatsLoading(false);
-		}
-	};
-
 	if (sections.length === 0) {
 		return (
 			<div
@@ -200,17 +142,7 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 						>
 							<RefreshIcon />
 						</button>
-						{hasValidFilePath && (
-							<button
-								type='button'
-								className='ui-icon-button'
-								data-variant='subtle'
-								title={t('Word Count Statistics')}
-								onClick={handleShowStatistics}
-							>
-								<WordCountIcon />
-							</button>
-						)}
+						{statisticsAction}
 					</div>
 				</div>
 				{!isCollapsed && (
@@ -219,17 +151,6 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 						<small>{t('Use = for headings')}</small>
 					</div>
 				)}
-				<StatisticsModal
-					isOpen={showStatistics}
-					onClose={() => setShowStatistics(false)}
-					statistics={statistics}
-					isLoading={statsLoading}
-					error={statsError}
-					options={statsOptions}
-					onOptionsChange={setStatsOptions}
-					onRefresh={handleShowStatistics}
-					contentType='typst'
-				/>
 			</div>
 		);
 	}
@@ -274,17 +195,7 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 					>
 						<RefreshIcon />
 					</button>
-					{hasValidFilePath && (
-						<button
-							type='button'
-							className='ui-icon-button'
-							data-variant='subtle'
-							title={t('Word Count Statistics')}
-							onClick={handleShowStatistics}
-						>
-							<WordCountIcon />
-						</button>
-					)}
+					{statisticsAction}
 				</div>
 			</div>
 
@@ -300,18 +211,6 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 					))}
 				</div>
 			)}
-
-			<StatisticsModal
-				isOpen={showStatistics}
-				onClose={() => setShowStatistics(false)}
-				statistics={statistics}
-				isLoading={statsLoading}
-				error={statsError}
-				options={statsOptions}
-				onOptionsChange={setStatsOptions}
-				onRefresh={handleShowStatistics}
-				contentType='typst'
-			/>
 		</div>
 	);
 };

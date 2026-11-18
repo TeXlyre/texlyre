@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useProperties } from '../../hooks/useProperties';
-import { useWheelScroll } from '../../hooks/useWheelScroll';
+import SidebarHeaderActions from '../common/SidebarHeaderActions';
 import { typesetterRegistryService } from '../../services/TypesetterRegistryService';
 import type { Project } from '../../types/projects';
 import type { StorageDashboardProject } from '../../types/storage';
@@ -65,7 +65,6 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 	availableGroups,
 }) => {
 	const { getProperty, setProperty, registerProperty } = useProperties();
-	const headerActionsRef = useWheelScroll<HTMLDivElement>();
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
@@ -177,31 +176,22 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 				<h3 className='ui-panel-title' data-size='body' data-shrink='true'>
 					{t('Projects')}
 				</h3>
-				<div
-					className='ui-toolbar-actions scroll-x'
-					data-gap='sm'
-					data-active-style='filled'
-					ref={headerActionsRef}
-				>
-					<button
-						type='button'
-						className='ui-icon-button'
-						data-variant='subtle'
-						title={t('New Project')}
-						onClick={onCreateProject}
-					>
-						<NewProjectIcon />
-					</button>
-					<button
-						type='button'
-						className='ui-icon-button'
-						data-variant='subtle'
-						title={t('Import Projects')}
-						onClick={onImportProject}
-					>
-						<ImportIcon />
-					</button>
-				</div>
+				<SidebarHeaderActions
+					actions={[
+						{
+							key: 'new-project',
+							label: t('New Project'),
+							icon: <NewProjectIcon />,
+							onClick: onCreateProject,
+						},
+						{
+							key: 'import',
+							label: t('Import Projects'),
+							icon: <ImportIcon />,
+							onClick: onImportProject,
+						},
+					]}
+				/>
 			</div>
 			<div
 				className='ui-stack project-panel-controls'

@@ -3,6 +3,7 @@ import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import SidebarHeaderActions from '../common/SidebarHeaderActions';
 import { createNamedLogger } from '@/logging';
 import type { SecretsContextType } from '../../contexts/SecretsContext';
 import { useAuth } from '../../hooks/useAuth';
@@ -969,19 +970,17 @@ const GitHistoryPanel: React.FC<GitHistoryPanelProps> = ({
 			<h3 className='ui-panel-title' data-size='body' data-shrink='true'>
 				{t('History')}
 			</h3>
-			<div className='ui-toolbar-actions scroll-x' data-gap='sm'>
-				<button
-					type='button'
-					className='ui-icon-button'
-					data-variant='subtle'
-					title={t('Git Remote')}
-					aria-label={t('Git Remote')}
-					onClick={() => setShowRemoteModal(true)}
-					disabled={!projectId}
-				>
-					<GitRemoteIcon />
-				</button>
-			</div>
+			<SidebarHeaderActions
+				actions={[
+					{
+						key: 'remote',
+						label: t('Git Remote'),
+						icon: <GitRemoteIcon />,
+						onClick: () => setShowRemoteModal(true),
+						disabled: !projectId,
+					},
+				]}
+			/>
 		</div>
 	);
 

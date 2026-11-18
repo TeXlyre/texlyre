@@ -19,6 +19,10 @@ jest.mock('@src/hooks/useAuth', () => ({
 	useAuth: () => ({ user: null }),
 }));
 
+jest.mock('@src/hooks/useSettings', () => ({
+	useSettings: () => ({ getSetting: jest.fn(() => undefined) }),
+}));
+
 jest.mock('@src/hooks/useProperties', () => ({
 	useProperties: () => ({
 		getProperty: jest.fn(() => undefined),
@@ -210,6 +214,17 @@ describe('Git history panel layout', () => {
 			fastForward: false,
 			mergeCommit: true,
 		});
+	});
+
+	it('opens the Git Remote modal from the sidebar header', async () => {
+		mockedGitService.getState.mockResolvedValue(initializedState());
+
+		render(
+			<GitHistoryPanel projectId='project-1' onOpenDiff={jest.fn()} onClearDiff={jest.fn()} />,
+		);
+
+		fireEvent.click(await screen.findByRole('button', { name: 'Git Remote' }));
+		expect(screen.getByRole('dialog', { name: 'Git Remote' })).toBeInTheDocument();
 	});
 
 	it('reconciles the worktree to the pulled HEAD before marking the remote synced', async () => {

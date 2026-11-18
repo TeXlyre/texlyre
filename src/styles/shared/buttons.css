@@ -174,3 +174,18 @@ button[aria-selected="true"],
 	background: transparent;
 	border-color: transparent;
 }
+
+.icon-button-tooltip {
+	--ui-tooltip-pointer-events: none;
+}
+
+.icon-button-tooltip .ui-tooltip-title {
+	display: block;
+}
+
+.icon-button-confirmation {
+	width: 280px;
+	max-width: calc(100vw - var(--space-md) * 2);
+	padding: var(--space-sm);
+	z-index: var(--z-above-all);
+}

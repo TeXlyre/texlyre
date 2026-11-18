@@ -2,7 +2,7 @@
 import type React from 'react';
 
 import { t } from '@/i18n';
-import { useWheelScroll } from '../../hooks/useWheelScroll';
+import SidebarHeaderActions from '../common/SidebarHeaderActions';
 import type { Document } from '../../types/documents';
 import type { EditorSidebarView } from '../../types/editor';
 import type { ProjectType } from '../../types/projects';
@@ -88,50 +88,40 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({
 	projectType,
 	children,
 }) => {
-	const viewToggleRef = useWheelScroll<HTMLDivElement>();
 	const viewToggle = (
-		<div
-			className='ui-tab-list scroll-x'
-			data-role='explorer-view'
-			ref={viewToggleRef}
-		>
-			<button
-				type='button'
-				className={`view-toggle-icon ui-tab${activeView === 'files' ? ' active' : ''}`}
-				onClick={() => onViewChange('files')}
-				title={t('Files')}
-				aria-label={t('Files')}
-			>
-				<FileIcon />
-			</button>
-			<button
-				type='button'
-				className={`view-toggle-icon ui-tab${activeView === 'documents' ? ' active' : ''}`}
-				onClick={() => onViewChange('documents')}
-				title={t('Collab')}
-				aria-label={t('Collab')}
-			>
-				<UsersIcon />
-			</button>
-			<button
-				type='button'
-				className={`view-toggle-icon ui-tab${activeView === 'search' ? ' active' : ''}`}
-				onClick={() => onViewChange('search')}
-				title={t('Search')}
-				aria-label={t('Search')}
-			>
-				<SearchIcon />
-			</button>
-			<button
-				type='button'
-				className={`view-toggle-icon ui-tab${activeView === 'history' ? ' active' : ''}`}
-				onClick={onHistorySelect}
-				title={t('History')}
-				aria-label={t('History')}
-			>
-				<HistoryIcon />
-			</button>
-		</div>
+		<SidebarHeaderActions
+			tabs
+			actions={[
+				{
+					key: 'files',
+					label: t('Files'),
+					icon: <FileIcon />,
+					active: activeView === 'files',
+					onClick: () => onViewChange('files'),
+				},
+				{
+					key: 'documents',
+					label: t('Collab'),
+					icon: <UsersIcon />,
+					active: activeView === 'documents',
+					onClick: () => onViewChange('documents'),
+				},
+				{
+					key: 'search',
+					label: t('Search'),
+					icon: <SearchIcon />,
+					active: activeView === 'search',
+					onClick: () => onViewChange('search'),
+				},
+				{
+					key: 'history',
+					label: t('History'),
+					icon: <HistoryIcon />,
+					active: activeView === 'history',
+					onClick: onHistorySelect,
+				},
+			]}
+		/>
 	);
 
 	return (

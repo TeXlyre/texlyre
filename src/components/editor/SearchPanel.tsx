@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useSearch } from '../../hooks/useSearch';
-import { useWheelScroll } from '../../hooks/useWheelScroll';
+import SidebarHeaderActions from '../common/SidebarHeaderActions';
 import { SearchIcon, ReplaceIcon, FileTextIcon } from '../common/Icons';
 import { fileOperationNotificationService } from '../../services/FileOperationNotificationService';
 import SearchReplaceModal from './SearchReplaceModal';
@@ -48,7 +48,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 	} = useSearch();
 
 	const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-	const headerActionsRef = useWheelScroll<HTMLDivElement>();
 	const [showReplaceModal, setShowReplaceModal] = useState(false);
 	const [pendingReplace, setPendingReplace] = useState<{
 		type: 'file' | 'document' | 'all';
@@ -252,31 +251,26 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 				<h3 className='ui-panel-title' data-size='body' data-shrink='true'>
 					{t('Search')}
 				</h3>
-				<div
-					className='ui-toolbar-actions scroll-x'
-					data-gap='sm'
-					data-active-style='filled'
-					ref={headerActionsRef}
-				>
-					<button
-						type='button'
-						className={`ui-icon-button ${!showReplace ? 'active' : ''}`}
-						data-variant='subtle'
-						onClick={() => showReplace && toggleReplace()}
-						title={t('Search only (Ctrl+Shift+F)')}
-					>
-						<SearchIcon />
-					</button>
-					<button
-						type='button'
-						className={`ui-icon-button ${showReplace ? 'active' : ''}`}
-						data-variant='subtle'
-						onClick={toggleReplace}
-						title={t('Search and Replace (Ctrl+Shift+H)')}
-					>
-						<ReplaceIcon />
-					</button>
-				</div>
+				<SidebarHeaderActions
+					actions={[
+						{
+							key: 'search',
+							label: t('Search only (Ctrl+Shift+F)'),
+							icon: <SearchIcon />,
+							active: !showReplace,
+							onClick: () => {
+								if (showReplace) toggleReplace();
+							},
+						},
+						{
+							key: 'replace',
+							label: t('Search and Replace (Ctrl+Shift+H)'),
+							icon: <ReplaceIcon />,
+							active: showReplace,
+							onClick: toggleReplace,
+						},
+					]}
+				/>
 			</div>
 
 			<div

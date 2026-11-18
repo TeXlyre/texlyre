@@ -95,7 +95,11 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 					</p>
 				</div>
 
-				<div className='ui-list' data-scroll='short'>
+				<div
+					className='ui-list'
+					data-role='project-summary'
+					data-scroll='short'
+				>
 					{selectedProjects.map((project) => (
 						<div
 							key={project.id}

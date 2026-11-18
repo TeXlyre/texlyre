@@ -6,7 +6,7 @@ import { t } from '@/i18n';
 import { createNamedLogger } from '@/logging';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';
-import { useWheelScroll } from '../../hooks/useWheelScroll';
+import SidebarHeaderActions from '../common/SidebarHeaderActions';
 import {
 	FileOperationCancelledError,
 	fileConflictPromptService,
@@ -143,7 +143,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	const previousFileTreeRef = useRef(fileTree);
 	const [showTemporaryFiles, setShowTemporaryFiles] = useState(true);
 	const [showOptionsMenu, setShowOptionsMenu] = useState(false);
-	const optionsButtonRef = useRef<HTMLDivElement>(null);
+	const [optionsTrigger, setOptionsTrigger] = useState<HTMLElement | null>(
+		null,
+	);
 	const [selectionMode, setSelectionMode] = useState(false);
 	const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(
 		new Set(),
@@ -154,7 +156,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		new Set(['/']),
 	);
 	const dropRef = useRef<HTMLDivElement>(null);
-	const headerActionsRef = useWheelScroll<HTMLDivElement>();
+	const overflowButtonRef = useRef<HTMLButtonElement>(null);
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
 	const [showDragDropDialog, setShowDragDropDialog] = useState(false);
@@ -453,7 +455,12 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		parentPath = '/',
 		triggerElement?: HTMLElement,
 	) => {
-		const trigger = triggerElement || fileCreationButtonRef.current;
+		const fileButton = fileCreationButtonRef.current;
+		const trigger =
+			triggerElement ||
+			(fileButton?.dataset.overflowHidden === 'true'
+				? overflowButtonRef.current
+				: fileButton);
 		if (
 			showFileCreationMenu &&
 			fileCreationParentPath === parentPath &&
@@ -1252,112 +1259,84 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 					<h3 className='ui-panel-title' data-size='body' data-shrink='true'>
 						{t('Files')}
 					</h3>
-					<div
-						className='ui-toolbar-actions scroll-x'
-						data-gap='sm'
-						data-active-style='filled'
-						ref={headerActionsRef}
-					>
-						<button
-							type='button'
-							className='ui-icon-button'
-							data-variant='subtle'
-							title={t('Refresh File Tree')}
-							onClick={() => refreshFileTree()}
-						>
-							<RefreshIcon />
-						</button>
-
-						<div ref={optionsButtonRef}>
-							<button
-								type='button'
-								className={`ui-icon-button ${showOptionsMenu ? 'active' : ''}`}
-								data-variant='subtle'
-								title={t('Options')}
-								onClick={() => setShowOptionsMenu(!showOptionsMenu)}
-							>
-								<OptionsIcon />
-							</button>
-						</div>
-
-						<button
-							type='button'
-							className={`ui-icon-button ${selectionMode ? 'active' : ''}`}
-							data-variant='subtle'
-							title={t('Multi-select')}
-							onClick={handleToggleSelectionMode}
-						>
-							<CheckIcon />
-						</button>
-
-						<div className='action-separator'></div>
-
-						<button
-							type='button'
-							className='ui-icon-button'
-							data-variant='subtle'
-							title={t('Export Current Project')}
-							onClick={handleExportCurrentProject}
-							disabled={!currentProjectId}
-						>
-							<ExportIcon />
-						</button>
-
-						<button
-							type='button'
-							className='ui-icon-button'
-							data-variant='subtle'
-							title={t('Open Folder from Disk')}
-							onClick={handleOpenFolder}
-							disabled={!currentProjectId || !workspaceService.isSupported()}
-						>
-							<FolderOpenIcon />
-						</button>
-
-						<button
-							type='button'
-							className='ui-icon-button'
-							data-variant='subtle'
-							title={t('Upload Files')}
-							onClick={() => document.getElementById('file-input')?.click()}
-						>
-							<UploadIcon />
-						</button>
-
-						<input
-							id='file-input'
-							type='file'
-							multiple
-							onChange={handleFileUpload}
-							style={{ display: 'none' }}
-						/>
-
-						<button
-							type='button'
-							ref={fileCreationButtonRef}
-							className='ui-icon-button'
-							data-variant='subtle'
-							title={t('New File')}
-							onClick={(e) => handleStartCreateFile('/', e.currentTarget)}
-						>
-							<FilePlusIcon />
-						</button>
-
-						<button
-							type='button'
-							className='ui-icon-button'
-							data-variant='subtle'
-							title={t('New Folder')}
-							onClick={() => handleStartCreateDirectory('/')}
-						>
-							<FolderPlusIcon />
-						</button>
-					</div>
+					<SidebarHeaderActions
+						overflowRef={overflowButtonRef}
+						onOverflowOpen={() => {
+							setShowOptionsMenu(false);
+							setShowFileCreationMenu(false);
+						}}
+						actions={[
+							{
+								key: 'refresh',
+								label: t('Refresh File Tree'),
+								icon: <RefreshIcon />,
+								onClick: () => refreshFileTree(),
+							},
+							{
+								key: 'options',
+								label: t('Options'),
+								icon: <OptionsIcon />,
+								active: showOptionsMenu,
+								onClick: (anchor) => {
+									setOptionsTrigger(anchor);
+									setShowOptionsMenu(!showOptionsMenu);
+								},
+							},
+							{
+								key: 'select',
+								label: t('Multi-select'),
+								icon: <CheckIcon />,
+								active: selectionMode,
+								onClick: handleToggleSelectionMode,
+							},
+							null,
+							{
+								key: 'export',
+								label: t('Export Current Project'),
+								icon: <ExportIcon />,
+								onClick: handleExportCurrentProject,
+								disabled: !currentProjectId,
+							},
+							{
+								key: 'open-folder',
+								label: t('Open Folder from Disk'),
+								icon: <FolderOpenIcon />,
+								onClick: handleOpenFolder,
+								disabled: !currentProjectId || !workspaceService.isSupported(),
+							},
+							{
+								key: 'upload',
+								label: t('Upload Files'),
+								icon: <UploadIcon />,
+								onClick: () => document.getElementById('file-input')?.click(),
+							},
+							{
+								key: 'new-file',
+								label: t('New File'),
+								icon: <FilePlusIcon />,
+								onClick: (anchor) => handleStartCreateFile('/', anchor),
+								buttonRef: fileCreationButtonRef,
+							},
+							{
+								key: 'new-folder',
+								label: t('New Folder'),
+								icon: <FolderPlusIcon />,
+								onClick: () => handleStartCreateDirectory('/'),
+							},
+						]}
+					/>
+					<input
+						id='file-input'
+						type='file'
+						multiple
+						onChange={handleFileUpload}
+						style={{ display: 'none' }}
+					/>
 
 					<FileExplorerOptionsMenu
 						isOpen={showOptionsMenu}
 						onClose={() => setShowOptionsMenu(false)}
-						triggerElement={optionsButtonRef.current}
+						triggerElement={optionsTrigger}
 						sortField={sortField}
 						sortDirection={sortDirection}
 						onSortFieldChange={handleSortFieldChange}

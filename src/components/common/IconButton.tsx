@@ -73,28 +73,19 @@ const IconButton: React.FC<IconButtonProps> = ({
 			<Popover
 				anchor={wrapperRef}
 				open={hovered && !confirming}
-				className='ui-tooltip'
+				className='ui-tooltip icon-button-tooltip'
 				side='start'
-				style={{ pointerEvents: 'none' }}
 			>
-				<strong className='ui-tooltip-title' style={{ display: 'block' }}>
-					{label}
-				</strong>
+				<strong className='ui-tooltip-title'>{label}</strong>
 				{tooltip && <span>{tooltip}</span>}
 			</Popover>
 
 			<Popover
 				anchor={wrapperRef}
 				open={confirming}
-				className='ui-menu'
+				className='ui-menu icon-button-confirmation'
 				side='start'
 				clampHeight
-				style={{
-					width: 280,
-					maxWidth: 'calc(100vw - 32px)',
-					padding: 'var(--space-sm)',
-					zIndex: 'var(--z-above-all)',
-				}}
 				onClose={() => setConfirming(false)}
 			>
 				<div className='ui-stack' data-gap='sm'>
@@ -115,7 +106,7 @@ const IconButton: React.FC<IconButtonProps> = ({
 					<div className='ui-actions' data-align='end'>
 						<button
 							type='button'
-							className='button secondary '
+							className='button secondary'
 							onClick={() => {
 								setHovered(false);
 								setConfirming(false);
@@ -125,7 +116,7 @@ const IconButton: React.FC<IconButtonProps> = ({
 						</button>
 						<button
 							type='button'
-							className='button danger '
+							className='button danger'
 							onClick={handleConfirm}
 						>
 							{confirm?.confirmLabel ?? t('Confirm')}

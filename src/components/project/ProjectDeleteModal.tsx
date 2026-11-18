@@ -71,7 +71,11 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 					</p>
 				</div>
 
-				<div className='ui-list' data-scroll='short'>
+				<div
+					className='ui-list'
+					data-role='project-summary'
+					data-scroll='short'
+				>
 					{selectedProjects.map((project) => (
 						<div
 							key={project.id}
