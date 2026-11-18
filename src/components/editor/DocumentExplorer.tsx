@@ -7,7 +7,7 @@ import { createNamedLogger } from '@/logging';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { filePathCacheService } from '../../services/FilePathCacheService';
 import { useCollab } from '../../hooks/useCollab';
-import { useWheelScroll } from '../../hooks/useWheelScroll';
+import SidebarHeaderActions from '../common/SidebarHeaderActions';
 import CollaboratorAvatars from '../common/CollaboratorAvatars';
 import type { Document } from '../../types/documents';
 import type { YjsDocUrl } from '../../types/yjs';
@@ -66,7 +66,6 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 	const [editName, setEditName] = useState('');
 	const [activeMenu, setActiveMenu] = useState<string | null>(null);
 	const menuRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-	const headerActionsRef = useWheelScroll<HTMLDivElement>();
 	const [showPropertiesModal, setShowPropertiesModal] = useState(false);
 	const [propertiesInfo, setPropertiesInfo] =
 		useState<DocumentPropertiesInfo | null>(null);
@@ -200,45 +199,24 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 					<h3 className='ui-panel-title' data-size='body' data-shrink='true'>
 						{t('Documents')}
 					</h3>
-					<div
-						className='ui-toolbar-actions scroll-x'
-						data-gap='sm'
-						data-active-style='filled'
-						ref={headerActionsRef}
-					>
-						{syncSession ? (
-							<button
-								type='button'
-								className='ui-icon-button'
-								data-variant='subtle'
-								title={t('Stop Sync')}
-								onClick={handleStopSync}
-								style={{ backgroundColor: 'var(--accent-color)' }}
-							>
-								<SyncIcon />
-							</button>
-						) : (
-							<button
-								type='button'
-								className='ui-icon-button'
-								data-variant='subtle'
-								title={t('Sync All Documents')}
-								onClick={handleSyncAll}
-								disabled={documents.length === 0}
-							>
-								<SyncIcon />
-							</button>
-						)}
-						<button
-							type='button'
-							className='ui-icon-button'
-							data-variant='subtle'
-							title={t('New Document')}
-							onClick={onCreateDocument}
-						>
-							<PlusIcon />
-						</button>
-					</div>
+					<SidebarHeaderActions
+						actions={[
+							{
+								key: 'sync',
+								label: syncSession ? t('Stop Sync') : t('Sync All Documents'),
+								icon: <SyncIcon />,
+								active: !!syncSession,
+								onClick: syncSession ? handleStopSync : handleSyncAll,
+								disabled: !syncSession && documents.length === 0,
+							},
+							{
+								key: 'new-document',
+								label: t('New Document'),
+								icon: <PlusIcon />,
+								onClick: onCreateDocument,
+							},
+						]}
+					/>
 				</div>
 
 				{syncSession && syncProgress.total > 0 && (

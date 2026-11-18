@@ -92,6 +92,78 @@
 	max-width: 150px;
 }
 
+[data-layout="texlyre-mobile"] header[data-role="projects"] {
+	display: grid;
+	grid-template-columns:
+		minmax(min-content, 1fr) max-content max-content
+		minmax(var(--mobile-min-touch-target), 1fr);
+	gap: var(--mobile-spacing-sm);
+}
+
+[data-layout="texlyre-mobile"] header[data-role="projects"] .header-left {
+	position: static;
+	max-width: 45vw;
+	min-width: 0;
+	align-self: center;
+}
+
+[data-layout="texlyre-mobile"] header[data-role="projects"] .header-left h1 {
+	margin: 0;
+	white-space: nowrap;
+}
+
+[data-layout="texlyre-mobile"] header[data-role="projects"] .header-center {
+	display: none;
+}
+
+[data-layout="texlyre-mobile"] header[data-role="projects"] .header-right {
+	display: contents;
+}
+
+[data-layout="texlyre-mobile"]
+	header[data-role="projects"]
+	.backup-status-dropdown-container {
+	grid-column: 2;
+}
+
+[data-layout="texlyre-mobile"]
+	header[data-role="projects"]
+	.header-settings-button {
+	grid-column: 3;
+}
+
+[data-layout="texlyre-mobile"]
+	header[data-role="projects"]
+	.header-right
+	> :has(> .user-dropdown-button) {
+	grid-column: 4;
+	justify-self: end;
+	min-width: 0;
+	max-width: 100%;
+}
+
+[data-layout="texlyre-mobile"]
+	header[data-role="projects"]
+	.user-dropdown-button {
+	position: static;
+	margin-inline-start: auto;
+	max-width: min(150px, 100%);
+}
+
+[data-layout="texlyre-mobile"]
+	header[data-role="projects"]
+	.user-dropdown-button
+	span {
+	min-width: 0;
+}
+
+[data-layout="texlyre-mobile"]
+	header[data-role="projects"]
+	.user-dropdown-button
+	svg {
+	flex-shrink: 0;
+}
+
 [data-layout="texlyre-mobile"] .main-content {
 	flex: 1;
 	width: 100vw;

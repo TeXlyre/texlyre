@@ -74,6 +74,7 @@
 .settings-container {
 	display: flex;
 	flex: 1;
+	min-width: 0;
 	min-height: 0;
 	position: relative;
 }
@@ -84,6 +85,29 @@
 
 .settings-container {
 	overflow: hidden;
+}
+
+.settings-language-select {
+	container-type: inline-size;
+}
+
+.settings-language-select .ui-progress {
+	min-width: 0;
+	max-width: 100%;
+}
+
+.settings-language-select .ui-control-content .ui-progress {
+	width: 3rem;
+}
+
+.settings-language-select .ui-menu-item {
+	overflow-wrap: anywhere;
+}
+
+@container (max-width: 12rem) {
+	.settings-language-select .ui-control-content .ui-progress {
+		display: none;
+	}
 }
 
 .settings-refresh-indicator {

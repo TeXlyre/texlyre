@@ -2,16 +2,19 @@
 import { t } from '@/i18n';
 import { Trans } from 'react-i18next';
 import type React from 'react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import type { Project } from '../../types/projects';
 import type { StorageDashboardProject } from '../../types/storage';
 import { useProperties } from '../../hooks/useProperties';
 import {
+	CheckIcon,
+	CloseIcon,
 	ExportIcon,
 	GridIcon,
 	ImportIcon,
 	ListIcon,
+	MinusIcon,
 	TrashIcon,
 } from '../common/Icons';
 import ProjectCard from './ProjectCard';
@@ -64,10 +67,31 @@ const ProjectList: React.FC<ProjectListProps> = ({
 		new Set(),
 	);
 	const [isSelectionMode, setIsSelectionMode] = useState(false);
+	const headerRef = useRef<HTMLDivElement>(null);
 	const gridRef = useRef<HTMLDivElement>(null);
 	const [columns, setColumns] = useState(1);
 	const itemsPerPage = maxItemsPerPage - (maxItemsPerPage % columns);
 	const totalPages = Math.ceil(projects.length / itemsPerPage);
+
+	useLayoutEffect(() => {
+		const header = headerRef.current;
+		if (!header) return;
+		const measure = () => {
+			if (!header.clientWidth) return;
+			delete header.dataset.selectionCompact;
+			delete header.dataset.sortCompact;
+			if (header.scrollWidth > header.clientWidth) {
+				header.dataset.selectionCompact = 'true';
+				if (header.scrollWidth > header.clientWidth) {
+					header.dataset.sortCompact = 'true';
+				}
+			}
+		};
+		measure();
+		const observer = new ResizeObserver(measure);
+		observer.observe(header);
+		return () => observer.disconnect();
+	});
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies(displayedProjects.length): The rendered item count intentionally retriggers CSS grid column measurement. */
 	useEffect(() => {
@@ -232,9 +256,18 @@ const ProjectList: React.FC<ProjectListProps> = ({
 		}
 	};
 
+	const allSelected = selectedProjects.size === projects.length;
+	const selectAllLabel = allSelected ? t('Deselect All') : t('Select All');
+	const exportLabel = `${t('Export (')}${selectedProjects.size})`;
+	const deleteLabel = `${t('Delete (')}${selectedProjects.size})`;
+
 	return (
 		<div className='ui-panel' data-height='full' data-role='project-list'>
-			<div className='ui-panel-header' data-role='project-list'>
+			<div
+				className='ui-panel-header scroll-x'
+				data-role='project-list'
+				ref={headerRef}
+			>
 				<div className='ui-toolbar' data-gap='sm'>
 					<span>{t('Sort by:')}</span>
 					<button
@@ -274,56 +307,74 @@ const ProjectList: React.FC<ProjectListProps> = ({
 					</button>
 				</div>
 
-				<div className='ui-actions'>
+				<div className='ui-actions' data-role='project-selection'>
 					{!isSelectionMode ? (
 						<button
 							type='button'
-							className='button secondary '
+							className='button secondary'
 							onClick={handleEnterSelectionMode}
 							disabled={projects.length === 0}
+							title={t('Select Projects')}
+							aria-label={t('Select Projects')}
 						>
-							{t('Select Projects')}
+							<span className='project-selection-icon'>
+								<CheckIcon />
+							</span>
+							<span className='project-selection-label'>
+								{t('Select Projects')}
+							</span>
 						</button>
 					) : (
-						<div className='ui-actions'>
+						<>
 							<button
 								type='button'
-								className='button secondary '
+								className='button secondary'
 								onClick={handleSelectAll}
+								title={selectAllLabel}
+								aria-label={selectAllLabel}
 							>
-								{selectedProjects.size === projects.length
-									? t('Deselect All')
-									: t('Select All')}
+								<span className='project-selection-icon'>
+									{allSelected ? <MinusIcon /> : <CheckIcon />}
+								</span>
+								<span className='project-selection-label'>
+									{selectAllLabel}
+								</span>
 							</button>
 							<button
 								type='button'
-								className='button primary '
+								className='button primary'
 								onClick={handleExportSelected}
 								disabled={selectedProjects.size === 0}
+								title={exportLabel}
+								aria-label={exportLabel}
 							>
 								<ExportIcon />
-								{t('Export (')}
-								{selectedProjects.size})
+								<span className='project-selection-label'>{exportLabel}</span>
 							</button>
 							<button
 								type='button'
-								className='button danger '
+								className='button danger'
 								onClick={handleShowDeleteModal}
 								disabled={selectedProjects.size === 0 || !onDeleteSelected}
-								title={`Delete ${selectedProjects.size} selected project${selectedProjects.size === 1 ? '' : 's'}`}
+								title={deleteLabel}
+								aria-label={deleteLabel}
 							>
 								<TrashIcon />
-								{t('Delete (')}
-								{selectedProjects.size})
+								<span className='project-selection-label'>{deleteLabel}</span>
 							</button>
 							<button
 								type='button'
-								className='button secondary '
+								className='button secondary'
 								onClick={handleExitSelectionMode}
+								title={t('Cancel')}
+								aria-label={t('Cancel')}
 							>
-								{t('Cancel')}
+								<span className='project-selection-icon'>
+									<CloseIcon />
+								</span>
+								<span className='project-selection-label'>{t('Cancel')}</span>
 							</button>
-						</div>
+						</>
 					)}
 				</div>
 			</div>

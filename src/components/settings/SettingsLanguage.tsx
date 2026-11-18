@@ -71,7 +71,10 @@ const SettingsLanguage: React.FC<SettingsLanguageProps> = ({
 		<div className='ui-stack' data-gap='lg'>
 			<div className='ui-field'>
 				<label>{setting.label}</label>
-				<div className='ui-menu-anchor' ref={dropdownRef}>
+				<div
+					className='ui-menu-anchor settings-language-select'
+					ref={dropdownRef}
+				>
 					<button
 						type='button'
 						className='ui-field-control ui-control-trigger'
@@ -136,7 +139,7 @@ const SettingsLanguage: React.FC<SettingsLanguageProps> = ({
 										onClick={() => handleSelect(lang.code)}
 									>
 										<span className='ui-stack' data-gap='xs' data-grow='true'>
-											<span className='ui-actions'>
+											<span className='ui-actions' data-wrap='true'>
 												<span>
 													{lang.nativeName} ({lang.name})
 												</span>

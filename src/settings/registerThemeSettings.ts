@@ -24,6 +24,21 @@ export function useRegisterThemeSettings(
 		};
 	}, []);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: Refresh translated setting labels when the language changes. */
+	useEffect(() => {
+		registerSetting({
+			id: 'sidebar-header-overflow',
+			category: t('Appearance'),
+			subcategory: t('Layout'),
+			type: 'checkbox',
+			label: t('Collapse sidebar header buttons'),
+			description: t(
+				'Show buttons that do not fit in a three-dot menu instead of scrolling horizontally',
+			),
+			defaultValue: false,
+		});
+	}, [registerSetting, languageVersion]);
+
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: languageVersion is an intentional trigger; pluginRegistry.getThemes() returns translated names. */
 	const availableThemes = useMemo(() => {
 		return pluginRegistry.getThemes();

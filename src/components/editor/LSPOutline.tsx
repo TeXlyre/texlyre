@@ -22,6 +22,7 @@ interface LSPOutlineProps {
 	currentLine?: number;
 	onSectionClick: (line: number, column?: number) => void;
 	onRefresh?: () => Promise<void>;
+	statisticsAction?: React.ReactNode;
 	previewEnabled?: boolean;
 	onPreviewToggle?: () => void;
 	maximized?: boolean;
@@ -35,6 +36,7 @@ const LSPOutline: React.FC<LSPOutlineProps> = ({
 	currentLine = 1,
 	onSectionClick,
 	onRefresh,
+	statisticsAction,
 	previewEnabled = false,
 	onPreviewToggle,
 	maximized = false,
@@ -146,6 +148,7 @@ const LSPOutline: React.FC<LSPOutlineProps> = ({
 					>
 						<RefreshIcon />
 					</button>
+					{statisticsAction}
 				</div>
 			</div>
 

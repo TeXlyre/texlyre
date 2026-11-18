@@ -69,9 +69,9 @@ const config: TexlyreConfig = {
 
     // Overwrite priority is default < local < mobile for corresponding configs
     userdata: {
-        version: '1.3.5',
+        version: '1.3.6',
         forceUpdate: {
-            settings: ['statusPageUrl', 'statusJsonUrl', 'themePlugin', 'fileSyncNotifications'],
+            settings: ['sidebarHeaderOverflow', 'statusPageUrl', 'statusJsonUrl', 'themePlugin', 'fileSyncNotifications'],
             properties: [],
         },
         default: {
@@ -122,6 +122,7 @@ const config: TexlyreConfig = {
                 pdfViewerRenderingQuality: 'high',
                 repositoryProxyUrl: 'https://proxy.texlyre.org/?url=',
                 latexSourcemapEnable: true,
+                sidebarHeaderOverflow: false,
                 statusJsonUrl: 'https://raw.githubusercontent.com/TeXlyre/upptime/master/status.json',
                 statusPageUrl: 'https://texlyre.org/upptime',
                 templatesApiUrl: 'https://texlyre.github.io/texlyre-templates/api/templates.json',

@@ -72,7 +72,9 @@
 }
 
 [data-layout="texlyre-compact"] header[data-role="projects"] .header-right {
-	flex-shrink: 0;
+	flex-shrink: 1;
+	overflow-x: auto;
+	overflow-y: hidden;
 	margin-inline-start: auto;
 	justify-content: flex-end;
 }
@@ -494,6 +496,7 @@
 
 [data-layout="texlyre-compact"] header[data-role="projects"] .header-left {
 	order: 0;
+	flex-shrink: 1;
 }
 
 [data-layout="texlyre-compact"] header[data-role="projects"] .header-left h1 {
@@ -504,6 +507,8 @@
 	line-height: 1;
 	color: var(--text-color);
 	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 [data-layout="texlyre-compact"]
