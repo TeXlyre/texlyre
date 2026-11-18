@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "lastUpdated": "2026-11-15T12:35:59.415Z",
+    "lastUpdated": "2026-11-18T13:10:22.406Z",
     "totalKeys": 2942
   },
   "languages": [
@@ -33,6 +33,16 @@
       "totalKeys": 2942,
       "translatedKeys": 2779,
       "filePath": "locales/zh-CN.json"
+    },
+    {
+      "code": "es",
+      "name": "Spanish",
+      "nativeName": "Español",
+      "direction": "ltr",
+      "coverage": 93,
+      "totalKeys": 2942,
+      "translatedKeys": 2741,
+      "filePath": "locales/es.json"
     },
     {
       "code": "de",
