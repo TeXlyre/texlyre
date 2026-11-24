@@ -1,6 +1,6 @@
 // src/components/project/ProjectPanelSections.tsx
 import type React from 'react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useWheelScroll } from '../../hooks/useWheelScroll';
@@ -19,6 +19,7 @@ import {
 	UnlinkIcon,
 } from '../common/Icons';
 import ResizablePanel, { ResizablePanelGroup } from '../common/ResizablePanel';
+import PositionedDropdown from '../common/PositionedDropdown';
 import StoredProjectList, { storageProjectKey } from './StoredProjectList';
 
 export const PROJECT_PANEL_MIN_SECTION_SIZE = 12;
@@ -138,12 +139,14 @@ const ProjectPanelSections: React.FC<ProjectPanelSectionsProps> = ({
 	onRestoreExternalProject,
 }) => {
 	const [optionsOpen, setOptionsOpen] = useState(false);
+	const optionsTriggerRef = useRef<HTMLButtonElement>(null);
 	const [selectionMode, setSelectionMode] = useState(false);
 	const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
 	const [visibility, setVisibility] = useState<'all' | 'local' | 'remote'>(
 		'all',
 	);
-	const [sort, setSort] = useState('updated-desc');
+	const [sortField, setSortField] = useState<'updated' | 'name'>('updated');
+	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 	const visibleProjects = useMemo(() => {
 		const filtered = externalProjects.filter(
 			(project) =>
@@ -151,18 +154,13 @@ const ProjectPanelSections: React.FC<ProjectPanelSectionsProps> = ({
 				(visibility === 'remote' ? project.remoteOnly : !project.remoteOnly),
 		);
 		return [...filtered].sort((a, b) => {
-			switch (sort) {
-				case 'name-asc':
-					return a.name.localeCompare(b.name);
-				case 'name-desc':
-					return b.name.localeCompare(a.name);
-				case 'updated-asc':
-					return a.updatedAt - b.updatedAt;
-				default:
-					return b.updatedAt - a.updatedAt;
-			}
+			const comparison =
+				sortField === 'name'
+					? a.name.localeCompare(b.name)
+					: a.updatedAt - b.updatedAt;
+			return sortDirection === 'asc' ? comparison : -comparison;
 		});
-	}, [externalProjects, visibility, sort]);
+	}, [externalProjects, visibility, sortField, sortDirection]);
 	const selected = visibleProjects.filter((project) =>
 		selectedKeys.has(storageProjectKey(project)),
 	);
@@ -331,8 +329,9 @@ const ProjectPanelSections: React.FC<ProjectPanelSectionsProps> = ({
 									data-size='xs'
 									title={t('Remote project options')}
 									aria-label={t('Remote project options')}
+									ref={optionsTriggerRef}
 									aria-expanded={optionsOpen}
-									onClick={() => setOptionsOpen(!optionsOpen)}
+									onClick={() => setOptionsOpen((current) => !current)}
 								>
 									<OptionsIcon />
 								</button>
@@ -351,39 +350,86 @@ const ProjectPanelSections: React.FC<ProjectPanelSectionsProps> = ({
 							</>
 						}
 					/>
+					<PositionedDropdown
+						isOpen={optionsOpen}
+						onClose={() => setOptionsOpen(false)}
+						triggerElement={optionsTriggerRef.current}
+						className='ui-options-dropdown'
+						align='right'
+					>
+						<div className='ui-menu-content'>
+							<div
+								className='ui-menu-section'
+								data-gap='xs'
+								data-divided='true'
+							>
+								<div
+									className='ui-menu-title'
+									data-tone='secondary'
+									data-size='sm'
+								>
+									{t('Show')}
+								</div>
+								<select
+									className='ui-field-control ui-menu-control'
+									aria-label={t('Show remote projects')}
+									value={visibility}
+									onChange={(event) =>
+										setVisibility(event.target.value as typeof visibility)
+									}
+								>
+									<option value='all'>{t('All remote projects')}</option>
+									<option value='local'>{t('Local and remote')}</option>
+									<option value='remote'>{t('Remote only')}</option>
+								</select>
+							</div>
+							<div
+								className='ui-menu-section'
+								data-gap='xs'
+								data-divided='true'
+							>
+								<div
+									className='ui-menu-title'
+									data-tone='secondary'
+									data-size='sm'
+								>
+									{t('Sort')}
+								</div>
+								<div className='ui-menu-sort-row'>
+									<select
+										className='ui-field-control ui-menu-control ui-menu-sort-field'
+										aria-label={t('Sort remote projects by')}
+										value={sortField}
+										onChange={(event) =>
+											setSortField(event.target.value as typeof sortField)
+										}
+									>
+										<option value='updated'>{t('Date Modified')}</option>
+										<option value='name'>{t('Name')}</option>
+									</select>
+									<button
+										type='button'
+										className={`ui-menu-sort-toggle ${sortDirection === 'desc' ? 'desc' : ''}`}
+										title={
+											sortDirection === 'asc' ? t('Ascending') : t('Descending')
+										}
+										aria-label={
+											sortDirection === 'asc' ? t('Ascending') : t('Descending')
+										}
+										onClick={() =>
+											setSortDirection((direction) =>
+												direction === 'asc' ? 'desc' : 'asc',
+											)
+										}
+									>
+										{sortDirection === 'asc' ? '↑' : '↓'}
+									</button>
+								</div>
+							</div>
+						</div>
+					</PositionedDropdown>
 					{!externalCollapsed && (
 						<div className='project-panel-section-body'>
-							{optionsOpen && (
-								<div className='project-panel-remote-options'>
-									<label>
-										{t('Show')}
-										<select
-											className='ui-field-control'
-											value={visibility}
-											onChange={(event) =>
-												setVisibility(event.target.value as typeof visibility)
-											}
-										>
-											<option value='all'>{t('All remote projects')}</option>
-											<option value='local'>{t('Local and remote')}</option>
-											<option value='remote'>{t('Remote only')}</option>
-										</select>
-									</label>
-									<label>
-										{t('Sort by')}
-										<select
-											className='ui-field-control'
-											value={sort}
-											onChange={(event) => setSort(event.target.value)}
-										>
-											<option value='updated-desc'>{t('Newest first')}</option>
-											<option value='updated-asc'>{t('Oldest first')}</option>
-											<option value='name-asc'>{t('Name (A–Z)')}</option>
-											<option value='name-desc'>{t('Name (Z–A)')}</option>
-										</select>
-									</label>
-								</div>
-							)}
 							{selectionMode && (
 								<div className='project-panel-remote-selection'>
 									<button

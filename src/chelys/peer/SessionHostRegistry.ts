@@ -7,6 +7,9 @@ import {
 	HOSTS_AWARENESS_FIELD,
 	isSessionRequest,
 	makeHostKey,
+	makeSessionId,
+	makeSessionRoomId,
+	makeChannelLabel,
 	readHostAdvertisements,
 	readPeerState,
 	SESSIONS_MAP_NAME,
@@ -26,6 +29,8 @@ export interface SessionHostRegistryOptions {
 	label: string;
 	signaling: string[];
 	onChannel: (channel: HostTransport) => void;
+	allowChelysRequesters?: boolean;
+	recoverPeerless?: boolean;
 }
 
 interface HostedSession {
@@ -53,11 +58,21 @@ export class SessionHostRegistry {
 		this.stopped = false;
 		this.sessions.observe(this.handleSessions);
 		this.awareness.on('change', this.handleAwareness);
-		void this.options.connection.ready.then(() => {
-			if (this.stopped) return;
-			this.publishAdvertisement();
-			this.sync();
-		});
+		void this.options.connection.ready
+			.then(() => {
+				if (this.stopped) return;
+				this.publishAdvertisement();
+				this.sync();
+			})
+			.catch((error) => {
+				if (!this.stopped) {
+					console.warn(
+						'[SessionHostRegistry] Control room failed to initialise:',
+						error,
+					);
+					this.stop();
+				}
+			});
 		this.publishAdvertisement();
 		this.sync();
 	}
@@ -128,11 +143,16 @@ export class SessionHostRegistry {
 		this.advertised = false;
 	}
 
-	private liveTexlyrePeers(): Map<string, PeerState> {
+	private liveRequesters(): Map<string, PeerState> {
 		const peers = new Map<string, PeerState>();
 		for (const state of this.awareness.getStates().values()) {
 			const peer = readPeerState(state);
-			if (peer?.kind === 'texlyre') peers.set(peer.id, peer);
+			if (
+				peer &&
+				(peer.kind === 'texlyre' ||
+					(this.options.allowChelysRequesters && peer.kind === 'chelys'))
+			)
+				peers.set(peer.id, peer);
 		}
 		return peers;
 	}
@@ -141,7 +161,7 @@ export class SessionHostRegistry {
 		if (this.stopped) return;
 		const localPeer = this.options.connection.peer;
 		if (!localPeer.transportPeerId) return;
-		const livePeers = this.liveTexlyrePeers();
+		const livePeers = this.liveRequesters();
 		const relevant = new Set<string>();
 		const now = Date.now();
 
@@ -152,7 +172,19 @@ export class SessionHostRegistry {
 				value.label !== this.options.label ||
 				value.targetHostPeerId !== localPeer.id ||
 				value.targetHostInstanceId !== localPeer.instanceId ||
-				value.targetHostTransportPeerId !== localPeer.transportPeerId
+				value.targetHostTransportPeerId !== localPeer.transportPeerId ||
+				value.id !==
+					makeSessionId(
+						value.baseRoomId,
+						value.label,
+						value.requesterInstanceId,
+					) ||
+				value.sessionRoomId !==
+					makeSessionRoomId(
+						this.options.connection.roomId,
+						value.requesterPeerId,
+					) ||
+				value.channelLabel !== makeChannelLabel(value.label, value.requestId)
 			) {
 				return;
 			}
@@ -172,7 +204,7 @@ export class SessionHostRegistry {
 				this.missingSince.set(sessionId, missingAt);
 				if (now - missingAt >= REQUESTER_ABSENCE_GRACE_MS) {
 					this.stopHost(sessionId);
-					this.fail(value, 'TeXlyre requester is no longer present');
+					this.fail(value, 'Service requester is no longer present');
 				}
 				return;
 			}
@@ -193,6 +225,8 @@ export class SessionHostRegistry {
 		const rendezvous = acquireRendezvous(
 			request.sessionRoomId,
 			this.options.signaling,
+			undefined,
+			{ recoverPeerless: this.options.recoverPeerless },
 		);
 		const hosted: HostedSession = {
 			host: null,

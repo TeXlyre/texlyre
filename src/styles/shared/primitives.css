@@ -1018,6 +1018,13 @@ textarea,
 	margin: 0;
 }
 
+select > :is(option, optgroup),
+select optgroup > option {
+	font-family: inherit;
+	font-size: inherit;
+	line-height: inherit;
+}
+
 select:not([multiple]),
 .ui-field-control:is(select:not([multiple])) {
 	overflow: hidden;
@@ -1309,6 +1316,12 @@ textarea:focus,
 	flex: 1 1 auto;
 	min-height: 0;
 	overflow-y: auto;
+}
+
+/* Shared positioning/spacing for panel options menus (Files, Remote Projects, etc.). */
+.ui-options-dropdown {
+	min-width: 200px;
+	padding: var(--space-sm);
 }
 
 .ui-menu-content {

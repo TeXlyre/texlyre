@@ -39,6 +39,8 @@ export interface OpenSessionOptions {
 	signaling: string[];
 	label: string;
 	timeoutMs?: number;
+	anonymous?: boolean;
+	recoverPeerless?: boolean;
 }
 
 async function acquireControlConnection(options: OpenSessionOptions): Promise<{
@@ -49,9 +51,15 @@ async function acquireControlConnection(options: OpenSessionOptions): Promise<{
 		const lease = acquireRendezvous(
 			options.controlRoomId,
 			options.signaling,
-			getAccountControlUser(),
+			options.anonymous ? undefined : getAccountControlUser(),
+			{ recoverPeerless: options.recoverPeerless },
 		);
-		await lease.connection.ready;
+		try {
+			await lease.connection.ready;
+		} catch (error) {
+			lease.release();
+			throw error;
+		}
 		return {
 			connection: lease.connection,
 			release: lease.release,
@@ -172,7 +180,8 @@ export async function openSession(
 		const session = acquireRendezvous(
 			sessionRoomId,
 			options.signaling,
-			getAccountControlUser(),
+			options.anonymous ? undefined : getAccountControlUser(),
+			{ recoverPeerless: options.recoverPeerless },
 		);
 		sessionLease = session;
 		await session.connection.ready;

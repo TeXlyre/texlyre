@@ -54,6 +54,7 @@ interface SharedEntry {
 	operation: Promise<void>;
 	stopped: boolean;
 	hadHealthyPeer: boolean;
+	recoverPeerless: boolean;
 }
 
 const sharedEntries = new Map<string, SharedEntry>();
@@ -159,7 +160,7 @@ const observeNativeScope = (entry: SharedEntry): void => {
 	detachHealthObservers(entry);
 
 	const scopeId = entry.connection.nativeScopeId;
-	if (!scopeId) return;
+	if (!scopeId || !entry.recoverPeerless) return;
 
 	const control = getNativeScopeControl();
 	if (!control) {
@@ -251,6 +252,7 @@ export function acquireRendezvous(
 	roomId: string,
 	signaling: string[],
 	user?: RendezvousUser | null,
+	options?: { recoverPeerless?: boolean },
 ): RendezvousLease {
 	const normalizedSignaling = normalizeSignaling(signaling);
 	const cacheKey = cacheKeyFor(roomId, normalizedSignaling);
@@ -283,6 +285,7 @@ export function acquireRendezvous(
 			operation: Promise.resolve(),
 			stopped: false,
 			hadHealthyPeer: false,
+			recoverPeerless: options?.recoverPeerless !== false,
 		};
 		sharedEntries.set(cacheKey, entry);
 		observeNativeScope(entry);

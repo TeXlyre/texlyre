@@ -71,11 +71,6 @@
 	gap: var(--ui-explorer-actions-gap, var(--space-sm));
 }
 
-.file-toolbar-dropdown {
-	min-width: 200px;
-	padding: var(--space-sm);
-}
-
 .ui-panel[data-role="explorer"].dragging {
 	background-color: var(--pico-primary-focus);
 	outline: 2px dashed var(--pico-primary);
