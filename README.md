@@ -291,14 +291,24 @@ The tools, interaction summaries, and AI-assisted development areas are document
 TeXlyre is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 See [LICENSE](LICENSE) for the complete license text.
 
-## Funding
+## Funding & Sponsorship
 
-[TeXlyre is funded by NLnet](https://nlnet.nl/project/Texlyre/) through the NGI0 Commons Fund, which is supported by the European Commission's Next Generation Internet programme. 
+[TeXlyre is funded by NLnet](https://nlnet.nl/project/Texlyre/) through the NGI0 Commons Fund, which is supported by the European Commission's Next Generation Internet programme.
 
 <p align="center">
-  <img src="showcase/sponsors_banner.svg"
-       alt="Funding agencies" width="100%">
+  <a href="https://nlnet.nl/project/Texlyre/">
+    <img src="showcase/sponsors_banner.svg"
+         alt="Funding agencies" width="100%">
+  </a>
+</p>
+
+Hosting sponsored by [Simafri](https://www.simafri.com/en/managed-vps/) (managed VPS)
+
+<p align="center">
+  <a href="https://www.simafri.com/en/managed-vps/" rel="sponsored">
+    <img src="https://github.com/user-attachments/assets/2e9f483b-995d-4b40-afa4-86c0e7a3bb31"
+         alt="Hosting sponsorship" width="15%">
+  </a>
 </p>
 
 ---
-
