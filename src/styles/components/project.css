@@ -486,27 +486,6 @@
 	height: 13px;
 }
 
-.project-panel-remote-options {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: var(--space-xs);
-	padding: var(--space-xs) var(--space-sm);
-	border-bottom: 1px solid var(--accent-border);
-}
-
-.project-panel-remote-options label {
-	display: flex;
-	flex-direction: column;
-	gap: 0.2rem;
-	min-width: 0;
-	font-size: var(--ui-project-meta-font-size, var(--font-size-meta));
-}
-
-.project-panel-remote-options select {
-	min-width: 0;
-	width: 100%;
-}
-
 .project-panel-remote-selection {
 	display: flex;
 	align-items: center;

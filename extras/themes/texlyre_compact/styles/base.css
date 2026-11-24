@@ -33,7 +33,7 @@ html[data-layout="texlyre-compact"] {
 	--font-size-xxs: 9px;
 	--font-size-nano: 11px;
 	--font-size-tiny: 13px;
-	--font-size-caption: 15px;
+	--font-size-caption: var(--font-size-micro);
 
 	--font-size-micro: 12px;
 	--font-size-meta: var(--compact-font-small);
@@ -408,9 +408,18 @@ html[data-layout="texlyre-compact"]
 	line-height: 1.35;
 }
 
-html[data-layout="texlyre-compact"] body textarea,
-html[data-layout="texlyre-compact"] body select[multiple] {
+html[data-layout="texlyre-compact"] body select:not([multiple]),
+html[data-layout="texlyre-compact"] body select[multiple],
+html[data-layout="texlyre-compact"] body select :is(option, optgroup) {
+	font-size: var(--ui-field-control-font-size);
+}
+
+html[data-layout="texlyre-compact"] body textarea {
 	font-size: var(--compact-font-small);
+	line-height: 1.35;
+}
+
+html[data-layout="texlyre-compact"] body select[multiple] {
 	line-height: 1.35;
 }
 
@@ -418,8 +427,9 @@ html[data-layout="texlyre-compact"] body select[multiple] {
 	font-size: var(--ui-field-control-font-size);
 }
 
-[data-layout="texlyre-compact"]
-	:where(input[type="file"])::file-selector-button {
+[data-layout="texlyre-compact"]:where(
+	input[type="file"]
+)::file-selector-button {
 	padding: 0 9px;
 	margin: 0 9px 0 0;
 	border: 0;

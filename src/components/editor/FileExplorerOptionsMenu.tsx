@@ -31,7 +31,7 @@ const FileExplorerOptionsMenu: React.FC<FileExplorerOptionsMenuProps> = ({
 	<PositionedDropdown
 		isOpen={isOpen}
 		triggerElement={triggerElement}
-		className='file-toolbar-dropdown'
+		className='ui-options-dropdown'
 		align='right'
 		onClose={onClose}
 	>
