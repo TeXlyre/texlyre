@@ -122,7 +122,7 @@ const config: TexlyreConfig = {
                 pdfViewerRenderingQuality: 'high',
                 repositoryProxyUrl: 'https://proxy.texlyre.org/?url=',
                 latexSourcemapEnable: true,
-                sidebarHeaderOverflow: false,
+                sidebarHeaderOverflow: true,
                 statusJsonUrl: 'https://raw.githubusercontent.com/TeXlyre/upptime/master/status.json',
                 statusPageUrl: 'https://texlyre.org/upptime',
                 templatesApiUrl: 'https://texlyre.github.io/texlyre-templates/api/templates.json',

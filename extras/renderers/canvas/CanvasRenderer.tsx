@@ -34,6 +34,7 @@ import './styles.css';
 import { getCanvasRendererSettings } from './settings';
 import {
 	parseSvgPages,
+	svgHasInteractivity,
 	renderSvgPageToCanvas,
 	renderSvgOverlay,
 	invalidateSvgOverlayCache,
@@ -207,6 +208,28 @@ const pageAtOffsetFor = (
 	return 1;
 };
 
+const AnimatedSvgImage = ({ svg, size }: { svg: string; size: PageMeta }) => {
+	const imageRef = useRef<HTMLImageElement>(null);
+
+	useEffect(() => {
+		const image = imageRef.current;
+		if (!image) return;
+		const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+		image.src = url;
+		return () => URL.revokeObjectURL(url);
+	}, [svg]);
+
+	return (
+		<img
+			ref={imageRef}
+			className='canvas-page-canvas'
+			style={{ width: size.width, height: size.height }}
+			alt=''
+			draggable={false}
+		/>
+	);
+};
+
 const CanvasRenderer: React.FC<RendererProps> = ({
 	content,
 	pagedSource,
@@ -326,11 +349,12 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 			canvasRefs,
 			pageMetadata,
 			scale,
+			interactive: canvasRendererTextSelection,
 			renderingRef,
 			pendingRenderRef,
 			renderTokensRef,
 		}),
-		[pageMetadata, scale],
+		[pageMetadata, scale, canvasRendererTextSelection],
 	);
 
 	const pdfCtx = useMemo<PdfRenderContext>(
@@ -407,14 +431,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 		for (const el of textLayerRefs.current.values()) {
 			el.replaceChildren();
 			el.style.visibility = 'hidden';
-			invalidateSvgOverlayCache(el);
 			invalidatePdfOverlayCaches(el);
-		}
-
-		for (const el of interactiveLayerRefs.current.values()) {
-			el.replaceChildren();
-			delete el.dataset.renderKey;
-			el.style.visibility = 'hidden';
 		}
 
 		for (const el of annotationLayerRefs.current.values()) {
@@ -494,7 +511,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 							if (generation !== renderGenerationRef.current) return;
 
 							const textEl = textLayerRefs.current.get(page);
-							const interactiveEl = interactiveLayerRefs.current.get(page);
 							const annotEl = annotationLayerRefs.current.get(page);
 
 							if (textEl) {
@@ -511,49 +527,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 								}
 								annotEl.replaceChildren();
 								annotEl.style.visibility = 'hidden';
-							}
-
-							if (
-								canvasRendererTextSelection &&
-								contentTypeRef.current === 'paged' &&
-								interactiveEl
-							) {
-								const source = pagedSourceRef.current;
-								const controller = contentAbortRef.current;
-
-								if (source?.renderInteractiveLayer && controller) {
-									const renderKey = `${source.id}:${scale}`;
-
-									if (interactiveEl.dataset.renderKey !== renderKey) {
-										interactiveEl.replaceChildren();
-										interactiveEl.style.visibility = 'hidden';
-
-										try {
-											await source.renderInteractiveLayer({
-												page,
-												container: interactiveEl,
-												scale,
-												signal: controller.signal,
-											});
-											if (generation !== renderGenerationRef.current) return;
-											interactiveEl.dataset.renderKey = renderKey;
-										} catch (error) {
-											delete interactiveEl.dataset.renderKey;
-											if (
-												!controller.signal.aborted &&
-												generation === renderGenerationRef.current
-											) {
-												moduleLog.warn(
-													'Failed to render paged interactive layer:',
-													error,
-												);
-											}
-										}
-									}
-								}
-
-								if (generation !== renderGenerationRef.current) return;
-								interactiveEl.style.visibility = 'visible';
 							}
 
 							if (canvasRendererTextSelection && textEl) {
@@ -689,6 +662,9 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 								await source.renderPage({
 									page,
 									canvas,
+									interactiveContainer: canvasRendererTextSelection
+										? interactiveLayerRefs.current.get(page)
+										: undefined,
 									scale,
 									signal: controller.signal,
 								});
@@ -895,6 +871,9 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 			invalidateSvgOverlayCache(el);
 			invalidatePdfOverlayCaches(el);
 			el.style.visibility = 'hidden';
+		}
+		for (const canvas of canvasRefs.current.values()) {
+			canvas.style.visibility = '';
 		}
 		for (const el of interactiveLayerRefs.current.values()) {
 			el.replaceChildren();
@@ -1347,12 +1326,12 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 	) => {
 		if (!onLocationClick) return;
 
-		const canvas = canvasRefs.current.get(page);
+		const surface = canvasRefs.current.get(page) ?? event.currentTarget;
 		const meta = pageMetadata.get(page);
 
-		if (!canvas || !meta) return;
+		if (!meta) return;
 
-		const rect = canvas.getBoundingClientRect();
+		const rect = surface.getBoundingClientRect();
 
 		if (rect.width <= 0 || rect.height <= 0) return;
 
@@ -1483,6 +1462,10 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
 	const renderPage = (page: number) => {
 		const size = pageSizeFor(pageMetadata, page, scale);
+		const svg =
+			contentType === 'svg' && !canvasRendererTextSelection
+				? svgPagesRef.current.get(page)
+				: undefined;
 
 		return (
 			<div
@@ -1499,23 +1482,25 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 						: undefined
 				}
 			>
-				<canvas
-					ref={setCanvasRef(page)}
-					className='canvas-page-canvas'
-					style={{
-						width: `${size.width}px`,
-						height: `${size.height}px`,
-					}}
-				/>
+				{svg && svgHasInteractivity(svg) ? (
+					<AnimatedSvgImage svg={svg} size={size} />
+				) : (
+					<canvas
+						ref={setCanvasRef(page)}
+						className='canvas-page-canvas'
+						style={{
+							width: `${size.width}px`,
+							height: `${size.height}px`,
+						}}
+					/>
+				)}
 
-				{canvasRendererTextSelection &&
-					contentType === 'paged' &&
-					pagedSourceRef.current?.renderInteractiveLayer && (
-						<div
-							ref={setInteractiveLayerRef(page)}
-							className='interactiveLayer'
-						/>
-					)}
+				{canvasRendererTextSelection && contentType === 'paged' && (
+					<div
+						ref={setInteractiveLayerRef(page)}
+						className='interactiveLayer'
+					/>
+				)}
 
 				{canvasRendererTextSelection && (
 					<div ref={setTextLayerRef(page)} className='textLayer' />

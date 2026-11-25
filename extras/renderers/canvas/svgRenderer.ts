@@ -14,7 +14,7 @@ function getWorker(): Worker {
 }
 
 export function invalidateSvgOverlayCache(container: HTMLDivElement): void {
-	svgOverlayScaleCache.delete(container);
+	svgOverlayCache.delete(container);
 }
 
 export function parseSvgPages(
@@ -58,6 +58,7 @@ export interface SvgRenderContext {
 	canvasRefs: RefObject<Map<number, HTMLCanvasElement>>;
 	pageMetadata: Map<number, { width: number; height: number }>;
 	scale: number;
+	interactive: boolean;
 	renderingRef: RefObject<Set<number>>;
 	pendingRenderRef: RefObject<Set<number>>;
 	renderTokensRef: RefObject<Map<number, number>>;
@@ -72,6 +73,7 @@ export function renderSvgPageToCanvas(
 		canvasRefs,
 		pageMetadata,
 		scale,
+		interactive,
 		renderingRef,
 		pendingRenderRef,
 		renderTokensRef,
@@ -116,7 +118,7 @@ export function renderSvgPageToCanvas(
 		canvas.style.height = `${scaledHeight}px`;
 	}
 
-	if (svgHasInteractivity(svgString)) {
+	if (interactive) {
 		canvasCtx.setTransform(1, 0, 0, 1, 0, 0);
 		canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
 		renderingRef.current.delete(pageNumber);
@@ -160,13 +162,20 @@ export function renderSvgPageToCanvas(
 	img.src = url;
 }
 
-function svgHasInteractivity(svg: string): boolean {
-	return /<animate|<set\b|begin\s*=\s*["'][^"']*\.(click|mouseover|mouseout|focus)/i.test(
+export function svgHasInteractivity(svg: string): boolean {
+	return /<(?:[\w.-]+:)?(?:animate(?:Motion|Transform|Color)?|set)\b|begin\s*=\s*["'][^"']*\.(click|mouseover|mouseout|focus)|@(?:-webkit-)?keyframes\b|\banimation(?:-[\w-]+)?\s*:/i.test(
 		svg,
 	);
 }
 
-const svgOverlayScaleCache = new WeakMap<HTMLDivElement, number>();
+const svgOverlayCache = new WeakMap<
+	HTMLDivElement,
+	{
+		svg: SVGSVGElement;
+		source: string;
+		onNavigate?: (target: SvgNavigationTarget) => void;
+	}
+>();
 
 export interface SvgNavigationTarget {
 	page: number;
@@ -183,13 +192,20 @@ export function renderSvgOverlay(
 	onNavigate?: (target: SvgNavigationTarget) => void,
 ): void {
 	if (!textLayerSvg) return;
-	if (svgOverlayScaleCache.get(container) === scale) return;
 
 	const scaledWidth = pageWidth * scale;
 	const scaledHeight = pageHeight * scale;
 
 	container.style.width = `${scaledWidth}px`;
 	container.style.height = `${scaledHeight}px`;
+
+	const cached = svgOverlayCache.get(container);
+	if (cached?.source === textLayerSvg) {
+		cached.svg.setAttribute('width', String(scaledWidth));
+		cached.svg.setAttribute('height', String(scaledHeight));
+		cached.onNavigate = onNavigate;
+		return;
+	}
 
 	const shadow =
 		container.shadowRoot ?? container.attachShadow({ mode: 'open' });
@@ -205,6 +221,7 @@ export function renderSvgOverlay(
 	svg.setAttribute('height', String(scaledHeight));
 	svg.setAttribute('preserveAspectRatio', 'xMinYMin meet');
 	svg.style.pointerEvents = 'none';
+	svg.style.lineHeight = 'normal';
 
 	svg
 		.querySelectorAll(
@@ -216,6 +233,7 @@ export function renderSvgOverlay(
 			const tag = el.tagName.toLowerCase();
 			if (tag === 'text' || el.hasAttribute('data-text')) {
 				(el as HTMLElement).style.cursor = 'text';
+				(el as HTMLElement).style.userSelect = 'text';
 			} else if (tag === 'a' || el.hasAttribute('id')) {
 				(el as HTMLElement).style.cursor = 'pointer';
 			} else {
@@ -223,40 +241,40 @@ export function renderSvgOverlay(
 			}
 		});
 
-	if (onNavigate) {
-		svg.addEventListener('click', (event) => {
-			const target = event.target as Element | null;
-			const anchor = target?.closest<SVGAElement>('a[data-nav-page]');
+	const entry = { svg, source: textLayerSvg, onNavigate };
+	svg.addEventListener('click', (event) => {
+		if (!entry.onNavigate) return;
+		const target = event.target as Element | null;
+		const anchor = target?.closest<SVGAElement>('a[data-nav-page]');
 
-			if (!anchor) return;
+		if (!anchor) return;
 
-			const page = Number(anchor.dataset.navPage);
-			const x =
-				anchor.dataset.navX === undefined
-					? undefined
-					: Number(anchor.dataset.navX);
-			const y =
-				anchor.dataset.navY === undefined
-					? undefined
-					: Number(anchor.dataset.navY);
+		const page = Number(anchor.dataset.navPage);
+		const x =
+			anchor.dataset.navX === undefined
+				? undefined
+				: Number(anchor.dataset.navX);
+		const y =
+			anchor.dataset.navY === undefined
+				? undefined
+				: Number(anchor.dataset.navY);
 
-			if (
-				!Number.isInteger(page) ||
-				page < 1 ||
-				(x !== undefined && !Number.isFinite(x)) ||
-				(y !== undefined && !Number.isFinite(y))
-			) {
-				return;
-			}
+		if (
+			!Number.isInteger(page) ||
+			page < 1 ||
+			(x !== undefined && !Number.isFinite(x)) ||
+			(y !== undefined && !Number.isFinite(y))
+		) {
+			return;
+		}
 
-			event.preventDefault();
-			event.stopPropagation();
+		event.preventDefault();
+		event.stopPropagation();
 
-			onNavigate({ page, x, y });
-		});
-	}
+		entry.onNavigate?.({ page, x, y });
+	});
 
 	shadow.replaceChildren(svg);
 
-	svgOverlayScaleCache.set(container, scale);
+	svgOverlayCache.set(container, entry);
 }
