@@ -89,6 +89,7 @@ export interface PagedRendererSource {
 	renderPage(options: {
 		page: number;
 		canvas: HTMLCanvasElement;
+		interactiveContainer?: HTMLDivElement;
 		scale: number;
 		signal: AbortSignal;
 	}): Promise<void>;
@@ -98,12 +99,6 @@ export interface PagedRendererSource {
 		scale: number;
 		signal: AbortSignal;
 		onNavigate?: (target: PagedRendererNavigationTarget) => void;
-	}): Promise<void>;
-	renderInteractiveLayer?(options: {
-		page: number;
-		container: HTMLDivElement;
-		scale: number;
-		signal: AbortSignal;
 	}): Promise<void>;
 	dispose?(): void;
 }
