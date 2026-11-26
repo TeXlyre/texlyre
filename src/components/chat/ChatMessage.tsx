@@ -2,6 +2,7 @@
 import type React from 'react';
 
 import { formatDate, formatTimestamp } from '../../utils/dateUtils';
+import MarkdownContent from '../common/MarkdownContent';
 
 interface ChatMessage {
 	id: string;
@@ -22,7 +23,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isOwnMessage }) => {
 		>
 			<div className='message-content'>
 				{!isOwnMessage && <div className='message-user'>{message.user}</div>}
-				<div className='message-text'>{message.content}</div>
+				<MarkdownContent className='message-text' content={message.content} />
 				<div
 					className='message-timestamp'
 					title={formatDate(message.timestamp)}

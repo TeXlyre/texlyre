@@ -1,6 +1,6 @@
 import { renderMarkdown } from '@src/extensions/codemirror/lsp/lspHover';
 
-describe('LSP Markdown sanitization', () => {
+describe('Shared Markdown rendering through LSP', () => {
 	it('preserves normal formatting and external links', () => {
 		const dom = renderMarkdown('**Bold** and [docs](https://example.com/docs)');
 		expect(dom.querySelector('strong')?.textContent).toBe('Bold');
@@ -33,5 +33,24 @@ describe('LSP Markdown sanitization', () => {
 		const dom = renderMarkdown('<img src=x onerror=alert(1)>');
 		expect(dom.querySelector('img')).toBeNull();
 		expect(dom.textContent).toContain('<img');
+	});
+
+	it('preserves literal code and renders ordered and unordered lists', () => {
+		const dom = renderMarkdown(
+			'## Steps\n\n3. `**literal**`\n4. **Bold**\n- Next\n\n```tex\n<code>\n**literal**',
+		);
+		expect(dom.querySelector('h2')?.textContent).toBe('Steps');
+		expect(dom.querySelector('ol')?.getAttribute('start')).toBe('3');
+		expect(dom.querySelector('ol li code')?.textContent).toBe('**literal**');
+		expect(dom.querySelector('ol li code strong')).toBeNull();
+		expect(dom.querySelector('ol li strong')?.textContent).toBe('Bold');
+		expect(dom.querySelector('ul li')?.textContent).toBe('Next');
+		expect(dom.querySelector('pre code')?.textContent).toBe('<code>\n**literal**');
+	});
+
+	it('preserves line breaks in paragraphs for chat styling', () => {
+		const dom = renderMarkdown('First\r\nSecond\n\nThird');
+		expect(dom.querySelector('p')?.textContent).toBe('First\nSecond');
+		expect(dom.querySelectorAll('p')).toHaveLength(2);
 	});
 });

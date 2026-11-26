@@ -5,6 +5,7 @@
 @import "./shared/modals.css";
 @import "./shared/scrollable.css";
 @import "./shared/primitives.css";
+@import "./shared/markdown.css";
 
 :root {
 	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;

@@ -19,6 +19,7 @@ import {
 	FileTextIcon,
 	TrashIcon,
 } from '../common/Icons';
+import MarkdownContent from '../common/MarkdownContent';
 import DiffView from './DiffView';
 import { toolLabel } from './toolLabel';
 
@@ -64,7 +65,7 @@ const Entry: React.FC<{ entry: AgentEntry }> = ({ entry }) => {
 		case 'user':
 			return (
 				<div className='agent-entry' data-kind='user'>
-					{entry.text}
+					<MarkdownContent content={entry.text} />
 					{entry.context && (
 						<span
 							className='agent-entry-context'
@@ -80,14 +81,14 @@ const Entry: React.FC<{ entry: AgentEntry }> = ({ entry }) => {
 		case 'agent':
 			return (
 				<div className='agent-entry' data-kind='agent'>
-					{entry.text}
+					<MarkdownContent content={entry.text} />
 				</div>
 			);
 		case 'thought':
 			return (
 				<details className='agent-entry' data-kind='thought'>
 					<summary>{t('Thinking')}</summary>
-					{entry.text}
+					<MarkdownContent content={entry.text} />
 				</details>
 			);
 		case 'tool':
@@ -108,7 +109,7 @@ const Entry: React.FC<{ entry: AgentEntry }> = ({ entry }) => {
 				<ol className='agent-entry' data-kind='plan'>
 					{entry.items.map((item, index) => (
 						<li
-							// biome-ignore lint/suspicious/noArrayIndexKey: plan items carry no ids and the agent replaces the whole plan on every update.
+							/* biome-ignore lint/suspicious/noArrayIndexKey: plan items carry no ids and the agent replaces the whole plan on every update. */
 							key={index}
 							data-status={item.status}
 						>
@@ -160,7 +161,7 @@ const AgentPanel: React.FC = () => {
 		endRef.current?.scrollIntoView({ behavior: 'smooth' });
 	}, [entries]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: chatId is an intentional trigger; another chat cancels a pending delete.
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: chatId is an intentional trigger; another chat cancels a pending delete. */
 	useEffect(() => {
 		setConfirmingDelete(false);
 	}, [chatId]);

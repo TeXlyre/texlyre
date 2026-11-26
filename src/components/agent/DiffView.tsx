@@ -27,7 +27,7 @@ const DiffView: React.FC<DiffViewProps> = ({ before, after, context = 3 }) => {
 				if (line.kind === 'skipped') {
 					return (
 						<div
-							// biome-ignore lint/suspicious/noArrayIndexKey: folded runs have no line of their own; the list is derived wholesale from its inputs.
+							/* biome-ignore lint/suspicious/noArrayIndexKey: folded runs have no line of their own; the list is derived fully from its inputs. */
 							key={`skip-${index}`}
 							className='agent-diff-line'
 							data-kind='skipped'

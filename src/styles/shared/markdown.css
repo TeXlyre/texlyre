@@ -1,0 +1,85 @@
+.markdown-content {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.markdown-content :is(p, ul, ol, pre) {
+	margin: 0 0 0.5em;
+}
+
+.markdown-content :is(ul, ol) {
+	padding-inline-start: 1.5em;
+}
+
+.markdown-content li {
+	margin: 0;
+}
+
+.markdown-content ul > li {
+	list-style: disc;
+}
+
+.markdown-content ol > li {
+	list-style: decimal;
+}
+
+.markdown-content pre {
+	max-width: 100%;
+	overflow-x: auto;
+	white-space: pre;
+	overflow-wrap: normal;
+}
+
+.markdown-content pre code {
+	white-space: inherit;
+}
+
+.markdown-content a {
+	text-decoration: underline;
+}
+
+.markdown-content h1 {
+	font-size: 1.4em;
+}
+
+.markdown-content h2 {
+	font-size: 1.25em;
+}
+
+.markdown-content h3 {
+	font-size: 1.1em;
+}
+
+.markdown-content h4 {
+	font-size: 1em;
+}
+
+.markdown-content h5 {
+	font-size: 0.9em;
+}
+
+.markdown-content h6 {
+	font-size: 0.85em;
+}
+
+.markdown-content :is(h1, h2, h3, h4, h5, h6) {
+	margin: 0.4em 0 0.2em;
+	font-weight: 600;
+	color: inherit;
+	line-height: 1.2;
+}
+
+.markdown-content hr {
+	border: none;
+	border-top: 1px solid currentColor;
+	opacity: 0.3;
+	margin: 0.5em 0;
+}
+
+.markdown-content > :first-child {
+	margin-top: 0;
+}
+
+.markdown-content > :last-child {
+	margin-bottom: 0;
+}
