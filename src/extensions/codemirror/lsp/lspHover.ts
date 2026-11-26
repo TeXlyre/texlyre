@@ -2,8 +2,8 @@
 import type { Extension } from '@codemirror/state';
 import { hoverTooltip, type Tooltip } from '@codemirror/view';
 import type { LSPClient } from '@codemirror/lsp-client';
-import DOMPurify from 'dompurify';
 
+import { renderMarkdownHtml } from '../../../utils/markdownUtils';
 import {
 	getClientLabel,
 	getClientsForFile,
@@ -18,112 +18,10 @@ interface HoverEntry {
 	content: string;
 }
 
-function escapeHtml(value: string): string {
-	return value
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;');
-}
-
-function renderInline(value: string): string {
-	return escapeHtml(value)
-		.replace(/`([^`]+)`/g, '<code>$1</code>')
-		.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-		.replace(/\*(.+?)\*/g, '<em>$1</em>')
-		.replace(
-			/\[([^\]]+)\]\(([^)]+)\)/g,
-			'<a href="$2" target="_blank" rel="noreferrer">$1</a>',
-		);
-}
-
 export function renderMarkdown(content: string): HTMLElement {
-	const out: string[] = [];
-	let code: string[] = [];
-	let paragraph: string[] = [];
-	let inCode = false;
-	let inList = false;
-
-	const flushParagraph = () => {
-		if (paragraph.length === 0) return;
-		out.push(`<p>${renderInline(paragraph.join(' '))}</p>`);
-		paragraph = [];
-	};
-
-	const closeList = () => {
-		if (!inList) return;
-		out.push('</ul>');
-		inList = false;
-	};
-
-	for (const line of content.split('\n')) {
-		if (/^```/.test(line)) {
-			if (inCode) {
-				out.push(`<pre><code>${escapeHtml(code.join('\n'))}</code></pre>`);
-				code = [];
-				inCode = false;
-			} else {
-				flushParagraph();
-				closeList();
-				inCode = true;
-			}
-			continue;
-		}
-
-		if (inCode) {
-			code.push(line);
-			continue;
-		}
-
-		const heading = line.match(/^(#{1,6})\s+(.*)$/);
-		if (heading) {
-			flushParagraph();
-			closeList();
-			const level = heading[1].length;
-			out.push(`<h${level}>${renderInline(heading[2])}</h${level}>`);
-			continue;
-		}
-
-		if (/^\s*([-*_])\1{2,}\s*$/.test(line)) {
-			flushParagraph();
-			closeList();
-			out.push('<hr>');
-			continue;
-		}
-
-		const item = line.match(/^\s*[-*+]\s+(.*)$/);
-		if (item) {
-			flushParagraph();
-			if (!inList) {
-				out.push('<ul>');
-				inList = true;
-			}
-			out.push(`<li>${renderInline(item[1])}</li>`);
-			continue;
-		}
-
-		if (line.trim() === '') {
-			flushParagraph();
-			closeList();
-			continue;
-		}
-
-		paragraph.push(line);
-	}
-
-	if (inCode)
-		out.push(`<pre><code>${escapeHtml(code.join('\n'))}</code></pre>`);
-	flushParagraph();
-	closeList();
-
 	const container = document.createElement('div');
-	container.className = 'cm-lsp-markdown';
-	container.innerHTML = DOMPurify.sanitize(out.join(''), {
-		USE_PROFILES: { html: true },
-	});
-	for (const link of container.querySelectorAll<HTMLAnchorElement>('a[href]')) {
-		link.target = '_blank';
-		link.rel = 'noopener noreferrer';
-	}
+	container.className = 'cm-lsp-markdown markdown-content';
+	container.innerHTML = renderMarkdownHtml(content);
 	return container;
 }
 

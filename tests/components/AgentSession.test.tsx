@@ -134,7 +134,10 @@ describe('agent session UI', () => {
 				{ type: 'text', text: 'Fix it' },
 			]),
 		);
-		expect(screen.getByText('Fix it', { selector: '.agent-entry' })).toBeInTheDocument();
+		expect(screen.getByText('Fix it', { selector: '.agent-entry p' }).closest('.agent-entry')).toHaveAttribute(
+			'data-kind',
+			'user',
+		);
 		expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
 
 		act(() => {
@@ -142,7 +145,7 @@ describe('agent session UI', () => {
 				sessionId: 'session-1',
 				update: {
 					sessionUpdate: 'agent_message_chunk',
-					content: { type: 'text', text: 'Done.' },
+					content: { type: 'text', text: '**Done' },
 				},
 			});
 			// Updates for another session are ignored.
@@ -154,7 +157,17 @@ describe('agent session UI', () => {
 				},
 			});
 		});
-		expect(screen.getByText('Done.')).toBeInTheDocument();
+		expect(screen.getByText('**Done')).toBeInTheDocument();
+		act(() => {
+			mockService.updateListener?.('claude', {
+				sessionId: 'session-1',
+				update: {
+					sessionUpdate: 'agent_message_chunk',
+					content: { type: 'text', text: '.**' },
+				},
+			});
+		});
+		expect(screen.getByText('Done.', { selector: 'strong' })).toBeInTheDocument();
 		expect(screen.queryByText('stale')).not.toBeInTheDocument();
 
 		await act(async () => finishPrompt({ stopReason: 'end_turn' }));
@@ -370,7 +383,10 @@ describe('shared agents', () => {
 			'disconnected',
 		);
 		// The chat stays open to read.
-		expect(screen.getByText('Hi', { selector: '.agent-entry' })).toBeInTheDocument();
+		expect(screen.getByText('Hi', { selector: '.agent-entry p' }).closest('.agent-entry')).toHaveAttribute(
+			'data-kind',
+			'user',
+		);
 		expect(
 			screen.queryByRole('option', { name: 'Claude Agent (shared by Alice)' }),
 		).not.toBeInTheDocument();

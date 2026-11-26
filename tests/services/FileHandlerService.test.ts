@@ -67,7 +67,7 @@ describe('FileHandlerService', () => {
 				configurable: true,
 			});
 		} else {
-			// biome-ignore lint/performance/noDelete: the property must be absent
+			/* biome-ignore lint/performance/noDelete: the property must be absent */
 			delete (window as { launchQueue?: unknown }).launchQueue;
 		}
 
@@ -499,8 +499,8 @@ describe('FileHandlerService', () => {
 
 		it('should open the merge view when a sync would drop annotations', async () => {
 			const resolve = mockResolveConflicts.mockResolvedValue(
-					new Map([['/chapters/intro.tex', { action: 'keep-local' }]]),
-				);
+				new Map([['/chapters/intro.tex', { action: 'keep-local' }]]),
+			);
 
 			const adapter = createAdapter(1_000, 'intro\nrewritten entirely\ntail');
 			module.fileHandlerService.attachWorkspace(adapter as never);

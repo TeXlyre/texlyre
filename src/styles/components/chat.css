@@ -228,13 +228,29 @@
 .message-text {
 	font-size: var(--ui-chat-message-font-size, var(--font-size-control));
 	line-height: var(--ui-chat-message-line-height, 1.4);
-	word-wrap: break-word;
 	white-space: pre-wrap;
-	overflow-wrap: break-word;
+	overflow-wrap: anywhere;
 }
 
 .message-timestamp {
 	font-size: var(--ui-chat-time-font-size, var(--font-size-micro));
 	opacity: 0.6;
 	margin-top: 2px;
+}
+
+.message-text.markdown-content a,
+.agent-entry > .markdown-content a {
+	color: inherit;
+}
+
+.message-text.markdown-content :is(code, pre),
+.agent-entry > .markdown-content :is(code, pre) {
+	color: inherit;
+	background: color-mix(in srgb, currentColor 10%, transparent);
+	border-radius: var(--radius-sm);
+}
+
+.message-text.markdown-content pre code,
+.agent-entry > .markdown-content pre code {
+	background: transparent;
 }
